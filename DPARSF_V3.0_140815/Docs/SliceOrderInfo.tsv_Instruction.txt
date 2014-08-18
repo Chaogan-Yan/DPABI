@@ -1,0 +1,17 @@
+The slice order type could be specified for each participant into SliceOrderInfo.tsv (under working directory) file, thus allow different slice timing correction for different participants in a batch mode. Please specify Slice Number as 0 in DPARSFA GUI. 
+
+Within SliceOrderInfor.tsv, the first column is Subject ID, and the second column is Slice Order Type:
+SA: sequential ascending
+SD: sequential descending
+IA: interleaved ascending
+ID: interleaved descending
+IA2: interleaved ascending, for SIEMENS scanner with even number of slices. Scanning of 2,4,6,ÿ and then 1,3,5ÿ, i.e., [2:2:SliceNumber,1:2:SliceNumber]
+ID2: interleaved descending, for SIEMENS scanner with even number of slices. Scanning of [SliceNumber-1:-2:1,SliceNumber:-2:1].
+
+Please see {DPARSF}/Docs/SliceOrderInfo.tsv for a sample file of ABIDE data. Also, please see Yan et al., 2013 Table 3 for a sample of FCP data (although IA2 and ID2 were not defined in that table.)
+
+Yan, C.G., Craddock, R.C., Zuo, X.N., Zang, Y.F., Milham, M.P., 2013. Standardizing the intrinsic brain: towards robust measurement of inter-individual variation in 1000 functional connectomes. Neuroimage in press.
+
+-----
+A sample of SliceOrderInfor.tsv:
+Subject ID	Slice Order Type0050002	IA0050003	IA0050004	IA0050145	IA20050146	IA20050147	IA20050269	SA0050270	SA0050271	SA0050272	SA0050527	IA20050528	IA20050529	IA20050530	IA20051571	SD0051572	SD0051573	SD0051574	SD0051575	SD0051576	SD
