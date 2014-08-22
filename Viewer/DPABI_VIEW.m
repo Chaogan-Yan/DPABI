@@ -1248,11 +1248,13 @@ switch Value
             return
         end
         [OverlayHeader, SendHeader]=RedrawOverlay(OverlayHeader);
-        OverlayHeader.Data = SendHeader.Data; %OverlayHeader=SetCSize(OverlayHeader); %YAN Chao-Gan, 140822. Need to save the data after setting cluster size.
+        %OverlayHeader.Data = SendHeader.Data; %OverlayHeader=SetCSize(OverlayHeader); %YAN Chao-Gan, 140822. Need to save the data after setting cluster size.
         handles.OverlayHeaders{index}=OverlayHeader;        
     case 9 %AlphaSim
         w_AlphaSimCorrection(OverlayHeader);
     case 10 %Cluster Report
+        OverlayHeader=SetCSize(OverlayHeader);               
+        OverlayHeader=SetPosNeg(OverlayHeader, handles); %Add by Sandy to set cluster size at first when someone use Cluster Report       
         y_ClusterReport(OverlayHeader.Data, OverlayHeader, OverlayHeader.RMM);
 end
 guidata(hObject, handles);
