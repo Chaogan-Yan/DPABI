@@ -1248,6 +1248,7 @@ switch Value
             return
         end
         OverlayHeader=RedrawOverlay(OverlayHeader);
+        OverlayHeader=SetCSize(OverlayHeader); %YAN Chao-Gan, 140822. Need to save the data after setting cluster size.
         handles.OverlayHeaders{index}=OverlayHeader;        
     case 9 %AlphaSim
         w_AlphaSimCorrection(OverlayHeader);
@@ -1907,4 +1908,4 @@ mode=Mode{state};
 set(handles.ModeButton, 'String', mode);
 st{curfig}.mode=str2double(mode);
 ShowUnderlay(handles);
-
+
