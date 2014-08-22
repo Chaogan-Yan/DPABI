@@ -1247,8 +1247,8 @@ switch Value
         if isempty(OverlayHeader)
             return
         end
-        OverlayHeader=RedrawOverlay(OverlayHeader);
-        OverlayHeader=SetCSize(OverlayHeader); %YAN Chao-Gan, 140822. Need to save the data after setting cluster size.
+        [OverlayHeader, SendHeader]=RedrawOverlay(OverlayHeader);
+        OverlayHeader.Data = SendHeader.Data; %OverlayHeader=SetCSize(OverlayHeader); %YAN Chao-Gan, 140822. Need to save the data after setting cluster size.
         handles.OverlayHeaders{index}=OverlayHeader;        
     case 9 %AlphaSim
         w_AlphaSimCorrection(OverlayHeader);
