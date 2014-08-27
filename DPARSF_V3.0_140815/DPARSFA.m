@@ -52,6 +52,12 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     fprintf('-----------------------------------------------------------\n');
     fprintf('Citing Information:\nIf you think DPARSFA is useful for your work, citing it in your paper would be greatly appreciated.\nSomething like "... The preprocessing was carried out by using Data Processing Assistant for Resting-State fMRI (DPARSF) (Yan & Zang, 2010, http://rfmri.org/DPARSF) which is based on Statistical Parametric Mapping (SPM8) (http://www.fil.ion.ucl.ac.uk/spm) and the toolbox for Data Processing & Analysis of Brain Imaging (DPABI, http://rfmri.org/DPABI)..."\nReference: Yan C and Zang Y (2010) DPARSF: a MATLAB toolbox for "pipeline" data analysis of resting-state fMRI. Front. Syst. Neurosci. 4:13. doi:10.3389/fnsys.2010.00013\n');
     
+    
+    [DPABILatestRelease WebStatus]=urlread('http://rfmri.org/DPABILatestRelease.txt');
+    if WebStatus
+        web('http://rfmri.org/DPARSF#overlay=HelpUs');
+    end
+    
     handles.hContextMenu =uicontextmenu;
     set(handles.listSubjectID, 'UIContextMenu', handles.hContextMenu);	%Added by YAN Chao-Gan 091110. Added popup menu to delete selected subject by right click.
 	uimenu(handles.hContextMenu, 'Label', 'Remove the selected participant', 'Callback', 'DPARSFA(''DeleteSelectedSubjectID'',gcbo,[], guidata(gcbo))');

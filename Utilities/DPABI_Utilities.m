@@ -22,7 +22,7 @@ function varargout = DPABI_Utilities(varargin)
 
 % Edit the above text to modify the response to help DPABI_Utilities
 
-% Last Modified by GUIDE v2.5 06-Aug-2014 02:36:06
+% Last Modified by GUIDE v2.5 26-Aug-2014 06:07:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -95,3 +95,20 @@ function pushbutton_ImageReslicer_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 DPABI_RESLICE_TOOL
+
+
+% --- Executes on button press in pushbuttonT1Avg.
+function pushbuttonT1Avg_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonT1Avg (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABI_T1ImgAverager
+
+
+% --- Executes on button press in pushbuttonT1Defacer.
+function pushbuttonT1Defacer_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonT1Defacer (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABI_T1ImgDefacer
+

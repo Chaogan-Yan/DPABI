@@ -55,7 +55,7 @@ function dpabi_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dpabi
 
 
-Release='V1.0_140815_Beta';
+Release='V1.1_140827';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -72,6 +72,13 @@ fprintf('-----------------------------------------------------------\n');
 fprintf('Citing Information:\nIf you think DPABI is useful for your work, citing it in your paper would be greatly appreciated!\n');
 
 
+[DPABILatestRelease WebStatus]=urlread('http://rfmri.org/DPABILatestRelease.txt');
+if WebStatus
+    web('http://rfmri.org/DPABI#overlay=HelpUs');
+    if str2double(DPABILatestRelease(end-5:end)) > str2double(Release(end-5:end))
+        uiwait(msgbox(sprintf('A new realease of DPABI is detected: %s, please update.',DPABILatestRelease)));
+    end
+end
 
 handles.output = hObject;
 
