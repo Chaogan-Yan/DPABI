@@ -199,11 +199,8 @@ ImgCells=handles.ImgCells;
 
 NewVoxSize=str2num(get(handles.VoxelSizeEntry, 'String'));
 InterpValue=get(handles.InterpPopup, 'Value');
-if InterpValue==1
-    InterpType=0;
-elseif InterpValue==2
-    InterpType=1;
-end
+InterpType=InterpValue-1; % Fixed a Bug that InterpValue cannot get the right order 
+
 
 ReferValue=get(handles.ReferCheck, 'Value');
 if ReferValue
@@ -293,7 +290,7 @@ function AddTable_Callback(hObject, eventdata, handles)
 % hObject    handle to AddTable (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Path=uigetdir(handles.CurDir, 'Pick DICOM Directory');
+Path=uigetdir(handles.CurDir, 'Pick Image Directory');
 if isnumeric(Path)
     return
 end
@@ -324,12 +321,11 @@ function AddAll_Callback(hObject, eventdata, handles)
 % hObject    handle to AddAll (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Path=uigetdir(handles.CurDir, 'Pick DICOM Parent Directory');
+Path=uigetdir(handles.CurDir, 'Pick Image Parent Directory');
 if isnumeric(Path)
     return
 end
 handles.CurDir=Path;
-Suffix=get(handles.PrefixEntry, 'String');
 
 SubjStruct=dir(Path);
 Index=cellfun(...
@@ -449,7 +445,7 @@ function ReferButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick Underlay File' , handles.CurDir);
+    'Pick 3D Image File' , handles.CurDir);
 if isnumeric(File)
     return;
 end
