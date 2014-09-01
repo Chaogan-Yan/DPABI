@@ -1,5 +1,5 @@
-function y_ICC_Image(Rate1Dir,Rate2Dir,OutputName,MaskFile)
-% function y_ICC_Image(Rate1Dir,Rate2Dir,OutputName,MaskFile)
+function y_ICC_Image_ReML(Rate1Dir,Rate2Dir,OutputName,MaskFile)
+% function y_ICC_Image_ReML(Rate1Dir,Rate2Dir,OutputName,MaskFile)
 % Calculate the Intraclass correlation coefficient for brain images.
 % Note: the ICC calculation is based on Xi-Nian Zuo's LFCD_lmm0
 % Use ReML Model; Zuo, X.N., Xing, X.X., 2011. Effects of non-local diffusion on structural MRI preprocessing and default network mapping: statistical comparisons with isotropic/anisotropic diffusion. PLoS ONE 6, e26703.

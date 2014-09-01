@@ -1,5 +1,5 @@
 function y_ICC_MSw_Image(Rate1Dir,Rate2Dir,OutputName,MaskFile)
-% function y_ICC_Image(Rate1Dir,Rate2Dir,OutputName,MaskFile)
+% function y_ICC_MSw_Image(Rate1Dir,Rate2Dir,OutputName,MaskFile)
 % Calculate the within-subject mean square (MSw, a component of Intraclass correlation coefficient) for brain images.
 %   Input:
 %     Group1Dir - Cell, directory of the first group. Take average if multiple sessions
