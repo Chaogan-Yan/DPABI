@@ -104,7 +104,7 @@ function AddButton_Callback(hObject, eventdata, handles)
 % hObject    handle to AddButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Path=uigetdir(handles.CurDir, 'Pick DICOM Directory');
+Path=uigetdir(handles.CurDir, 'Pick Image Directory');
 if isnumeric(Path)
     return
 end
@@ -251,7 +251,7 @@ function AddTable_Callback(hObject, eventdata, handles)
 % hObject    handle to AddTable (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Path=uigetdir(handles.CurDir, 'Pick DICOM Directory');
+Path=uigetdir(handles.CurDir, 'Pick Image Directory');
 if isnumeric(Path)
     return
 end
@@ -282,7 +282,7 @@ function AddAll_Callback(hObject, eventdata, handles)
 % hObject    handle to AddAll (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Path=uigetdir(handles.CurDir, 'Pick DICOM Parent Directory');
+Path=uigetdir(handles.CurDir, 'Pick Image Parent Directory');
 if isnumeric(Path)
     return
 end
@@ -420,7 +420,7 @@ function AddImgTable_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick Underlay File' , handles.CurDir);
+    'Pick NifTi File' , handles.CurDir);
 if isnumeric(File)
     return;
 end
@@ -436,7 +436,7 @@ function AddImgButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick Underlay File' , handles.CurDir);
+    'Pick NifTi File' , handles.CurDir);
 if isnumeric(File)
     return;
 end
