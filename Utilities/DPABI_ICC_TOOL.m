@@ -113,8 +113,8 @@ end
 
 [ImgCell, Num]=GetSubNameCell(Path);
 
-handles.ImgCells1{numel(handles.ImgCells1)+1}=ImgCell;
-StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
+handles.ImgCells1{numel(handles.ImgCells1)+1}=Path;
+StringOne={sprintf('DIR: [%s] (%s) %s', Num, Name, Path)};
 AddString(handles.ImgListbox1, StringOne);
 guidata(hObject, handles);
 
@@ -220,7 +220,7 @@ OutputName=[Prefix, '.nii'];
 Function=which('y_ICC_Image');
 if isempty(Function)
     Self=which('DPABI_ICC_TOOL.m');
-    FunctionDir=fullfill(fileparts(Self), 'ICC');
+    FunctionDir=fullfile(fileparts(Self), 'ICC');
     addpath(genpath(FunctionDir));
 end
 
@@ -232,6 +232,7 @@ switch Method
     case 3 % Linear Mixed Models
         y_ICC_Image_LMM(ImgCells1, ImgCells2, OutputName, MaskFile);
 end
+fprintf('Done!\n');
 
 
 % --- Executes on selection change in TypePopup.
@@ -269,8 +270,8 @@ end
 
 [ImgCell, Num]=GetSubNameCell(Path);
 
-handles.ImgCells1{numel(handles.ImgCells1)+1}=ImgCell;
-StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
+handles.ImgCells1{numel(handles.ImgCells1)+1}=Path;
+StringOne={sprintf('DIR: [%s] (%s) %s', Num, Name, Path)};
 AddString(handles.ImgListbox1, StringOne);
 guidata(hObject, handles);
 
@@ -313,8 +314,8 @@ drawnow;
 for i=1:numel(SubjPath);
     [ImgCell, Num]=GetSubNameCell(SubjPath{i});
     
-    handles.ImgCells1{numel(handles.ImgCells1)+1}=ImgCell;
-    StringOne={sprintf('DIR: [%d] (%s) %s', Num, SubjName{i}, SubjPath{i})};
+    handles.ImgCells1{numel(handles.ImgCells1)+1}=SubjPath{i};
+    StringOne={sprintf('DIR: [%s] (%s) %s', Num, SubjName{i}, SubjPath{i})};
     AddString(handles.ImgListbox1, StringOne);
     drawnow;
 end
@@ -347,7 +348,7 @@ if isempty(D)
 end
 
 NameCell={D.name}';
-Num=numel(NameCell);
+Num=num2str(numel(NameCell));
 ImgCell=cellfun(@(Name) fullfile(Path, Name), NameCell,...
     'UniformOutput', false);
 
@@ -499,8 +500,8 @@ end
 
 [ImgCell, Num]=GetSubNameCell(Path);
 
-handles.ImgCells2{numel(handles.ImgCells2)+1}=ImgCell;
-StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
+handles.ImgCells2{numel(handles.ImgCells2)+1}=Path;
+StringOne={sprintf('DIR: [%s] (%s) %s', Num, Name, Path)};
 AddString(handles.ImgListbox2, StringOne);
 guidata(hObject, handles);
 
@@ -540,8 +541,8 @@ end
 
 [ImgCell, Num]=GetSubNameCell(Path);
 
-handles.ImgCells2{numel(handles.ImgCells2)+1}=ImgCell;
-StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
+handles.ImgCells2{numel(handles.ImgCells2)+1}=Path;
+StringOne={sprintf('DIR: [%s] (%s) %s', Num, Name, Path)};
 AddString(handles.ImgListbox2, StringOne);
 guidata(hObject, handles);
 
@@ -600,8 +601,8 @@ drawnow;
 for i=1:numel(SubjPath);
     [ImgCell, Num]=GetSubNameCell(SubjPath{i});
     
-    handles.ImgCells2{numel(handles.ImgCells2)+1}=ImgCell;
-    StringOne={sprintf('DIR: [%d] (%s) %s', Num, SubjName{i}, SubjPath{i})};
+    handles.ImgCells2{numel(handles.ImgCells2)+1}=SubjPath{i};
+    StringOne={sprintf('DIR: [%s] (%s) %s', Num, SubjName{i}, SubjPath{i})};
     AddString(handles.ImgListbox2, StringOne);
     drawnow;
 end
