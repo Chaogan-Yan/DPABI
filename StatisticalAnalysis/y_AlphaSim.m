@@ -21,6 +21,17 @@ function y_AlphaSim(maskfile,outdir,outname,rmm,s,pthr,iter)
 %   Modified by YAN Chao-Gan 0901215: Fixed the error when rmm=6.
 %------------------------------------------------------------------------------------------------------------------------------
 
+% MODIFICATIONS Katharina Wittfeld (September 2014)
+% line 72: normrnd replaced by randn (no Statistics Toolbox needed)
+% line 86: norminv replaced by a workaround (no Statistics Toolbox needed)
+% several modifications in iteration loop (all documented in the code)
+% changes: 
+% 	moved the masking step (this important: if masking is done before the gauss filter, the gauss filter will blur the borders of the mask and areas outside the mask will be taken into account)
+% 	estimation of mean and sd for every iteration seperately (not sure if this has an imapct on the results)
+% 	small adjustment in the thresholding step (not sure if the case of xthr<0 can even occure)
+% line 103: bwlabeln ersetzt durch SPM-Variante
+% line 105-117: joined the loops
+
 if ~(exist('spm_conv_vol.m'))
     uiwait(msgbox('This function is based on SPM, please install SPM5 or later version at first.','AlphaSim'));
     return
@@ -51,36 +62,60 @@ end
 
 ft=zeros(1,VariableLine);   
 mt=zeros(1,VariableLine);   
-count=0;
-suma=0;
-sumsq=0;
+count=nx*ny*nz; % Katharina Wittfeld, fixed to the number of voxels in the whole volume
+%suma=0;        % Katharina Wittfeld, not needed if estimation of mean and sd is done seperately for every iteration 
+%sumsq=0;       % Katharina Wittfeld, not needed if estimation of mean and sd is done seperately for every iteration 
 
 for nt=1:iter
     foneimt=zeros(1,VariableLine); 
-    fim=normrnd(0,1,nx,ny,nz);
-    fim = fim.*mask;
+    %fim=normrnd(0,1,nx,ny,nz);
+    fim=randn(nx,ny,nz);  	% Katharina Wittfeld, alternative version without the use of the Statistic Toolbox, before: fim=normrnd(0,1,nx,ny,nz); 
+
+    %fim = fim.*mask;       % Katharina Wittfeld, will be down later in the script
     if s ~= 0
       fim = gauss_filter(s,fim,voxdim); 
     end
     fimca=reshape(fim,1,[]);
-    count=count+nxyz;
-    suma=sum(fimca)+suma;
-    sumsq=sum(fimca.*fimca)+sumsq;
+    %count=count+nxyz;      % Katharina Wittfeld, count is fixed now to the number of voxels in the volume
+    suma=sum(fimca);        % Katharina Wittfeld, before: suma=sum(fimca)+suma;
+    sumsq=sum(fimca.*fimca);    % Katharina Wittfeld, before: sumsq=sum(fimca.*fimca)+sumsq;
     mean=suma/count;
     sd = sqrt((sumsq - (suma * suma)/count) / (count-1));
     
-    zthr =norminv(1 - pthr);
+    %zthr =norminv(1 - pthr);
+    zthr=-sqrt(2) * erfcinv((1-pthr)*2); % Katharina Wittfeld, alternative version without the use of the Statistic Toolbox, before: zthr =norminv(1 - pthr);
+
     xthr=sd*zthr+mean;
-    fim(fim<=xthr)=0;      
-    fim(fim>xthr)=1;
+    
+    %fim(fim<=xthr)=0;  
+    %fim(fim>xthr)=1;
+    % Katharina Wittfeld ('safe' version, could be a problem if xthr<0 otherwise (don't know if this would be possible))
+    fim2=fim;
+    fim2(fim<=xthr)=0;      
+    fim2(fim>xthr)=1;
+    fim=fim2;
+    
+    fim = fim.*mask; 		% Katharina Wittfeld, apply mask 
+    
     a=numel(find(fim==1))/nxyz;
-    [theCluster, theCount] =bwlabeln(fim, connect);
+    %[theCluster, theCount] =bwlabeln(fim, connect);
+    
+    [theCluster, theCount] = spm_bwlabel(fim, connect); % Katharina Wittfeld, alternative version without use of the Imaging processing toolbox, before: [theCluster, theCount] =bwlabeln(fim, connect);
+    
+    %for i=1:theCount
+    %    foneimt(numel(find(theCluster==i)))=foneimt(numel(find(theCluster==i)))+1;
+    %end
+    %for i=1:theCount
+    %    ft(numel(find(theCluster==i)))=ft(numel(find(theCluster==i)))+1;
+    %end
+    
+    % Katharina Wittfeld (joined the loops)
     for i=1:theCount
-        foneimt(numel(find(theCluster==i)))=foneimt(numel(find(theCluster==i)))+1;
+        numCluster_i=numel(find(theCluster==i));
+        foneimt(numCluster_i)=foneimt(numCluster_i)+1;
+        ft(numCluster_i)=ft(numCluster_i)+1;
     end
-    for i=1:theCount
-        ft(numel(find(theCluster==i)))=ft(numel(find(theCluster==i)))+1;
-    end
+    
     mt(find(foneimt, 1, 'last' ))=mt(find(foneimt, 1, 'last' ))+1;
     fprintf('iter=%d  pvoxel=%f zthr=%f mc=%d mean=%f\n',nt,a,xthr,find(foneimt, 1, 'last' ),mean);
 end
