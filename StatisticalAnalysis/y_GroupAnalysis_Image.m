@@ -150,6 +150,8 @@ end
 %YAN Chao-Gan, 130227
 if exist('IsOutputResidual','var') && (IsOutputResidual==1)
     y_Write(r_OLS_brain,Header,[OutputName,'_Residual','.nii']);
+	RMS_r_OLS_brain=mean(r_OLS_brain.^2, 4);
+	y_Write(r_OLS_brain,Header,[OutputName,'_Residual_RMS','.nii']);
 end
 
 Header = HeaderTWithDOF;
