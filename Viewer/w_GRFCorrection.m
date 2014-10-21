@@ -240,7 +240,7 @@ OverlayHeader=handles.OverlayHeader;
 TestFlag=OverlayHeader.TestFlag;
 Df=OverlayHeader.Df;
 Df2=OverlayHeader.Df2;
-if strcmpi(OverlayHeader.TestFlag, 'Z')
+if ~strcmpi(OverlayHeader.TestFlag, 'Z')
     [ZMap, P]=y_TFRtoZ(OverlayHeader, '', TestFlag, Df, Df2);
 else
     ZMap=OverlayHeader.Raw;
