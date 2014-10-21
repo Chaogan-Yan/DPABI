@@ -150,10 +150,10 @@ end
 %YAN Chao-Gan, 130227
 if exist('IsOutputResidual','var') && (IsOutputResidual==1)
 	[Path, Name, Ext]=fileparts(OutputName);
-	Name=fullfile(Path, Name)
+	Name=fullfile(Path, Name);
     y_Write(r_OLS_brain,Header,[Name,'_Residual','.nii']);
-	RMS_r_OLS_brain=mean(r_OLS_brain.^2, 4);
-	y_Write(r_OLS_brain,Header,[Name,'_Residual_RMS','.nii']);
+	SSE_r_OLS_brain=sum(r_OLS_brain.^2, 4); %Add error sum of square by Sandy
+	y_Write(SSE_r_OLS_brain,Header,[Name,'_Residual_SSE','.nii']);
 end
 
 Header = HeaderTWithDOF;
