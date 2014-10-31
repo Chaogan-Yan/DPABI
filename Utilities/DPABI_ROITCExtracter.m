@@ -1,35 +1,35 @@
-function varargout = DPABI_RESLICE_TOOL(varargin)
-% DPABI_RESLICE_TOOL MATLAB code for DPABI_RESLICE_TOOL.fig
-%      DPABI_RESLICE_TOOL, by itself, creates a new DPABI_RESLICE_TOOL or raises the existing
+function varargout = DPABI_ROITCExtracter(varargin)
+% DPABI_ROITCExtracter MATLAB code for DPABI_ROITCExtracter.fig
+%      DPABI_ROITCExtracter, by itself, creates a new DPABI_ROITCExtracter or raises the existing
 %      singleton*.
 %
-%      H = DPABI_RESLICE_TOOL returns the handle to a new DPABI_RESLICE_TOOL or the handle to
+%      H = DPABI_ROITCExtracter returns the handle to a new DPABI_ROITCExtracter or the handle to
 %      the existing singleton*.
 %
-%      DPABI_RESLICE_TOOL('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in DPABI_RESLICE_TOOL.M with the given input arguments.
+%      DPABI_ROITCExtracter('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in DPABI_ROITCExtracter.M with the given input arguments.
 %
-%      DPABI_RESLICE_TOOL('Property','Value',...) creates a new DPABI_RESLICE_TOOL or raises the
+%      DPABI_ROITCExtracter('Property','Value',...) creates a new DPABI_ROITCExtracter or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before DPABI_RESLICE_TOOL_OpeningFcn gets called.  An
+%      applied to the GUI before DPABI_ROITCExtracter_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to DPABI_RESLICE_TOOL_OpeningFcn via varargin.
+%      stop.  All inputs are passed to DPABI_ROITCExtracter_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help DPABI_RESLICE_TOOL
+% Edit the above text to modify the response to help DPABI_ROITCExtracter
 
-% Last Modified by GUIDE v2.5 07-Aug-2014 20:25:43
+% Last Modified by GUIDE v2.5 29-Aug-2014 06:44:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @DPABI_RESLICE_TOOL_OpeningFcn, ...
-                   'gui_OutputFcn',  @DPABI_RESLICE_TOOL_OutputFcn, ...
+                   'gui_OpeningFcn', @DPABI_ROITCExtracter_OpeningFcn, ...
+                   'gui_OutputFcn',  @DPABI_ROITCExtracter_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,30 +44,30 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before DPABI_RESLICE_TOOL is made visible.
-function DPABI_RESLICE_TOOL_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before DPABI_ROITCExtracter is made visible.
+function DPABI_ROITCExtracter_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to DPABI_RESLICE_TOOL (see VARARGIN)
+% varargin   command line arguments to DPABI_ROITCExtracter (see VARARGIN)
 
 handles.ImgCells={};
 handles.CurDir=pwd;
 
 set(handles.OutputDirEntry, 'String', pwd);
-% Choose default command line output for DPABI_RESLICE_TOOL
+% Choose default command line output for DPABI_ROITCExtracter
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes DPABI_RESLICE_TOOL wait for user response (see UIRESUME)
+% UIWAIT makes DPABI_ROITCExtracter wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = DPABI_RESLICE_TOOL_OutputFcn(hObject, eventdata, handles) 
+function varargout = DPABI_ROITCExtracter_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -104,7 +104,7 @@ function AddButton_Callback(hObject, eventdata, handles)
 % hObject    handle to AddButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Path=uigetdir(handles.CurDir, 'Pick DICOM Directory');
+Path=uigetdir(handles.CurDir, 'Pick Image Directory');
 if isnumeric(Path)
     return
 end
@@ -197,21 +197,9 @@ if isempty(handles.ImgCells)
 end
 ImgCells=handles.ImgCells;
 
-NewVoxSize=str2num(get(handles.VoxelSizeEntry, 'String'));
-InterpValue=get(handles.InterpPopup, 'Value');
-InterpType=InterpValue-1; % Fixed a Bug that InterpValue cannot get the right order 
+ExtractType=get(handles.TypePopup, 'Value');
 
-
-ReferValue=get(handles.ReferCheck, 'Value');
-if ReferValue
-    ReferFile=get(handles.ReferEntry, 'String');
-    if isempty(ReferFile)
-        errordlg('Invalid Reference Image');
-        return
-    end
-else
-    ReferFile='ImageItself';
-end
+MaskFile=get(handles.MaskEntry, 'String');
 
 OutputDir=get(handles.OutputDirEntry, 'String');
 if isempty(OutputDir)
@@ -224,39 +212,31 @@ for i=1:numel(ImgCells)
     Img=ImgCells{i};
     if iscell(Img)
         Path=fileparts(Img{1});
-        fprintf('Reslice %s etc.\n', Path);
-        for j=1:numel(Img)
-            [Path, File, Ext]=fileparts(Img{j});
-            fprintf('\tReslice %s\n', File);
-            [ParentPath, Name]=fileparts(Path);
-            OutputSubDir=fullfile(OutputDir, sprintf('%s_%s', Prefix, Name));
-            if exist(OutputSubDir, 'dir')~=7
-                mkdir(OutputSubDir);
-            end
-            OutputFile=fullfile(OutputSubDir, [File, Ext]);
-            y_Reslice(Img{j}, OutputFile, NewVoxSize, InterpType, ReferFile);            
-        end
+        fprintf('Extract time series from %s etc.\n', Path);
+        [ParentPath, Name, Ext]=fileparts(Path); 
+        OutputFile=fullfile(OutputDir, sprintf('%s_%s.txt', Prefix, Name));
+        w_ExtractROITC(Img, MaskFile, ExtractType, OutputFile);
     else
         fprintf('Reslice %s\n', Img);
         [Path, File, Ext]=fileparts(Img);
-        OutputFile=fullfile(OutputDir, sprintf('%s_%s%s', Prefix, File, Ext));
-        y_Reslice(Img, OutputFile, NewVoxSize, InterpType, ReferFile);
+        OutputFile=fullfile(OutputDir, sprintf('%s_%s.txt', Prefix, File));
+        w_ExtractROITC(Img, MaskFile, ExtractType, OutputFile);
     end
 end
 
-% --- Executes on selection change in InterpPopup.
-function InterpPopup_Callback(hObject, eventdata, handles)
-% hObject    handle to InterpPopup (see GCBO)
+% --- Executes on selection change in TypePopup.
+function TypePopup_Callback(hObject, eventdata, handles)
+% hObject    handle to TypePopup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns InterpPopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from InterpPopup
+% Hints: contents = cellstr(get(hObject,'String')) returns TypePopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from TypePopup
 
 
 % --- Executes during object creation, after setting all properties.
-function InterpPopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to InterpPopup (see GCBO)
+function TypePopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to TypePopup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -265,25 +245,6 @@ function InterpPopup_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-% --- Executes on button press in ReferCheck.
-function ReferCheck_Callback(hObject, eventdata, handles)
-% hObject    handle to ReferCheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-Value=get(handles.ReferCheck, 'Value');
-if Value
-    Flag='On';
-    String='';
-else
-    Flag='Off';
-    String='Keep the original space';
-end
-
-set(handles.ReferEntry,  'Enable', Flag, 'String', String);
-set(handles.ReferButton, 'Enable', Flag);
-% Hint: get(hObject,'Value') returns toggle state of ReferCheck
 
 % --------------------------------------------------------------------
 function AddTable_Callback(hObject, eventdata, handles)
@@ -326,6 +287,7 @@ if isnumeric(Path)
     return
 end
 handles.CurDir=Path;
+Suffix=get(handles.PrefixEntry, 'String');
 
 SubjStruct=dir(Path);
 Index=cellfun(...
@@ -417,18 +379,18 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-function ReferEntry_Callback(hObject, eventdata, handles)
-% hObject    handle to ReferEntry (see GCBO)
+function MaskEntry_Callback(hObject, eventdata, handles)
+% hObject    handle to MaskEntry (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of ReferEntry as text
-%        str2double(get(hObject,'String')) returns contents of ReferEntry as a double
+% Hints: get(hObject,'String') returns contents of MaskEntry as text
+%        str2double(get(hObject,'String')) returns contents of MaskEntry as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function ReferEntry_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ReferEntry (see GCBO)
+function MaskEntry_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to MaskEntry (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -439,18 +401,18 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in ReferButton.
-function ReferButton_Callback(hObject, eventdata, handles)
-% hObject    handle to ReferButton (see GCBO)
+% --- Executes on button press in MaskButton.
+function MaskButton_Callback(hObject, eventdata, handles)
+% hObject    handle to MaskButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick 3D Image File' , handles.CurDir);
+    'Pick 4D Image File' , handles.CurDir);
 if isnumeric(File)
     return;
 end
 ReferFile=fullfile(Path, File);
-set(handles.ReferEntry, 'String', ReferFile);
+set(handles.MaskEntry, 'String', ReferFile);
 
 % --------------------------------------------------------------------
 function AddImgTable_Callback(hObject, eventdata, handles)
@@ -458,7 +420,7 @@ function AddImgTable_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick Underlay File' , handles.CurDir);
+    'Pick NifTi File' , handles.CurDir);
 if isnumeric(File)
     return;
 end
@@ -474,7 +436,7 @@ function AddImgButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick Underlay File' , handles.CurDir);
+    'Pick NifTi File' , handles.CurDir);
 if isnumeric(File)
     return;
 end

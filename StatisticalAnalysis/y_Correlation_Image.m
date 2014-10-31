@@ -68,7 +68,7 @@ else
 end
 Contrast(1) = 1;
 
-[b_OLS_brain, t_OLS_brain, TTest1_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header);
+[b_OLS_brain, t_OLS_brain, TTest1_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',1,Header); % Modified Residual Output to 1 by Sandy
 %[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
 
 Df_E = size(Regressors,1) - size(Contrast,2);
@@ -82,7 +82,3 @@ Header.descrip = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.descrip(Index(1)+1:end)
 y_Write(rCorr,Header,OutputName);
 
 fprintf('\n\tCorrelation Calculation finished.\n');
-
-
-
-
