@@ -1,35 +1,35 @@
-function varargout = DPABI_ROITCExtracter(varargin)
-% DPABI_ROITCExtracter MATLAB code for DPABI_ROITCExtracter.fig
-%      DPABI_ROITCExtracter, by itself, creates a new DPABI_ROITCExtracter or raises the existing
+function varargout = DPABI_ROISignalExtracter(varargin)
+% DPABI_ROISignalExtracter MATLAB code for DPABI_ROISignalExtracter.fig
+%      DPABI_ROISignalExtracter, by itself, creates a new DPABI_ROISignalExtracter or raises the existing
 %      singleton*.
 %
-%      H = DPABI_ROITCExtracter returns the handle to a new DPABI_ROITCExtracter or the handle to
+%      H = DPABI_ROISignalExtracter returns the handle to a new DPABI_ROISignalExtracter or the handle to
 %      the existing singleton*.
 %
-%      DPABI_ROITCExtracter('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in DPABI_ROITCExtracter.M with the given input arguments.
+%      DPABI_ROISignalExtracter('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in DPABI_ROISignalExtracter.M with the given input arguments.
 %
-%      DPABI_ROITCExtracter('Property','Value',...) creates a new DPABI_ROITCExtracter or raises the
+%      DPABI_ROISignalExtracter('Property','Value',...) creates a new DPABI_ROISignalExtracter or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before DPABI_ROITCExtracter_OpeningFcn gets called.  An
+%      applied to the GUI before DPABI_ROISignalExtracter_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to DPABI_ROITCExtracter_OpeningFcn via varargin.
+%      stop.  All inputs are passed to DPABI_ROISignalExtracter_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help DPABI_ROITCExtracter
+% Edit the above text to modify the response to help DPABI_ROISignalExtracter
 
-% Last Modified by GUIDE v2.5 29-Aug-2014 06:44:43
+% Last Modified by GUIDE v2.5 01-Nov-2014 03:17:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @DPABI_ROITCExtracter_OpeningFcn, ...
-                   'gui_OutputFcn',  @DPABI_ROITCExtracter_OutputFcn, ...
+                   'gui_OpeningFcn', @DPABI_ROISignalExtracter_OpeningFcn, ...
+                   'gui_OutputFcn',  @DPABI_ROISignalExtracter_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,30 +44,32 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before DPABI_ROITCExtracter is made visible.
-function DPABI_ROITCExtracter_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before DPABI_ROISignalExtracter is made visible.
+function DPABI_ROISignalExtracter_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to DPABI_ROITCExtracter (see VARARGIN)
+% varargin   command line arguments to DPABI_ROISignalExtracter (see VARARGIN)
 
 handles.ImgCells={};
 handles.CurDir=pwd;
+handles.ROIDef=[];
+handles.IsMultipleLabel=0;
 
 set(handles.OutputDirEntry, 'String', pwd);
-% Choose default command line output for DPABI_ROITCExtracter
+% Choose default command line output for DPABI_ROISignalExtracter
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes DPABI_ROITCExtracter wait for user response (see UIRESUME)
+% UIWAIT makes DPABI_ROISignalExtracter wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = DPABI_ROITCExtracter_OutputFcn(hObject, eventdata, handles) 
+function varargout = DPABI_ROISignalExtracter_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -197,10 +199,6 @@ if isempty(handles.ImgCells)
 end
 ImgCells=handles.ImgCells;
 
-ExtractType=get(handles.TypePopup, 'Value');
-
-MaskFile=get(handles.MaskEntry, 'String');
-
 OutputDir=get(handles.OutputDirEntry, 'String');
 if isempty(OutputDir)
     OutputDir=handles.CurDir;
@@ -208,20 +206,22 @@ end
 
 Prefix=get(handles.PrefixEntry, 'String');
 
-for i=1:numel(ImgCells)
+parfor i=1:numel(ImgCells)
     Img=ImgCells{i};
+    
+    %By YAN Chao-Gan, 141101.
     if iscell(Img)
         Path=fileparts(Img{1});
-        fprintf('Extract time series from %s etc.\n', Path);
         [ParentPath, Name, Ext]=fileparts(Path); 
-        OutputFile=fullfile(OutputDir, sprintf('%s_%s.txt', Prefix, Name));
-        w_ExtractROITC(Img, MaskFile, ExtractType, OutputFile);
     else
-        fprintf('Reslice %s\n', Img);
-        [Path, File, Ext]=fileparts(Img);
-        OutputFile=fullfile(OutputDir, sprintf('%s_%s.txt', Prefix, File));
-        w_ExtractROITC(Img, MaskFile, ExtractType, OutputFile);
+        [Path, Name, Ext]=fileparts(Img);
     end
+    
+    OutputFile=fullfile(OutputDir, sprintf('%s_%s.txt', Prefix, Name));
+    
+    [ROISignals] = y_ExtractROISignal(Img, handles.ROIDef, OutputFile, '', handles.IsMultipleLabel);
+    %[ROISignals] = y_ExtractROISignal(AllVolume, ROIDef, OutputName, MaskData, IsMultipleLabel, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)             
+
 end
 
 % --- Executes on selection change in TypePopup.
@@ -401,18 +401,32 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in MaskButton.
-function MaskButton_Callback(hObject, eventdata, handles)
-% hObject    handle to MaskButton (see GCBO)
+% --- Executes on button press in DefineROI.
+function DefineROI_Callback(hObject, eventdata, handles)
+% hObject    handle to DefineROI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick 4D Image File' , handles.CurDir);
-if isnumeric(File)
-    return;
+
+ROIDef=handles.ROIDef;
+if isempty(ROIDef)
+    [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+    addpath([ProgramPath,filesep,'SubGUIs']);
+    [ROIDef,IsMultipleLabel]=DPARSF_ROI_Template(ROIDef,handles.IsMultipleLabel);
+    handles.IsMultipleLabel = IsMultipleLabel;
 end
-ReferFile=fullfile(Path, File);
-set(handles.MaskEntry, 'String', ReferFile);
+
+if handles.IsMultipleLabel
+    fprintf('\nIsMultipleLabel is set to 1: There are multiple labels in the ROI mask file.\n');
+else
+    fprintf('\nIsMultipleLabel is set to 0: All the non-zero values will be used to define the only ROI.\n');
+end
+
+ROIDef=DPABI_ROIList(ROIDef);
+handles.ROIDef=ROIDef;
+guidata(hObject, handles);
+
+
+
 
 % --------------------------------------------------------------------
 function AddImgTable_Callback(hObject, eventdata, handles)

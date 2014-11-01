@@ -34,7 +34,7 @@ end
 
 % --- Executes just before DPARSFA is made visible.
 function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V3.0_140815';
+    Release='V3.1_141101';
     handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
     
     if ispc
@@ -55,7 +55,14 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     
     [DPABILatestRelease WebStatus]=urlread('http://rfmri.org/DPABILatestRelease.txt');
     if WebStatus
-        web('http://rfmri.org/DPARSF#overlay=HelpUs');
+        DPARSFMessage=urlread('http://rfmri.org/DPARSFMessage.txt');
+        if ~isempty(DPARSFMessage)
+            uiwait(msgbox(DPARSFMessage,'DPARSF Message'));
+        end
+        DPARSFMessageWeb=urlread('http://rfmri.org/DPARSFMessageWeb.txt');
+        if ~isempty(DPARSFMessageWeb)
+            web(DPARSFMessageWeb);
+        end
     end
     
     handles.hContextMenu =uicontextmenu;

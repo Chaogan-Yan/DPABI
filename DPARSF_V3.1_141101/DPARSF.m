@@ -29,6 +29,7 @@ function varargout = DPARSF(varargin)
 % Modified by YAN Chao-Gan, 130303. DPARSF V2.2, minor revision.
 % Modified by YAN Chao-Gan, 130615. DPARSF V2.3.
 % Modified by YAN Chao-Gan, 140814. DPARSF V3.0.
+% Modified by YAN Chao-Gan, 141101. DPARSF V3.1.
 
 
 % Begin initialization code - DO NOT EDIT
@@ -53,7 +54,7 @@ end
 
 % --- Executes just before DPARSF is made visible.
 function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V3.0_140815';
+    Release='V3.1_141101';
     
     [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
     addpath([ProgramPath,filesep,'SubGUIs']);
@@ -84,7 +85,14 @@ function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
     
     [DPABILatestRelease WebStatus]=urlread('http://rfmri.org/DPABILatestRelease.txt');
     if WebStatus
-        web('http://rfmri.org/DPARSF#overlay=HelpUs');
+        DPARSFMessage=urlread('http://rfmri.org/DPARSFMessage.txt');
+        if ~isempty(DPARSFMessage)
+            uiwait(msgbox(DPARSFMessage,'DPARSF Message'));
+        end
+        DPARSFMessageWeb=urlread('http://rfmri.org/DPARSFMessageWeb.txt');
+        if ~isempty(DPARSFMessageWeb)
+            web(DPARSFMessageWeb);
+        end
     end
     
     handles.hContextMenu =uicontextmenu;
@@ -157,12 +165,12 @@ function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
     %handles.Cfg.CalReHo.mReHo_1=1;
 
     %handles.Cfg.IsExtractAALTC=0;
-    handles.Cfg.IsExtractROITC=0;
+    handles.Cfg.IsExtractROISignals=0;
     handles.Cfg.ExtractROITC.IsTalCoordinates=1;
     handles.Cfg.ExtractROITC.ROICenter='';%ROICenter;
     handles.Cfg.ExtractROITC.ROIRadius=6;
     
-    handles.Cfg.IsExtractRESTdefinedROITC=0;
+    handles.Cfg.IsExtractROISignals=0;
     handles.Cfg.IsCalFC=0;
     handles.Cfg.CalFC.IsMultipleLabel=0;
     handles.Cfg.CalFC.ROIDef=[];
@@ -930,9 +938,9 @@ function checkboxOtherCovariates_Callback(hObject, eventdata, handles)
     
 function checkboxExtractRESTdefinedROITC_Callback(hObject, eventdata, handles)
 	if get(hObject,'Value')
-		handles.Cfg.IsExtractRESTdefinedROITC = 1;
+		handles.Cfg.IsExtractROISignals = 1;
 	else	
-		handles.Cfg.IsExtractRESTdefinedROITC = 0;
+		handles.Cfg.IsExtractROISignals = 0;
     end	
     handles=CheckCfgParameters(handles);
 	guidata(hObject, handles);
@@ -1419,12 +1427,12 @@ function UpdateDisplay(handles)
         set(handles.checkboxOtherCovariates, 'Enable', 'off', 'Value', ~isempty(handles.Cfg.Covremove.OtherCovariatesROI));
     end
     
-    if (handles.Cfg.IsExtractRESTdefinedROITC==1) || (handles.Cfg.IsCalFC==1)
-        set(handles.checkboxExtractRESTdefinedROITC, 'Value', handles.Cfg.IsExtractRESTdefinedROITC);
+    if (handles.Cfg.IsExtractROISignals==1) || (handles.Cfg.IsCalFC==1)
+        set(handles.checkboxExtractRESTdefinedROITC, 'Value', handles.Cfg.IsExtractROISignals);
         set(handles.checkboxCalFC, 'Value', handles.Cfg.IsCalFC);
         set(handles.pushbuttonDefineROI, 'Enable', 'on');
     else
-        set(handles.checkboxExtractRESTdefinedROITC, 'Value', handles.Cfg.IsExtractRESTdefinedROITC);
+        set(handles.checkboxExtractRESTdefinedROITC, 'Value', handles.Cfg.IsExtractROISignals);
         set(handles.checkboxCalFC, 'Value', handles.Cfg.IsCalFC);
         set(handles.pushbuttonDefineROI, 'Enable', 'off');
     end

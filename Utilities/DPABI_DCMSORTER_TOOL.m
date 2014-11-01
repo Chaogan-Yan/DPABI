@@ -22,7 +22,7 @@ function varargout = DPABI_DCMSORTER_TOOL(varargin)
 
 % Edit the above text to modify the response to help DPABI_DCMSORTER_TOOL
 
-% Last Modified by GUIDE v2.5 15-Jul-2014 22:17:52
+% Last Modified by GUIDE v2.5 31-Oct-2014 15:51:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -100,9 +100,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in AddButton.
+% --- Executes on button press in AddAll.
 function AddButton_Callback(hObject, eventdata, handles)
-% hObject    handle to AddButton (see GCBO)
+% hObject    handle to AddAll (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Path=uigetdir(handles.CurDir, 'Pick DICOM Directory');

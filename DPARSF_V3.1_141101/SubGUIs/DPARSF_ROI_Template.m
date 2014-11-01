@@ -129,7 +129,7 @@ function checkboxMultiLabel_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in pushbuttonAAL.
 function pushbuttonAAL_Callback(hObject, eventdata, handles)
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+[ProgramPath, fileN, extn] = fileparts(which('dpabi.m'));
 handles.ROIDef = {[ProgramPath,filesep,'Templates',filesep,'aal.nii']};
 handles.IsMultipleLabel = 1;
 guidata(hObject, handles);
@@ -141,7 +141,7 @@ uiresume(handles.figure1);
 
 % --- Executes on button press in pushbuttonHOA.
 function pushbuttonHOA_Callback(hObject, eventdata, handles)
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+[ProgramPath, fileN, extn] = fileparts(which('dpabi.m'));
 handles.ROIDef = {[ProgramPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];[ProgramPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii']};
 handles.IsMultipleLabel = 1;
 guidata(hObject, handles);
@@ -153,7 +153,7 @@ uiresume(handles.figure1);
 
 % --- Executes on button press in pushbuttonDos160.
 function pushbuttonDos160_Callback(hObject, eventdata, handles)
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+[ProgramPath, fileN, extn] = fileparts(which('dpabi.m'));
 load([ProgramPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
 
 ROICenter=Dosenbach_Science_160ROIs_Center;
@@ -190,7 +190,7 @@ uiresume(handles.figure1);
 
 % --- Executes on button press in pushbuttonCC200.
 function pushbuttonCC200_Callback(hObject, eventdata, handles)
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+[ProgramPath, fileN, extn] = fileparts(which('dpabi.m'));
 handles.ROIDef = {[ProgramPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii']};
 handles.IsMultipleLabel = 1;
 guidata(hObject, handles);

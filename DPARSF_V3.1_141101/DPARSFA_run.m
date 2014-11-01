@@ -949,7 +949,7 @@ end
 
 %Reorient T1 Image Interactively
 %Do not need parfor
-if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1)
+if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1) && (7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img'],'dir'))
     % First check which kind of T1 image need to be applied
     if ~exist('UseNoCoT1Image','var')
         cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{1}]);
@@ -1325,79 +1325,81 @@ if (AutoDataProcessParameter.IsBet==1)
     
     
     %%%%For structural image%%%%
-    % Check if co* image exist. Added by YAN Chao-Gan 100510.
-    if ~exist('UseNoCoT1Image','var')
-        cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{1}]);
-        DirCo=dir('c*.img');
-        if isempty(DirCo)
-            DirCo=dir('c*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
-            if length(DirCo)==1
-                gunzip(DirCo(1).name);
-                delete(DirCo(1).name);
-            end
-            DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
-        end
-        if isempty(DirCo)
-            DirImg=dir('*.img');
-            if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
-                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
-                if length(DirImg)>=1
-                    for j=1:length(DirImg)
-                        gunzip(DirImg(j).name);
-                        delete(DirImg(j).name);
-                    end
+    if (7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img'],'dir')) %YAN Chao-Gan, 141101.
+        % Check if co* image exist. Added by YAN Chao-Gan 100510.
+        if ~exist('UseNoCoT1Image','var')
+            cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{1}]);
+            DirCo=dir('c*.img');
+            if isempty(DirCo)
+                DirCo=dir('c*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                if length(DirCo)==1
+                    gunzip(DirCo(1).name);
+                    delete(DirCo(1).name);
                 end
-                DirImg=dir('*.nii');
+                DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
             end
-            if length(DirImg)==1
-                button = questdlg(['No co* T1 image (T1 image which is reoriented to the nearest orthogonal direction to ''canonical space'' and removed excess air surrounding the individual as well as parts of the neck below the cerebellum) is found. Do you want to use the T1 image without co? Such as: ',DirImg(1).name,'?'],'No co* T1 image is found','Yes','No','Yes');
-                if strcmpi(button,'Yes')
-                    UseNoCoT1Image=1;
+            if isempty(DirCo)
+                DirImg=dir('*.img');
+                if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
+                    DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                    if length(DirImg)>=1
+                        for j=1:length(DirImg)
+                            gunzip(DirImg(j).name);
+                            delete(DirImg(j).name);
+                        end
+                    end
+                    DirImg=dir('*.nii');
+                end
+                if length(DirImg)==1
+                    button = questdlg(['No co* T1 image (T1 image which is reoriented to the nearest orthogonal direction to ''canonical space'' and removed excess air surrounding the individual as well as parts of the neck below the cerebellum) is found. Do you want to use the T1 image without co? Such as: ',DirImg(1).name,'?'],'No co* T1 image is found','Yes','No','Yes');
+                    if strcmpi(button,'Yes')
+                        UseNoCoT1Image=1;
+                    else
+                        return;
+                    end
+                elseif length(DirImg)==0
+                    errordlg(['No T1 image has been found.'],'No T1 image has been found');
+                    return;
                 else
+                    errordlg(['No co* T1 image (T1 image which is reoriented to the nearest orthogonal direction to ''canonical space'' and removed excess air surrounding the individual as well as parts of the neck below the cerebellum) is found. And there are too many T1 images detected in T1Img directory. Please determine which T1 image you want to use and delete the others from the T1Img directory, then re-run the analysis.'],'No co* T1 image is found');
                     return;
                 end
-            elseif length(DirImg)==0
-                errordlg(['No T1 image has been found.'],'No T1 image has been found');
-                return;
             else
-                errordlg(['No co* T1 image (T1 image which is reoriented to the nearest orthogonal direction to ''canonical space'' and removed excess air surrounding the individual as well as parts of the neck below the cerebellum) is found. And there are too many T1 images detected in T1Img directory. Please determine which T1 image you want to use and delete the others from the T1Img directory, then re-run the analysis.'],'No co* T1 image is found');
-                return;
-            end
-        else
-            UseNoCoT1Image=0;
-        end
-    end
-
-    parfor i=1:AutoDataProcessParameter.SubjectNum
-        if UseNoCoT1Image==0
-            %Search the T1 file - first go with "c" initial
-            DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.img']);
-            if isempty(DirImg)
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii.gz']);
-            end
-            if isempty(DirImg)
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii']);
-            end
-        else
-            %Search the T1 file - then any possible file
-            DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
-            if isempty(DirImg)
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
-            end
-            if isempty(DirImg)
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+                UseNoCoT1Image=0;
             end
         end
         
-        T1File=[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgBet',filesep,AutoDataProcessParameter.SubjectID{i}]);
-        
-        OutputFile_Temp = [AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgBet',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'Bet_',DirImg(1).name];
-                
-        %eval(['!bet ',T1File,' ',OutputFile_Temp])
-        
-        y_Call_bet(T1File, OutputFile_Temp, '');
-        
+        parfor i=1:AutoDataProcessParameter.SubjectNum
+            if UseNoCoT1Image==0
+                %Search the T1 file - first go with "c" initial
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.img']);
+                if isempty(DirImg)
+                    DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii.gz']);
+                end
+                if isempty(DirImg)
+                    DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii']);
+                end
+            else
+                %Search the T1 file - then any possible file
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
+                if isempty(DirImg)
+                    DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
+                end
+                if isempty(DirImg)
+                    DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+                end
+            end
+            
+            T1File=[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
+            mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgBet',filesep,AutoDataProcessParameter.SubjectID{i}]);
+            
+            OutputFile_Temp = [AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgBet',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'Bet_',DirImg(1).name];
+            
+            %eval(['!bet ',T1File,' ',OutputFile_Temp])
+            
+            y_Call_bet(T1File, OutputFile_Temp, '');
+            
+        end
     end
     fprintf('Bet finished\n');
    

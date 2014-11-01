@@ -55,7 +55,7 @@ function dpabi_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dpabi
 
 
-Release='V1.1_140827';
+Release='V1.2_141101';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -67,17 +67,26 @@ fprintf('DPABI: a toolbox for Data Processing & Analysis of Brain Imaging.\nRele
 fprintf('Copyright(c) 2014; GNU GENERAL PUBLIC LICENSE\n');
 fprintf('The Nathan Kline Institute for Psychiatric Research, 140 Old Orangeburg Road, Orangeburg, NY 10962; Department of Child and Adolescent Psychiatry / NYU Langone Medical Center Child Study Center, New York University, New York, NY 10016; ');
 fprintf('State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China\n');
-fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
+fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgrammers: YAN Chao-Gan; WANG Xin-Di\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
 fprintf('-----------------------------------------------------------\n');
 fprintf('Citing Information:\nIf you think DPABI is useful for your work, citing it in your paper would be greatly appreciated!\n');
 
 
 [DPABILatestRelease WebStatus]=urlread('http://rfmri.org/DPABILatestRelease.txt');
 if WebStatus
-    web('http://rfmri.org/DPABI#overlay=HelpUs');
     if str2double(DPABILatestRelease(end-5:end)) > str2double(Release(end-5:end))
         uiwait(msgbox(sprintf('A new realease of DPABI is detected: %s, please update.',DPABILatestRelease)));
     end
+    
+    DPABIMessage=urlread('http://rfmri.org/DPABIMessage.txt');
+    if ~isempty(DPABIMessage)
+        uiwait(msgbox(DPABIMessage,'DPABI Message'));
+    end
+    DPABIMessageWeb=urlread('http://rfmri.org/DPABIMessageWeb.txt');
+    if ~isempty(DPABIMessageWeb)
+        web(DPABIMessageWeb);
+    end
+    
 end
 
 handles.output = hObject;
