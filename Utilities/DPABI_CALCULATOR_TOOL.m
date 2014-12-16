@@ -309,9 +309,10 @@ end
 GroupCells=handles.GroupCells;
 GroupLabel=handles.GroupLabel;
 for j=1:numel(GroupCells)
-    fprintf('%s: %s\n', GroupLabel{j}, GroupCells{j});    
+    GroupPath=fileparts(GroupCells{j}{1});
+    fprintf('%s: %s etc.\n', GroupLabel{j}, GroupPath);    
     CMD=sprintf('[%s, VoxelSize, FileList, Header] = y_ReadAll(''%s'');',...
-        GroupLabel{j}, GroupCells{j});
+        GroupLabel{j}, GroupPath);
     eval(CMD);
 end
 
@@ -346,6 +347,7 @@ else
     OutputName=fullfile(OutputDir, [Prefix, '.nii']);
     y_Write(Result, Header, OutputName);
 end
+fprintf('Finished\n');
 
 % --- Executes on button press in HelpButton.
 function HelpButton_Callback(hObject, eventdata, handles)
