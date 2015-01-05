@@ -214,8 +214,26 @@ else
         
     %YAN Chao-Gan, 140805. Add the view function for normalization QC.
     elseif strcmpi(handles.TypeFlag, 'Norm')
-        y_QC_Normalization(MainDir, {Subj}, 1, 1, 1);
-        %y_QC_Normalization(WorkingDir,SubjectID,IsCheckwT1,IsCheckwFun,IsCheckwGM)
+        %y_QC_Normalization(MainDir, {Subj}, 1, 1, 1);
+        %Modified by Sandy (BUG: Error when no Fun)
+        NewSegDir=fullfile(MainDir, 'T1ImgNewSegment');
+        OldSegDir=fullfile(MainDir, 'T1ImgSegment');
+        RealignDir=fullfile(MainDir, 'RealignParameter');
+
+        IsCheckwT1=0; IsCheckwGM=0;
+        if exist(NewSegDir, 'dir')==7 || exist(OldSegDir, 'dir')==7
+            IsCheckwT1=1; IsCheckwGM=1;
+        end
+
+        IsCheckwFun=0;
+        if exist(RealignDir, 'dir')==7
+            IsCheckwFun=1;
+        end
+
+        if ~(IsCheckwT1 || IsCheckwGM || IsCheckwFun)
+            return;
+        end
+        y_QC_Normalization(MainDir, {Subj}, IsCheckwT1, IsCheckwFun, IsCheckwGM)
     end
 end
 
