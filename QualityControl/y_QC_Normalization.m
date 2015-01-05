@@ -79,7 +79,18 @@ for i=1:length(SubjectID)
     %Xin-Di, please make a score GUI (w_QCScore_gui) at the center
     
     [QCScoreTemp, QCCommentTemp] = w_QCScore;
-    close(H1);close(H2);close(H3);close(H4);
+    if IsCheckwT1
+        close(H1);
+    end
+    
+    if IsCheckwFun
+        close(H2);
+    end
+    
+    if IsCheckwGM
+        close(H3);
+    end
+    close(H4);
 
     QCScore(i,1) = QCScoreTemp;
     QCComment{i,1} = QCCommentTemp;
