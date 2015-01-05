@@ -703,7 +703,7 @@ UnderlayHeader.Vox  = UnderlayVox;
 y_spm_orthviews('Image',UnderlayHeader);
 
 Max=length(get(handles.TemplatePopup, 'String'));
-set(handles.TemplatePopup, 'Value', Max-1);
+set(handles.TemplatePopup, 'Value', Max);
 
 function handles=NoneUnderlay(handles)
 global st
