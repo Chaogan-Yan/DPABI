@@ -39,8 +39,11 @@ addpath([ProgramPath,filesep,'Subfunctions']);
 [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
 TemplatePath=fullfile(DPABIPath, 'Templates');
 
-[SPMversion,c]=spm('Ver');
-SPMversion=str2double(SPMversion(end));
+[SPMversionText,c]=spm('Ver');
+SPMversion=str2double(SPMversionText(end-1:end));
+if isnan(SPMversion)
+    SPMversion=str2double(SPMversionText(end));
+end
 
 
 %Make compatible with missing parameters. YAN Chao-Gan, 100420.
@@ -1914,8 +1917,8 @@ if (AutoDataProcessParameter.IsSegment>=1)
         end
         fprintf('\n');
     end
-
-     T1SourceFileSet = cell(AutoDataProcessParameter.SubjectNum,1); % Save to use in the step of DARTEL normalize to MNI
+    T1SourceFileSet = cell(AutoDataProcessParameter.SubjectNum,1); % Save to use in the step of DARTEL normalize to MNI
+    
     if AutoDataProcessParameter.IsSegment==1  %Segment
         cd([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName]);
         parfor i=1:AutoDataProcessParameter.SubjectNum
@@ -1928,11 +1931,12 @@ if (AutoDataProcessParameter.IsSegment>=1)
             [SPMPath, fileN, extn] = fileparts(which('spm.m'));
             SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.tpm={[SPMPath,filesep,'tpm',filesep,'grey.nii'];[SPMPath,filesep,'tpm',filesep,'white.nii'];[SPMPath,filesep,'tpm',filesep,'csf.nii']};
             SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.data={SourceFile};
-            if strcmpi(AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation,'mni')   %Added by YAN Chao-Gan 091110. Use different Affine Regularisation in Segmentation: East Asian brains (eastern) or European brains (mni).
-                SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.regtype='mni';
-            else
-                SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.regtype='eastern';
-            end
+            SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.regtype = AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation;
+%             if strcmpi(AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation,'mni')   %Added by YAN Chao-Gan 091110. Use different Affine Regularisation in Segmentation: East Asian brains (eastern) or European brains (mni).
+%                 SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.regtype='mni';
+%             else
+%                 SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.regtype='eastern';
+%             end
             T1SourceFileSet{i} = SourceFile;%YAN Chao-Gan 121218.
             fprintf(['Segment Setup:',AutoDataProcessParameter.SubjectID{i},' OK']);
 
@@ -1944,6 +1948,16 @@ if (AutoDataProcessParameter.IsSegment>=1)
             end
 
             fprintf('\n');
+
+            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+                oldseg = SPMJOB.matlabbatch{1,1}.spm.spatial.preproc;
+                if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
+                    oldseg.opts.tpm={[SPMPath,filesep,'toolbox',filesep,'OldSeg',filesep,'grey.nii'];[SPMPath,filesep,'toolbox',filesep,'OldSeg',filesep,'white.nii'];[SPMPath,filesep,'toolbox',filesep,'OldSeg',filesep,'csf.nii']};
+                end
+                SPMJOB=[];
+                SPMJOB.matlabbatch{1,1}.spm.tools.oldseg = oldseg;
+            end
+            
             spm_jobman('run',SPMJOB.matlabbatch);
             
         end
@@ -1959,11 +1973,13 @@ if (AutoDataProcessParameter.IsSegment>=1)
                 SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.tissue(1,T1ImgSegmentDirectoryNameue).tpm{1,1}=[SPMPath,filesep,'toolbox',filesep,'Seg',filesep,'TPM.nii',',',num2str(T1ImgSegmentDirectoryNameue)];
                 SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.tissue(1,T1ImgSegmentDirectoryNameue).warped = [0 0]; % Do not need warped results. Warp by DARTEL
             end
-            if strcmpi(AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation,'mni')   %Added by YAN Chao-Gan 091110. Use different Affine Regularisation in Segmentation: East Asian brains (eastern) or European brains (mni).
-                SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.warp.affreg='mni';
-            else
-                SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.warp.affreg='eastern';
-            end
+            
+            SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.warp.affreg = AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation;
+%             if strcmpi(AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation,'mni')   %Added by YAN Chao-Gan 091110. Use different Affine Regularisation in Segmentation: East Asian brains (eastern) or European brains (mni).
+%                 SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.warp.affreg='mni';
+%             else
+%                 SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.warp.affreg='eastern';
+%             end
 
             SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
             if isempty(SourceDir)  %YAN Chao-Gan, 111114. Also support .nii files.
@@ -1974,6 +1990,26 @@ if (AutoDataProcessParameter.IsSegment>=1)
             SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.channel.vols={SourceFile};
             T1SourceFileSet{i} = SourceFile;
             fprintf(['Segment Setup:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
+            
+            
+            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, New Segment (in SPM8) has turned to normal Segment.
+                preproc = SPMJOB.matlabbatch{1,1}.spm.tools.preproc8;
+                %Set the TPMs
+                for T1ImgSegmentDirectoryNameue=1:6
+                    preproc.tissue(1,T1ImgSegmentDirectoryNameue).tpm{1,1}=[SPMPath,filesep,'tpm',filesep,'TPM.nii',',',num2str(T1ImgSegmentDirectoryNameue)];
+                    preproc.tissue(1,T1ImgSegmentDirectoryNameue).warped = [0 0]; % Do not need warped results. Warp by DARTEL
+                end
+                
+                %Set the new parameters in SPM12 to default
+                preproc.warp.mrf = 1;
+                preproc.warp.cleanup = 1;
+                preproc.warp.reg = [0 0.001 0.5 0.05 0.2];
+                preproc.warp.fwhm = 0;
+                SPMJOB=[];
+                SPMJOB.matlabbatch{1,1}.spm.spatial.preproc = preproc;
+            end
+            
+            
             spm_jobman('run',SPMJOB.matlabbatch);
         end
         
@@ -2661,7 +2697,22 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
                 SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T2.nii,1']};
             end
             
+            %YAN Chao-Gan, 150515.
+            if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 3)  %Special Mode: Rat
+                SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'rat97t2w_96x96x30.v6.nii,1']};
+            end
+            
             fprintf(['Normalize:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
+            
+            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+                oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
+                if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
+                    oldnorm.estwrite.eoptions.template={[SPMPath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']};
+                end
+                SPMJOB=[];
+                SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
+            end
+            
             spm_jobman('run',SPMJOB.matlabbatch);
             
         end
@@ -2679,6 +2730,12 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
             fprintf(['Normalize-Write:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
             
+            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+                oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
+                SPMJOB=[];
+                SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
+            end
+
             spm_jobman('run',SPMJOB.matlabbatch);
             
         end
@@ -2703,6 +2760,56 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             spm_jobman('run',SPMJOB.matlabbatch);
             fprintf(['Normalization by using DARTEL:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
         end
+        
+        
+        if (AutoDataProcessParameter.IsNormalize==4) %Normalization by using the T1 image templates: Normalize T1 image to T1 template, and then apply to functional images. For Rat SpecialMode 3.
+            
+            SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Normalize.mat']);
+
+            DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
+            if isempty(DirT1ImgCoreg)  %YAN Chao-Gan, 111114. Also support .nii files.
+                DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
+                if length(DirT1ImgCoreg)==1
+                    gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                    delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                end
+                DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+            end
+            Source = [AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1ImgCoreg(1).name];
+
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).source={Source};
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=[FileList;{Source}];
+            
+            [SPMPath, fileN, extn] = fileparts(which('spm.m'));
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMPath,filesep,'templates',filesep,'T1.nii,1']};
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.bb=AutoDataProcessParameter.Normalize.BoundingBox;
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
+            
+            %YAN Chao-Gan, 140815.
+            if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 2)  %Special Mode: Monkey
+                SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii,1']};
+            end
+            
+            %YAN Chao-Gan, 150515.
+            if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 3)  %Special Mode: Rat
+                SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'ratT1Template_YCG.nii,1']};
+            end
+            
+            fprintf(['Normalize:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
+            
+            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+                oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
+                if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
+                    oldnorm.estwrite.eoptions.template={[SPMPath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']};
+                end
+                SPMJOB=[];
+                SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
+            end
+            
+            spm_jobman('run',SPMJOB.matlabbatch);
+            
+        end
+        
     end
     
     %Copy the Normalized files to DataProcessDir\{AutoDataProcessParameter.StartingDirName}+W
@@ -2742,6 +2849,10 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
     %YAN Chao-Gan, 140815.
     if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 2)  %Special Mode: Monkey
         Ch2Filename=[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii'];
+    end
+    %YAN Chao-Gan, 150515.
+    if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 3)  %Special Mode: Rat
+        Ch2Filename=[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'rat97t2w_96x96x30.v6.nii'];
     end
     
     for i=1:AutoDataProcessParameter.SubjectNum
@@ -3967,7 +4078,7 @@ if AutoDataProcessParameter.IsNormalizeToSymmetricGroupT1Mean==1
         end
         
         
-        SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Normalize_SPM8.mat']);
+        SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Normalize.mat']);
 
         SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).source=SubwT1File(i);
         SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=FileList;
@@ -3981,13 +4092,24 @@ if AutoDataProcessParameter.IsNormalizeToSymmetricGroupT1Mean==1
         
         SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.prefix = 'sym_';
         
-        
+        if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+            oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
+            SPMJOB=[];
+            SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
+        end
+
         spm_jobman('run',SPMJOB.matlabbatch);
         
                 
         %Also normalize T1 image to symmetric template
-        SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=SubwT1File(i);
-        SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.vox=T1VoxSize;
+        if SPMversion==8
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=SubwT1File(i);
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.vox=T1VoxSize;
+        elseif SPMversion==12
+            SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm.estwrite.subj(1,1).resample=SubwT1File(i);
+            SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm.estwrite.roptions.vox=T1VoxSize;
+        end
+        
         spm_jobman('run',SPMJOB.matlabbatch);
         
         fprintf(['Normalize to symmetric group T1 mean Template:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
@@ -4127,6 +4249,16 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
                 SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T2.nii,1']};
             end
             
+            
+            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+                oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
+                if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
+                    oldnorm.estwrite.eoptions.template={[SPMPath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']};
+                end
+                SPMJOB=[];
+                SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
+            end
+            
             spm_jobman('run',SPMJOB.matlabbatch);
         end
         
@@ -4141,6 +4273,12 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.subj(1,1).resample=FileList;
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.bb=AutoDataProcessParameter.Normalize.BoundingBox;
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
+            
+            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+                oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
+                SPMJOB=[];
+                SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
+            end
             
             spm_jobman('run',SPMJOB.matlabbatch);
             
@@ -4165,6 +4303,53 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
 
             spm_jobman('run',SPMJOB.matlabbatch);
         end
+        
+        
+        if (AutoDataProcessParameter.IsNormalize==4) %Normalization by using the T1 image templates: Normalize T1 image to T1 template, and then apply to functional images. For Rat SpecialMode 3.
+            
+            SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Normalize.mat']);
+            
+            DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
+            if isempty(DirT1ImgCoreg)  %YAN Chao-Gan, 111114. Also support .nii files.
+                DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
+                if length(DirT1ImgCoreg)==1
+                    gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                    delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                end
+                DirT1ImgCoreg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+            end
+            Source = [AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1ImgCoreg(1).name];
+            
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).source={Source};
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=[FileList;{Source}];
+            
+            [SPMPath, fileN, extn] = fileparts(which('spm.m'));
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMPath,filesep,'templates',filesep,'T1.nii,1']};
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.bb=AutoDataProcessParameter.Normalize.BoundingBox;
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
+            
+            %YAN Chao-Gan, 140815.
+            if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 2)  %Special Mode: Monkey
+                SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii,1']};
+            end
+            
+            %YAN Chao-Gan, 150515.
+            if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 3)  %Special Mode: Rat
+                SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'ratT1Template_YCG.nii,1']};
+            end
+             
+            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+                oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
+                if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
+                    oldnorm.estwrite.eoptions.template={[SPMPath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']};
+                end
+                SPMJOB=[];
+                SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
+            end
+            
+            spm_jobman('run',SPMJOB.matlabbatch);
+        end
+
     end
     
 
@@ -4184,13 +4369,17 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
     %Revised to use y_Call_spm_orthviews on 140331.
     mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
     cd([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
-    
+
     Ch2Filename=fullfile(TemplatePath,'ch2.nii');
     %YAN Chao-Gan, 140815.
     if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 2)  %Special Mode: Monkey
         Ch2Filename=[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii'];
     end
-    
+    %YAN Chao-Gan, 150515.
+    if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 3)  %Special Mode: Rat
+        Ch2Filename=[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'rat97t2w_96x96x30.v6.nii'];
+    end
+
     for i=1:AutoDataProcessParameter.SubjectNum
         
         % Set the normalized mean functional image instead of the first normalized volume to get pictures % YAN Chao-Gan, 120826

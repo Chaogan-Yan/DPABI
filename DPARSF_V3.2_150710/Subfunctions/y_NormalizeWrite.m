@@ -9,8 +9,8 @@ function y_NormalizeWrite(SourceFile,OutFile,RefFile,ParameterFile,Interp)
 % Written by YAN Chao-Gan 101010 for DPARSF.
 % State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China, 100875
 % ycg.yan@gmail.com
-% Last revised by YAN Chao-Gan, 120203. Check if the dimension appropriate. If not (in the case that the RefFile has rotation), then reslice to the same dimension.
-
+% Revised by YAN Chao-Gan, 120203. Check if the dimension appropriate. If not (in the case that the RefFile has rotation), then reslice to the same dimension.
+% Revised by YAN Chao-Gan, 150706. SPM12 compatible.
 
 if nargin<=4
     Interp=1;
@@ -26,27 +26,30 @@ Head.pinfo = [1;0;0];
 y_Write(Data,Head,OutFile);
 
 [ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
-[SPMversion,c]=spm('Ver');
-SPMversion=str2double(SPMversion(end));
-
-load([ProgramPath,filesep,'Jobmats',filesep,'Normalize_Write.mat']);
-[mn, mx, voxsize]= y_GetBoundingBox(RefFile);
-i=1;
-jobs{1,i}.spatial{1,1}.normalise{1,1}.write.subj.matname={ParameterFile};
-jobs{1,i}.spatial{1,1}.normalise{1,1}.write.subj.resample={OutFile}; %jobs{1,i}.spatial{1,1}.normalise{1,1}.write.subj.resample={TempFileName};
-jobs{1,i}.spatial{1,1}.normalise{1,1}.write.roptions.bb=[mn;mx];
-jobs{1,i}.spatial{1,1}.normalise{1,1}.write.roptions.vox=voxsize;
-jobs{1,i}.spatial{1,1}.normalise{1,1}.write.roptions.interp=Interp;
-
-if SPMversion==5
-    spm_jobman('run',jobs);
-elseif SPMversion==8  %YAN Chao-Gan, 090925. SPM8 compatible.
-    jobs = spm_jobman('spm5tospm8',{jobs});
-    spm_jobman('run',jobs{1});
-else
-    uiwait(msgbox('The current SPM version is not supported by DPARSF. Please install SPM5 or SPM8 first.','Invalid SPM Version.'));
-    return
+[SPMversionText,c]=spm('Ver');
+SPMversion=str2double(SPMversionText(end-1:end));
+if isnan(SPMversion)
+    SPMversion=str2double(SPMversionText(end));
 end
+
+SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Normalize_Write.mat']);
+%load([ProgramPath,filesep,'Jobmats',filesep,'Normalize_Write.mat']);
+[mn, mx, voxsize]= y_GetBoundingBox(RefFile);
+
+SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.subj(1,1).matname={ParameterFile};
+SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.subj(1,1).resample={OutFile}; 
+SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.bb=[mn;mx];
+SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.vox=voxsize;
+SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.interp=Interp;
+
+if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+    oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
+    SPMJOB=[];
+    SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
+end
+
+spm_jobman('run',SPMJOB.matlabbatch);
+
 
 % Check if the dimension appropriate. If not (in the case that the RefFile has rotation), then reslice to the same dimension.
 % YAN Chao-Gan, 120203.

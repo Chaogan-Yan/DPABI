@@ -309,9 +309,12 @@ end
 GroupCells=handles.GroupCells;
 GroupLabel=handles.GroupLabel;
 for j=1:numel(GroupCells)
-    fprintf('%s: %s\n', GroupLabel{j}, GroupCells{j});    
-    CMD=sprintf('[%s, VoxelSize, FileList, Header] = y_ReadAll(''%s'');',...
-        GroupLabel{j}, GroupCells{j});
+    %YAN Chao-Gan, 150518
+    for k=1:numel(GroupCells{j})
+        fprintf('%s: %s\n', GroupLabel{j}, GroupCells{j}{k});
+    end
+    CMD=sprintf('[%s, VoxelSize, FileList, Header] = y_ReadAll(%s);',...
+        GroupLabel{j}, 'GroupCells{j}');
     eval(CMD);
 end
 
@@ -341,10 +344,17 @@ if ndims(Result)==2
     OutputName=fullfile(OutputDir, [Prefix, '.txt']);
     save(OutputName, 'Result',...
         '-ASCII', '-DOUBLE', '-TABS');
-
 else
-    OutputName=fullfile(OutputDir, [Prefix, '.nii']);
-    y_Write(Result, Header, OutputName);
+    if ~isempty(GroupCells) && ~isempty(GroupCells{1}) && (size(Result,4) == numel(GroupCells{1})) %YAN Chao-Gan, 150518
+        for k=1:numel(GroupCells{1})
+            [Path, fileN, extn] = fileparts(GroupCells{1}{k});
+            OutputName=fullfile(OutputDir, [Prefix, fileN, '.nii']);
+            y_Write(Result(:,:,:,k), Header, OutputName);
+        end
+    else
+        OutputName=fullfile(OutputDir, [Prefix, '.nii']);
+        y_Write(Result, Header, OutputName);
+    end
 end
 
 % --- Executes on button press in HelpButton.

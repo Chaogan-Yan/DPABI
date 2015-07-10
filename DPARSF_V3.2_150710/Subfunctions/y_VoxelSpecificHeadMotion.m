@@ -76,7 +76,7 @@ for t=1:nTimePoint
     
     M_RigidBodyTransform=MT*M1*M2*M3;
     
-    Disp = y_gmdmp(inv(M_RigidBodyTransform)*Head0.mat, 2, D, 1) - gmdmp(Head0.mat, 2, D, 1);
+    Disp = y_gmdmp(inv(M_RigidBodyTransform)*Head0.mat, 2, D, 1) - y_gmdmp(Head0.mat, 2, D, 1);
     %gmdmp.m is a program for General Multi Dimensional Matrix Product written by Wynton Moore
     
     HMvox_X(:,:,:,t) = squeeze(Disp(1,:,:,:));

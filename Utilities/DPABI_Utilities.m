@@ -22,7 +22,7 @@ function varargout = DPABI_Utilities(varargin)
 
 % Edit the above text to modify the response to help DPABI_Utilities
 
-% Last Modified by GUIDE v2.5 01-Nov-2014 14:54:29
+% Last Modified by GUIDE v2.5 15-May-2015 18:19:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -112,6 +112,12 @@ function pushbuttonT1Defacer_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 DPABI_T1ImgDefacer
 
+% --- Executes on button press in pushbuttonVoxelAugmentor.
+function pushbuttonVoxelAugmentor_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonVoxelAugmentor (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABI_VoxelAugmentor
 
 % --- Executes on button press in pushbuttonROISignalExtractor.
 function pushbuttonROISignalExtractor_Callback(hObject, eventdata, handles)
@@ -126,3 +132,6 @@ function pushbuttonICC_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 DPABI_ICC_TOOL
+
+
+

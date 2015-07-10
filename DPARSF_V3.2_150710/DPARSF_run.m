@@ -90,6 +90,24 @@ Cfg.IsExtractROISignals = CfgBasic.IsExtractROISignals;
 Cfg.CalFC.IsMultipleLabel = CfgBasic.CalFC.IsMultipleLabel;
 Cfg.CalFC.ROIDef=CfgBasic.CalFC.ROIDef;
 
+
+%Turn off Reorient, AutoMask, Bet if without Normalize process %YAN Chao-Gan, 150706
+if Cfg.IsNormalize==0
+    Cfg.IsNeedT1CoregisterToFun=0;
+    Cfg.IsSegment=0;
+    Cfg.IsDARTEL=0;
+    
+    Cfg.IsNeedReorientFunImgInteractively=0; 
+    Cfg.IsNeedReorientT1ImgInteractively=0; 
+    Cfg.IsBet=0; 
+    Cfg.IsAutoMask=0;  
+end
+
+%Turn off VMHC
+Cfg.IsNormalizeToSymmetricGroupT1Mean=0; %YAN Chao-Gan, 150706
+Cfg.IsCalVMHC=0;
+
+
 Cfg.StartingDirName=CfgBasic.StartingDirName;
 
 [Error] = DPARSFA_run(Cfg);

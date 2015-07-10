@@ -18,8 +18,11 @@ function y_WarpBackByDARTEL(SourceFile,OutFile,RefFile,DARTELTemplateFilename,DA
 
 
 [ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
-[SPMversion,c]=spm('Ver');
-SPMversion=str2double(SPMversion(end));
+[SPMversionText,c]=spm('Ver');
+SPMversion=str2double(SPMversionText(end-1:end));
+if isnan(SPMversion)
+    SPMversion=str2double(SPMversionText(end));
+end
 
 
 for iFile=1:length(SourceFile)
@@ -40,16 +43,24 @@ end
 
 
 % Warp to the original T1 space second
-SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Deformation_Blank.mat']);
+if SPMversion==8
+    SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Deformation_Blank.mat']);
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.ofname=''; % ouput name for y_*.nii
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.fnames=OutFile; %fnames could be n*1 cell
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.interp=Interp;
+    %SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.times = [1,0]; % Backward.  If want forward, then put [0,1];
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.times = [0,1]; % Forward.  If want backward, then put [1,0];
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.flowfield{1,1}=FlowFieldFilename;
+elseif SPMversion==12
+    SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Deformation_Blank_SPM12.mat']);
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.out{1,1}.pull.fnames=OutFile; %fnames could be n*1 cell
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.out{1,1}.pull.interp=Interp;
+    %SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.times = [1,0]; % Backward.  If want forward, then put [0,1];
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.times = [0,1]; % Forward.  If want backward, then put [1,0];
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.flowfield=[];
+    SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.flowfield{1,1}=FlowFieldFilename;
+end
 
-SPMJOB.matlabbatch{1,1}.spm.util.defs.ofname=''; % ouput name for y_*.nii
-SPMJOB.matlabbatch{1,1}.spm.util.defs.fnames=OutFile; %fnames could be n*1 cell
-
-SPMJOB.matlabbatch{1,1}.spm.util.defs.interp=Interp;
-%SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.times = [1,0]; % Backward.  If want forward, then put [0,1];
-SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.times = [0,1]; % Forward.  If want backward, then put [1,0];
-
-SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.flowfield{1,1}=FlowFieldFilename;
 
 [OutPathTemp] = fileparts(OutFile{1});
 if isempty(OutPathTemp)

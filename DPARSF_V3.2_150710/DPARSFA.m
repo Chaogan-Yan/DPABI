@@ -34,7 +34,7 @@ end
 
 % --- Executes just before DPARSFA is made visible.
 function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V3.1_141101';
+    Release='V3.2_150710';
     handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
     
     if ispc
@@ -46,7 +46,8 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     fprintf('Welcome: %s, %.4d-%.2d-%.2d %.2d:%.2d \n', UserName,Datetime(1),Datetime(2),Datetime(3),Datetime(4),Datetime(5));
     fprintf('Data Processing Assistant for Resting-State fMRI (DPARSF) Advanced Edition (alias: DPARSFA). \nRelease = %s\n',Release);
     fprintf('Copyright(c) 2009; GNU GENERAL PUBLIC LICENSE\n');
-    fprintf('The Nathan Kline Institute for Psychiatric Research, 140 Old Orangeburg Road, Orangeburg, NY 10962; Child Mind Institute, 445 Park Avenue, New York, NY 10022; The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016\n');
+    fprintf('Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; ');
+    fprintf('The Nathan Kline Institute for Psychiatric Research, 140 Old Orangeburg Road, Orangeburg, NY 10962; Child Mind Institute, 445 Park Avenue, New York, NY 10022; The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016');
     fprintf('State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China\n');
     fprintf('Mail to Author:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\n<a href="http://rfmri.org/DPARSF">http://rfmri.org/DPARSF</a>\n');
     fprintf('-----------------------------------------------------------\n');
@@ -280,8 +281,11 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     if ~exist('spm.m')
         uiwait(msgbox('DPARSFA is based on SPM and Matlab, Please install Matlab 7.3 and SPM8 or later version at first.','DPARSFA'));
     else
-        [SPMversion,c]=spm('Ver');
-        SPMversion=str2double(SPMversion(end));
+        [SPMversionText,c]=spm('Ver');
+        SPMversion=str2double(SPMversionText(end-1:end));
+        if isnan(SPMversion)
+            SPMversion=str2double(SPMversionText(end));
+        end
         FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
         if (SPMversion<8)||(FullMatlabVersion(1)*1000+FullMatlabVersion(2)<7*1000+3)
             uiwait(msgbox('DPARSFA is based on SPM and Matlab, Please install Matlab 7.3 and SPM8 or later version at first.','DPARSFA'));
@@ -2109,6 +2113,28 @@ function UpdateDisplay(handles)
         set(handles.checkboxNewSegment_DARTEL,'Visible', 'off');
         set(handles.radiobuttonEuropean,'Visible', 'off');
         set(handles.radiobuttonEastAsian,'Value',1,'string','Average');
+        
+        set(handles.checkboxSmoothByDARTEL,'Visible', 'off');
+    end
+    
+    %150515
+    if isfield(handles.Cfg,'SpecialMode') && (handles.Cfg.SpecialMode == 3)  %Special Mode: Rat
+        set(handles.checkboxSegment,'Visible', 'off');
+        set(handles.checkboxNewSegment_DARTEL,'Visible', 'off');
+        set(handles.textAffineRegularisation,'Visible','off');
+        set(handles.radiobuttonEuropean,'Visible', 'off');
+        set(handles.radiobuttonEastAsian,'Visible','off');
+        
+        set(handles.checkboxCovremoveAfterRealign,'Enable','off');
+
+        set(handles.radiobuttonNormalize_DARTEL,'Visible', 'off');
+        set(handles.radiobuttonNormalize_T1,'string', 'Normalize by using T1 image templates');
+        if handles.Cfg.IsNormalize>1
+            handles.Cfg.IsNormalize = 4;
+            set(handles.radiobuttonNormalize_T1,'Enable', 'on', 'Value',1);
+        end
+
+        set(handles.checkboxSmoothByDARTEL,'Visible', 'off');
     end
     
     drawnow;

@@ -30,6 +30,7 @@ function varargout = DPARSF(varargin)
 % Modified by YAN Chao-Gan, 130615. DPARSF V2.3.
 % Modified by YAN Chao-Gan, 140814. DPARSF V3.0.
 % Modified by YAN Chao-Gan, 141101. DPARSF V3.1.
+% Modified by YAN Chao-Gan, 150710. DPARSF V3.2.
 
 
 % Begin initialization code - DO NOT EDIT
@@ -54,7 +55,7 @@ end
 
 % --- Executes just before DPARSF is made visible.
 function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V3.1_141101';
+    Release='V3.2_150710';
     
     [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
     addpath([ProgramPath,filesep,'SubGUIs']);
@@ -76,7 +77,8 @@ function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
     fprintf('Welcome: %s, %.4d-%.2d-%.2d %.2d:%.2d \n', UserName,Datetime(1),Datetime(2),Datetime(3),Datetime(4),Datetime(5));
     fprintf('Data Processing Assistant for Resting-State fMRI (DPARSF) Basic Edition. \nRelease = %s\n',Release);
     fprintf('Copyright(c) 2009; GNU GENERAL PUBLIC LICENSE\n');
-    fprintf('The Nathan Kline Institute for Psychiatric Research, 140 Old Orangeburg Road, Orangeburg, NY 10962; Child Mind Institute, 445 Park Avenue, New York, NY 10022; The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016\n');
+    fprintf('Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; ');
+    fprintf('The Nathan Kline Institute for Psychiatric Research, 140 Old Orangeburg Road, Orangeburg, NY 10962; Child Mind Institute, 445 Park Avenue, New York, NY 10022; The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016');
     fprintf('State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China\n');
     fprintf('Mail to Author:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\n<a href="http://rfmri.org/DPARSF">http://rfmri.org/DPARSF</a>\n');
     fprintf('-----------------------------------------------------------\n');
@@ -201,8 +203,11 @@ function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
     if ~exist('spm.m')
         uiwait(msgbox('DPARSF is based on SPM and Matlab, Please install Matlab 7.3 and SPM8 or later version at first.','DPARSF'));
     else
-        [SPMversion,c]=spm('Ver');
-        SPMversion=str2double(SPMversion(end));
+        [SPMversionText,c]=spm('Ver');
+        SPMversion=str2double(SPMversionText(end-1:end));
+        if isnan(SPMversion)
+            SPMversion=str2double(SPMversionText(end));
+        end
         FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
         if (SPMversion<8)||(FullMatlabVersion(1)*1000+FullMatlabVersion(2)<7*1000+3)
             uiwait(msgbox('DPARSF is based on SPM and Matlab, Please install Matlab 7.3 and SPM8 or later version at first.','DPARSF'));
