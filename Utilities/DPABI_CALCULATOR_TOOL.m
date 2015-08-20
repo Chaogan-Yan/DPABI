@@ -402,7 +402,7 @@ function Volume3D=w_STD(Volume4D)
 if ndims(Volume4D)==3
     Volume3D=zeros(size(Volume4D));
 elseif ndims(Volume4D)==4
-    Volume3D=std(Volume4D, 4);
+    Volume3D=std(Volume4D,0,4); %YAN Chao-Gan, 20150815 Fixed a bug. %Volume3D=std(Volume4D, 4);
 end
 
 function Volume4D=w_REPMAT(Volume3D, T)

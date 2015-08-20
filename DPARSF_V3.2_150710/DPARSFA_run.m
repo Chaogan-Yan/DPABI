@@ -2163,14 +2163,39 @@ if ((AutoDataProcessParameter.IsCovremove==1) && (strcmpi(AutoDataProcessParamet
 %                 OutHead.pinfo = [1;0;0]; OutHead.dt    =[2,0];
 %                 y_Write(OutVolume>GMThrd,OutHead,[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_ThrdMask_',AutoDataProcessParameter.SubjectID{i},'_GM.nii']);
 %                 
-                DirImg=dir('c2*');
+
+
+                DirImg=dir('c2*.img');
+                if isempty(DirImg)
+                    DirImg=dir('c2*.nii.gz');
+                    if length(DirImg)==1
+                        gunzip(DirImg(1).name);
+                        delete(DirImg(1).name);
+                    end
+                    DirImg=dir('c2*.nii');
+                end
+
+                %DirImg=dir('c2*'); %YAN Chao-Gan, 150820. Fixed the "File too small" error when .hdr/.img files are used.
+                
                 [OutVolume OutHead] = y_Reslice([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name],[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_',AutoDataProcessParameter.SubjectID{i},'_WM.nii'],RefVox,1, RefFile);
                 OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
                 y_Write(OutVolume,OutHead,[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_',AutoDataProcessParameter.SubjectID{i},'_WM.nii']);
                 OutHead.pinfo = [1;0;0]; OutHead.dt    =[2,0];
                 y_Write(OutVolume>AutoDataProcessParameter.Covremove.WM.MaskThreshold,OutHead,[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_ThrdMask_',AutoDataProcessParameter.SubjectID{i},'_WM.nii']);
                 
-                DirImg=dir('c3*');
+                
+                DirImg=dir('c3*.img');
+                if isempty(DirImg)
+                    DirImg=dir('c3*.nii.gz');
+                    if length(DirImg)==1
+                        gunzip(DirImg(1).name);
+                        delete(DirImg(1).name);
+                    end
+                    DirImg=dir('c3*.nii');
+                end
+                
+                %DirImg=dir('c3*'); %YAN Chao-Gan, 150820. Fixed the "File too small" error when .hdr/.img files are used.
+                
                 [OutVolume OutHead] = y_Reslice([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name],[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_',AutoDataProcessParameter.SubjectID{i},'_CSF.nii'],RefVox,1, RefFile);
                 OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
                 y_Write(OutVolume,OutHead,[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_',AutoDataProcessParameter.SubjectID{i},'_CSF.nii']);
@@ -3083,14 +3108,36 @@ if ((AutoDataProcessParameter.IsCovremove==1) && (strcmpi(AutoDataProcessParamet
 %                 OutHead.pinfo = [1;0;0]; OutHead.dt    =[2,0];
 %                 y_Write(OutVolume>GMThrd,OutHead,[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',AutoDataProcessParameter.SubjectID{i},'_GM.nii']);
 %                 
-                DirImg=dir('wc2*');
+                DirImg=dir('wc2*.img');
+                if isempty(DirImg)
+                    DirImg=dir('wc2*.nii.gz');
+                    if length(DirImg)==1
+                        gunzip(DirImg(1).name);
+                        delete(DirImg(1).name);
+                    end
+                    DirImg=dir('wc2*.nii');
+                end
+
+                %DirImg=dir('wc2*'); %YAN Chao-Gan, 150820. Fixed the "File too small" error when .hdr/.img files are used.
+
                 [OutVolume OutHead] = y_Reslice([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name],[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',AutoDataProcessParameter.SubjectID{i},'_WM.nii'],RefVox,1, RefFile);
                 OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
                 y_Write(OutVolume,OutHead,[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',AutoDataProcessParameter.SubjectID{i},'_WM.nii']);
                 OutHead.pinfo = [1;0;0]; OutHead.dt    =[2,0];
                 y_Write(OutVolume>AutoDataProcessParameter.Covremove.WM.MaskThreshold,OutHead,[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',AutoDataProcessParameter.SubjectID{i},'_WM.nii']);
                 
-                DirImg=dir('wc3*');
+                DirImg=dir('wc3*.img');
+                if isempty(DirImg)
+                    DirImg=dir('wc3*.nii.gz');
+                    if length(DirImg)==1
+                        gunzip(DirImg(1).name);
+                        delete(DirImg(1).name);
+                    end
+                    DirImg=dir('wc3*.nii');
+                end
+                
+                %DirImg=dir('wc3*'); %YAN Chao-Gan, 150820. Fixed the "File too small" error when .hdr/.img files are used.
+
                 [OutVolume OutHead] = y_Reslice([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name],[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',AutoDataProcessParameter.SubjectID{i},'_CSF.nii'],RefVox,1, RefFile);
                 OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
                 y_Write(OutVolume,OutHead,[AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',AutoDataProcessParameter.SubjectID{i},'_CSF.nii']);

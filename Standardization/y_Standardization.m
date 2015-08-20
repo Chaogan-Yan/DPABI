@@ -70,8 +70,9 @@ for i=1:numel(ImgCells)
     if iscell(ImgFiles)
         OutputFileNames = [OutputFileNames;ImgFiles];
     else
-        OutputFileNames = [OutputFileNames;{ImgFiles}];
-        OutputFileNames{end,2} = size(AllVolume,2);
+        %OutputFileNames = [OutputFileNames;{ImgFiles}];
+        %OutputFileNames{end,2} = size(AllVolume,2);
+        OutputFileNames = [OutputFileNames;{ImgFiles}, size(AllVolume,2)]; %Thanks to the Report by Andrew Owenson
     end
 end
 
