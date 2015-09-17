@@ -38,7 +38,7 @@ else
     VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));
 end
 
-if ~isnumeric(CovVolume)
+if exist('CovVolume','var') && (~isnumeric(CovVolume))
     [CovVolume] = y_ReadAll(DependentVolume);
     fprintf('\n\tImage Files as covariates:\n');
     for itheImgFileList=1:length(theImgFileList)

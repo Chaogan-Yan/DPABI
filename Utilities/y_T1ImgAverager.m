@@ -39,11 +39,11 @@ if ~isfield(AutoDataProcessParameter,'DataProcessDir')
 end
 
 if ~isfield(AutoDataProcessParameter,'IsNeedConvertT1DCM2IMG')
-    AutoDataProcessParameter.IsNeedConvertT1DCM2IMG=0; 
+    AutoDataProcessParameter.IsNeedConvertT1DCM2IMG=0;
 end
 
 if ~isfield(AutoDataProcessParameter,'IsCalMeanT1Image')
-    AutoDataProcessParameter.IsCalMeanT1Image=0; 
+    AutoDataProcessParameter.IsCalMeanT1Image=0;
 end
 
 
@@ -51,7 +51,7 @@ end
 %Convert T1 DICOM files to NIFTI images
 if (AutoDataProcessParameter.IsNeedConvertT1DCM2IMG==1)
     cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Raw_MultiRun']);
-    for i=1:AutoDataProcessParameter.SubjectNum
+    parfor i=1:AutoDataProcessParameter.SubjectNum
         cd (AutoDataProcessParameter.SubjectID{i})
         DirRuns=dir;
         
@@ -105,7 +105,7 @@ if (AutoDataProcessParameter.IsCalMeanT1Image==1)
         end
         
         cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirRuns(StartIndex).name]);
-                
+        
         DirCo=dir('c*.img');
         if isempty(DirCo)
             DirCo=dir('c*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
@@ -147,7 +147,7 @@ if (AutoDataProcessParameter.IsCalMeanT1Image==1)
         cd('..');
     end
     
-
+    
     
     parfor i=1:AutoDataProcessParameter.SubjectNum
         cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{i}]);
@@ -159,7 +159,7 @@ if (AutoDataProcessParameter.IsCalMeanT1Image==1)
             StartIndex=3;
         end
         
-
+        
         if UseNoCoT1Image==0
             DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirRuns(StartIndex).name,filesep,'c*.img']);
             if isempty(DirT1Img)
@@ -184,8 +184,8 @@ if (AutoDataProcessParameter.IsCalMeanT1Image==1)
         
         RefDir = DirT1Img;
         RefFile=[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirRuns(StartIndex).name,filesep,DirT1Img(1).name];
-
-
+        
+        
         for iRun=StartIndex+1:length(DirRuns)
             
             if UseNoCoT1Image==0
@@ -214,40 +214,40 @@ if (AutoDataProcessParameter.IsCalMeanT1Image==1)
             
             
             SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Coregister_Estimate_Reslice.mat']);
-
+            
             SPMJOB.matlabbatch{1,1}.spm.spatial.coreg.estwrite.ref={RefFile};
             SPMJOB.matlabbatch{1,1}.spm.spatial.coreg.estwrite.source={SourceFile};
             fprintf(['Coregister Setup:',AutoDataProcessParameter.SubjectID{i},', Run- ',num2str(iRun),' OK']);
             
             fprintf('\n');
             spm_jobman('run',SPMJOB.matlabbatch);
-            
-
-            %Calculate the mean
-            fprintf('\nCalculate the mean T1 mean brain for "%s".\n',AutoDataProcessParameter.SubjectID{i});
-            cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{i}]);
-            
-            [Data, Header] = y_Read(RefFile);
-            DataSum = Data;
-            nT1 = 1;
-
-            for iRun=StartIndex+1:length(DirRuns)
-                SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirRuns(iRun).name,filesep,'r*.nii']);
-                SourceFile=[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirRuns(iRun).name,filesep,SourceDir(1).name];
-                
-                [Data, Header] = y_Read(SourceFile);
-                DataSum = DataSum + Data;
-                nT1 = nT1 + 1;
-            end
-            Data=DataSum/nT1;
-            
-            Header.pinfo = [1;0;0];
-            Header.dt = [16,0];
-
-            mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}]);
-            y_Write(Data,Header,[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean',RefDir(1).name]);
-            fprintf('\nMean T1 brain for "%s" saved as: %s\n',AutoDataProcessParameter.SubjectID{i}, [AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean',RefDir(1).name]);
         end
+        
+        %Calculate the mean
+        fprintf('\nCalculate the mean T1 mean brain for "%s".\n',AutoDataProcessParameter.SubjectID{i});
+        cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{i}]);
+        
+        [Data, Header] = y_Read(RefFile);
+        DataSum = Data;
+        nT1 = 1;
+        
+        for iRun=StartIndex+1:length(DirRuns)
+            SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirRuns(iRun).name,filesep,'r*.nii']);
+            SourceFile=[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img_MultiRun',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirRuns(iRun).name,filesep,SourceDir(1).name];
+            
+            [Data, Header] = y_Read(SourceFile);
+            DataSum = DataSum + Data;
+            nT1 = nT1 + 1;
+        end
+        Data=DataSum/nT1;
+        
+        Header.pinfo = [1;0;0];
+        Header.dt = [16,0];
+        
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}]);
+        y_Write(Data,Header,[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean',RefDir(1).name]);
+        fprintf('\nMean T1 brain for "%s" saved as: %s\n',AutoDataProcessParameter.SubjectID{i}, [AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean',RefDir(1).name]);
+        
     end
 end
 

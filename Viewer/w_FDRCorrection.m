@@ -53,7 +53,8 @@ function w_FDRCorrection_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to w_FDRCorrection (see VARARGIN)
 OverlayHeader=varargin{1};
 if isempty(OverlayHeader.TestFlag)
-    msgbox('FDR only take effects on the statistical map!');        
+    msgbox('FDR only take effects on the statistical map!');   
+    delete(handles.figure1);
     return
 end
 

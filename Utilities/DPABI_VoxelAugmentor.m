@@ -1,35 +1,35 @@
-function varargout = DPABI_DCMSORTER_TOOL(varargin)
-% DPABI_DCMSORTER_TOOL MATLAB code for DPABI_DCMSORTER_TOOL.fig
-%      DPABI_DCMSORTER_TOOL, by itself, creates a new DPABI_DCMSORTER_TOOL or raises the existing
+function varargout = DPABI_VoxelAugmentor(varargin)
+% DPABI_VoxelAugmentor MATLAB code for DPABI_VoxelAugmentor.fig
+%      DPABI_VoxelAugmentor, by itself, creates a new DPABI_VoxelAugmentor or raises the existing
 %      singleton*.
 %
-%      H = DPABI_DCMSORTER_TOOL returns the handle to a new DPABI_DCMSORTER_TOOL or the handle to
+%      H = DPABI_VoxelAugmentor returns the handle to a new DPABI_VoxelAugmentor or the handle to
 %      the existing singleton*.
 %
-%      DPABI_DCMSORTER_TOOL('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in DPABI_DCMSORTER_TOOL.M with the given input arguments.
+%      DPABI_VoxelAugmentor('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in DPABI_VoxelAugmentor.M with the given input arguments.
 %
-%      DPABI_DCMSORTER_TOOL('Property','Value',...) creates a new DPABI_DCMSORTER_TOOL or raises the
+%      DPABI_VoxelAugmentor('Property','Value',...) creates a new DPABI_VoxelAugmentor or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before DPABI_DCMSORTER_TOOL_OpeningFcn gets called.  An
+%      applied to the GUI before DPABI_VoxelAugmentor_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to DPABI_DCMSORTER_TOOL_OpeningFcn via varargin.
+%      stop.  All inputs are passed to DPABI_VoxelAugmentor_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help DPABI_DCMSORTER_TOOL
+% Edit the above text to modify the response to help DPABI_VoxelAugmentor
 
-% Last Modified by GUIDE v2.5 31-Oct-2014 15:51:09
+% Last Modified by GUIDE v2.5 15-May-2015 18:03:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @DPABI_DCMSORTER_TOOL_OpeningFcn, ...
-                   'gui_OutputFcn',  @DPABI_DCMSORTER_TOOL_OutputFcn, ...
+                   'gui_OpeningFcn', @DPABI_VoxelAugmentor_OpeningFcn, ...
+                   'gui_OutputFcn',  @DPABI_VoxelAugmentor_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,30 +44,31 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before DPABI_DCMSORTER_TOOL is made visible.
-function DPABI_DCMSORTER_TOOL_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before DPABI_VoxelAugmentor is made visible.
+function DPABI_VoxelAugmentor_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to DPABI_DCMSORTER_TOOL (see VARARGIN)
+% varargin   command line arguments to DPABI_VoxelAugmentor (see VARARGIN)
+
+uiwait(msgbox('Generally, the Voxel Size Augmentor is used for Rat data: the voxel size of rat image is too small for SPM to process. The Voxel Size Augmentor will augment the voxel size by modifying the affine matrix in the header.'));
 
 handles.DICOMCells={};
 handles.CurDir=pwd;
 
-set(handles.OutputDirEntry, 'String', pwd);
-% Choose default command line output for DPABI_DCMSORTER_TOOL
+% Choose default command line output for DPABI_VoxelAugmentor
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes DPABI_DCMSORTER_TOOL wait for user response (see UIRESUME)
+% UIWAIT makes DPABI_VoxelAugmentor wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = DPABI_DCMSORTER_TOOL_OutputFcn(hObject, eventdata, handles) 
+function varargout = DPABI_VoxelAugmentor_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -171,40 +172,6 @@ end
 
 
 
-function OutputDirEntry_Callback(hObject, eventdata, handles)
-% hObject    handle to OutputDirEntry (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of OutputDirEntry as text
-%        str2double(get(hObject,'String')) returns contents of OutputDirEntry as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function OutputDirEntry_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to OutputDirEntry (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in OutputDirButton.
-function OutputDirButton_Callback(hObject, eventdata, handles)
-% hObject    handle to OutputDirButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-Path=uigetdir(handles.CurDir, 'Pick Output Directory');
-if isnumeric(Path)
-    return
-end
-handles.CurDir=fileparts(Path);
-set(handles.OutputDirEntry, 'String', Path);
-guidata(hObject, handles);
 
 % --- Executes on button press in ComputeButton.
 function ComputeButton_Callback(hObject, eventdata, handles)
@@ -216,47 +183,25 @@ if isempty(handles.DICOMCells)
 end
 
 DICOMCells=handles.DICOMCells;
-OutputDir=get(handles.OutputDirEntry, 'String');
-if isempty(OutputDir)
-    OutputDir=handles.CurDir;
+AugmentTimes=eval(get(handles.editAugmentTimes, 'String'));
+
+
+
+for i=1:numel(DICOMCells)
+    OneDICOM=DICOMCells{i};
+    fprintf('Augment %s etc.\n', OneDICOM{1});
+    for j=1:numel(OneDICOM)
+        OldMat = spm_get_space(OneDICOM{j});
+        NewMat=OldMat*AugmentTimes;
+        NewMat(4,4)=1;
+        spm_get_space(OneDICOM{j},NewMat);
+        
+        if exist([OneDICOM{j}(1:end-4),'.mat'])==2
+            delete([OneDICOM{j}(1:end-4),'.mat']);
+        end
+        
+    end
 end
-
-HierarchyValue=get(handles.HierarchyPopup, 'Value');
-AnonyFlag=get(handles.AnonyButton, 'Value');
-
-w_DCMSort(DICOMCells, HierarchyValue, AnonyFlag, OutputDir);
-
-% --- Executes on selection change in HierarchyPopup.
-function HierarchyPopup_Callback(hObject, eventdata, handles)
-% hObject    handle to HierarchyPopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns HierarchyPopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from HierarchyPopup
-
-
-% --- Executes during object creation, after setting all properties.
-function HierarchyPopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to HierarchyPopup (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in AnonyButton.
-function AnonyButton_Callback(hObject, eventdata, handles)
-% hObject    handle to AnonyButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of AnonyButton
-
 
 % --------------------------------------------------------------------
 function AddTable_Callback(hObject, eventdata, handles)
@@ -319,7 +264,6 @@ handles.CurDir=Path;
 Suffix=get(handles.SuffixEntry, 'String');
 
 
-
 %YAN Chao-Gan, 150518. Recursively add Path
 SubjPath = y_GetRecursivePath(Path,[]);
 %PathList = y_GetRecursivePath(InPath,PathList)
@@ -332,7 +276,6 @@ SubjPath = y_GetRecursivePath(Path,[]);
 % SubjName={SubjStruct.name}';
 % SubjPath=cellfun(@(Name) fullfile(Path, Name), SubjName,...
 %     'UniformOutput', false);
-
 
 set(handles.DICOMListbox, 'BackgroundColor', 'Green');
 drawnow;
@@ -350,14 +293,14 @@ for i=1:numel(SubjPath);
             {D.isdir}, {D.name});
         D=D(Index);    
     end
-
+    
     if ~isempty(D)
         NameCell={D.name}';
         Num=numel(NameCell);
         DICOMCell=cellfun(@(Name) fullfile(SubjPath{i}, Name), NameCell,...
             'UniformOutput', false);
         handles.DICOMCells{numel(handles.DICOMCells)+1}=DICOMCell;
-        StringOne={sprintf('[%d] %s', Num, SubjPath{i})};  %StringOne={sprintf('[%d] (%s) %s', Num, SubjName{i}, SubjPath{i})};
+        StringOne={sprintf('[%d] %s', Num, SubjPath{i})};
         AddString(handles.DICOMListbox, StringOne);
         drawnow;
     end
@@ -397,3 +340,27 @@ if Value > numel(StringCell)
     Value=Value-1;
 end
 set(ListboxHandle, 'String', StringCell, 'Value', Value);
+
+
+
+
+function editAugmentTimes_Callback(hObject, eventdata, handles)
+% hObject    handle to editAugmentTimes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editAugmentTimes as text
+%        str2double(get(hObject,'String')) returns contents of editAugmentTimes as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editAugmentTimes_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editAugmentTimes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

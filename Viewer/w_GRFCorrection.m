@@ -53,7 +53,8 @@ function w_GRFCorrection_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to w_GRFCorrection (see VARARGIN)
 OverlayHeader=varargin{1};
 if isempty(OverlayHeader.TestFlag)
-    msgbox('GRF only take effects on the statistical map!');        
+    msgbox('GRF only take effects on the statistical map!');  
+    delete(handles.figure1);
     return
 end
 

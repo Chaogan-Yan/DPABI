@@ -70,8 +70,9 @@ for i=1:numel(ImgCells)
     if iscell(ImgFiles)
         OutputFileNames = [OutputFileNames;ImgFiles];
     else
-        OutputFileNames = [OutputFileNames;{ImgFiles}];
-        OutputFileNames{end,2} = size(AllVolume,2);
+        %OutputFileNames = [OutputFileNames;{ImgFiles}];
+        %OutputFileNames{end,2} = size(AllVolume,2);
+        OutputFileNames = [OutputFileNames;{ImgFiles}, size(AllVolume,2)]; %Thanks to the Report by Andrew Owenson
     end
 end
 
@@ -215,7 +216,7 @@ Header.dt    =[16,0];
 iPoint = 0;
 for iFile = 1:size(OutputFileNames,1)
     [Path, File, Ext]=fileparts(OutputFileNames{iFile,1});
-    TempIndex = strfind(Path,'/');
+    TempIndex = strfind(Path,filesep);
     [status,message,messageid] = mkdir(fullfile(OutputDir,[Path(TempIndex(end)+1:end),Suffix]));
     OutName = fullfile(OutputDir,[Path(TempIndex(end)+1:end),Suffix],[File, Ext]);
     if size(OutputFileNames,2)>=2 && (~isempty(OutputFileNames{iFile,2}))

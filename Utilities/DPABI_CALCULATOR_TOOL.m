@@ -309,10 +309,19 @@ end
 GroupCells=handles.GroupCells;
 GroupLabel=handles.GroupLabel;
 for j=1:numel(GroupCells)
+<<<<<<< HEAD
     GroupPath=fileparts(GroupCells{j}{1});
     fprintf('%s: %s etc.\n', GroupLabel{j}, GroupPath);    
     CMD=sprintf('[%s, VoxelSize, FileList, Header] = y_ReadAll(''%s'');',...
         GroupLabel{j}, GroupPath);
+=======
+    %YAN Chao-Gan, 150518
+    for k=1:numel(GroupCells{j})
+        fprintf('%s: %s\n', GroupLabel{j}, GroupCells{j}{k});
+    end
+    CMD=sprintf('[%s, VoxelSize, FileList, Header] = y_ReadAll(%s);',...
+        GroupLabel{j}, 'GroupCells{j}');
+>>>>>>> a373282bfae987dc51229c8372bed20a50db9a5d
     eval(CMD);
 end
 
@@ -342,10 +351,17 @@ if ndims(Result)==2
     OutputName=fullfile(OutputDir, [Prefix, '.txt']);
     save(OutputName, 'Result',...
         '-ASCII', '-DOUBLE', '-TABS');
-
 else
-    OutputName=fullfile(OutputDir, [Prefix, '.nii']);
-    y_Write(Result, Header, OutputName);
+    if ~isempty(GroupCells) && ~isempty(GroupCells{1}) && (size(Result,4) == numel(GroupCells{1})) %YAN Chao-Gan, 150518
+        for k=1:numel(GroupCells{1})
+            [Path, fileN, extn] = fileparts(GroupCells{1}{k});
+            OutputName=fullfile(OutputDir, [Prefix, fileN, '.nii']);
+            y_Write(Result(:,:,:,k), Header, OutputName);
+        end
+    else
+        OutputName=fullfile(OutputDir, [Prefix, '.nii']);
+        y_Write(Result, Header, OutputName);
+    end
 end
 fprintf('Finished\n');
 
@@ -394,7 +410,7 @@ function Volume3D=w_STD(Volume4D)
 if ndims(Volume4D)==3
     Volume3D=zeros(size(Volume4D));
 elseif ndims(Volume4D)==4
-    Volume3D=std(Volume4D, 4);
+    Volume3D=std(Volume4D,0,4); %YAN Chao-Gan, 20150815 Fixed a bug. %Volume3D=std(Volume4D, 4);
 end
 
 function Volume4D=w_REPMAT(Volume3D, T)
