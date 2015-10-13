@@ -72,7 +72,8 @@ global st
 if ~iscell(st)
     st=cell(24);
 end
-curfig=hObject;
+curfig=w_Compatible2014bFig(hObject);
+
 st{curfig}.fig=hObject;
 
 st{curfig}.curblob=0;
@@ -82,7 +83,7 @@ st{curfig}.n=0;st{curfig}.vols=cell(2);st{curfig}.bb=[];
 st{curfig}.Space=eye(4,4);st{curfig}.centre=[0 0 0];
 st{curfig}.callback=';';st{curfig}.mode=1;st{curfig}.snap=[];
 st{curfig}.plugins={'movie'};%'reorient' 'roi'   'rgb'  
-st{curfig}.TCFlag=0;st{curfig}.SSFlag=0;
+st{curfig}.TCFlag=[];st{curfig}.SSFlag=[];
 st{curfig}.MPFlag=[];
 
 colormap(gray(64));
@@ -91,6 +92,7 @@ UnderlayFileName=fullfile(TemplatePath,'ch2.nii');
 
 [UnderlayVolume UnderlayVox UnderlayHeader] = y_ReadRPI(UnderlayFileName);
 handles.UnderlayFileName='';
+handles.UserDefinedFileName=UnderlayFileName;
 set(handles.UnderlayEntry, 'String', 'ch2.nii');
 
 UnderlayHeader.Data = UnderlayVolume;
@@ -265,8 +267,10 @@ function AButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 TMFlag=w_Montage(handles.DPABI_fig, 'T');
+%TMFlag=w_Compatible2014bFig(TMFlag);
 st{curfig}.MPFlag=[st{curfig}.MPFlag;{TMFlag}];
 
 % --- Executes on button press in SButton.
@@ -276,8 +280,10 @@ function SButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 SMFlag=w_Montage(handles.DPABI_fig, 'S');
+%SMFlag=w_Compatible2014bFig(SMFlag);
 st{curfig}.MPFlag=[st{curfig}.MPFlag;{SMFlag}];
 
 % --- Executes on button press in CButton.
@@ -287,8 +293,10 @@ function CButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 CMFlag=w_Montage(handles.DPABI_fig, 'C');
+%CMFlag=w_Compatible2014bFig(CMFlag);
 st{curfig}.MPFlag=[st{curfig}.MPFlag;{CMFlag}];
 
 function ScaleEntry_Callback(hObject, eventdata, handles)
@@ -297,6 +305,7 @@ function ScaleEntry_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 scale=get(handles.ScaleEntry, 'String');
 scale=str2double(scale);
@@ -380,6 +389,8 @@ function YokeCheck_Callback(hObject, eventdata, handles)
 global st
 
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
+
 st{curfig}.yoke=1;
 % Hint: get(hObject,'Value') returns toggle state of YokeCheck
 
@@ -429,6 +440,7 @@ function OverlayEntry_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st;
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 Num=get(handles.OverlayEntry, 'Value');
 if Num==1
@@ -570,6 +582,7 @@ global st
 
 if nargin < 3
     curfig=gcf;
+    curfig=w_Compatible2014bFig(curfig);
 end
 if nargin < 4
     curblob=st{curfig}.curblob;
@@ -684,6 +697,7 @@ if ~ischar(File)
 end
 UnderlayFileName=[Path, File];
 handles.UnderlayFileName=UnderlayFileName;
+handles.UserDefinedFileName=UnderlayFileName;
 set(handles.UnderlayEntry, 'String', File);
 guidata(hObject, handles);
 ShowUnderlay(handles);
@@ -703,11 +717,12 @@ UnderlayHeader.Vox  = UnderlayVox;
 y_spm_orthviews('Image',UnderlayHeader);
 
 Max=length(get(handles.TemplatePopup, 'String'));
-set(handles.TemplatePopup, 'Value', Max);
+set(handles.TemplatePopup, 'Value', Max-1);
 
 function handles=NoneUnderlay(handles)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 index=HeaderIndex(handles);
 if ~index
     st{curfig}.vols{1}.Data=zeros(st{curfig}.vols{1}.dim);
@@ -737,6 +752,13 @@ switch flag
         File='ch2better.nii';
     case 4
         File='mni_icbm152_t1_tal_nlin_asym_09c.nii';
+    case 5
+        UnderlayFileName=handles.UserDefinedFileName;
+        [UnderlayVolume UnderlayVox UnderlayHeader] = y_ReadRPI(UnderlayFileName);
+        UnderlayHeader.Data = UnderlayVolume;
+        UnderlayHeader.Vox  = UnderlayVox;
+        y_spm_orthviews('Image',UnderlayHeader);
+        return;
     case Max
         handles=NoneUnderlay(handles);
         set(handles.UnderlayEntry, 'String', '');
@@ -785,6 +807,7 @@ ThrdListener_Callback(hObject, eventdata, hObject);
 function ThrdListener_Callback(hObject, eventdata, hFig)
 handles=guidata(hFig);
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 value=get(handles.ThrdSlider, 'Value');
 index=HeaderIndex(handles);
@@ -833,6 +856,8 @@ global st
 if nargin<2
     curfig=gcf;
 end
+curfig=w_Compatible2014bFig(curfig);
+
 MainHandle=guidata(curfig);
 if nargin<3
     curblob=st{curfig}.curblob;
@@ -932,6 +957,7 @@ end
 function OverlayHeader=ChangeThrd(OverlayHeader, NMin, PMin, curfig)
 if nargin<4
     curfig=gcf;
+    curfig=w_Compatible2014bFig(curfig);
 end
 OverlayHeader.NMin=NMin;
 OverlayHeader.PMin=PMin;
@@ -966,6 +992,7 @@ if isnan(Thrd)
 end
 
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 OverlayHeader=handles.OverlayHeaders{index};
 
@@ -1080,6 +1107,7 @@ function PosNegNon(OverlayHeaders, flag, curfig)
 global st
 if nargin<3
     curfig=gcf;
+    curfig=w_Compatible2014bFig(curfig);
 end
 
 if isfield(st{curfig}.vols{1}, 'blobs')
@@ -1110,6 +1138,7 @@ function OnlyPos_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 flag=get(handles.OnlyPos, 'Value');
 
@@ -1133,6 +1162,7 @@ function OnlyNeg_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 flag=get(handles.OnlyNeg, 'Value');
 
@@ -1155,6 +1185,7 @@ function OnlyUnder_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 
 flag=get(handles.OnlyUnder, 'Value');
 
@@ -1282,6 +1313,7 @@ function MorePopup_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 curblob=st{curfig}.curblob;
 
 Value=get(handles.MorePopup, 'Value');
@@ -1509,6 +1541,7 @@ function SIButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 SI={'S','I'};
 state=get(handles.SIButton, 'String');
 state=strcmpi(state, 'S')+1;
@@ -1532,6 +1565,7 @@ function PAButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 PA={'P','A'};
 state=get(handles.PAButton, 'String');
 state=strcmpi(state, 'P')+1;
@@ -1555,6 +1589,7 @@ function LRButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 LR={'R','L'};
 state=get(handles.LRButton, 'String');
 state=strcmpi(state, 'R')+1;
@@ -1573,9 +1608,10 @@ y_spm_orthviews('redraw');
 
 function index = HeaderIndex(handles, curblob)
 global st;
-
+curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 if nargin<2
-    curblob=st{handles.DPABI_fig}.curblob;
+    curblob=st{curfig}.curblob;
 end
 
 if curblob==0;
@@ -1611,6 +1647,7 @@ switch lower(label)
         J=str2double(get(handles.JEntry, 'String'));
         K=str2double(get(handles.KEntry, 'String'));
         curfig=handles.DPABI_fig;
+        curfig=w_Compatible2014bFig(curfig);
         curblob=st{curfig}.curblob;
         if isfield(st{curfig}.vols{1}, 'blobs')
             tmp=st{curfig}.vols{1}.blobs{curblob}.vol.mat*[I;J;K;1];
@@ -1849,6 +1886,7 @@ function AtlasButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 flag=w_AtlasSelect(curfig);
 if flag
     y_spm_orthviews('Redraw');
@@ -1861,6 +1899,7 @@ function StructrueButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 AtlasInfo=st{curfig}.AtlasInfo;
 if isempty(AtlasInfo)
     msgbox('Please Select Atlas First!', 'modal');
@@ -1877,16 +1916,17 @@ function DPABI_fig_DeleteFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
-if st{curfig}.TCFlag && ishandle(st{curfig}.TCFlag)
+curfig=w_Compatible2014bFig(curfig);
+if ~isempty(st{curfig}.TCFlag) && ishandle(st{curfig}.TCFlag)
     delete(st{curfig}.TCFlag);
 end
 
-if st{curfig}.SSFlag && ishandle(st{curfig}.SSFlag)
+if ~isempty(st{curfig}.SSFlag) && ishandle(st{curfig}.SSFlag)
     delete(st{curfig}.SSFlag);
 end
 
 for i=1:numel(st{curfig}.MPFlag)
-    if st{curfig}.MPFlag{i} && ishandle(st{curfig}.MPFlag{i})
+    if ~isempty(st{curfig}.MPFlag{i}) && ishandle(st{curfig}.MPFlag{i})
         delete(st{curfig}.MPFlag{i});
     end
 end
@@ -1902,6 +1942,7 @@ function ModeButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global st
 curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
 Mode={'1','0'};
 mode=get(handles.ModeButton, 'String');
 state=strcmpi(mode, '1')+1;

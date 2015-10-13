@@ -636,6 +636,7 @@ spm('Pointer','Arrow');
 function H = specify_image(img)
 global st
 curfig=GetCurFig;
+
 H = [];
 if isstruct(img)
     V = img(1);
@@ -665,7 +666,7 @@ end
 DeleteFcn = ['y_spm_orthviews(''Delete'',' num2str(ii) ');'];
 V.ax = cell(3,1);
 for i=1:3
-    ax = axes('Visible','off', 'DrawMode','fast', 'Parent',st{curfig}.fig, ...
+    ax = axes('Visible','on', 'Parent',st{curfig}.fig, ... % 'DrawMode','fast', 
         'YDir','normal', 'DeleteFcn',DeleteFcn, 'ButtonDownFcn',@repos_start);
     d  = image(0, 'Tag','Transverse', 'Parent',ax, 'DeleteFcn',DeleteFcn);
     set(ax, 'Ydir','normal', 'ButtonDownFcn',@repos_start);
@@ -1385,7 +1386,7 @@ if isfield(handles, 'DPABI_fig')
         set(handles.OverlayValue, 'String',...
             sprintf('%g', OverlayValue));
         TCFlag=st{curfig}.TCFlag;
-        if TCFlag
+        if ~isempty(TCFlag)
             if ~ishandle(TCFlag)
                 st{curfig}.TCFlag=0;
                 if isfield(st{curfig}, 'TCLinObj')
@@ -1461,7 +1462,7 @@ if isfield(handles, 'DPABI_fig')
     MPFlag=st{curfig}.MPFlag;
     if ~isempty(MPFlag)
         for m=1:numel(MPFlag)
-            if st{curfig}.MPFlag{m} && ishandle(st{curfig}.MPFlag{m})
+            if ~isempty(st{curfig}.MPFlag{m}) && ishandle(st{curfig}.MPFlag{m})
                 w_Montage('RedrawXhairs', curfig, MPFlag{m});
             end
         end
@@ -1684,7 +1685,7 @@ cent = is(1:3,1:3)*st{curfig}.centre(:) + is(1:3,4);
                 omps=zeros(size(umps));
                 
                 if isfield(handles, 'DPABI_fig')
-                    if st{curfig}.SSFlag && ishandle(st{curfig}.SSFlag)
+                    if ~isempty(st{curfig}.SSFlag) && ishandle(st{curfig}.SSFlag)
                         SSFlag=st{curfig}.SSFlag;
                         SSHandle=guidata(SSFlag);
                         IsPreview=get(SSHandle.PreviewBtn, 'Value');
@@ -1733,7 +1734,7 @@ cent = is(1:3,1:3)*st{curfig}.centre(:) + is(1:3,4);
                             end
                         end
                     else
-                        st{curfig}.SSFlag=0;
+                        st{curfig}.SSFlag=[];
                     end
                 end
                 
@@ -1957,7 +1958,7 @@ cent = is(1:3,1:3)*st{curfig}.centre(:) + is(1:3,4);
             end
         else
             if isfield(handles, 'DPABI_fig')
-                if st{curfig}.SSFlag && ishandle(st{curfig}.SSFlag)
+                if ~isempty(st{curfig}.SSFlag) && ishandle(st{curfig}.SSFlag)
                     SSFlag=st{curfig}.SSFlag;
                     SSHandle=guidata(SSFlag);
                     IsPreview=get(SSHandle.PreviewBtn, 'Value');
@@ -1986,7 +1987,7 @@ cent = is(1:3,1:3)*st{curfig}.centre(:) + is(1:3,4);
                         end
                     end
                 else
-                    st{curfig}.SSFlag=0;
+                    st{curfig}.SSFlag=[];
                     IsPreview=0;
                 end
             else
@@ -2960,6 +2961,7 @@ m = 1;
 function curfig = GetCurFig(varargin)
 if nargin<2
     curfig=gcf;
+    curfig=w_Compatible2014bFig(curfig);
     if rem(curfig, 1)
         curfig=gcbf;
     end

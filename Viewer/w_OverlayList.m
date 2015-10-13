@@ -53,7 +53,7 @@ function w_OverlayList_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to w_OverlayList (see VARARGIN)
 
 % Choose default command line output for w_OverlayList
-handles.MainFig=varargin{1};
+handles.MainFig=w_Compatible2014bFig(varargin{1});
 MainHandle=guidata(handles.MainFig);
 
 %set(MainHandle.ThrdSlider, 'Value',  0);

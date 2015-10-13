@@ -133,6 +133,7 @@ spm('pointer','arrow');
 function curfig = GetCurFig(varargin)
 if nargin<2
     curfig=gcf;
+    curfig=w_Compatible2014bFig(curfig);
     if rem(curfig, 1)
         curfig=gcbf;
     end

@@ -51,7 +51,7 @@ function w_Montage_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to w_Montage (see VARARGIN)
-MainFig=varargin{1};
+MainFig=w_Compatible2014bFig(varargin{1});
 MontageType=varargin{2};
 
 handles.ImageView=image('Parent', handles.MontageAxe);
@@ -412,6 +412,7 @@ set(fig,'windowbuttonmotionfcn','', 'windowbuttonupfcn','');
 
 function MontageRepos(curfig, fig)
 global st;
+fig=fig;
 bb=st{curfig}.bb;
 Dims = round(diff(bb)'+1);
 
