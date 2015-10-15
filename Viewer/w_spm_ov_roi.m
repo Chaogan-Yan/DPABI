@@ -104,6 +104,8 @@ if nargin<2
 else
     curfig=GetCurFig(varargin{2});
 end
+curfig=w_Compatible2014bFig(curfig);
+
 if isempty(st)
     error('roi: This routine can only be called as a plugin for spm_orthviews!');
 end;
@@ -798,7 +800,6 @@ function fig = GetCurFig(h)
 fig=gcf;
 if isempty(fig)
     fig=get(0, 'CurrentFigure');
-    fig=w_Compatible2014bFig(fig);
     if rem(fig,1)
         fig=h;
         set(0,'CurrentFigure',h);

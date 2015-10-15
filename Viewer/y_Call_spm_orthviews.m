@@ -43,10 +43,12 @@ end
 
 if ~exist('H','var')
     curfig=figure;
+    curfig=w_Compatible2014bFig(curfig);
     st{curfig}.fig = curfig;
 else
     curfig=gcf;
-    st{curfig}.fig=H;
+    curfig=w_Compatible2014bFig(curfig);
+    st{curfig}.fig=w_Compatible2014bFig(H);
 end
 
 st{curfig}.xhairs=1;st{curfig}.hld=1;st{curfig}.yoke=1;st{curfig}.curblob=0;%Add yoke by Sandy 20130823

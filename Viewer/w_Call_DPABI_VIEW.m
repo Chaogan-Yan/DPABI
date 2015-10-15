@@ -40,6 +40,7 @@ else
     curfig=H;
 end
 Handle=guidata(curfig);
+curfig=w_Compatible2014bFig(curfig);
 
 %Add underlay
 % Set up underlay file

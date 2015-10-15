@@ -29,6 +29,7 @@ if nargin<2
 else
     curfig=GetCurFig(varargin{2});
 end
+curfig=w_Compatible2014bFig(curfig);
 
 if isempty(st)
     error('movie: This routine can only be called as a plugin for spm_orthviews!');
