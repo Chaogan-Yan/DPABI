@@ -1,6 +1,7 @@
 function FigNum=w_Compatible2014bFig(Fig)
 
-if strcmpi(version('-release'), '2014b') && ~isnumeric(Fig)
+FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+if (FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=8*1000+4) && ~isnumeric(Fig)
     FigNum=Fig.Number;
     if isempty(FigNum)
         FigNum=-0.1;

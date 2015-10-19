@@ -52,7 +52,7 @@ if ischar(BrainVolume)
         BrainVolume = double(Nii.dat);
         BrainHeader.mat = Nii.mat;
     else
-        [BrainVolume Vox BrainHeader]=rest_readfile(BrainVolume);
+        [BrainVolume Vox BrainHeader]=y_ReadRPI(BrainVolume);
     end
 end
 
