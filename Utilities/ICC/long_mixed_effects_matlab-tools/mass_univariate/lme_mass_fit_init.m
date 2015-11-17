@@ -71,14 +71,34 @@ for i=1:m
     t1 = t1 + t2;
     posi = posf+1;
 end;
-if (prs==1) || (matlabpool('size') ~= prs)
-    if (matlabpool('size') > 0)
-        matlabpool close;
+%Modified by YAN Chao-Gan 151117. For parpool
+FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+    if (prs==1) || (matlabpool('size') ~= prs)
+        if (matlabpool('size') > 0)
+            matlabpool close;
+        end;
+        if (prs>1)
+            matlabpool(prs);
+        end;
     end;
-    if (prs>1)
-        matlabpool(prs);
-    end;
-end;
+else
+    poolobj = gcp('nocreate'); % If no pool, do not create new one.
+    if isempty(poolobj)
+        CurrentSize_MatlabPool = 0;
+    else
+        CurrentSize_MatlabPool = poolobj.NumWorkers;
+    end
+    if (prs==1) || (CurrentSize_MatlabPool ~= prs)
+        if (CurrentSize_MatlabPool > 0)
+            poolobj = gcp('nocreate'); % If no pool, do not create new one.
+            delete(poolobj);
+        end;
+        if (prs>1)
+            parpool(prs);
+        end;
+    end
+end
 display(' ');
 display('Computing initial values ...');
 sinvX = pinv(X);

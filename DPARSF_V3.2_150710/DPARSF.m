@@ -184,13 +184,21 @@ function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.Cfg.IsExtractAALGMVolume=0;
 
     handles.Cfg.StartingDirName='FunRaw';
-    
+
     handles.Cfg.ParallelWorkersNumber=0;%%%%
     % Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
     if (exist('matlabpool'))
         FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
-        if FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+        if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
             CurrentSize_MatlabPool = matlabpool('size');
+            handles.Cfg.ParallelWorkersNumber = CurrentSize_MatlabPool;
+        else
+            poolobj = gcp('nocreate'); % If no pool, do not create new one.
+            if isempty(poolobj)
+                CurrentSize_MatlabPool = 0;
+            else
+                CurrentSize_MatlabPool = poolobj.NumWorkers;
+            end
             handles.Cfg.ParallelWorkersNumber = CurrentSize_MatlabPool;
         end
     end
@@ -1022,7 +1030,7 @@ function editParallelWorkersNumber_Callback(hObject, eventdata, handles)
     % Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
     if (exist('matlabpool'))
         FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
-        if FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+        if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
             if Size_MatlabPool ~= handles.Cfg.ParallelWorkersNumber;
                 if handles.Cfg.ParallelWorkersNumber~=0
                     matlabpool close
@@ -1032,6 +1040,23 @@ function editParallelWorkersNumber_Callback(hObject, eventdata, handles)
                 end
             end
             CurrentSize_MatlabPool = matlabpool('size');
+            handles.Cfg.ParallelWorkersNumber = CurrentSize_MatlabPool;
+        else
+            if Size_MatlabPool ~= handles.Cfg.ParallelWorkersNumber;
+                if handles.Cfg.ParallelWorkersNumber~=0
+                    poolobj = gcp('nocreate'); % If no pool, do not create new one.
+                    delete(poolobj);
+                end
+                if Size_MatlabPool~=0
+                    parpool(Size_MatlabPool)
+                end
+            end
+            poolobj = gcp('nocreate'); % If no pool, do not create new one.
+            if isempty(poolobj)
+                CurrentSize_MatlabPool = 0;
+            else
+                CurrentSize_MatlabPool = poolobj.NumWorkers;
+            end
             handles.Cfg.ParallelWorkersNumber = CurrentSize_MatlabPool;
         end
     end

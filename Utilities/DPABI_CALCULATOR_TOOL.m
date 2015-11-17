@@ -309,19 +309,18 @@ end
 GroupCells=handles.GroupCells;
 GroupLabel=handles.GroupLabel;
 for j=1:numel(GroupCells)
-<<<<<<< HEAD
-    GroupPath=fileparts(GroupCells{j}{1});
-    fprintf('%s: %s etc.\n', GroupLabel{j}, GroupPath);    
-    CMD=sprintf('[%s, VoxelSize, FileList, Header] = y_ReadAll(''%s'');',...
-        GroupLabel{j}, GroupPath);
-=======
+
+%     GroupPath=fileparts(GroupCells{j}{1});
+%     fprintf('%s: %s etc.\n', GroupLabel{j}, GroupPath);    
+%     CMD=sprintf('[%s, VoxelSize, FileList, Header] = y_ReadAll(''%s'');',...
+%         GroupLabel{j}, GroupPath);
+
     %YAN Chao-Gan, 150518
     for k=1:numel(GroupCells{j})
         fprintf('%s: %s\n', GroupLabel{j}, GroupCells{j}{k});
     end
     CMD=sprintf('[%s, VoxelSize, FileList, Header] = y_ReadAll(%s);',...
         GroupLabel{j}, 'GroupCells{j}');
->>>>>>> a373282bfae987dc51229c8372bed20a50db9a5d
     eval(CMD);
 end
 
@@ -427,7 +426,7 @@ if strcmpi(Flag, 'temporal')
     V2=reshape(V2, [], n4);
     V=zeros(n1*n2*n3, 1);
     for i=1:n1*n2*n3
-        V(i, 1)=corr(V1(i,:)', V2(i,:));
+        V(i, 1)=corr(V1(i,:)', V2(i,:)');
     end
     V=reshape(V, [n1, n2, n3]);
 elseif strcmpi(Flag, 'spatial')
