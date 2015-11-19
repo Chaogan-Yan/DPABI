@@ -1073,14 +1073,18 @@ function pushbuttonHelp_Callback(hObject, eventdata, handles)
 	web('http://rfmri.org/DPARSF');    
     
 function pushbuttonSave_Callback(hObject, eventdata, handles)
-	[filename, pathname] = uiputfile({'*.mat'}, 'Save Parameters As');
-    Cfg=handles.Cfg;
-    save(['',pathname,filename,''], 'Cfg');
+    [filename, pathname] = uiputfile({'*.mat'}, 'Save Parameters As');
+    if ischar(filename)
+        Cfg=handles.Cfg;
+        save(['',pathname,filename,''], 'Cfg');
+    end
     
 function handles=pushbuttonLoad_Callback(hObject, eventdata, handles)
-	[filename, pathname] = uigetfile({'*.mat'}, 'Load Parameters From');
-    load([pathname,filename]);
-    SetLoadedData(hObject,handles, Cfg);	
+    [filename, pathname] = uigetfile({'*.mat'}, 'Load Parameters From');
+    if ischar(filename)
+        load([pathname,filename]);
+        SetLoadedData(hObject,handles, Cfg);
+    end
     
 function pushbuttonUtilities_Callback(hObject, eventdata, handles)
     [ProgramPath, fileN, extn] = fileparts(which('DPARSF.m'));

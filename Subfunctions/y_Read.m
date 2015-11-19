@@ -54,7 +54,7 @@ if ~exist(FileName,'file')
     error(['File doesn''t exist: ',fullfile(pathstr,[name ext])]);
 end
 
-FileNameWithoutGZ = FileName;
+FileNameWithGZ = FileName;
 if strcmpi(ext,'.gz')
     gunzip(FileName);
     FileName = fullfile(pathstr,[name]);
@@ -71,7 +71,7 @@ else
     Data = double(Nii.dat);
     Header = V(1);
 end
-Header.fname=FileNameWithoutGZ;
+Header.fname=FileNameWithGZ;
 
 if strcmpi(ext,'.gz')
     delete(FileName);

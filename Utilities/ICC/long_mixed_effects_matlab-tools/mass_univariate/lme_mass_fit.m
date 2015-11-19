@@ -212,9 +212,9 @@ else
     end;
 end;
 parfor_progress(fn,0);
-if (matlabpool('size') > 0)
-    matlabpool close;
-end;
+% if (matlabpool('size') > 0)
+%     matlabpool close;
+% end;
 %et = toc;
 %display(['Elapsed time is ' num2str(et/60) ' minutes.']);
 end
