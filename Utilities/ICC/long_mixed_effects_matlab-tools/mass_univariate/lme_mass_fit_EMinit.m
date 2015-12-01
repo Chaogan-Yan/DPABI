@@ -130,9 +130,9 @@ Theta0 = zeros(nth,nv0);
 Theta0(:,maskvtx) = Theta1;
 Re0 = zeros(n,nv0);
 Re0(:,maskvtx) = Re1;
-if (matlabpool('size') > 0)
-    matlabpool close;
-end;
+% if (matlabpool('size') > 0)
+%     matlabpool close;
+% end;
 et = toc;
 display(['Total elapsed time is ' num2str(et/60) ' minutes.']);
 

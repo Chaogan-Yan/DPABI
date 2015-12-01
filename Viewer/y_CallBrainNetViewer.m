@@ -52,7 +52,7 @@ if ischar(BrainVolume)
         BrainVolume = double(Nii.dat);
         BrainHeader.mat = Nii.mat;
     else
-        [BrainVolume Vox BrainHeader]=rest_readfile(BrainVolume);
+        [BrainVolume Vox BrainHeader]=y_ReadRPI(BrainVolume);
     end
 end
 
@@ -146,12 +146,15 @@ if exist('ClusterSize','var')
 end
 surf.hdr=BrainHeader;
 surf.mask=BrainVolume;
+surf.vol=BrainVolume; %YAN Chao-Gan 151026. To fit the change in BrainNet Viewer.
 
 
 % Adjust the colormap to leave blank to values under threshold, the orginal color map with be set into [NMax NMin] and [PMin PMax].
 EC.vol.CM=AdjustColorMap(ColorMap,EC.vol.null,NMax,NMin,PMin,PMax);
 EC.vol.px=PMax;
 EC.vol.nx=NMax;
+
+EC.vol.mapalgorithm = 1;%YAN Chao-Gan, 20151116. % 1 for Nearest Voxel % 2 for Average Vertex % 3 for Average Voxel % 4 for Gaussian % 5 for Interpolated (default) % 6 for Maximum Voxel % 7 for Minimum Voxel % 8 for Extremum Voxel % 9 for Most Neighbour Voxel
 
 % Set up other parameters
 EC.msh.alpha=1;

@@ -19,7 +19,8 @@ function [OutVolume OutHead] = y_Reslice(InputFile,OutputFile,NewVoxSize,hld, Ta
 %__________________________________________________________________________
 % Revised by YAN Chao-Gan 100401. Fixed a bug while calculating the new dimension.
 % Revised by YAN Chao-Gan 120229. Simplified the processing.
-% Last Revised by YAN Chao-Gan 121214. Fixed the brain edge artifact when reslice to a bigger FOV. Apply a mask from the source image: don't extend values to outside brain.
+% Revised by YAN Chao-Gan 121214. Fixed the brain edge artifact when reslice to a bigger FOV. Apply a mask from the source image: don't extend values to outside brain.
+% Last Revised by YAN Chao-Gan 151117. Fixed a bug when reslicing .nii.gz files. 
 
 if nargin<=4
     TargetSpace='ImageItself';
@@ -46,6 +47,14 @@ end
 
 
 [SourceData SourceHead]=y_Read(InputFile);
+
+%Handle .nii.gz. Referenced from y_Read.m. YAN Chao-Gan, 151117
+[pathstr, name, ext] = fileparts(InputFile);
+if strcmpi(ext,'.gz')
+    gunzip(InputFile);
+    FileNameWithoutGZ = fullfile(pathstr,name);
+    SourceHead.fname = FileNameWithoutGZ;
+end
 
 [x1,x2,x3] = ndgrid(1:dim(1),1:dim(2),1:dim(3));
 d     = [hld*[1 1 1]' [1 1 0]'];
@@ -76,3 +85,6 @@ OutHead.dim(1:3) = dim;
 
 y_Write(OutVolume,OutHead,OutputFile);
 
+if strcmpi(ext,'.gz')
+    delete(FileNameWithoutGZ);
+end
