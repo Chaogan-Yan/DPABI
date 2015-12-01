@@ -31,6 +31,7 @@ function varargout = DPARSF(varargin)
 % Modified by YAN Chao-Gan, 140814. DPARSF V3.0.
 % Modified by YAN Chao-Gan, 141101. DPARSF V3.1.
 % Modified by YAN Chao-Gan, 150710. DPARSF V3.2.
+% Modified by YAN Chao-Gan, 151201. DPARSF V4.0.
 
 
 % Begin initialization code - DO NOT EDIT
@@ -55,7 +56,7 @@ end
 
 % --- Executes just before DPARSF is made visible.
 function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V3.2_150710';
+    Release='V4.0_151201';
     
     [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
     addpath([ProgramPath,filesep,'SubGUIs']);

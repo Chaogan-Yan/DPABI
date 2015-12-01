@@ -170,6 +170,7 @@ end
 
 Header.pinfo = [1;0;0];
 Header.dt    =[16,0];
+Header.descrip=sprintf('Band{[%g %g]}',LowCutoff,HighCutoff);
 
 y_Write(ALFFBrain,Header,AResultFilename_ALFF);
 y_Write(fALFFBrain,Header,AResultFilename_fALFF);

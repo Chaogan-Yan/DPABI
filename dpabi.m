@@ -22,7 +22,7 @@ function varargout = dpabi(varargin)
 
 % Edit the above text to modify the response to help dpabi
 
-% Last Modified by GUIDE v2.5 15-May-2015 17:11:59
+% Last Modified by GUIDE v2.5 29-Nov-2015 21:32:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,7 @@ function dpabi_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dpabi
 
 
-Release='V1.3_150710';
+Release='V2.0_151201';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -234,4 +234,24 @@ function pushbutton_Utilities_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 DPABI_Utilities
+
+
+
+% --- Executes on button press in pushbutton_RfMRIMaps.
+function pushbutton_RfMRIMaps_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_RfMRIMaps (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[DPABIMessage WebStatus]=urlread('http://rfmri.org/RfMRIMapMessage.txt');
+if WebStatus
+    if ~isempty(DPABIMessage)
+        uiwait(msgbox(DPABIMessage,'The R-fMRI Maps Project Message'));
+    end
+    DPABIMessageWeb=urlread('http://rfmri.org/RfMRIMapMessageWeb.txt');
+    if ~isempty(DPABIMessageWeb)
+        web(DPABIMessageWeb);
+    end
+end
+
+DPABI_ResultsOrganizer
 

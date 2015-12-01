@@ -181,6 +181,9 @@ end
 if ~isfield(AutoDataProcessParameter,'IsNormalizeToSymmetricGroupT1Mean') %YAN Chao-Gan 121221.
     AutoDataProcessParameter.IsNormalizeToSymmetricGroupT1Mean=0; 
 end
+if ~isfield(AutoDataProcessParameter,'IsSmoothBeforeVMHC') %YAN Chao-Gan 151119.
+    AutoDataProcessParameter.IsSmoothBeforeVMHC=0; 
+end
 if ~isfield(AutoDataProcessParameter,'IsCalVMHC')
     AutoDataProcessParameter.IsCalVMHC=0; 
 end
@@ -2237,7 +2240,10 @@ if (AutoDataProcessParameter.IsWarpMasksIntoIndividualSpace==1) || ((AutoDataPro
             % If is processed by New Segment and DARTEL
             
             TemplateDir_SubID=AutoDataProcessParameter.SubjectID{1};
-            
+            if exist([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']) %YAN Chao-Gan, 151129. Check if it's .nii.gz
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']);
+                delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']);
+            end
             DARTELTemplateFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii'];
             DARTELTemplateMatFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6_2mni.mat'];
             
@@ -2246,6 +2252,12 @@ if (AutoDataProcessParameter.IsWarpMasksIntoIndividualSpace==1) || ((AutoDataPro
             parfor i=1:AutoDataProcessParameter.SubjectNum
                 
                 DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+                [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+                if strcmpi(ext,'.gz')
+                    gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                    delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                    DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+                end
                 FlowFieldFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
 
                 % Set the reference image
@@ -2371,11 +2383,20 @@ if (AutoDataProcessParameter.IsCovremove==1) && ((strcmpi(AutoDataProcessParamet
                 % If is processed by New Segment and DARTEL
                 
                 TemplateDir_SubID=AutoDataProcessParameter.SubjectID{1};
-                
+                if exist([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']) %YAN Chao-Gan, 151129
+                    gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']);
+                    delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']);
+                end
                 DARTELTemplateFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii'];
                 DARTELTemplateMatFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6_2mni.mat'];
                 
                 DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+                [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+                if strcmpi(ext,'.gz')
+                    gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                    delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                    DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+                end
                 FlowFieldFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 
                 
@@ -2775,11 +2796,23 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.vox=AutoDataProcessParameter.Normalize.VoxSize;
             
             DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'Template_6.*']);
+            [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+            if strcmpi(ext,'.gz')
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]);
+                delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]);
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'Template_6.*']);
+            end
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.template={[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]};
             
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.data.subj(1,1).images=FileList;
             
             DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+            [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+            if strcmpi(ext,'.gz')
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+            end
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.data.subj(1,1).flowfield={[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]};
             
             spm_jobman('run',SPMJOB.matlabbatch);
@@ -2970,6 +3003,12 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.vox=AutoDataProcessParameter.Normalize.VoxSize;
             
             DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'Template_6.*']);
+            [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+            if strcmpi(ext,'.gz')
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]);
+                delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]);
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'Template_6.*']);
+            end
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.template={[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]};
             
             
@@ -3008,6 +3047,12 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.data.subj(1,1).images=FileList;
             
             DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+            [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+            if strcmpi(ext,'.gz')
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+            end
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.data.subj(1,1).flowfield={[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]};
             
             spm_jobman('run',SPMJOB.matlabbatch);
@@ -3354,6 +3399,10 @@ if (AutoDataProcessParameter.IsCovremove==1) && (strcmpi(AutoDataProcessParamete
                     SourceDir_Temp = [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'VoxelSpecificHeadMotion'];
                     OutpurDir_Temp = [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'VoxelSpecificHeadMotion','W'];
                     T1ImgNewSegmentDir = [AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment'];
+                    if exist([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']) %YAN Chao-Gan, 151129
+                        gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']);
+                        delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']);
+                    end
                     DARTELTemplateFile = [AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii'];
                     IsSubDirectory = 1;
                     BoundingBox=AutoDataProcessParameter.Normalize.BoundingBox;
@@ -3556,8 +3605,8 @@ if (AutoDataProcessParameter.IsCalALFF==1)
     
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
         
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ALFF']);
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'fALFF']);
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ALFF_',AutoDataProcessParameter.StartingDirName]);
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'fALFF_',AutoDataProcessParameter.StartingDirName]);
         
         parfor i=1:AutoDataProcessParameter.SubjectNum
             
@@ -3574,7 +3623,7 @@ if (AutoDataProcessParameter.IsCalALFF==1)
                 AutoDataProcessParameter.CalALFF.ALowPass_HighCutoff, ...
                 AutoDataProcessParameter.CalALFF.AHighPass_LowCutoff, ...
                 AutoDataProcessParameter.MaskFileForEachSubject{i}, ...
-                {[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ALFF',filesep,'ALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'fALFF',filesep,'fALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']});
+                {[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ALFF_',AutoDataProcessParameter.StartingDirName,filesep,'ALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'fALFF_',AutoDataProcessParameter.StartingDirName,filesep,'fALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']});
 
             % Get the m* files: divided by the mean within the mask
             % and the z* files: substract by the mean and then divided by the std within the mask
@@ -3584,17 +3633,17 @@ if (AutoDataProcessParameter.IsCalALFF==1)
                 BrainMaskData=y_ReadRPI(AutoDataProcessParameter.MaskFileForEachSubject{i});
                 
                 Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ALFF',filesep,'mALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ALFF_',AutoDataProcessParameter.StartingDirName,filesep,'mALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
                 
                 Temp = ((ALFFBrain - mean(ALFFBrain(find(BrainMaskData)))) ./ std(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ALFF',filesep,'zALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ALFF_',AutoDataProcessParameter.StartingDirName,filesep,'zALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
                 
                 
                 Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'fALFF',filesep,'mfALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'fALFF_',AutoDataProcessParameter.StartingDirName,filesep,'mfALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
                 
                 Temp = ((fALFFBrain - mean(fALFFBrain(find(BrainMaskData)))) ./ std(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'fALFF',filesep,'zfALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'fALFF_',AutoDataProcessParameter.StartingDirName,filesep,'zfALFFMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
                 
             end
         end
@@ -3685,7 +3734,7 @@ end
 %Calculate ReHo
 if (AutoDataProcessParameter.IsCalReHo==1)
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo']);
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo_',AutoDataProcessParameter.StartingDirName]);
         
         parfor i=1:AutoDataProcessParameter.SubjectNum
 
@@ -3693,7 +3742,7 @@ if (AutoDataProcessParameter.IsCalReHo==1)
             [ReHoBrain, Header] = y_reho([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
                 AutoDataProcessParameter.CalReHo.ClusterNVoxel, ...
                 AutoDataProcessParameter.MaskFileForEachSubject{i}, ...
-                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo',filesep,'ReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo_',AutoDataProcessParameter.StartingDirName,filesep,'ReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
 
             % Get the m* files: divided by the mean within the mask
             % and the z* files: substract by the mean and then divided by the std within the mask
@@ -3702,10 +3751,10 @@ if (AutoDataProcessParameter.IsCalReHo==1)
                 BrainMaskData=y_ReadRPI(AutoDataProcessParameter.MaskFileForEachSubject{i});
                 
                 Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo',filesep,'mReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo_',AutoDataProcessParameter.StartingDirName,filesep,'mReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
                 
                 Temp = ((ReHoBrain - mean(ReHoBrain(find(BrainMaskData)))) ./ std(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo',filesep,'zReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo_',AutoDataProcessParameter.StartingDirName,filesep,'zReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
             end
             
             
@@ -3714,9 +3763,9 @@ if (AutoDataProcessParameter.IsCalReHo==1)
             if AutoDataProcessParameter.CalReHo.SmoothReHo == 1
 
                 FileList=[];
-                FileList{1,1}=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo',filesep,'ReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];
-                FileList{2,1}=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo',filesep,'mReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];
-                FileList{3,1}=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo',filesep,'zReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];
+                FileList{1,1}=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo_',AutoDataProcessParameter.StartingDirName,filesep,'ReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];
+                FileList{2,1}=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo_',AutoDataProcessParameter.StartingDirName,filesep,'mReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];
+                FileList{3,1}=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ReHo_',AutoDataProcessParameter.StartingDirName,filesep,'zReHoMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];
                 
                 
                 SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Smooth.mat']);
@@ -3735,14 +3784,14 @@ end
 %Calculate Degree Centrality
 if (AutoDataProcessParameter.IsCalDegreeCentrality==1)
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality']);
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality_',AutoDataProcessParameter.StartingDirName]);
         
         parfor i=1:AutoDataProcessParameter.SubjectNum
 
             % Degree Centrality Calculation
             [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
                 AutoDataProcessParameter.CalDegreeCentrality.rThreshold, ...
-                {[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality',filesep,'DegreeCentrality_PositiveWeightedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality',filesep,'DegreeCentrality_PositiveBinarizedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']}, ...
+                {[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality_',AutoDataProcessParameter.StartingDirName,filesep,'DegreeCentrality_PositiveWeightedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii'];[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality_',AutoDataProcessParameter.StartingDirName,filesep,'DegreeCentrality_PositiveBinarizedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']}, ...
                 AutoDataProcessParameter.MaskFileForEachSubject{i});
 
             
@@ -3753,17 +3802,17 @@ if (AutoDataProcessParameter.IsCalDegreeCentrality==1)
                 BrainMaskData=y_ReadRPI(AutoDataProcessParameter.MaskFileForEachSubject{i});
                 
                 Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality',filesep,'mDegreeCentrality_PositiveWeightedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality_',AutoDataProcessParameter.StartingDirName,filesep,'mDegreeCentrality_PositiveWeightedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
                 
                 Temp = ((DegreeCentrality_PositiveWeightedSumBrain - mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality',filesep,'zDegreeCentrality_PositiveWeightedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality_',AutoDataProcessParameter.StartingDirName,filesep,'zDegreeCentrality_PositiveWeightedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
                 
                 
                 Temp = (DegreeCentrality_PositiveBinarizedSumBrain ./ mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality',filesep,'mDegreeCentrality_PositiveBinarizedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality_',AutoDataProcessParameter.StartingDirName,filesep,'mDegreeCentrality_PositiveBinarizedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
                 
                 Temp = ((DegreeCentrality_PositiveBinarizedSumBrain - mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality',filesep,'zDegreeCentrality_PositiveBinarizedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+                y_Write(Temp,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'DegreeCentrality_',AutoDataProcessParameter.StartingDirName,filesep,'zDegreeCentrality_PositiveBinarizedSumBrainMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
             end
         end
     end
@@ -3894,10 +3943,20 @@ if (~isempty(AutoDataProcessParameter.CalFC.ROIDef)) || (AutoDataProcessParamete
                 
                 TemplateDir_SubID=AutoDataProcessParameter.SubjectID{1};
                 
+                if exist([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']) %YAN Chao-Gan, 151129
+                    gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']);
+                    delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii.gz']);
+                end
                 DARTELTemplateFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6.nii'];
                 DARTELTemplateMatFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,TemplateDir_SubID,filesep,'Template_6_2mni.mat'];
                 
                 DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+                [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+                if strcmpi(ext,'.gz')
+                    gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                    delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                    DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+                end
                 FlowFieldFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 
                 
@@ -3983,7 +4042,7 @@ end
 %Functional Connectivity Calculation (by Seed based Correlation Anlyasis)
 if (AutoDataProcessParameter.IsCalFC==1)
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FC']);
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FC_',AutoDataProcessParameter.StartingDirName]);
         
         parfor i=1:AutoDataProcessParameter.SubjectNum
             
@@ -3991,7 +4050,7 @@ if (AutoDataProcessParameter.IsCalFC==1)
 
             y_SCA([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
                 AutoDataProcessParameter.CalFC.ROIDefForEachSubject{i}, ...
-                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FC',filesep,'FCMap_',AutoDataProcessParameter.SubjectID{i}], ...
+                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FC_',AutoDataProcessParameter.StartingDirName,filesep,'FCMap_',AutoDataProcessParameter.SubjectID{i}], ...
                 AutoDataProcessParameter.MaskFileForEachSubject{i}, ...
                 AutoDataProcessParameter.CalFC.IsMultipleLabel);
             
@@ -4008,14 +4067,14 @@ end
 if (AutoDataProcessParameter.IsExtractROISignals==1)
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
         
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'_ROISignals']);
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,FunSessionPrefixSet{iFunSession},'ROISignals_',AutoDataProcessParameter.StartingDirName]);
         
         %Extract the ROI time courses
         parfor i=1:AutoDataProcessParameter.SubjectNum
             
             y_ExtractROISignal([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
                 AutoDataProcessParameter.CalFC.ROIDefForEachSubject{i}, ...
-                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'_ROISignals',filesep,AutoDataProcessParameter.SubjectID{i}], ...
+                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,FunSessionPrefixSet{iFunSession},'ROISignals_',AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
                 '', ... % Will not restrict into the brain mask in extracting ROI signals
                 AutoDataProcessParameter.CalFC.IsMultipleLabel);
             
@@ -4031,12 +4090,12 @@ end
 %Calculate CWAS: This should be performed in MNI Space (4*4*4) and only one session!
 if (AutoDataProcessParameter.IsCWAS==1)
     for iFunSession=1:1
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'CWAS']);
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'CWAS_',AutoDataProcessParameter.StartingDirName]);
 
         % CWAS Calculation
         [p_Brain, F_Brain, Header] = y_CWAS([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName], ...
             AutoDataProcessParameter.SubjectID, ...
-            [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'CWAS',filesep,'CWAS.nii'], ...
+            [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'CWAS_',AutoDataProcessParameter.StartingDirName,filesep,'CWAS.nii'], ...
             AutoDataProcessParameter.CWAS.Regressors, ...
             AutoDataProcessParameter.CWAS.iter);
         
@@ -4068,6 +4127,9 @@ if AutoDataProcessParameter.IsNormalizeToSymmetricGroupT1Mean==1
         if isempty(DirImg)
             DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'w*.nii']);
         end
+        if isempty(DirImg)
+            DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'w*.nii.gz']);
+        end
 
         for iFile = 1:length(DirImg)
             if ~( strcmpi(DirImg(iFile).name(1:3),'wc1') || strcmpi(DirImg(iFile).name(1:3),'wc2') || strcmpi(DirImg(iFile).name(1:3),'wc3') )
@@ -4079,6 +4141,13 @@ if AutoDataProcessParameter.IsNormalizeToSymmetricGroupT1Mean==1
     %Create Group T1 Template
     GroupT1Sum=0;
     for i=1:AutoDataProcessParameter.SubjectNum
+        [pathstr,name,ext] = fileparts(SubwT1File{i}); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+        if strcmpi(ext,'.gz')
+            gunzip(SubwT1File{i});
+            delete(SubwT1File{i});
+            SubwT1File{i} = SubwT1File{i}(1:end-3);
+        end
+        
         [Data Vox Head]=y_ReadRPI(SubwT1File{i});
         GroupT1Sum = GroupT1Sum + Data;
     end
@@ -4178,19 +4247,85 @@ if AutoDataProcessParameter.IsNormalizeToSymmetricGroupT1Mean==1
 end
 
 
-
+%Smooth on functional data right before VMHC %YAN Chao-Gan, 151119
+if (AutoDataProcessParameter.IsSmoothBeforeVMHC==1)
+    parfor i=1:AutoDataProcessParameter.SubjectNum
+        FileList=[];
+        for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
+            cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
+            DirImg=dir('*.img');
+            if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii
+                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                if length(DirImg)==1
+                    gunzip(DirImg(1).name);
+                    delete(DirImg(1).name);
+                end
+                DirImg=dir('*.nii');
+            end
+            
+            if length(DirImg)>1  %3D .img or .nii images.
+                if AutoDataProcessParameter.TimePoints>0 && length(DirImg)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                    Error=[Error;{['Error in Smooth: ',AutoDataProcessParameter.SubjectID{i}]}];
+                end
+                for j=1:length(DirImg)
+                    FileList=[FileList;{[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(j).name]}];
+                end
+            else %4D .nii images
+                Nii  = nifti(DirImg(1).name);
+                if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
+                    Error=[Error;{['Error in Smooth: ',AutoDataProcessParameter.SubjectID{i}]}];
+                end
+                
+                FileList=[FileList;{[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]}];
+                %YAN Chao-Gan, 130301. Fixed a bug (leave session 1) in smooth in multiple sessions.  %FileList={[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]};
+                
+            end
+        end
+        
+        SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Smooth.mat']);
+        SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.data = FileList;
+        SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.fwhm = AutoDataProcessParameter.Smooth.FWHM;
+        spm_jobman('run',SPMJOB.matlabbatch);
+        
+        fprintf(['Smooth:',AutoDataProcessParameter.SubjectID{i},' OK']);
+    end
+    
+    
+    %Copy the Smoothed files to DataProcessDir\{AutoDataProcessParameter.StartingDirName}+S
+    for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
+        parfor i=1:AutoDataProcessParameter.SubjectNum
+            mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'S',filesep,AutoDataProcessParameter.SubjectID{i}])
+            
+            %YAN Chao-Gan, 151124. In considering the files initiated wity sym_
+            DirList = dir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'s*']);
+            for iFile=1:length(DirList)
+                if ~strcmpi(DirList(iFile).name(1:4),'sym_')
+                    movefile([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirList(iFile).name],[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'S',filesep,AutoDataProcessParameter.SubjectID{i}])
+                end
+            end
+            fprintf(['Moving Smoothed Files:',AutoDataProcessParameter.SubjectID{i},' OK']);
+        end
+        fprintf('\n');
+    end
+    
+    AutoDataProcessParameter.StartingDirName=[AutoDataProcessParameter.StartingDirName,'S']; %Now StartingDirName is with new suffix 'S'
+end
+if ~isempty(Error)
+    disp(Error);
+    return;
+end
 
 
 %Calculate VMHC: This usually performed in MNI Space
 if (AutoDataProcessParameter.IsCalVMHC==1)
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'VMHC']);
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'VMHC_',AutoDataProcessParameter.StartingDirName]);
         
         parfor i=1:AutoDataProcessParameter.SubjectNum
 
             % VMHC Calculation
             [VMHCBrain, Header] = y_VMHC([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
-                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'VMHC',filesep,'VMHCMap_',AutoDataProcessParameter.SubjectID{i},'.nii'], ...
+                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'VMHC_',AutoDataProcessParameter.StartingDirName,filesep,'VMHCMap_',AutoDataProcessParameter.SubjectID{i},'.nii'], ...
                 AutoDataProcessParameter.MaskFileForEachSubject{i});
 
             
@@ -4200,7 +4335,7 @@ if (AutoDataProcessParameter.IsCalVMHC==1)
                   
             zVMHCBrain = (0.5 * log((1 + VMHCBrain)./(1 - VMHCBrain)));
 
-            y_Write(zVMHCBrain,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'VMHC',filesep,'zVMHCMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
+            y_Write(zVMHCBrain,Header,[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'VMHC_',AutoDataProcessParameter.StartingDirName,filesep,'zVMHCMap_',AutoDataProcessParameter.SubjectID{i},'.nii']);
 
         end
     end
@@ -4228,7 +4363,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
     MeasureSet=[];
     for iDir=StartIndex:length(DirMeasure)
         if DirMeasure(iDir).isdir
-            if ~(strcmpi(DirMeasure(iDir).name,'VMHC') || (length(DirMeasure(iDir).name)>10 && strcmpi(DirMeasure(iDir).name(end-10:end),'_ROISignals')))
+            if ~( (length(DirMeasure(iDir).name)>=4 && strcmpi(DirMeasure(iDir).name(1:4),'VMHC')) || (length(DirMeasure(iDir).name)>=10 && strcmpi(DirMeasure(iDir).name(1:10),'ROISignals')))   %~(strcmpi(DirMeasure(iDir).name,'VMHC') || (length(DirMeasure(iDir).name)>10 && strcmpi(DirMeasure(iDir).name(end-10:end),'_ROISignals')))
                 MeasureSet = [MeasureSet;{DirMeasure(iDir).name}];
             end
         end
@@ -4341,11 +4476,23 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.vox=AutoDataProcessParameter.Normalize.VoxSize;
             
             DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'Template_6.*']);
+            [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+            if strcmpi(ext,'.gz')
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]);
+                delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]);
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'Template_6.*']);
+            end
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.template={[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]};
             
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.data.subj(1,1).images=FileList;
             
             DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+            [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+            if strcmpi(ext,'.gz')
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+            end
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.data.subj(1,1).flowfield={[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]};
 
             spm_jobman('run',SPMJOB.matlabbatch);
@@ -4474,7 +4621,7 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
     MeasureSet=[];
     for iDir=StartIndex:length(DirMeasure)
         if DirMeasure(iDir).isdir
-            if ~((length(DirMeasure(iDir).name)>10 && strcmpi(DirMeasure(iDir).name(end-10:end),'_ROISignals')))
+            if ~((length(DirMeasure(iDir).name)>=10 && strcmpi(DirMeasure(iDir).name(1:10),'ROISignals'))) %~((length(DirMeasure(iDir).name)>10 && strcmpi(DirMeasure(iDir).name(end-10:end),'_ROISignals')))
                 MeasureSet = [MeasureSet;{DirMeasure(iDir).name}];
             end
         end
@@ -4523,6 +4670,12 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.vox=AutoDataProcessParameter.Normalize.VoxSize;
             
             DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'Template_6.*']);
+            [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+            if strcmpi(ext,'.gz')
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]);
+                delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]);
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'Template_6.*']);
+            end
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.template={[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{1},filesep,DirImg(1).name]};
             
             FileList=[];
@@ -4546,6 +4699,12 @@ if (AutoDataProcessParameter.IsSmooth>=1) && strcmpi(AutoDataProcessParameter.Sm
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.data.subj(1,1).images=FileList;
             
             DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+            [pathstr,name,ext] = fileparts(DirImg(1).name); %YAN Chao-Gan, 151129. Check if it's .nii.gz
+            if strcmpi(ext,'.gz')
+                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]);
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'u_*']);
+            end
             SPMJOB.matlabbatch{1,1}.spm.tools.dartel.mni_norm.data.subj(1,1).flowfield={[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name]};
             
             spm_jobman('run',SPMJOB.matlabbatch);

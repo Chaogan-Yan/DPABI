@@ -22,7 +22,7 @@ function varargout = DPABI_STAT_TOOL(varargin)
 
 % Edit the above text to modify the response to help DPABI_STAT_TOOL
 
-% Last Modified by GUIDE v2.5 28-Mar-2014 21:02:35
+% Last Modified by GUIDE v2.5 27-Nov-2015 11:44:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -98,8 +98,9 @@ end
 function handles=StatType(handles)
 Value=get(handles.StatPopup, 'Value');
 CorrFlag='Off';
-
 BaseFlag='Off';
+MCFlag='Off'; %YAN Chao-Gan, 151127. For multiple comparison test.
+
 switch Value
     case 1
         handles.SampleNum=1;
@@ -114,13 +115,13 @@ switch Value
     case 4
         handles.SampleNum=10;
         Prefix='F';
+        MCFlag='On';
     case 5
         handles.SampleNum=10;
         Prefix='FR';
     case 6
         handles.SampleNum=2;
         Prefix='R';
-        
         CorrFlag='On';
 end
 
@@ -133,6 +134,8 @@ set(handles.PrefixEntry, 'String', Prefix);
 %set(handles.CorrSeedRemoveButton, 'Visible', CorrFlag);
 %set(handles.CorrSeedAddButton,    'Enable', CorrFlag);
 set(handles.CorrSeedFrame,        'Visible', CorrFlag); 
+set(handles.textMC,        'Visible', MCFlag); 
+set(handles.popupmenuMC,        'Visible', MCFlag); 
 
 % --- Outputs from this function are returned to the command line.
 function varargout = DPABI_STAT_TOOL_OutputFcn(hObject, eventdata, handles) 
@@ -496,7 +499,11 @@ switch Value
     case 3 %Paired
         y_TTestPaired_Image(S, OutputName, MaskFile, ImageCell, TextCell);      
     case 4 %ANCOVA
-        y_ANCOVA1_Image(S, OutputName, MaskFile, ImageCell, TextCell);
+        %y_ANCOVA1_Image(S, OutputName, MaskFile, ImageCell, TextCell);
+        MC_list = {'None';'tukey-kramer';'lsd';'bonferroni';'dunn-sidak';'scheffe';}; %YAN Chao-Gan, 151127. Add multiple comparison test for ANCOVA
+        MC_Value = get(handles.popupmenuMC,'Value');
+        MC_type = MC_list{MC_Value};
+        y_ANCOVA1_Multcompare_Image(S, OutputName, MaskFile, ImageCell, TextCell, MC_type);
     case 5 %ANCOVA Repeat
         y_ANCOVA1_Repeated_Image(S, OutputName, MaskFile, ImageCell, TextCell);
     case 6 %Corr
@@ -660,6 +667,29 @@ function BaseEntry_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenuMC.
+function popupmenuMC_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenuMC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuMC contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenuMC
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenuMC_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuMC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');

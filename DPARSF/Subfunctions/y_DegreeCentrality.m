@@ -185,6 +185,7 @@ DegreeCentrality_PositiveBinarizedSumBrain=reshape(DegreeCentrality_PositiveBina
 
 Header.pinfo = [1;0;0];
 Header.dt    =[16,0];
+Header.descrip=sprintf('rThreshold{%g}',rThreshold);
 
 if ischar(OutputName)
     [pathstr, name, ext] = fileparts(OutputName);

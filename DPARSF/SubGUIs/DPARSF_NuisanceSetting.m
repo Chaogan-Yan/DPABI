@@ -22,16 +22,16 @@ function varargout = DPARSF_NuisanceSetting(varargin)
 
 % Edit the above text to modify the response to help DPARSF_NuisanceSetting
 
-% Last Modified by GUIDE v2.5 16-Aug-2014 04:25:14
+% Last Modified by GUIDE v2.5 24-Nov-2015 09:23:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @DPARSF_NuisanceSetting_OpeningFcn, ...
-                   'gui_OutputFcn',  @DPARSF_NuisanceSetting_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @DPARSF_NuisanceSetting_OpeningFcn, ...
+    'gui_OutputFcn',  @DPARSF_NuisanceSetting_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -57,18 +57,22 @@ if nargin<4
     Covremove.WM.MaskThreshold = 0.99;
     Covremove.WM.Method = 'Mean'; %or 'CompCor'
     Covremove.WM.CompCorPCNum = 5;
-
+    
     Covremove.CSF.IsRemove = 1; % or 0
     Covremove.CSF.Mask = 'SPM'; % or 'Segment'
     Covremove.CSF.MaskThreshold = 0.99;
     Covremove.CSF.Method = 'Mean'; %or 'CompCor'
     Covremove.CSF.CompCorPCNum = 5;
-
-    Covremove.WholeBrain.IsRemove = 0; % or 0
+    
+    Covremove.WholeBrain.IsRemove = 0; % or 1
+    Covremove.WholeBrain.IsBothWithWithoutGSR = 1; % or 0 %YAN Chao-Gan, 151123
     Covremove.WholeBrain.Mask = 'SPM'; % or 'AutoMask'
     Covremove.WholeBrain.Method = 'Mean';
 else
     Covremove=varargin{1};
+    if ~isfield(Covremove.WholeBrain,'IsBothWithWithoutGSR')  %YAN Chao-Gan, 151123
+        Covremove.WholeBrain.IsBothWithWithoutGSR = 0;
+    end
 end
 Init(Covremove, handles);
 
@@ -81,7 +85,7 @@ uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = DPARSF_NuisanceSetting_OutputFcn(hObject, eventdata, handles) 
+function varargout = DPARSF_NuisanceSetting_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -150,6 +154,7 @@ Covremove.CSF.CompCorPCNum=str2num(get(handles.edit_PCNumber, 'String'));
 
 %%Global Signal Started
 Covremove.WholeBrain.IsRemove=get(handles.WholeBrainButton, 'Value');
+Covremove.WholeBrain.IsBothWithWithoutGSR=get(handles.checkboxBothWithWithoutGSR, 'Value'); %YAN Chao-Gan, 151123
 %Method
 Covremove.WholeBrain.Method=get(handles.WholeBrainMethodPopup, 'String');
 %Mask
@@ -263,7 +268,7 @@ if Value==2
     elseif MaskType==2
         MaskFlag='On';
     end
-    set(handles.(CSFThrdWidget), 'Enable', MaskFlag);    
+    set(handles.(CSFThrdWidget), 'Enable', MaskFlag);
 end
 
 CheckOnOff('WM', handles); %Update the "enable" of the PC Number Edit. YAN Chao-Gan, 140805
@@ -368,8 +373,24 @@ function WholeBrainButton_Callback(hObject, eventdata, handles)
 % hObject    handle to WholeBrainButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if get(handles.WholeBrainButton, 'Value') %YAN Chao-Gan, 151123
+    set(handles.checkboxBothWithWithoutGSR, 'Value', 0)
+end
 CheckOnOff('WholeBrain', handles);
 % Hint: get(hObject,'Value') returns toggle state of WholeBrainButton
+
+
+% --- Executes on button press in checkboxBothWithWithoutGSR.
+function checkboxBothWithWithoutGSR_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxBothWithWithoutGSR (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkboxBothWithWithoutGSR
+if get(handles.checkboxBothWithWithoutGSR, 'Value') %YAN Chao-Gan, 151123
+    set(handles.WholeBrainButton, 'Value', 0)
+end
+CheckOnOff('WholeBrain', handles);
 
 
 % --- Executes on selection change in WholeBrainMaskPopup.
@@ -429,6 +450,12 @@ if Value
     Flag='On';
 end
 
+if strcmpi(Tag, 'WholeBrain') %YAN Chao-Gan, 151123. Check the competition between "Global Signal" and "Both with & without GSR".
+    if get(handles.checkboxBothWithWithoutGSR, 'Value')
+        Flag='On';
+    end
+end
+
 set(handles.(MaskWidget), 'Enable', Flag);
 if isfield(handles, ThrdWidget)
     set(handles.(ThrdWidget), 'Enable', Flag);
@@ -443,7 +470,7 @@ if isfield(handles, ThrdWidget)
     else
         Other='WM';
     end
-    OtherButtonWidget=sprintf('%sButton', Other);        
+    OtherButtonWidget=sprintf('%sButton', Other);
     OtherValue=get(handles.(OtherButtonWidget), 'Value');
     
     MethodType=get(handles.(MethodWidget), 'Value');
@@ -457,6 +484,7 @@ if isfield(handles, ThrdWidget)
         MFlag='Off';
         MValue=1;
     end
+    
     set(handles.(MethodWidget), 'Enable', MFlag, 'Value', MValue);
     
     %YAN Chao-Gan, added PC number. 140805.
@@ -504,7 +532,7 @@ if MaskValue==1
     set(handles.(WMThrdWidget), 'Enable', 'Off');
 end
 
-%CSF Widget 
+%CSF Widget
 Tag='CSF';
 CSFButtonWidget=sprintf('%sButton',      Tag);
 CSFMethodWidget='MethodPopup';
@@ -559,10 +587,11 @@ WBMethodWidget=sprintf('%sMethodPopup', Tag);
 WBMaskWidget=sprintf('%sMaskPopup',     Tag);
 BtnValue=Struct.(Tag).IsRemove;
 Flag='Off';
-if BtnValue
+if BtnValue || Struct.(Tag).IsBothWithWithoutGSR  %YAN Chao-Gan, 151123
     Flag='On';
 end
 set(handles.(WBButtonWidget), 'Value', BtnValue)
+set(handles.checkboxBothWithWithoutGSR, 'Value', Struct.(Tag).IsBothWithWithoutGSR); %YAN Chao-Gan, 151123
 %Method
 Method=Struct.(Tag).Method;
 set(handles.(WBMethodWidget), 'String',Method);

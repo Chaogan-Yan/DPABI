@@ -1,35 +1,35 @@
-function varargout = DPABI_T1ImgDefacer(varargin)
-% DPABI_T1ImgDefacer MATLAB code for DPABI_T1ImgDefacer.fig
-%      DPABI_T1ImgDefacer, by itself, creates a new DPABI_T1ImgDefacer or raises the existing
+function varargout = DPABI_ResultsOrganizer(varargin)
+% DPABI_ResultsOrganizer MATLAB code for DPABI_ResultsOrganizer.fig
+%      DPABI_ResultsOrganizer, by itself, creates a new DPABI_ResultsOrganizer or raises the existing
 %      singleton*.
 %
-%      H = DPABI_T1ImgDefacer returns the handle to a new DPABI_T1ImgDefacer or the handle to
+%      H = DPABI_ResultsOrganizer returns the handle to a new DPABI_ResultsOrganizer or the handle to
 %      the existing singleton*.
 %
-%      DPABI_T1ImgDefacer('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in DPABI_T1ImgDefacer.M with the given input arguments.
+%      DPABI_ResultsOrganizer('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in DPABI_ResultsOrganizer.M with the given input arguments.
 %
-%      DPABI_T1ImgDefacer('Property','Value',...) creates a new DPABI_T1ImgDefacer or raises the
+%      DPABI_ResultsOrganizer('Property','Value',...) creates a new DPABI_ResultsOrganizer or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before DPABI_T1ImgDefacer_OpeningFcn gets called.  An
+%      applied to the GUI before DPABI_ResultsOrganizer_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to DPABI_T1ImgDefacer_OpeningFcn via varargin.
+%      stop.  All inputs are passed to DPABI_ResultsOrganizer_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help DPABI_T1ImgDefacer
+% Edit the above text to modify the response to help DPABI_ResultsOrganizer
 
-% Last Modified by GUIDE v2.5 27-Aug-2014 07:54:31
+% Last Modified by GUIDE v2.5 29-Nov-2015 15:23:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @DPABI_T1ImgDefacer_OpeningFcn, ...
-                   'gui_OutputFcn',  @DPABI_T1ImgDefacer_OutputFcn, ...
+                   'gui_OpeningFcn', @DPABI_ResultsOrganizer_OpeningFcn, ...
+                   'gui_OutputFcn',  @DPABI_ResultsOrganizer_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,26 +44,27 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before DPABI_T1ImgDefacer is made visible.
-function DPABI_T1ImgDefacer_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before DPABI_ResultsOrganizer is made visible.
+function DPABI_ResultsOrganizer_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to DPABI_T1ImgDefacer (see VARARGIN)
+% varargin   command line arguments to DPABI_ResultsOrganizer (see VARARGIN)
+
 handles.SubjString=[];
-% Choose default command line output for DPABI_T1ImgDefacer
+% Choose default command line output for DPABI_ResultsOrganizer
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes DPABI_T1ImgDefacer wait for user response (see UIRESUME)
+% UIWAIT makes DPABI_ResultsOrganizer wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = DPABI_T1ImgDefacer_OutputFcn(hObject, eventdata, handles) 
+function varargout = DPABI_ResultsOrganizer_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -113,27 +114,6 @@ set(handles.WorkDirEntry, 'String', Path);
 
 GetSubjList(hObject, handles);
 
-function StartDirEntry_Callback(hObject, eventdata, handles)
-% hObject    handle to StartDirEntry (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-GetSubjList(hObject, handles);
-% Hints: get(hObject,'String') returns contents of StartDirEntry as text
-%        str2double(get(hObject,'String')) returns contents of StartDirEntry as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function StartDirEntry_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to StartDirEntry (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on selection change in StartDirEntry.
 function TypePopup_Callback(hObject, eventdata, handles)
@@ -180,18 +160,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-% --- Executes on button press in ComputeButton.
-function ComputeButton_Callback(hObject, eventdata, handles)
-% hObject    handle to ComputeButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-Cfg.DataProcessDir=get(handles.WorkDirEntry, 'String');
-Cfg.SubjectID=get(handles.SubjListbox, 'String');
-Cfg.IsT1Deface=1;
-Cfg.IsNeedConvertT1DCM2IMG = get(handles.StartDirEntry, 'Value')==1;
-y_T1ImgDefacer(Cfg);
 
 % --- Executes on button press in CustomButton.
 function CustomButton_Callback(hObject, eventdata, handles)
@@ -289,9 +257,7 @@ function GetSubjList(hObject, handles)
 %Create by Sandy to get the Subject List
 WorkDir=get(handles.WorkDirEntry, 'String');
 if isempty(handles.SubjString)
-    StartDirSet=get(handles.StartDirEntry, 'String');
-    StartValue=get(handles.StartDirEntry, 'Value');
-    StartDir=StartDirSet{StartValue};
+    StartDir=get(handles.StartDirEntry, 'String');
     FullDir=fullfile(WorkDir, StartDir);
 
     if isempty(WorkDir) || isempty(StartDir) || ~isdir(FullDir)
@@ -318,3 +284,94 @@ set(handles.CustomButton, 'Value', CustomFlag);
 
 set(handles.SubjListbox, 'String', SubjString);
 set(handles.SubjListbox, 'Value', 1);
+
+
+
+function StartDirEntry_Callback(hObject, eventdata, handles)
+% hObject    handle to StartDirEntry (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of StartDirEntry as text
+%        str2double(get(hObject,'String')) returns contents of StartDirEntry as a double
+GetSubjList(hObject, handles);
+
+
+
+% --- Executes during object creation, after setting all properties.
+function StartDirEntry_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to StartDirEntry (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function OutputDirEntry_Callback(hObject, eventdata, handles)
+% hObject    handle to OutputDirEntry (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of OutputDirEntry as text
+%        str2double(get(hObject,'String')) returns contents of OutputDirEntry as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function OutputDirEntry_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to OutputDirEntry (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in OutputDirButton.
+function OutputDirButton_Callback(hObject, eventdata, handles)
+% hObject    handle to OutputDirButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+Path=get(handles.OutputDirEntry, 'String');
+if ~isdir(Path)
+    Path=pwd;
+end
+Path=uigetdir(Path);
+if ~ischar(Path)
+    return
+end
+set(handles.OutputDirEntry, 'String', Path);
+
+
+% --- Executes on button press in pushbuttonInterFiles.
+function pushbuttonInterFiles_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonInterFiles (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+WorkingDir=get(handles.WorkDirEntry, 'String');
+SubjectID=get(handles.SubjListbox, 'String');
+OutputDir=get(handles.OutputDirEntry, 'String');
+
+y_IntermediateFilesOrganizer(WorkingDir,SubjectID,OutputDir);
+
+
+
+% --- Executes on button press in ComputeButton.
+function ComputeButton_Callback(hObject, eventdata, handles)
+% hObject    handle to ComputeButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+WorkingDir=get(handles.WorkDirEntry, 'String');
+SubjectID=get(handles.SubjListbox, 'String');
+OutputDir=get(handles.OutputDirEntry, 'String');
+
+y_ResultsOrganizer(WorkingDir,SubjectID,OutputDir);

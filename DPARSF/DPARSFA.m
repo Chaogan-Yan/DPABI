@@ -34,7 +34,7 @@ end
 
 % --- Executes just before DPARSFA is made visible.
 function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V3.2_150710';
+    Release='V4.0_151201';
     handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
     
     if ispc
@@ -75,11 +75,12 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
 
     
     TemplateParameters={'Template Parameters'...
-        'Calculate in Original Space (warp by DARTEL)'...
-        'Calculate in Original Space (warp by information from unified segmentation)'...
+        'V4: Calculate in MNI Space (warp by DARTEL)'...
         'Calculate in MNI Space (warp by DARTEL)'...
         'Calculate in MNI Space (warp by information from unified segmentation)'...
         'Calculate in MNI Space: TRADITIONAL order'...
+        'Calculate in Original Space (warp by DARTEL)'...
+        'Calculate in Original Space (warp by information from unified segmentation)'...
         'Calculate ReHo and DC only (Smooth later)'...
         'Intraoperative Processing'...
         'Task fMRI data preprocessing'...
@@ -90,12 +91,13 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     
     if (~ispc) && (~ismac)
         TipString = sprintf(['Template Parameters\n'...
-            'Calculate in Original Space (warp by DARTEL)\n'...
-            'Calculate in Original Space (warp by information from unified segmentation)\n'...
+            'V4: Calculate in MNI Space (warp by DARTEL)\n'...
             'Calculate in MNI Space (warp by DARTEL)\n'...
             'Calculate in MNI Space (warp by information from unified segmentation)\n'...
             'Calculate in MNI Space: TRADITIONAL order\n'...
-            'Calculate ReHo and DC only (Smooth later)'...
+            'Calculate in Original Space (warp by DARTEL)\n'...
+            'Calculate in Original Space (warp by information from unified segmentation)\n'...
+            'Calculate ReHo and DC only (Smooth later)\n'...
             'Intraoperative Processing\n'...
             'Task fMRI data preprocessing\n'...
             'VBM (New Segment and DARTEL)\n'...
@@ -164,7 +166,8 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.Cfg.Covremove.CSF.MaskThreshold = 0.99;
     handles.Cfg.Covremove.CSF.Method = 'Mean'; %or 'CompCor'
     handles.Cfg.Covremove.CSF.CompCorPCNum = 5;
-    handles.Cfg.Covremove.WholeBrain.IsRemove = 0; % or 0
+    handles.Cfg.Covremove.WholeBrain.IsRemove = 0; % or 1
+    handles.Cfg.Covremove.WholeBrain.IsBothWithWithoutGSR = 0; % or 1 %YAN Chao-Gan, 151123
     handles.Cfg.Covremove.WholeBrain.Mask = 'SPM'; % or 'AutoMask'
     handles.Cfg.Covremove.WholeBrain.Method = 'Mean';
     
@@ -238,6 +241,7 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     
     
     handles.Cfg.IsNormalizeToSymmetricGroupT1Mean = 0; %YAN Chao-Gan, 121225.
+    handles.Cfg.IsSmoothBeforeVMHC = 0;
     handles.Cfg.IsCalVMHC = 0;
     
     
@@ -252,7 +256,22 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
 
     %YAN Chao-Gan, 140804. Can input parameter .mat file.
     if nargin<4
-        load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInMNISpace_Warp_DARTEL.mat']);
+        load([ProgramPath,filesep,'Jobmats',filesep,'Template_V4_CalculateInMNISpace_Warp_DARTEL.mat']);
+        
+        DPABIPath = fileparts(which('dpabi.m')); %YAN Chao-Gan, 151229. For set up ROIs, for the R-fMRI Project
+        Cfg.CalFC.ROIDef = {[DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
+            [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
+            [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
+            [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
+            [DPABIPath,filesep,'Templates',filesep,'Zalesky_1024_parcellated_compact.nii']};
+        Cfg.CalFC.IsMultipleLabel = 1;
+        load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
+        ROICenter=Dosenbach_Science_160ROIs_Center;
+        ROIRadius=5;
+        for iROI=1:size(ROICenter,1)
+            ROIDef{iROI,1}=[ROICenter(iROI,:), ROIRadius];
+        end
+        Cfg.CalFC.ROIDef = [Cfg.CalFC.ROIDef;ROIDef];
     else
         load(varargin{1});
     end
@@ -322,8 +341,9 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.checkbox_IsAutoMask,'Callback','DPARSFA(''checkbox_IsAutoMask_Callback'',gcbo,[],guidata(gcbo))');
     set(handles.checkbox_IsBet,'Callback','DPARSFA(''checkbox_IsBet_Callback'',gcbo,[],guidata(gcbo))');
     set(handles.pushbutton_NuisanceSetting,'Callback','DPARSFA(''pushbutton_NuisanceSetting_Callback'',gcbo,[],guidata(gcbo))');
-    
     set(handles.checkboxCovremoveAfterNormalize,'Callback','DPARSFA(''checkboxCovremoveAfterNormalize_Callback'',gcbo,[],guidata(gcbo))');
+    
+    set(handles.checkboxSmoothBeforeVMHC,'Callback','DPARSFA(''checkboxSmoothBeforeVMHC_Callback'',gcbo,[],guidata(gcbo))'); %YAN Chao-Gan, 151120
 
     
     % Choose default command line output for DPARSFA
@@ -490,33 +510,49 @@ function popupmenuTemplateParameters_Callback(hObject, eventdata, handles)
     switch get(hObject, 'Value'),
         case 1,	%Template Parameters
             return;%Do nothing
-        case 2, %Calculate in Original Space (warp by DARTEL)
-            load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInOriginalSpace_Warp_DARTEL.mat']);
-        case 3, %Calculate in Original Space (warp by information from unified segmentation)
-            load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInOriginalSpace_Warp_UnifiedSegment.mat']);
-        case 4, %Calculate in MNI Space (warp by DARTEL)
+        case 2, %V4 parameters: Calculate in MNI Space (warp by DARTEL)
+            load([ProgramPath,filesep,'Jobmats',filesep,'Template_V4_CalculateInMNISpace_Warp_DARTEL.mat']);
+            DPABIPath = fileparts(which('dpabi.m')); %For set up the ROIs, for the R-fMRI Maps Project
+            Cfg.CalFC.ROIDef = {[DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
+                [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
+                [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
+                [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
+                [DPABIPath,filesep,'Templates',filesep,'Zalesky_1024_parcellated_compact.nii']};
+            Cfg.CalFC.IsMultipleLabel = 1;
+            load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
+            ROICenter=Dosenbach_Science_160ROIs_Center;
+            ROIRadius=5;
+            for iROI=1:size(ROICenter,1)
+                ROIDef{iROI,1}=[ROICenter(iROI,:), ROIRadius];
+            end
+            Cfg.CalFC.ROIDef = [Cfg.CalFC.ROIDef;ROIDef];
+        case 3, %Calculate in MNI Space (warp by DARTEL)
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInMNISpace_Warp_DARTEL.mat']);
-        case 5, %Calculate in MNI Space (warp by information from unified segmentation)
+        case 4, %Calculate in MNI Space (warp by information from unified segmentation)
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInMNISpace_Warp_UnifiedSegment.mat']);
-        case 6, %Calculate in MNI Space: TRADITIONAL order
+        case 5, %Calculate in MNI Space: TRADITIONAL order
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInMNISpace_TraditionalOrder.mat']);
-        case 7, %Calculate ReHo and DC only (Smooth later)
+        case 6, %Calculate in Original Space (warp by DARTEL)
+            load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInOriginalSpace_Warp_DARTEL.mat']);
+        case 7, %Calculate in Original Space (warp by information from unified segmentation)
+            load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInOriginalSpace_Warp_UnifiedSegment.mat']);
+        case 8, %Calculate ReHo and DC only (Smooth later)
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateReHoDC.mat']);
-        case 8, %Intraoperative Processing
+        case 9, %Intraoperative Processing
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_IntraoperativeProcessing.mat']);
-        case 9, %Task fMRI data preprocessing
+        case 10, %Task fMRI data preprocessing
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_TaskfMRIPreprocessing.mat']);
-        case 10, %VBM (New Segment and DARTEL)
+        case 11, %VBM (New Segment and DARTEL)
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_VBM_NewSegmentDARTEL.mat']);
-        case 11, %VBM (unified segmentaition)
+        case 12, %VBM (unified segmentaition)
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_VBM_UnifiedSegment.mat']);
-        case 12, %Blank
+        case 13, %Blank
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_Blank.mat']);
     end
     
 
     Cfg.WorkingDir =pwd;
-    Cfg.DataProcessDir =handles.Cfg.WorkingDir;
+    Cfg.DataProcessDir = Cfg.WorkingDir;
     SetLoadedData(hObject,handles, Cfg);
     
 function ckboxEPIDICOM2NIFTI_Callback(hObject, eventdata, handles)
@@ -1361,7 +1397,7 @@ function radiobuttonReHo27voxels_Callback(hObject, eventdata, handles)
 function checkboxSmoothReHo_Callback(hObject, eventdata, handles)
     if get(hObject,'Value')
         
-        uiwait(msgbox({'ReHo is usually performed on unsmoothed data, thus need to be smoothed afterwards. This option is convenient if ReHo is the only measure need to be smoothed afterwards (e.g., performed in MNI space). Another option is "Smooth Derivatives", that option is convenient if all the measures need to be smoothed afterwards (e.g., performed in native space.)';...
+        uiwait(msgbox({'ReHo is usually performed on unsmoothed data, thus need to be smoothed afterwards. This option is convenient if ReHo is the only measure need to be smoothed afterwards (e.g., performed in MNI space). Another option is "Smooth Derivatives", that option is convenient if all the measures need to be smoothed afterwards (e.g., performed in native space). The smooth kernel is set by FWMH after the first smooth checkbox.';...
             },'Smooth ReHo'));
         
         handles.Cfg.CalReHo.SmoothReHo = 1;
@@ -1490,6 +1526,19 @@ function checkboxNormalizeToSymmetricGroupT1Mean_Callback(hObject, eventdata, ha
 	UpdateDisplay(handles); 
     
 
+function checkboxSmoothBeforeVMHC_Callback(hObject, eventdata, handles)
+	if get(hObject,'Value')
+        uiwait(msgbox({'In order to improve the correspondence between symmetric voxels, smooth is performed before VMHC calculation. The smooth kernel is set by FWMH after the first smooth checkbox.';...
+            },'Smooth before VMHC calculation'));
+        handles.Cfg.IsSmoothBeforeVMHC = 1;
+	else	
+		handles.Cfg.IsSmoothBeforeVMHC = 0;
+    end	
+    handles=CheckCfgParameters(handles);
+	guidata(hObject, handles);
+	UpdateDisplay(handles);  
+    
+    
 function checkboxCalVMHC_Callback(hObject, eventdata, handles)
 	if get(hObject,'Value')
         handles.Cfg.IsCalVMHC = 1;
@@ -1671,6 +1720,15 @@ function SetLoadedData(hObject,handles, Cfg);
     if ~isfield(handles.Cfg,'IsApplyDownloadedReorientMats')
         handles.Cfg.IsApplyDownloadedReorientMats=0;
     end
+    
+    if ~isfield(handles.Cfg,'IsSmoothBeforeVMHC')
+        handles.Cfg.IsSmoothBeforeVMHC=0;
+    end
+    
+    if ~isfield(handles.Cfg.Covremove.WholeBrain,'IsBothWithWithoutGSR')
+        handles.Cfg.Covremove.WholeBrain.IsBothWithWithoutGSR = 0; %YAN Chao-Gan, 151123
+    end
+    
 
     guidata(hObject, handles);
     UpdateDisplay(handles);
@@ -1701,6 +1759,11 @@ function pushbuttonRun_Callback(hObject, eventdata, handles)
     Datetime=fix(clock); %Added by YAN Chao-Gan, 100130.
     save([handles.Cfg.DataProcessDir,filesep,'DPARSFA_AutoSave_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
     [Error]=DPARSFA_run(handles.Cfg);
+    
+    if ((handles.Cfg.IsCovremove==1) && (handles.Cfg.Covremove.WholeBrain.IsBothWithWithoutGSR == 1)) %YAN Chao-Gan, 151123
+        [Error]=DPARSFA_RerunWithGSR(handles.Cfg);
+    end
+    
     if ~isempty(Error)
         uiwait(msgbox(Error,'Errors were encountered while processing','error'));
     end
@@ -2115,6 +2178,7 @@ function UpdateDisplay(handles)
     
     
     set(handles.checkboxNormalizeToSymmetricGroupT1Mean, 'Value', handles.Cfg.IsNormalizeToSymmetricGroupT1Mean); %YAN Chao-Gan, 121225.
+    set(handles.checkboxSmoothBeforeVMHC, 'Value', handles.Cfg.IsSmoothBeforeVMHC); %YAN Chao-Gan, 151120
     set(handles.checkboxCalVMHC, 'Value', handles.Cfg.IsCalVMHC);
     
     if handles.Cfg.IsCWAS

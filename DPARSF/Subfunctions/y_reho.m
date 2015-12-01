@@ -308,6 +308,7 @@ end %end switch
 ReHoBrain = K;
 Header.pinfo = [1;0;0];
 Header.dt    =[16,0];
+Header.descrip=sprintf('Cluster{%g}',NVoxel);
 
 y_Write(ReHoBrain,Header,AResultFilename);
 

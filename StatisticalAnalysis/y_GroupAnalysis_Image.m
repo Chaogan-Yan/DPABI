@@ -1,5 +1,5 @@
-function [b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
-% function [b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
+function [b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header, SSE_OLS_brain] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
+% function [b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header, SSE_OLS_brain] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
 % Perform regression analysis 
 % Input:
 % 	DependentVolume		-	4D data matrix (DimX*DimY*DimZ*DimTimePoints) or the directory of 3D image data file or the filename of one 4D data file
@@ -70,6 +70,7 @@ TF_ForContrast_brain=zeros(nDim1,nDim2,nDim3);
 %YAN Chao-Gan, 130227
 
 r_OLS_brain=zeros(nDim1,nDim2,nDim3,nDim4);
+SSE_OLS_brain=zeros(nDim1,nDim2,nDim3); %YAN Chao-Gan, 151125. Also outpur the SSE Brain.
 
 
 fprintf('\n\tRegression Calculating...\n');
@@ -106,7 +107,7 @@ for i=1:nDim1
                 end
                 
                 r_OLS_brain(i,j,k,:)=r;
-                
+                SSE_OLS_brain(i,j,k)=SSE; %YAN Chao-Gan, 151125. Also outpur the SSE Brain.
             end
         end
     end
@@ -152,8 +153,9 @@ if exist('IsOutputResidual','var') && (IsOutputResidual==1)
 	[Path, Name, Ext]=fileparts(OutputName);
 	Name=fullfile(Path, Name);
     y_Write(r_OLS_brain,Header,[Name,'_Residual','.nii']);
-	SSE_r_OLS_brain=sum(r_OLS_brain.^2, 4); %Add error sum of square by Sandy
-	y_Write(SSE_r_OLS_brain,Header,[Name,'_Residual_SSE','.nii']);
+	%SSE_r_OLS_brain=sum(r_OLS_brain.^2, 4); %Add error sum of square by Sandy
+	%y_Write(SSE_r_OLS_brain,Header,[Name,'_Residual_SSE','.nii']);
+    y_Write(SSE_OLS_brain,Header,[Name,'_Residual_SSE','.nii']); %YAN Chao-Gan, 151125. Just save the already stored one.
 end
 
 Header = HeaderTWithDOF;
