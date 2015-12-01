@@ -1352,7 +1352,7 @@ switch Value
             ColorMap=OverlayHeader.ColorMap;
         else
             if isnan(cbar)
-                ColorMap = colormap(cbarstring);
+                ColorMap = colormap(OverlayHeader.cbarstring);
             else
                 ColorMap = y_AFNI_ColorMap(cbar);
             end
