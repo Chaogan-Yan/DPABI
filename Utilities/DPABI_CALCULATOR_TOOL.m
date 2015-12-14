@@ -335,7 +335,7 @@ end
 
 Expression=strrep(Expression,'std','w_STD');
 Expression=strrep(Expression,'mean','w_MEAN');
-Expression=strrep(Expression,'4D','w_REPMAT');
+Expression=strrep(Expression,'To4D','w_REPMAT');
 
 Expression=strrep(Expression,'corr','w_CORR');
 Expression=['Result=', Expression, ';'];
