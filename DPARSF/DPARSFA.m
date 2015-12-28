@@ -263,15 +263,16 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
             [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
-            [DPABIPath,filesep,'Templates',filesep,'Zalesky_1024_parcellated_compact.nii']};
+            [DPABIPath,filesep,'Templates',filesep,'Zalesky_1024_parcellated_compact.nii'];...
+            [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii']};
         Cfg.CalFC.IsMultipleLabel = 1;
-        load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
-        ROICenter=Dosenbach_Science_160ROIs_Center;
-        ROIRadius=5;
-        for iROI=1:size(ROICenter,1)
-            ROIDef{iROI,1}=[ROICenter(iROI,:), ROIRadius];
-        end
-        Cfg.CalFC.ROIDef = [Cfg.CalFC.ROIDef;ROIDef];
+%         load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
+%         ROICenter=Dosenbach_Science_160ROIs_Center;
+%         ROIRadius=5;
+%         for iROI=1:size(ROICenter,1)
+%             ROIDef{iROI,1}=[ROICenter(iROI,:), ROIRadius];
+%         end
+%         Cfg.CalFC.ROIDef = [Cfg.CalFC.ROIDef;ROIDef];
     else
         load(varargin{1});
     end
@@ -517,15 +518,16 @@ function popupmenuTemplateParameters_Callback(hObject, eventdata, handles)
                 [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
                 [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
                 [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
-                [DPABIPath,filesep,'Templates',filesep,'Zalesky_1024_parcellated_compact.nii']};
+                [DPABIPath,filesep,'Templates',filesep,'Zalesky_1024_parcellated_compact.nii'];...
+            [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii']};
             Cfg.CalFC.IsMultipleLabel = 1;
-            load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
-            ROICenter=Dosenbach_Science_160ROIs_Center;
-            ROIRadius=5;
-            for iROI=1:size(ROICenter,1)
-                ROIDef{iROI,1}=[ROICenter(iROI,:), ROIRadius];
-            end
-            Cfg.CalFC.ROIDef = [Cfg.CalFC.ROIDef;ROIDef];
+%             load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
+%             ROICenter=Dosenbach_Science_160ROIs_Center;
+%             ROIRadius=5;
+%             for iROI=1:size(ROICenter,1)
+%                 ROIDef{iROI,1}=[ROICenter(iROI,:), ROIRadius];
+%             end
+%             Cfg.CalFC.ROIDef = [Cfg.CalFC.ROIDef;ROIDef];
         case 3, %Calculate in MNI Space (warp by DARTEL)
             load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInMNISpace_Warp_DARTEL.mat']);
         case 4, %Calculate in MNI Space (warp by information from unified segmentation)

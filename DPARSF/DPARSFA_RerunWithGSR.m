@@ -24,6 +24,9 @@ end
 Cfg.IsNeedConvertFunDCM2IMG=0;
 Cfg.IsApplyDownloadedReorientMats=0;
 Cfg.RemoveFirstTimePoints=0;
+if Cfg.TimePoints~=0  %Adjust the number of time points. 151214. Thanks for the report of Hua-Sheng Liu
+    Cfg.TimePoints = Cfg.TimePoints - Cfg.RemoveFirstTimePoints;
+end
 if Cfg.IsSliceTiming
     StartingDirName = [StartingDirName,'A'];
     Cfg.IsSliceTiming=0;

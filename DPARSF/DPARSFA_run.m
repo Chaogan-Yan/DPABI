@@ -648,7 +648,7 @@ if (AutoDataProcessParameter.IsSliceTiming==1)
                         StringFilter = [StringFilter,'\t%s']; %Get the Slice Order Type for the sessions.
                     end
                     tline = fgetl(fid); %Skip the title line
-                    SliceOrderSet = textscan(fid,StringFilter,'\n');
+                    SliceOrderSet = textscan(fid,StringFilter); %YAN Chao-Gan, 151210. For matlab 2015. %SliceOrderSet = textscan(fid,StringFilter,'\n');
                     fclose(fid);
                     
                     if ~strcmp(AutoDataProcessParameter.SubjectID{i},SliceOrderSet{1}{i})
@@ -670,7 +670,11 @@ if (AutoDataProcessParameter.IsSliceTiming==1)
                             SliceOrder = [SliceNumber:-1:1];
                             
                         otherwise
-                            error(['The specified slice order definition ',SliceOrderSet{2}{i},' for subject ',AutoDataProcessParameter.SubjectID{i},' is not supported!'])
+                            try
+                                SliceOrder = load([AutoDataProcessParameter.DataProcessDir,filesep,SliceOrderSet{1+iFunSession}{i}]); %The slice order is specified in a text file.
+                            catch
+                                error(['The specified slice order definition ',SliceOrderSet{1+iFunSession}{i},' for subject ',AutoDataProcessParameter.SubjectID{i},' is not supported!'])
+                            end
                     end;
                     
                     SPMJOB.matlabbatch{1,1}.spm.temporal.st.so = SliceOrder;
