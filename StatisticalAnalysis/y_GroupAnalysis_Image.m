@@ -39,7 +39,7 @@ else
 end
 
 if exist('CovVolume','var') && (~isnumeric(CovVolume))
-    [CovVolume] = y_ReadAll(DependentVolume);
+    [CovVolume] = y_ReadAll(CovVolume);%YAN Chao-Gan, 160119. Fixed a bug.  %[CovVolume] = y_ReadAll(DependentVolume);
     fprintf('\n\tImage Files as covariates:\n');
     for itheImgFileList=1:length(theImgFileList)
         fprintf('\t%s%s\n',theImgFileList{itheImgFileList});

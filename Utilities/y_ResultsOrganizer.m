@@ -33,6 +33,7 @@ for iMeasure=1:length(MeasureList)
             end
             if iMeasure == 6
                 copyfile([WorkingDir,filesep,'Results',filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.mat'],[OutputDir,filesep,'Results',filesep,DirList(iDir).name]);
+                copyfile([WorkingDir,filesep,'Results',filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.txt'],[OutputDir,filesep,'Results',filesep,DirList(iDir).name]);
             end
         end
     end
@@ -56,6 +57,7 @@ for iSession=1:length(DirSessionResults)
                 end
                 if iMeasure == 6
                     copyfile([WorkingDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.mat'],[OutputDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name]);
+                    copyfile([WorkingDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.txt'],[OutputDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name]);
                 end
             end
         end
@@ -135,6 +137,13 @@ if exist([WorkingDir,filesep,'QC'])
     fprintf('\n\tOrganizing QC Results.\n')
     mkdir([OutputDir,filesep,'QC'])
     copyfile([WorkingDir,filesep,'QC'],[OutputDir,filesep,'QC']);
+end
+
+%Organize Pictures For Check Normalization
+if exist([WorkingDir,filesep,'PicturesForChkNormalization'])
+    fprintf('\n\tOrganizing Pictures For Check Normalization.\n')
+    mkdir([OutputDir,filesep,'PicturesForChkNormalization'])
+    copyfile([WorkingDir,filesep,'PicturesForChkNormalization'],[OutputDir,filesep,'PicturesForChkNormalization']);
 end
 
 fprintf('\n\tResults Organizing Finished.\n')
