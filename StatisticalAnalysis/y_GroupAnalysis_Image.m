@@ -32,7 +32,7 @@ if ~isnumeric(DependentVolume)
     [DependentVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentVolume);
     fprintf('\n\tImage Files in the Group:\n');
     for itheImgFileList=1:length(theImgFileList)
-        fprintf('\t%s%s\n',theImgFileList{itheImgFileList});
+        fprintf('\t%s\n',theImgFileList{itheImgFileList});
     end
 else
     VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));
