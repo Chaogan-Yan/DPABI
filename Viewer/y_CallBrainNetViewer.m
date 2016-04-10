@@ -1,4 +1,4 @@
-function H_BrainNet = y_CallBrainNetViewer(BrainVolume,NMin,PMin,ClusterSize,ConnectivityCriterion,SurfFileName,viewtype,ColorMap,NMax,PMax,BrainHeader)
+function H_BrainNet = y_CallBrainNetViewer(BrainVolume,NMin,PMin,ClusterSize,ConnectivityCriterion,SurfFileName,viewtype,ColorMap,NMax,PMax,BrainHeader, PN_Flag)
 % function H_BrainNet = y_CallBrainNetViewer(BrainVolume,NMin,PMin,ClusterSize,ConnectivityCriterion,SurfFileName,viewtype,ColorMap,NMax,PMax,BrainHeader)
 % Function to call BrainNet Viewer (by Mingrui Xia) by REST Slice Viewer. Also can be used to scripting call BrainNet Viewer.
 % Input:
@@ -148,9 +148,12 @@ surf.hdr=BrainHeader;
 surf.mask=BrainVolume;
 surf.vol=BrainVolume; %YAN Chao-Gan 151026. To fit the change in BrainNet Viewer.
 
-
+%Wang Sandy 160411. To add full mode of colormap for positive or negative
+if exist('PN_Flag', 'var')~=1
+    PN_Flag=[];
+end
 % Adjust the colormap to leave blank to values under threshold, the orginal color map with be set into [NMax NMin] and [PMin PMax].
-EC.vol.CM=AdjustColorMap(ColorMap,EC.vol.null,NMax,NMin,PMin,PMax);
+EC.vol.CM=y_AdjustColorMap(ColorMap,EC.vol.null,NMax,NMin,PMin,PMax, PN_Flag);
 EC.vol.px=PMax;
 EC.vol.nx=NMax;
 

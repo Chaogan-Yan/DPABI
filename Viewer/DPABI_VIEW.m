@@ -868,6 +868,13 @@ PMin=SendHeader.PMin;
 NMin=SendHeader.NMin;
 NMax=SendHeader.NMax;
 cbarstring=SendHeader.cbarstring;
+cbarstring = SendHeader.cbarstring;
+if cbarstring(end)=='+' || cbarstring(end)=='-'
+    PN_Flag=cbarstring(end);
+    cbarstring=cbarstring(1:end-1);
+else
+    PN_Flag=[];
+end
 cbar=str2double(cbarstring);
 
 
@@ -934,7 +941,8 @@ ColorMap = y_AdjustColorMap(ColorMap,...
     NMax,...
     NMin,...
     PMin,...
-    PMax);
+    PMax,...
+    PN_Flag);
 
 y_spm_orthviews('Settruecolourimage',...
     curfig,...
@@ -1346,13 +1354,21 @@ switch Value
         OverlayHeader=SetPosNeg(OverlayHeader, handles);
         OverlayHeader=SetCSize(OverlayHeader);
         CVSize=OverlayHeader.CSize/prod(OverlayHeader.Vox);
-
-        cbar=str2double(OverlayHeader.cbarstring);
+        
+        cbarstring = OverlayHeader.cbarstring;
+        if cbarstring(end)=='+' || cbarstring(end)=='-'
+            PN_Flag=cbarstring(end);
+            cbarstring=cbarstring(1:end-1);
+        else
+            PN_Flag=[];
+        end
+        cbar=str2double(cbarstring);
+        
         if cbar==0 && isfield(SendHeader, 'ColorMap')
             ColorMap=OverlayHeader.ColorMap;
         else
             if isnan(cbar)
-                ColorMap = colormap(OverlayHeader.cbarstring);
+                ColorMap = colormap(cbarstring);
             else
                 ColorMap = y_AFNI_ColorMap(cbar);
             end
@@ -1372,7 +1388,8 @@ switch Value
             CVSize, OverlayHeader.RMM,...
             SurfFileName, 'MediumView', ColorMap,...
             OverlayHeader.NMax, OverlayHeader.PMax,...
-            OverlayHeader);
+            OverlayHeader,...
+            PN_Flag);
     case 4 % Set Range
         index=HeaderIndex(handles);
         if ~index
@@ -1442,6 +1459,12 @@ switch Value
         OverlayHeader=handles.OverlayHeaders{index};
         
         cbarstring=OverlayHeader.cbarstring;
+        if cbarstring(end)=='+' || cbarstring(end)=='-'
+            PN_Flag=cbarstring(end);
+            cbarstring=cbarstring(1:end-1);
+        else
+            PN_Flag=[];
+        end        
         cbar=str2double(cbarstring);
         if cbar==0 && isfield(OverlayHeader, 'ColorMap')
             ColorMap=OverlayHeader.ColorMap;
@@ -1484,7 +1507,14 @@ switch Value
         OverlayHeader=handles.OverlayHeaders{index};
         
         cbarstring=OverlayHeader.cbarstring;
+        if cbarstring(end)=='+' || cbarstring(end)=='-'
+            PN_Flag=cbarstring(end);
+            cbarstring=cbarstring(1:end-1);
+        else
+            PN_Flag=[];
+        end        
         cbar=str2double(cbarstring);
+        
         if cbar==0 && isfield(OverlayHeader, 'ColorMap')
             ColorMap=OverlayHeader.ColorMap;
         else
@@ -1496,7 +1526,7 @@ switch Value
         end
         OverlayHeader.ColorMap=ColorMap;
         save(fullfile(Path, File), 'ColorMap');
-    case 10 %Save colorbar as MAT
+    case 10 %Load colorbar from MAT
         index=HeaderIndex(handles);
         if ~index
             return
