@@ -431,14 +431,27 @@ function AddImgTable1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick NifTi File' , handles.CurDir);
+    'Pick NifTi File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
 end
-ImgFile=fullfile(Path, File);
-handles.ImgCells1{numel(handles.ImgCells1)+1}=ImgFile;
-StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
-AddString(handles.ImgListbox1, StringOne);
+if iscell(File)
+    N=numel(File);
+    ImgCell=cell(1, N);
+    StringCell=cell(N, 1);
+    for i=1:N
+        ImgFile=fullfile(Path, File{i});
+        ImgCell{1, i}=ImgFile;
+        StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+    end
+    handles.ImgCells1=[handles.ImgCells1, ImgCell];
+    AddString(handles.ImgListbox1, StringCell);
+else
+    ImgFile=fullfile(Path, File);
+    handles.ImgCells1{numel(handles.ImgCells1)+1}=ImgFile;
+    StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
+    AddString(handles.ImgListbox1, StringOne);
+end
 guidata(hObject, handles);
 
 % --- Executes on button press in AddImgButton.
@@ -447,14 +460,28 @@ function AddImgButton1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick NifTi File' , handles.CurDir);
+    'Pick NifTi File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
 end
-ImgFile=fullfile(Path, File);
-handles.ImgCells1{numel(handles.ImgCells1)+1}=ImgFile;
-StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
-AddString(handles.ImgListbox1, StringOne);
+
+if iscell(File)
+    N=numel(File);
+    ImgCell=cell(1, N);
+    StringCell=cell(N, 1);
+    for i=1:N
+        ImgFile=fullfile(Path, File{i});
+        ImgCell{1, i}=ImgFile;
+        StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+    end
+    handles.ImgCells1=[handles.ImgCells1, ImgCell];
+    AddString(handles.ImgListbox1, StringCell);
+else
+    ImgFile=fullfile(Path, File);
+    handles.ImgCells1{numel(handles.ImgCells1)+1}=ImgFile;
+    StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
+    AddString(handles.ImgListbox1, StringOne);
+end
 guidata(hObject, handles);
 
 
@@ -464,14 +491,28 @@ function AddImgButton2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick NifTi File' , handles.CurDir);
+    'Pick NifTi File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
 end
-ImgFile=fullfile(Path, File);
-handles.ImgCells2{numel(handles.ImgCells2)+1}=ImgFile;
-StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
-AddString(handles.ImgListbox2, StringOne);
+
+if iscell(File)
+    N=numel(File);
+    ImgCell=cell(1, N);
+    StringCell=cell(N, 1);
+    for i=1:N
+        ImgFile=fullfile(Path, File{i});
+        ImgCell{1, i}=ImgFile;
+        StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+    end
+    handles.ImgCells2=[handles.ImgCells2, ImgCell];
+    AddString(handles.ImgListbox2, StringCell);
+else
+    ImgFile=fullfile(Path, File);
+    handles.ImgCells2{numel(handles.ImgCells2)+1}=ImgFile;
+    StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
+    AddString(handles.ImgListbox2, StringOne);
+end
 guidata(hObject, handles);
 
 % --- Executes on button press in RemoveButton2.
@@ -552,14 +593,28 @@ function AddImgTable2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick NifTi File' , handles.CurDir);
+    'Pick NifTi File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
 end
-ImgFile=fullfile(Path, File);
-handles.ImgCells2{numel(handles.ImgCells2)+1}=ImgFile;
-StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
-AddString(handles.ImgListbox2, StringOne);
+
+if iscell(File)
+    N=numel(File);
+    ImgCell=cell(1, N);
+    StringCell=cell(N, 1);
+    for i=1:N
+        ImgFile=fullfile(Path, File{i});
+        ImgCell{1, i}=ImgFile;
+        StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+    end
+    handles.ImgCells2=[handles.ImgCells2, ImgCell];
+    AddString(handles.ImgListbox2, StringCell);
+else
+    ImgFile=fullfile(Path, File);
+    handles.ImgCells2{numel(handles.ImgCells2)+1}=ImgFile;
+    StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
+    AddString(handles.ImgListbox2, StringOne);
+end
 guidata(hObject, handles);
 
 % --------------------------------------------------------------------

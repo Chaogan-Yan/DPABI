@@ -458,14 +458,28 @@ function AddImgTable_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick Underlay File' , handles.CurDir);
+    'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
 end
-ImgFile=fullfile(Path, File);
-handles.ImgCells{numel(handles.ImgCells)+1}=ImgFile;
-StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
-AddString(handles.ImgListbox, StringOne);
+
+if iscell(File)
+    N=numel(File);
+    ImgCell=cell(1, N);
+    StringCell=cell(N, 1);
+    for i=1:N
+        ImgFile=fullfile(Path, File{i});
+        ImgCell{1, i}=ImgFile;
+        StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+    end
+    handles.ImgCells=[handles.ImgCells, ImgCell];
+    AddString(handles.ImgListbox, StringCell);
+else
+    ImgFile=fullfile(Path, File);
+    handles.ImgCells{numel(handles.ImgCells)+1}=ImgFile;
+    StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
+    AddString(handles.ImgListbox, StringOne);
+end
 guidata(hObject, handles);
 
 % --- Executes on button press in AddImgButton.
@@ -474,12 +488,26 @@ function AddImgButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick Underlay File' , handles.CurDir);
+    'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
 end
-ImgFile=fullfile(Path, File);
-handles.ImgCells{numel(handles.ImgCells)+1}=ImgFile;
-StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
-AddString(handles.ImgListbox, StringOne);
+
+if iscell(File)
+    N=numel(File);
+    ImgCell=cell(1, N);
+    StringCell=cell(N, 1);
+    for i=1:N
+        ImgFile=fullfile(Path, File{i});
+        ImgCell{1, i}=ImgFile;
+        StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+    end
+    handles.ImgCells=[handles.ImgCells, ImgCell];
+    AddString(handles.ImgListbox, StringCell);
+else
+    ImgFile=fullfile(Path, File);
+    handles.ImgCells{numel(handles.ImgCells)+1}=ImgFile;
+    StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
+    AddString(handles.ImgListbox, StringOne);
+end
 guidata(hObject, handles);

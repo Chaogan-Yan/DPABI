@@ -396,6 +396,14 @@ end
 if Value > numel(StringCell)
     Value=Value-1;
 end
+
+if ~isempty(StringCell)
+    for i=1:numel(StringCell)
+        StringCell{i}=regexprep(StringCell{i}, '\{([ig])\d+\}', ...
+            sprintf('{$1%d}', i));
+    end
+end
+
 set(ListboxHandle, 'String', StringCell, 'Value', Value);
 
 function Volume3D=w_MEAN(Volume4D)
