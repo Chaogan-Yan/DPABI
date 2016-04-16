@@ -2604,6 +2604,7 @@ if (AutoDataProcessParameter.IsCovremove==1) && (strcmpi(AutoDataProcessParamete
                 CovariablesDef.ort_file=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'Covs',filesep,'ROISignals_',AutoDataProcessParameter.SubjectID{i},'.txt'];
             end
             
+            CovariablesDef.IsAddMeanBack = AutoDataProcessParameter.Covremove.IsAddMeanBack; %YAN Chao-Gan, 160415: Add the option of "Add Mean Back".
             
             %Regressing out the covariates
             fprintf('\nRegressing out covariates for subject %s %s.\n',AutoDataProcessParameter.SubjectID{i},FunSessionPrefixSet{iFunSession});
@@ -3573,6 +3574,7 @@ if (AutoDataProcessParameter.IsCovremove==1) && (strcmpi(AutoDataProcessParamete
                 CovariablesDef.ort_file=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'Covs',filesep,'ROISignals_',AutoDataProcessParameter.SubjectID{i},'.txt'];
             end
             
+            CovariablesDef.IsAddMeanBack = AutoDataProcessParameter.Covremove.IsAddMeanBack; %YAN Chao-Gan, 160415: Add the option of "Add Mean Back".
             
             %Regressing out the covariates
             fprintf('\nRegressing out covariates for subject %s %s.\n',AutoDataProcessParameter.SubjectID{i},FunSessionPrefixSet{iFunSession});

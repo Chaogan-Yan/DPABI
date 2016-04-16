@@ -1,17 +1,43 @@
-The slice order type could be specified for each participant into SliceOrderInfo.tsv (under working directory) file, thus allow different slice timing correction for different participants in a batch mode. Please specify Slice Number as 0 in DPARSFA GUI. 
+Most fMRI data are acquired using two-dimensional pulse sequences that acquire images one slice at a time, thus all slices are acquired at different time within a repeat time (TR). Timing differences are especially problematic for longer TR. Hence the differences in image acquisition time between slices need to be corrected. The number of slices, slice order and reference slice need to be specified, then DPARSF will do slice timing by calling functions in SPM.
 
-Within SliceOrderInfor.tsv, the first column is Subject ID, and the second column is Slice Order Type:
+For batch mode, The slice order type could be specified for each participant into SliceOrderInfo.tsv (under working directory) file, thus allow different slice timing correction for different participants. Please specify Slice Number as 0 in DPARSFA GUI. 
+
+Within SliceOrderInfor.tsv, the first column is Subject ID, and the second column is Slice Order Type. The third column (if available) is the Slice Order Type for Session 2.
 SA: sequential ascending
 SD: sequential descending
 IA: interleaved ascending
 ID: interleaved descending
-IA2: interleaved ascending, for SIEMENS scanner with even number of slices. Scanning of 2,4,6,ÿ and then 1,3,5ÿ, i.e., [2:2:SliceNumber,1:2:SliceNumber]
+IA2: interleaved ascending, for SIEMENS scanner with even number of slices. Scanning of 2,4,6,... and then 1,3,5,... i.e., [2:2:SliceNumber,1:2:SliceNumber]
 ID2: interleaved descending, for SIEMENS scanner with even number of slices. Scanning of [SliceNumber-1:-2:1,SliceNumber:-2:1].
-
-Please see {DPARSF}/Docs/SliceOrderInfo.tsv for a sample file of ABIDE data. Also, please see Yan et al., 2013 Table 3 for a sample of FCP data (although IA2 and ID2 were not defined in that table.)
-
-Yan, C.G., Craddock, R.C., Zuo, X.N., Zang, Y.F., Milham, M.P., 2013. Standardizing the intrinsic brain: towards robust measurement of inter-individual variation in 1000 functional connectomes. Neuroimage in press.
-
+ 
+Please see {DPARSF}/Docs/SliceOrderInfo.tsv for a sample file. Also, please see Yan et al., 2013 Table 3 for a sample of FCP data (although IA2 and ID2 were not defined in that table.)
+ 
+Yan, C.G., Craddock, R.C., Zuo, X.N., Zang, Y.F., Milham, M.P., 2013. Standardizing the intrinsic brain: towards robust measurement of inter-individual variation in 1000 functional connectomes. Neuroimage 80, 246-262.
+ 
 -----
 A sample of SliceOrderInfor.tsv:
-Subject ID	Slice Order Type0050002	IA0050003	IA0050004	IA0050145	IA20050146	IA20050147	IA20050269	SA0050270	SA0050271	SA0050272	SA0050527	IA20050528	IA20050529	IA20050530	IA20051571	SD0051572	SD0051573	SD0051574	SD0051575	SD0051576	SD
+Subject ID Slice Order Type S2: Slice Order Type
+MRN_0027412 IA IA
+MRN_0027413 IA IA
+MRN_0027417 IA IA
+MRN_0027418 IA IA
+MRN_0027419 IA IA
+NKI_TRT_0021001_1400 SliceOrderInfo_NKI1400.txt SliceOrderInfo_NKI1400.txt
+NKI_TRT_0021001_2500 IA2 IA2
+NKI_TRT_0021001_645 SliceOrderInfo_NKI645.txt SliceOrderInfo_NKI645.txt
+NKI_TRT_0021002_1400 SliceOrderInfo_NKI1400.txt SliceOrderInfo_NKI1400.txt
+NKI_TRT_0021002_2500 IA2 IA2
+NKI_TRT_0021002_645 SliceOrderInfo_NKI645.txt SliceOrderInfo_NKI645.txt
+NKI_TRT_0021006_1400 SliceOrderInfo_NKI1400.txt SliceOrderInfo_NKI1400.txt
+NKI_TRT_0021006_2500 IA2 IA2
+NKI_TRT_0021006_645 SliceOrderInfo_NKI645.txt SliceOrderInfo_NKI645.txt
+SWU_4_0025629 IA2 IA2
+SWU_4_0025630 IA2 IA2
+SWU_4_0025631 IA2 IA2
+SWU_4_0025632 IA2 IA2
+SWU_4_0025633 IA2 IA2
+SWU_4_0025634 IA2 IA2
+ 
+Of note, SliceOrderInfo_NKI1400.txt and SliceOrderInfo_NKI645.txt are slice timing specifications for MultiBand data in NKI Enhanced Rockland Sample.
+
+http://wiki.rfmri.org/SliceTiming

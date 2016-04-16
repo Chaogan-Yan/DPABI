@@ -34,7 +34,7 @@ end
 
 % --- Executes just before DPARSFA is made visible.
 function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V4.0_151201';
+    Release='V4.1_160415';
     handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
     
     if ispc
@@ -51,7 +51,7 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     fprintf('State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China\n');
     fprintf('Mail to Author:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\n<a href="http://rfmri.org/DPARSF">http://rfmri.org/DPARSF</a>\n');
     fprintf('-----------------------------------------------------------\n');
-    fprintf('Citing Information:\nIf you think DPARSFA is useful for your work, citing it in your paper would be greatly appreciated.\nSomething like "... The preprocessing was carried out by using Data Processing Assistant for Resting-State fMRI (DPARSF) (Yan & Zang, 2010, http://rfmri.org/DPARSF) which is based on Statistical Parametric Mapping (SPM8) (http://www.fil.ion.ucl.ac.uk/spm) and the toolbox for Data Processing & Analysis of Brain Imaging (DPABI, http://rfmri.org/DPABI)..."\nReference: Yan C and Zang Y (2010) DPARSF: a MATLAB toolbox for "pipeline" data analysis of resting-state fMRI. Front. Syst. Neurosci. 4:13. doi:10.3389/fnsys.2010.00013\n');
+    fprintf('Citing Information:\nIf you think DPARSFA is useful for your work, citing it in your paper would be greatly appreciated.\nSomething like "... The preprocessing was performed using the Data Processing Assistant for Resting-State fMRI (DPARSF, Yan and Zang 2010, http://rfmri.org/DPARSF), which is based on Statistical Parametric Mapping (SPM, http://www.fil.ion.ucl.ac.uk/spm) and the toolbox for Data Processing & Analysis of Brain Imaging (DPABI, Yan et al. 2016, http://rfmri.org/DPABI)..."\nReferences: Yan C and Zang Y (2010) DPARSF: a MATLAB toolbox for "pipeline" data analysis of resting-state fMRI. Front. Syst. Neurosci. 4:13. doi:10.3389/fnsys.2010.00013; Yan, C.G., Wang, X.D., Zuo, X.N., Zang, Y.F., 2016. DPABI: Data Processing & Analysis for (Resting-State) Brain Imaging. Neuroinformatics. In press. doi: 10.1007/s12021-016-9299-4\n');
     
     
     [DPABILatestRelease WebStatus]=urlread('http://rfmri.org/DPABILatestRelease.txt');
@@ -171,7 +171,8 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.Cfg.Covremove.WholeBrain.Mask = 'SPM'; % or 'AutoMask'
     handles.Cfg.Covremove.WholeBrain.Method = 'Mean';
     
-    handles.Cfg.Covremove.OtherCovariatesROI=[];
+    handles.Cfg.Covremove.OtherCovariatesROI = [];
+    handles.Cfg.Covremove.IsAddMeanBack = 0; %YAN Chao-Gan, 160415: Add the option of "Add Mean Back".
     
     handles.Cfg.IsFilter=1;
     handles.Cfg.Filter.Timing='AfterNormalize'; %Another option: BeforeNormalize
@@ -263,7 +264,7 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
             [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
-            [DPABIPath,filesep,'Templates',filesep,'Zalesky_1024_parcellated_compact.nii'];...
+            [DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii']};
         Cfg.CalFC.IsMultipleLabel = 1;
 %         load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
@@ -345,6 +346,7 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.checkboxCovremoveAfterNormalize,'Callback','DPARSFA(''checkboxCovremoveAfterNormalize_Callback'',gcbo,[],guidata(gcbo))');
     
     set(handles.checkboxSmoothBeforeVMHC,'Callback','DPARSFA(''checkboxSmoothBeforeVMHC_Callback'',gcbo,[],guidata(gcbo))'); %YAN Chao-Gan, 151120
+    set(handles.checkboxCovremoveIsAddMeanBack,'Callback','DPARSFA(''checkboxCovremoveIsAddMeanBack_Callback'',gcbo,[],guidata(gcbo))'); %YAN Chao-Gan, 160415
 
     
     % Choose default command line output for DPARSFA
@@ -518,7 +520,7 @@ function popupmenuTemplateParameters_Callback(hObject, eventdata, handles)
                 [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
                 [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
                 [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
-                [DPABIPath,filesep,'Templates',filesep,'Zalesky_1024_parcellated_compact.nii'];...
+                [DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii']};
             Cfg.CalFC.IsMultipleLabel = 1;
 %             load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
@@ -1052,6 +1054,17 @@ function checkboxOtherCovariates_Callback(hObject, eventdata, handles)
 	guidata(hObject, handles);
 	UpdateDisplay(handles);      
 
+function checkboxCovremoveIsAddMeanBack_Callback(hObject, eventdata, handles) %YAN Chao-Gan 160415: Add the option of "Add Mean Back".
+	if get(hObject,'Value')
+        uiwait(msgbox({'The mean will be added back to the residual after nuisance regression. This is useful for circumstances of ICA or task-based analysis.';...
+            },'Add mean back'));
+        handles.Cfg.Covremove.IsAddMeanBack = 1;
+	else	
+		handles.Cfg.Covremove.IsAddMeanBack = 0;
+    end	
+    handles=CheckCfgParameters(handles);
+	guidata(hObject, handles);
+	UpdateDisplay(handles);  
     
     
 function checkboxFilter_BeforeNormalize_Callback(hObject, eventdata, handles)
@@ -1731,6 +1744,9 @@ function SetLoadedData(hObject,handles, Cfg);
         handles.Cfg.Covremove.WholeBrain.IsBothWithWithoutGSR = 0; %YAN Chao-Gan, 151123
     end
     
+    if ~isfield(handles.Cfg.Covremove,'IsAddMeanBack')
+        handles.Cfg.Covremove.IsAddMeanBack = 0; %YAN Chao-Gan, 160415: Add the option of "Add Mean Back".
+    end
 
     guidata(hObject, handles);
     UpdateDisplay(handles);
@@ -1977,6 +1993,7 @@ function UpdateDisplay(handles)
 %             set(handles.checkboxCovremoveWhiteMatter, 'Enable', 'on', 'Value', handles.Cfg.Covremove.WhiteMatter, 'ForegroundColor', 'k');
 %             set(handles.checkboxCovremoveCSF, 'Enable', 'on', 'Value', handles.Cfg.Covremove.CSF, 'ForegroundColor', 'k');
             set(handles.checkboxOtherCovariates, 'Enable', 'on', 'Value', ~isempty(handles.Cfg.Covremove.OtherCovariatesROI), 'ForegroundColor', 'k');
+            set(handles.checkboxCovremoveIsAddMeanBack, 'Enable', 'on', 'Value', handles.Cfg.Covremove.IsAddMeanBack, 'ForegroundColor', 'k');
         elseif strcmpi(handles.Cfg.Covremove.Timing,'AfterNormalize')
             set(handles.checkboxCovremoveAfterRealign, 'Value', 0, 'ForegroundColor', [0.4,0.4,0.4]);
             set(handles.checkboxCovremoveAfterNormalize, 'Value', 1, 'ForegroundColor', 'b');
@@ -1994,6 +2011,7 @@ function UpdateDisplay(handles)
 %             set(handles.checkboxCovremoveWhiteMatter, 'Enable', 'on', 'Value', handles.Cfg.Covremove.WhiteMatter, 'ForegroundColor', 'b');
 %             set(handles.checkboxCovremoveCSF, 'Enable', 'on', 'Value', handles.Cfg.Covremove.CSF, 'ForegroundColor', 'b');
             set(handles.checkboxOtherCovariates, 'Enable', 'on', 'Value', ~isempty(handles.Cfg.Covremove.OtherCovariatesROI), 'ForegroundColor', 'b');
+            set(handles.checkboxCovremoveIsAddMeanBack, 'Enable', 'on', 'Value', handles.Cfg.Covremove.IsAddMeanBack, 'ForegroundColor', 'b');
         end
     else
         set(handles.checkboxCovremoveAfterRealign, 'Value', 0, 'ForegroundColor', 'k');
@@ -2012,6 +2030,7 @@ function UpdateDisplay(handles)
 %         set(handles.checkboxCovremoveWhiteMatter, 'Enable', 'off', 'Value', handles.Cfg.Covremove.WhiteMatter, 'ForegroundColor', 'k');
 %         set(handles.checkboxCovremoveCSF, 'Enable', 'off', 'Value', handles.Cfg.Covremove.CSF, 'ForegroundColor', 'k');
         set(handles.checkboxOtherCovariates, 'Enable', 'off', 'Value', ~isempty(handles.Cfg.Covremove.OtherCovariatesROI), 'ForegroundColor', 'k');
+        set(handles.checkboxCovremoveIsAddMeanBack, 'Enable', 'off', 'Value', handles.Cfg.Covremove.IsAddMeanBack, 'ForegroundColor', 'k');
     end
     
     

@@ -65,7 +65,7 @@ Cfg.Covremove.PolynomialTrend = CfgBasic.Covremove.PolynomialTrend; %YAN Chao-Ga
 Cfg.Covremove.HeadMotion=4*CfgBasic.Covremove.HeadMotion;
 Cfg.Covremove.WholeBrain.IsRemove = CfgBasic.Covremove.WholeBrain;
 Cfg.Covremove.CSF.IsRemove = CfgBasic.Covremove.CSF;
-Cfg.Covremove.WM.IsRemov = CfgBasic.Covremove.WhiteMatter;
+Cfg.Covremove.WM.IsRemove = CfgBasic.Covremove.WhiteMatter; %YAN Chao-Gan, 20160415. Fixed the bug. Cfg.Covremove.WM.IsRemov = CfgBasic.Covremove.WhiteMatter;
 Cfg.Covremove.OtherCovariatesROI=CfgBasic.Covremove.OtherCovariatesROI; %YAN Chao-Gan added 091215./091212.
 
 Cfg.MaskFile =CfgBasic.MaskFile;
