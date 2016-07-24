@@ -86,10 +86,10 @@ switch upper(Flag)
         Lim=2;
     case 'F'
         Value=4;
-        Lim=10;
+        Lim=100;
     case 'FR'
         Value=5;
-        Lim=10;
+        Lim=100;
     case 'R'
         Value=6;
         Lim=4;
@@ -113,11 +113,11 @@ switch Value
         handles.SampleNum=2;
         Prefix='TP';
     case 4
-        handles.SampleNum=10;
+        handles.SampleNum=100;
         Prefix='F';
         MCFlag='On';
     case 5
-        handles.SampleNum=10;
+        handles.SampleNum=100;
         Prefix='FR';
     case 6
         handles.SampleNum=2;
