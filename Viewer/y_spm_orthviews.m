@@ -663,7 +663,12 @@ if isfield(st{curfig}.vols{1}, 'ax')
     return;
 end
 
-DeleteFcn = ['y_spm_orthviews(''Delete'',' num2str(ii) ');'];
+handles=guidata(st{curfig}.fig);
+if ~isfield(handles, 'DPABI_fig'); %Compatibility matlab2014b    
+    DeleteFcn = ['y_spm_orthviews(''Delete'',' num2str(ii) ');'];
+else
+    DeleteFcn = '';
+end
 V.ax = cell(3,1);
 for i=1:3
     ax = axes('Visible','on', 'Parent',st{curfig}.fig, ... % 'DrawMode','fast', 
@@ -989,18 +994,20 @@ curfig=GetCurFig;
 rmblobs(handle);
 % remove displayed axes
 % Remove loop by Sandy
-kids = get(st{curfig}.fig,'Children');
-for j=1:3
-    try
-        if any(kids == st{curfig}.vols{1}.ax{j}.ax)
-            set(get(st{curfig}.vols{1}.ax{j}.ax,'Children'),'DeleteFcn','');
-            delete(st{curfig}.vols{1}.ax{j}.ax);
+handles=guidata(st{curfig}.fig);
+if ~isfield(handles, 'DPABI_fig');
+    kids = get(st{curfig}.fig,'Children');
+    for j=1:3
+        try
+            if any(kids == st{curfig}.vols{1}.ax{j}.ax)
+                set(get(st{curfig}.vols{1}.ax{j}.ax,'Children'),'DeleteFcn','');
+                delete(st{curfig}.vols{1}.ax{j}.ax);
+            end
         end
     end
+    st{curfig}.vols{1} = [];
+    st{curfig}=[];
 end
-st{curfig}.vols{1} = [];
-st{curfig}=[];
-
 
 %==========================================================================
 % function resolution(res)

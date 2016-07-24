@@ -1961,8 +1961,8 @@ for i=1:numel(st{curfig}.MPFlag)
     end
 end
 st{curfig}.MPFlag=[];
-
-delete(handles.DPABI_fig);
+st{curfig}=[];
+%delete(handles.DPABI_fig);
 
 
 % --- Executes on button press in ModeButton.
