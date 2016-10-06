@@ -986,20 +986,22 @@ function my_delete(handle)
 global st
 curfig=GetCurFig;
 % remove blobs (and colourbars, if any)
-rmblobs(handle);
-% remove displayed axes
-% Remove loop by Sandy
-kids = get(st{curfig}.fig,'Children');
-for j=1:3
-    try
-        if any(kids == st{curfig}.vols{1}.ax{j}.ax)
-            set(get(st{curfig}.vols{1}.ax{j}.ax,'Children'),'DeleteFcn','');
-            delete(st{curfig}.vols{1}.ax{j}.ax);
+if ~isempty(st{curfig}) %YAN Chao-Gan, 161006. For MATLAB2016b compatibility.
+    rmblobs(handle);
+    % remove displayed axes
+    % Remove loop by Sandy
+    kids = get(st{curfig}.fig,'Children');
+    for j=1:3
+        try
+            if any(kids == st{curfig}.vols{1}.ax{j}.ax)
+                set(get(st{curfig}.vols{1}.ax{j}.ax,'Children'),'DeleteFcn','');
+                delete(st{curfig}.vols{1}.ax{j}.ax);
+            end
         end
     end
+    st{curfig}.vols{1} = [];
+    st{curfig}=[];
 end
-st{curfig}.vols{1} = [];
-st{curfig}=[];
 
 
 %==========================================================================

@@ -61,7 +61,12 @@ addlistener(handles.ThrdSlider, 'Value',...
     @(objH, eventData) ThrdListener_Callback(objH, eventData, hObject));
 
 
-[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+%[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+if isdeployed %YAN Chao-Gan, 161006. For Compiler.
+    DPABIPath=ctfroot;
+else
+    [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+end
 
 TemplatePath=fullfile(DPABIPath, 'Templates');
 
@@ -640,7 +645,12 @@ function UnderlayEntry_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if isempty(handles.UnderlayFileName)
-    [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+    %[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+    if isdeployed %YAN Chao-Gan, 161006. For Compiler.
+        DPABIPath=ctfroot;
+    else
+        [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+    end
     TemplatePath=fullfile(DPABIPath, 'Templates');
     
     UnderlayFileName=fullfile(TemplatePath,'ch2.nii');
@@ -704,7 +714,12 @@ ShowUnderlay(handles);
 
 function ShowUnderlay(handles)
 if isempty(handles.UnderlayFileName)
-    [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+    %[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+    if isdeployed %YAN Chao-Gan, 161006. For Compiler.
+        DPABIPath=ctfroot;
+    else
+        [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+    end
     TemplatePath=fullfile(DPABIPath, 'Templates');
     UnderlayFileName=fullfile(TemplatePath,'ch2.nii');
 else
@@ -742,7 +757,12 @@ function TemplatePopup_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 flag=get(handles.TemplatePopup, 'Value');
 Max=length(get(handles.TemplatePopup, 'String'));
-[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+%[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+if isdeployed %YAN Chao-Gan, 161006. For Compiler.
+    DPABIPath=ctfroot;
+else
+    [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+end
 switch flag
     case 1
         File='ch2.nii';
@@ -1381,8 +1401,16 @@ switch Value
 %             OverlayHeader.PMin,...
 %             OverlayHeader.PMax);
 
-        [BrainNetViewerPath, fileN, extn] = fileparts(which('BrainNet.m'));
-        SurfFileName=[BrainNetViewerPath,filesep,'Data',filesep,'SurfTemplate',filesep,'BrainMesh_ICBM152_smoothed.nv'];
+%         [BrainNetViewerPath, fileN, extn] = fileparts(which('BrainNet.m'));
+%         SurfFileName=[BrainNetViewerPath,filesep,'Data',filesep,'SurfTemplate',filesep,'BrainMesh_ICBM152_smoothed.nv'];
+        if isdeployed %YAN Chao-Gan, 161006. For Compiler.
+            DPABIPath=ctfroot;
+            SurfFileName=[DPABIPath,filesep,'Templates',filesep, 'BrainMesh_ICBM152_smoothed.nv'];
+        else
+            [BrainNetViewerPath, fileN, extn] = fileparts(which('BrainNet.m'));
+            SurfFileName=[BrainNetViewerPath,filesep,'Data',filesep,'SurfTemplate',filesep,'BrainMesh_ICBM152_smoothed.nv'];
+        end
+
         y_CallBrainNetViewer(OverlayHeader.Data,...
             OverlayHeader.NMin, OverlayHeader.PMin,...
             CVSize, OverlayHeader.RMM,...
