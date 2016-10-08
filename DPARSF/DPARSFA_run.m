@@ -24,6 +24,7 @@ function [Error]=DPARSFA_run(AutoDataProcessParameter)
 % Modified by YAN Chao-Gan, 121225. DPARSF V2.2.
 % Modified by YAN Chao-Gan, 130303. DPARSF V2.2, minor revision.
 % Modified by YAN Chao-Gan, 130615. DPARSF V2.3.
+% Modified by YAN Chao-Gan, 161006. For compiling.
 
 
 if ischar(AutoDataProcessParameter)  %If inputed a .mat file name. (Cfg inside)
@@ -31,18 +32,25 @@ if ischar(AutoDataProcessParameter)  %If inputed a .mat file name. (Cfg inside)
     AutoDataProcessParameter=Cfg;
 end
 
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
 AutoDataProcessParameter.SubjectNum=length(AutoDataProcessParameter.SubjectID);
 Error=[];
-addpath([ProgramPath,filesep,'Subfunctions']);
 
 [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+ProgramPath=fullfile(DPABIPath, 'DPARSF');
+addpath([ProgramPath,filesep,'Subfunctions']);
 TemplatePath=fullfile(DPABIPath, 'Templates');
 
-[SPMversionText,c]=spm('Ver');
-SPMversion=str2double(SPMversionText(end-1:end));
-if isnan(SPMversion)
-    SPMversion=str2double(SPMversionText(end));
+%[SPMPath, fileN, extn] = fileparts(which('spm.m'));
+SPMFilePath=fullfile(DPABIPath, 'Templates','SPMTemplates'); %YAN Chao-Gan, 161006. Move the necessary files to DPABI. After compiling, this should be usable.
+
+if isdeployed %YAN Chao-Gan, 161006. For Compiler.
+    SPMversion=12;
+else
+    [SPMversionText,c]=spm('Ver');
+    SPMversion=str2double(SPMversionText(end-1:end));
+    if isnan(SPMversion)
+        SPMversion=str2double(SPMversionText(end));
+    end
 end
 
 
@@ -1935,8 +1943,8 @@ if (AutoDataProcessParameter.IsSegment>=1)
                 SourceDir=dir([AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
             end
             SourceFile=[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,SourceDir(1).name];
-            [SPMPath, fileN, extn] = fileparts(which('spm.m'));
-            SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.tpm={[SPMPath,filesep,'tpm',filesep,'grey.nii'];[SPMPath,filesep,'tpm',filesep,'white.nii'];[SPMPath,filesep,'tpm',filesep,'csf.nii']};
+            %SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.tpm={[SPMFilePath,filesep,'tpm',filesep,'grey.nii'];[SPMFilePath,filesep,'tpm',filesep,'white.nii'];[SPMFilePath,filesep,'tpm',filesep,'csf.nii']}; %YAN Chao-Gan, 161006.
+            SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.tpm={[SPMFilePath,filesep,'toolbox',filesep,'OldSeg',filesep,'grey.nii'];[SPMFilePath,filesep,'toolbox',filesep,'OldSeg',filesep,'white.nii'];[SPMFilePath,filesep,'toolbox',filesep,'OldSeg',filesep,'csf.nii']}; %YAN Chao-Gan, 161006.
             SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.data={SourceFile};
             SPMJOB.matlabbatch{1,1}.spm.spatial.preproc.opts.regtype = AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation;
 %             if strcmpi(AutoDataProcessParameter.Segment.AffineRegularisationInSegmentation,'mni')   %Added by YAN Chao-Gan 091110. Use different Affine Regularisation in Segmentation: East Asian brains (eastern) or European brains (mni).
@@ -1959,7 +1967,7 @@ if (AutoDataProcessParameter.IsSegment>=1)
             if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldseg = SPMJOB.matlabbatch{1,1}.spm.spatial.preproc;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
-                    oldseg.opts.tpm={[SPMPath,filesep,'toolbox',filesep,'OldSeg',filesep,'grey.nii'];[SPMPath,filesep,'toolbox',filesep,'OldSeg',filesep,'white.nii'];[SPMPath,filesep,'toolbox',filesep,'OldSeg',filesep,'csf.nii']};
+                    oldseg.opts.tpm={[SPMFilePath,filesep,'toolbox',filesep,'OldSeg',filesep,'grey.nii'];[SPMFilePath,filesep,'toolbox',filesep,'OldSeg',filesep,'white.nii'];[SPMFilePath,filesep,'toolbox',filesep,'OldSeg',filesep,'csf.nii']};
                 end
                 SPMJOB=[];
                 SPMJOB.matlabbatch{1,1}.spm.tools.oldseg = oldseg;
@@ -1975,9 +1983,9 @@ if (AutoDataProcessParameter.IsSegment>=1)
         parfor i=1:AutoDataProcessParameter.SubjectNum
             
             SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'NewSegment.mat']);
-            [SPMPath, fileN, extn] = fileparts(which('spm.m'));
             for T1ImgSegmentDirectoryNameue=1:6
-                SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.tissue(1,T1ImgSegmentDirectoryNameue).tpm{1,1}=[SPMPath,filesep,'toolbox',filesep,'Seg',filesep,'TPM.nii',',',num2str(T1ImgSegmentDirectoryNameue)];
+                %SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.tissue(1,T1ImgSegmentDirectoryNameue).tpm{1,1}=[SPMFilePath,filesep,'toolbox',filesep,'Seg',filesep,'TPM.nii',',',num2str(T1ImgSegmentDirectoryNameue)];
+                SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.tissue(1,T1ImgSegmentDirectoryNameue).tpm{1,1}=[SPMFilePath,filesep,'tpm',filesep,'TPM.nii',',',num2str(T1ImgSegmentDirectoryNameue)]; %YAN Chao-Gan, 161006.
                 SPMJOB.matlabbatch{1,1}.spm.tools.preproc8.tissue(1,T1ImgSegmentDirectoryNameue).warped = [0 0]; % Do not need warped results. Warp by DARTEL
             end
             
@@ -2003,7 +2011,7 @@ if (AutoDataProcessParameter.IsSegment>=1)
                 preproc = SPMJOB.matlabbatch{1,1}.spm.tools.preproc8;
                 %Set the TPMs
                 for T1ImgSegmentDirectoryNameue=1:6
-                    preproc.tissue(1,T1ImgSegmentDirectoryNameue).tpm{1,1}=[SPMPath,filesep,'tpm',filesep,'TPM.nii',',',num2str(T1ImgSegmentDirectoryNameue)];
+                    preproc.tissue(1,T1ImgSegmentDirectoryNameue).tpm{1,1}=[SPMFilePath,filesep,'tpm',filesep,'TPM.nii',',',num2str(T1ImgSegmentDirectoryNameue)];
                     preproc.tissue(1,T1ImgSegmentDirectoryNameue).warped = [0 0]; % Do not need warped results. Warp by DARTEL
                 end
                 
@@ -2738,8 +2746,8 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).source={MeanFilename};
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=FileList;
             
-            [SPMPath, fileN, extn] = fileparts(which('spm.m'));
-            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMPath,filesep,'templates',filesep,'EPI.nii,1']};
+            %SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMFilePath,filesep,'templates',filesep,'EPI.nii,1']};
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']}; %YAN Chao-Gan, 161006.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.bb=AutoDataProcessParameter.Normalize.BoundingBox;
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
             
@@ -2758,7 +2766,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
-                    oldnorm.estwrite.eoptions.template={[SPMPath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']};
+                    oldnorm.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']};
                 end
                 SPMJOB=[];
                 SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
@@ -2843,8 +2851,8 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).source={Source};
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=[FileList;{Source}];
             
-            [SPMPath, fileN, extn] = fileparts(which('spm.m'));
-            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMPath,filesep,'templates',filesep,'T1.nii,1']};
+            %SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMFilePath,filesep,'templates',filesep,'T1.nii,1']};
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']}; %YAN Chao-Gan, 161006.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.bb=AutoDataProcessParameter.Normalize.BoundingBox;
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
             
@@ -2863,7 +2871,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
-                    oldnorm.estwrite.eoptions.template={[SPMPath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']};
+                    oldnorm.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']};
                 end
                 SPMJOB=[];
                 SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
@@ -4427,8 +4435,8 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).source={MeanFilename};
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=FileList;
             
-            [SPMPath, fileN, extn] = fileparts(which('spm.m'));
-            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMPath,filesep,'templates',filesep,'EPI.nii,1']};
+            %SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMFilePath,filesep,'templates',filesep,'EPI.nii,1']};
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']}; %YAN Chao-Gan, 161006.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.bb=AutoDataProcessParameter.Normalize.BoundingBox;
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
 
@@ -4441,7 +4449,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
-                    oldnorm.estwrite.eoptions.template={[SPMPath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']};
+                    oldnorm.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']};
                 end
                 SPMJOB=[];
                 SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
@@ -4523,8 +4531,8 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).source={Source};
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=[FileList;{Source}];
             
-            [SPMPath, fileN, extn] = fileparts(which('spm.m'));
-            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMPath,filesep,'templates',filesep,'T1.nii,1']};
+            %SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMFilePath,filesep,'templates',filesep,'T1.nii,1']};
+            SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']}; %YAN Chao-Gan, 161006.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.bb=AutoDataProcessParameter.Normalize.BoundingBox;
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
             
@@ -4541,7 +4549,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
-                    oldnorm.estwrite.eoptions.template={[SPMPath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']};
+                    oldnorm.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']};
                 end
                 SPMJOB=[];
                 SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
