@@ -18,13 +18,13 @@ function y_MixedEffectsAnalysis_Image(DependentDir,BetweenSubjectFactor,WithinSu
 % ycg.yan@gmail.com
 
 
-if ~exit('OtherCovariates')
+if ~exist('OtherCovariates','var')
     OtherCovariates=[];
 end
-if ~exit('CovariateDirs')
+if ~exist('CovariateDirs','var')
     CovariateDirs=[];
 end
-if ~exit('MaskFile')
+if ~exist('MaskFile','var')
     MaskFile='';
 end
 

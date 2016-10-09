@@ -2649,7 +2649,7 @@ if (AutoDataProcessParameter.IsFilter==1) && (strcmpi(AutoDataProcessParameter.F
         parfor i=1:AutoDataProcessParameter.SubjectNum
 
             if AutoDataProcessParameter.TR==0  % Need to retrieve the TR information from the NIfTI images
-                TR = AutoDataProcessParameter.TRSet(i,iFunSession)
+                TR = AutoDataProcessParameter.TRSet(i,iFunSession);
             else
                 TR = AutoDataProcessParameter.TR;
             end
@@ -3625,7 +3625,7 @@ if (AutoDataProcessParameter.IsCalALFF==1)
         parfor i=1:AutoDataProcessParameter.SubjectNum
             
             if AutoDataProcessParameter.TR==0  % Need to retrieve the TR information from the NIfTI images
-                TR = AutoDataProcessParameter.TRSet(i,iFunSession)
+                TR = AutoDataProcessParameter.TRSet(i,iFunSession);
             else
                 TR = AutoDataProcessParameter.TR;
             end
@@ -3671,7 +3671,7 @@ if (AutoDataProcessParameter.IsFilter==1) && (strcmpi(AutoDataProcessParameter.F
         parfor i=1:AutoDataProcessParameter.SubjectNum
 
             if AutoDataProcessParameter.TR==0  % Need to retrieve the TR information from the NIfTI images
-                TR = AutoDataProcessParameter.TRSet(i,iFunSession)
+                TR = AutoDataProcessParameter.TRSet(i,iFunSession);
             else
                 TR = AutoDataProcessParameter.TR;
             end

@@ -188,7 +188,8 @@ function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
 
     handles.Cfg.ParallelWorkersNumber=0;%%%%
     % Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
-    if (exist('matlabpool'))
+    PCTVer = ver('distcomp');
+    if ~isempty(PCTVer)
         FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
         if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
             CurrentSize_MatlabPool = matlabpool('size');
@@ -1029,7 +1030,8 @@ function editParallelWorkersNumber_Callback(hObject, eventdata, handles)
     Size_MatlabPool =str2double(get(hObject,'String'));
     
     % Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
-    if (exist('matlabpool'))
+    PCTVer = ver('distcomp');
+    if ~isempty(PCTVer)
         FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
         if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
             if Size_MatlabPool ~= handles.Cfg.ParallelWorkersNumber;
@@ -1479,7 +1481,8 @@ function UpdateDisplay(handles)
     
     % Check if Parallel Computation Toolbox is detected and higher than MATLAB 2008.
     FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
-    if (exist('matlabpool')) && (FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8)
+    PCTVer = ver('distcomp');
+    if (~isempty(PCTVer)) && (FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8)
         set(handles.editParallelWorkersNumber ,'String', num2str(handles.Cfg.ParallelWorkersNumber), 'Enable', 'on');	
     else
         set(handles.editParallelWorkersNumber ,'String', num2str(handles.Cfg.ParallelWorkersNumber), 'Enable', 'off');	

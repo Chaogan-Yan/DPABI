@@ -47,13 +47,7 @@ global cam
 
 % Reading Volume Data. If it is still a file name, then read it.
 if ischar(BrainVolume)
-    if (isdeployed)
-        Nii  = nifti(BrainVolume);
-        BrainVolume = double(Nii.dat);
-        BrainHeader.mat = Nii.mat;
-    else
-        [BrainVolume Vox BrainHeader]=y_ReadRPI(BrainVolume);
-    end
+    [BrainVolume Vox BrainHeader]=y_ReadRPI(BrainVolume);
 end
 
 % Reading Surf Data. Referenced from Mingrui Xia's BrainNet Viewer
@@ -94,44 +88,22 @@ end
 
 if ~exist('NMax','var')
     NMax = min(BrainVolume(:));
-else
-    if (isdeployed)
-        NMax = str2num(NMax);
-    end
 end
 if ~exist('NMin','var')
     NMin = max(BrainVolume(BrainVolume<0));
-else
-    if (isdeployed)
-        NMin = str2num(NMin);
-    end
 end
 if ~exist('PMin','var')
     PMin = min(BrainVolume(BrainVolume>0));
-else
-    if (isdeployed)
-        PMin = str2num(PMin);
-    end
 end
 if ~exist('PMax','var')
     PMax = max(BrainVolume(:));
 else
-    if (isdeployed)
-        PMax = str2num(PMax);
-    end
 end
 
 % Cluster Size thresholding, only need when ClusterSize exist and bigger than zero
 if exist('ClusterSize','var')
-    if (isdeployed)
-        ClusterSize = str2num(ClusterSize);
-    end
     if ~exist('ConnectivityCriterion','var')
         ConnectivityCriterion = 18;
-    else
-        if (isdeployed)
-            ConnectivityCriterion = str2num(ConnectivityCriterion);
-        end
     end
     if ClusterSize > 0
         BrainVolume = BrainVolume .* ((BrainVolume <= NMin) + (BrainVolume >= PMin));
