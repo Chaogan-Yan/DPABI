@@ -17,7 +17,9 @@ function y_WarpBackByDARTEL(SourceFile,OutFile,RefFile,DARTELTemplateFilename,DA
 % ycg.yan@gmail.com
 
 
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
+%[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
+[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+ProgramPath=fullfile(DPABIPath, 'DPARSF');
 [SPMversionText,c]=spm('Ver');
 SPMversion=str2double(SPMversionText(end-1:end));
 if isnan(SPMversion)

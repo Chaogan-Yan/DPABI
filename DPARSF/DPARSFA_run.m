@@ -1,7 +1,10 @@
-function [Error]=DPARSFA_run(AutoDataProcessParameter)
-% FORMAT [Error]=DPARSFA_run(AutoDataProcessParameter)
+function [Error]=DPARSFA_run(AutoDataProcessParameter,WorkingDir,SubjectListFile,IsAllowGUI)
+% FORMAT [Error]=DPARSFA_run(AutoDataProcessParameter,WorkingDir,SubjectListFile,IsAllowGUI)
 % Input:
-%   AutoDataProcessParameter - the parameters for auto data processing
+%   AutoDataProcessParameter - the parameters for auto data processing. Read http://wiki.rfmri.org/ConfigDPARSFA_run to learn how to define it.
+%   WorkingDir - Define the working directory to replace the one defined in AutoDataProcessParameter
+%   SubjectListFile - Define the subject list to replace the one defined in AutoDataProcessParameter. Should be a text file
+%   IsAllowGUI - Set to 0 if you are running on a remote cluster without GUI. Interactively Reorienting will be skipped and pictures for checking normalization will not be generated.
 % Output:
 %   The processed data that you want.
 %___________________________________________________________________________
@@ -31,6 +34,23 @@ if ischar(AutoDataProcessParameter)  %If inputed a .mat file name. (Cfg inside)
     load(AutoDataProcessParameter);
     AutoDataProcessParameter=Cfg;
 end
+
+if exist('WorkingDir','var') && ~isempty(WorkingDir)
+    AutoDataProcessParameter.DataProcessDir=WorkingDir;
+    AutoDataProcessParameter.WorkingDir=WorkingDir;
+end
+
+if exist('SubjectListFile','var') && ~isempty(SubjectListFile)
+    fid = fopen(SubjectListFile);
+    IDCell = textscan(fid,'%s','\n');
+    fclose(fid);
+    AutoDataProcessParameter.SubjectID=IDCell{1};
+end
+
+if exist('IsAllowGUI','var') && ~isempty(IsAllowGUI)
+    AutoDataProcessParameter.IsAllowGUI=IsAllowGUI;
+end
+
 
 AutoDataProcessParameter.SubjectNum=length(AutoDataProcessParameter.SubjectID);
 Error=[];
@@ -198,8 +218,9 @@ end
 if ~isfield(AutoDataProcessParameter,'IsCWAS')
     AutoDataProcessParameter.IsCWAS=0; 
 end
-
-
+if ~isfield(AutoDataProcessParameter,'IsAllowGUI')
+    AutoDataProcessParameter.IsAllowGUI=1; 
+end
 
 
 
@@ -967,7 +988,7 @@ end
 
 %Reorient T1 Image Interactively
 %Do not need parfor
-if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1) && (7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img'],'dir'))
+if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1) && (7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img'],'dir')) && AutoDataProcessParameter.IsAllowGUI
     % First check which kind of T1 image need to be applied
     if ~exist('UseNoCoT1Image','var')
         cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{1}]);
@@ -1080,7 +1101,7 @@ end
 
 %Reorient Functional Images Interactively
 %Do not need parfor
-if (AutoDataProcessParameter.IsNeedReorientFunImgInteractively==1)
+if (AutoDataProcessParameter.IsNeedReorientFunImgInteractively==1) && AutoDataProcessParameter.IsAllowGUI
     % Check if mean* image generated in Head Motion Correction exist. Added by YAN Chao-Gan 101010.
     if 7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{1}],'dir')
         DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{1},filesep,'mean*.img']);
@@ -1636,7 +1657,7 @@ end
 
 %Reorient Interactively After Coregistration for better orientation in Segmentation
 %Do not need parfor
-if (AutoDataProcessParameter.IsNeedReorientInteractivelyAfterCoreg==1)
+if (AutoDataProcessParameter.IsNeedReorientInteractivelyAfterCoreg==1) && AutoDataProcessParameter.IsAllowGUI
     
     if ~(7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'ReorientMats'],'dir'))
         mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'ReorientMats']);
@@ -2910,47 +2931,49 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
 %     end
     
 
-    %Generate the pictures for checking normalization %YAN Chao-Gan, 091001
-    %Revised to use y_Call_spm_orthviews on 140331.
-    mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
-    cd([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
-    
-
-    Ch2Filename=fullfile(TemplatePath,'ch2.nii');
-    %YAN Chao-Gan, 140815.
-    if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 2)  %Special Mode: Monkey
-        Ch2Filename=[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii'];
-    end
-    %YAN Chao-Gan, 150515.
-    if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 3)  %Special Mode: Rat
-        Ch2Filename=[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'rat97t2w_96x96x30.v6.nii'];
-    end
-    
-    for i=1:AutoDataProcessParameter.SubjectNum
+    if AutoDataProcessParameter.IsAllowGUI %YAN Chao-Gan, 161011. Generate the pictures only if GUI is allowed.
+        %Generate the pictures for checking normalization %YAN Chao-Gan, 091001
+        %Revised to use y_Call_spm_orthviews on 140331.
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
+        cd([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
         
-        % Set the normalized mean functional image instead of the first normalized volume to get pictures % YAN Chao-Gan, 120826
-        DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.img']);
-        if isempty(DirMean)  %YAN Chao-Gan, 111114. Also support .nii files.
-            DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.nii.gz']);% Search .nii.gz and unzip; YAN Chao-Gan, 120806.
-            if length(DirMean)==1
-                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
-                delete([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
-            end
-            DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.nii']);
+        
+        Ch2Filename=fullfile(TemplatePath,'ch2.nii');
+        %YAN Chao-Gan, 140815.
+        if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 2)  %Special Mode: Monkey
+            Ch2Filename=[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii'];
         end
-        Filename = [AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name];
-
-        H = figure;
-        H = y_Call_spm_orthviews(Ch2Filename,0,0,0,18,Filename,jet(64),0,250,H,0.8);
-        %H = y_Call_spm_orthviews(BrainVolume,NMin,PMin,ClusterSize,ConnectivityCriterion,UnderlayFileName,ColorMap,NMax,PMax,H,Transparency,Position,BrainHeader);
-
-        eval(['print(''-dtiff'',''-r100'',''',AutoDataProcessParameter.SubjectID{i},'.tif'',H);']);
-        fprintf(['Generating the pictures for checking normalization: ',AutoDataProcessParameter.SubjectID{i},' OK. ']);
+        %YAN Chao-Gan, 150515.
+        if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 3)  %Special Mode: Rat
+            Ch2Filename=[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'rat97t2w_96x96x30.v6.nii'];
+        end
         
-        close(H)
-        
+        for i=1:AutoDataProcessParameter.SubjectNum
+            
+            % Set the normalized mean functional image instead of the first normalized volume to get pictures % YAN Chao-Gan, 120826
+            DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.img']);
+            if isempty(DirMean)  %YAN Chao-Gan, 111114. Also support .nii files.
+                DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.nii.gz']);% Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                if length(DirMean)==1
+                    gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
+                    delete([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
+                end
+                DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.nii']);
+            end
+            Filename = [AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name];
+            
+            H = figure;
+            H = y_Call_spm_orthviews(Ch2Filename,0,0,0,18,Filename,jet(64),0,250,H,0.8);
+            %H = y_Call_spm_orthviews(BrainVolume,NMin,PMin,ClusterSize,ConnectivityCriterion,UnderlayFileName,ColorMap,NMax,PMax,H,Transparency,Position,BrainHeader);
+            
+            eval(['print(''-dtiff'',''-r100'',''',AutoDataProcessParameter.SubjectID{i},'.tif'',H);']);
+            fprintf(['Generating the pictures for checking normalization: ',AutoDataProcessParameter.SubjectID{i},' OK. ']);
+            
+            close(H)
+            
+        end
+        fprintf('\n');
     end
-    fprintf('\n');
 
 end
 if ~isempty(Error)
@@ -3837,7 +3860,7 @@ end
 
 
 % Define ROI Interactively
-if (AutoDataProcessParameter.IsDefineROIInteractively==1)
+if (AutoDataProcessParameter.IsDefineROIInteractively==1) && AutoDataProcessParameter.IsAllowGUI
     prompt ={'How many ROIs do you want to define interactively?', 'ROI Radius (mm. "0" means define for each ROI seperately): '};
     def	={	'1', ...
         '0', ...
@@ -4573,46 +4596,48 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
     AutoDataProcessParameter.StartingDirName=[AutoDataProcessParameter.StartingDirName,'W']; %Now StartingDirName is with new suffix 'W'
     
 
-    %Generate the pictures for checking normalization %YAN Chao-Gan, 091001
-    %Revised to use y_Call_spm_orthviews on 140331.
-    mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
-    cd([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
-
-    Ch2Filename=fullfile(TemplatePath,'ch2.nii');
-    %YAN Chao-Gan, 140815.
-    if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 2)  %Special Mode: Monkey
-        Ch2Filename=[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii'];
-    end
-    %YAN Chao-Gan, 150515.
-    if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 3)  %Special Mode: Rat
-        Ch2Filename=[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'rat97t2w_96x96x30.v6.nii'];
-    end
-
-    for i=1:AutoDataProcessParameter.SubjectNum
+    if AutoDataProcessParameter.IsAllowGUI %YAN Chao-Gan, 161011. Generate the pictures only if GUI is allowed.
+        %Generate the pictures for checking normalization %YAN Chao-Gan, 091001
+        %Revised to use y_Call_spm_orthviews on 140331.
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
+        cd([AutoDataProcessParameter.DataProcessDir,filesep,'PicturesForChkNormalization']);
         
-        % Set the normalized mean functional image instead of the first normalized volume to get pictures % YAN Chao-Gan, 120826
-        DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.img']);
-        if isempty(DirMean)  %YAN Chao-Gan, 111114. Also support .nii files.
-            DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.nii.gz']);% Search .nii.gz and unzip; YAN Chao-Gan, 120806.
-            if length(DirMean)==1
-                gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
-                delete([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
-            end
-            DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.nii']);
+        Ch2Filename=fullfile(TemplatePath,'ch2.nii');
+        %YAN Chao-Gan, 140815.
+        if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 2)  %Special Mode: Monkey
+            Ch2Filename=[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii'];
         end
-        Filename = [AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name];
-
-        H = figure;
-        H = y_Call_spm_orthviews(Ch2Filename,0,0,0,18,Filename,jet(64),0,250,H,0.8);
-        %H = y_Call_spm_orthviews(BrainVolume,NMin,PMin,ClusterSize,ConnectivityCriterion,UnderlayFileName,ColorMap,NMax,PMax,H,Transparency,Position,BrainHeader);
-
-        eval(['print(''-dtiff'',''-r100'',''',AutoDataProcessParameter.SubjectID{i},'.tif'',H);']);
-        fprintf(['Generating the pictures for checking normalization: ',AutoDataProcessParameter.SubjectID{i},' OK. ']);
+        %YAN Chao-Gan, 150515.
+        if isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 3)  %Special Mode: Rat
+            Ch2Filename=[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'rat97t2w_96x96x30.v6.nii'];
+        end
         
-        close(H)
-        
+        for i=1:AutoDataProcessParameter.SubjectNum
+            
+            % Set the normalized mean functional image instead of the first normalized volume to get pictures % YAN Chao-Gan, 120826
+            DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.img']);
+            if isempty(DirMean)  %YAN Chao-Gan, 111114. Also support .nii files.
+                DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.nii.gz']);% Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                if length(DirMean)==1
+                    gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
+                    delete([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name]);
+                end
+                DirMean=dir([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'wmean*.nii']);
+            end
+            Filename = [AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name];
+            
+            H = figure;
+            H = y_Call_spm_orthviews(Ch2Filename,0,0,0,18,Filename,jet(64),0,250,H,0.8);
+            %H = y_Call_spm_orthviews(BrainVolume,NMin,PMin,ClusterSize,ConnectivityCriterion,UnderlayFileName,ColorMap,NMax,PMax,H,Transparency,Position,BrainHeader);
+            
+            eval(['print(''-dtiff'',''-r100'',''',AutoDataProcessParameter.SubjectID{i},'.tif'',H);']);
+            fprintf(['Generating the pictures for checking normalization: ',AutoDataProcessParameter.SubjectID{i},' OK. ']);
+            
+            close(H)
+            
+        end
+        fprintf('\n');
     end
-    fprintf('\n');
     
 end
 if ~isempty(Error)
