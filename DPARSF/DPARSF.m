@@ -56,7 +56,7 @@ end
 
 % --- Executes just before DPARSF is made visible.
 function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V4.0_151201';
+    Release='V4.1_160415';
     
     [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
     addpath([ProgramPath,filesep,'SubGUIs']);
@@ -83,7 +83,7 @@ function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
     fprintf('State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China\n');
     fprintf('Mail to Author:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\n<a href="http://rfmri.org/DPARSF">http://rfmri.org/DPARSF</a>\n');
     fprintf('-----------------------------------------------------------\n');
-    fprintf('Citing Information:\nIf you think DPARSFA is useful for your work, citing it in your paper would be greatly appreciated.\nSomething like "... The preprocessing was carried out by using Data Processing Assistant for Resting-State fMRI (DPARSF) (Yan & Zang, 2010, http://rfmri.org/DPARSF) which is based on Statistical Parametric Mapping (SPM8) (http://www.fil.ion.ucl.ac.uk/spm) and the toolbox for Data Processing & Analysis of Brain Imaging (DPABI, http://rfmri.org/DPABI)..."\nReference: Yan C and Zang Y (2010) DPARSF: a MATLAB toolbox for "pipeline" data analysis of resting-state fMRI. Front. Syst. Neurosci. 4:13. doi:10.3389/fnsys.2010.00013\n');
+    fprintf('Citing Information:\nIf you think DPARSF is useful for your work, citing it in your paper would be greatly appreciated.\nSomething like "... The preprocessing was performed using the Data Processing Assistant for Resting-State fMRI (DPARSF, Yan and Zang 2010, http://rfmri.org/DPARSF), which is based on Statistical Parametric Mapping (SPM, http://www.fil.ion.ucl.ac.uk/spm) and the toolbox for Data Processing & Analysis of Brain Imaging (DPABI, Yan et al. 2016, http://rfmri.org/DPABI)..."\nReferences: Yan C and Zang Y (2010) DPARSF: a MATLAB toolbox for "pipeline" data analysis of resting-state fMRI. Front. Syst. Neurosci. 4:13. doi:10.3389/fnsys.2010.00013; Yan, C.G., Wang, X.D., Zuo, X.N., Zang, Y.F., 2016. DPABI: Data Processing & Analysis for (Resting-State) Brain Imaging. Neuroinformatics. In press. doi: 10.1007/s12021-016-9299-4\n');
 
     
     [DPABILatestRelease WebStatus]=urlread('http://rfmri.org/DPABILatestRelease.txt');
@@ -188,7 +188,8 @@ function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
 
     handles.Cfg.ParallelWorkersNumber=0;%%%%
     % Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
-    if (exist('matlabpool'))
+    PCTVer = ver('distcomp');
+    if ~isempty(PCTVer)
         FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
         if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
             CurrentSize_MatlabPool = matlabpool('size');
@@ -1029,7 +1030,8 @@ function editParallelWorkersNumber_Callback(hObject, eventdata, handles)
     Size_MatlabPool =str2double(get(hObject,'String'));
     
     % Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
-    if (exist('matlabpool'))
+    PCTVer = ver('distcomp');
+    if ~isempty(PCTVer)
         FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
         if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
             if Size_MatlabPool ~= handles.Cfg.ParallelWorkersNumber;
@@ -1479,7 +1481,8 @@ function UpdateDisplay(handles)
     
     % Check if Parallel Computation Toolbox is detected and higher than MATLAB 2008.
     FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
-    if (exist('matlabpool')) && (FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8)
+    PCTVer = ver('distcomp');
+    if (~isempty(PCTVer)) && (FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8)
         set(handles.editParallelWorkersNumber ,'String', num2str(handles.Cfg.ParallelWorkersNumber), 'Enable', 'on');	
     else
         set(handles.editParallelWorkersNumber ,'String', num2str(handles.Cfg.ParallelWorkersNumber), 'Enable', 'off');	

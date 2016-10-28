@@ -641,6 +641,7 @@ function UnderlayEntry_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 if isempty(handles.UnderlayFileName)
     [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+
     TemplatePath=fullfile(DPABIPath, 'Templates');
     
     UnderlayFileName=fullfile(TemplatePath,'ch2.nii');
@@ -705,6 +706,7 @@ ShowUnderlay(handles);
 function ShowUnderlay(handles)
 if isempty(handles.UnderlayFileName)
     [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+
     TemplatePath=fullfile(DPABIPath, 'Templates');
     UnderlayFileName=fullfile(TemplatePath,'ch2.nii');
 else
@@ -743,6 +745,7 @@ function TemplatePopup_Callback(hObject, eventdata, handles)
 flag=get(handles.TemplatePopup, 'Value');
 Max=length(get(handles.TemplatePopup, 'String'));
 [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+
 switch flag
     case 1
         File='ch2.nii';
@@ -1383,6 +1386,7 @@ switch Value
 
         [BrainNetViewerPath, fileN, extn] = fileparts(which('BrainNet.m'));
         SurfFileName=[BrainNetViewerPath,filesep,'Data',filesep,'SurfTemplate',filesep,'BrainMesh_ICBM152_smoothed.nv'];
+
         y_CallBrainNetViewer(OverlayHeader.Data,...
             OverlayHeader.NMin, OverlayHeader.PMin,...
             CVSize, OverlayHeader.RMM,...

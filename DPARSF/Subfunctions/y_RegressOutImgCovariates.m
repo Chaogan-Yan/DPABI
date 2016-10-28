@@ -12,6 +12,7 @@ function [theCovariables] = y_RegressOutImgCovariates(DataDir,CovariablesDef,Pos
 %                 CovariablesDef.CovImgDir - Directory Cell: the image directory you want to regress out 
 %                 CovariablesDef.CovMat    - Covariable Matrix. Time points by Cov number matrix
 %                 CovariablesDef.CovMask   - Covariable Masks. Cells of Mask file names.
+%                 CovariablesDef.IsAddMeanBack - If 1 or 'Yes', the regression mean will be added back to the residual
 %   Postfix        - Post fix of the resulting data directory. e.g. '_Covremoved'
 %   MaskFilename   - The mask file for regression. Empty means perform regression on all the brain voxels.
 %   ImgCovModel    - The model for the image covariates defined in CovariablesDef.CovImgDir. E.g., used for the voxel-specific 12 head motion regression model
@@ -20,6 +21,7 @@ function [theCovariables] = y_RegressOutImgCovariates(DataDir,CovariablesDef,Pos
 %                     3: Use the current time point and their squares. e.g., Txi, Tyi, Tzi, Txi^2, Tyi^2, Tzi^2
 %                     4: Use the current time point, the previous time point and their squares. e.g., Txi, Tyi, Tzi, Txi-1, Tyi-1, Tzi-1 and their squares (total 12 items). Like the Friston autoregressive model (Friston, K.J., Williams, S., Howard, R., Frackowiak, R.S., Turner, R., 1996. Movement-related effects in fMRI time-series. Magn Reson Med 35, 346-355.)
 % Output:
+%   theCovariables - The covariables used in the regression model.
 %   *.nii - data removed the effect of covariables.
 %___________________________________________________________________________
 % Written by YAN Chao-Gan 111209.
@@ -27,6 +29,7 @@ function [theCovariables] = y_RegressOutImgCovariates(DataDir,CovariablesDef,Pos
 % Child Mind Institute, 445 Park Avenue, New York, NY 10022, USA
 % The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016, USA
 % ycg.yan@gmail.com
+%   Revised by YAN Chao-Gan 160415: Add the option of "Add Mean Back".
 
 
 if ~exist('MaskFilename','var')
@@ -105,6 +108,10 @@ end
 MaskData = any(AllVolume,4) .* MaskData; % skip the voxels with all zeros
 
 VolumeAfterRemoveCov=zeros(nDim1,nDim2,nDim3,nDim4);
+MeanBrain=zeros(nDim1,nDim2,nDim3);
+
+AlltheCovariables = theCovariables;
+AlltheCovariables(:,2:end) = (AlltheCovariables(:,2:end)-repmat(mean(AlltheCovariables(:,2:end)),size(AlltheCovariables,1),1)); %YAN Chao-Gan, 20160415. Demean, then the constant models the mean. At the end, could add the mean back.
 
 fprintf('\n\tRegressing Out Covariates...\n');
 for i=1:nDim1
@@ -126,18 +133,26 @@ for i=1:nDim1
                         Q1 = squeeze(Cov5DVolume(i,j,k,:,:));
                         ImgCovTemp = [Q1, [zeros(1,size(Q1,2));Q1(1:end-1,:)], Q1.^2, [zeros(1,size(Q1,2));Q1(1:end-1,:)].^2];
                     end
-                    AlltheCovariables=[theCovariables,ImgCovTemp];
-                else
-                    AlltheCovariables=theCovariables;
+                    ImgCovTemp = (ImgCovTemp-repmat(mean(ImgCovTemp),size(ImgCovTemp,1),1)); %YAN Chao-Gan, 20160415. Demean.
+                    AlltheCovariables=[AlltheCovariables,ImgCovTemp];
                 end
                 
                 [b,r] = y_regress_ss(DependentVariable,AlltheCovariables);
                 VolumeAfterRemoveCov(i,j,k,:)=r;
+                MeanBrain(i,j,k)=b(1);
             end
         end
     end
 end
 VolumeAfterRemoveCov(isnan(VolumeAfterRemoveCov))=0;
+
+
+if isfield(CovariablesDef,'IsAddMeanBack') %YAN Chao-Gan, 20160415. Add the mean back.
+    if CovariablesDef.IsAddMeanBack==1 || strcmpi(CovariablesDef.IsAddMeanBack, 'Yes')
+        VolumeAfterRemoveCov = VolumeAfterRemoveCov + repmat(MeanBrain,1,1,1,nDim4);
+    end
+end
+
 
 if strcmp(DataDir(end),filesep)==1,
     DataDir=DataDir(1:end-1);

@@ -25,7 +25,9 @@ Head.pinfo = [1;0;0];
 % y_Write(Data,Head,TempFileName);
 y_Write(Data,Head,OutFile);
 
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
+%[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
+[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+ProgramPath=fullfile(DPABIPath, 'DPARSF');
 [SPMversionText,c]=spm('Ver');
 SPMversion=str2double(SPMversionText(end-1:end));
 if isnan(SPMversion)

@@ -30,7 +30,9 @@ if ~exist('VoxSize','var')
     VoxSize=[3 3 3];
 end
 
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
+%[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
+[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+ProgramPath=fullfile(DPABIPath, 'DPARSF');
 addpath([ProgramPath,filesep,'Subfunctions']);
 
 

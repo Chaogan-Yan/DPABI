@@ -227,10 +227,10 @@ end
 switch Method
     case 1 % ANOVA Model
         y_ICC_Image(ImgCells1, ImgCells2, OutputName, MaskFile);
-    case 2 % ReML Model
-        y_ICC_Image_ReML(ImgCells1, ImgCells2, OutputName, MaskFile);
-    case 3 % Linear Mixed Models
+    case 2 % Linear Mixed Models %YAN Chao-Gan, 160415. Adjusted the order. Only two models on the GUI. The 2nd one is LMM.
         y_ICC_Image_LMM(ImgCells1, ImgCells2, OutputName, MaskFile);
+    case 3 % Linear Mixed Models (ReML)
+        y_ICC_Image_ReML(ImgCells1, ImgCells2, OutputName, MaskFile);
 end
 fprintf('Done!\n');
 

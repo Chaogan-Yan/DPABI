@@ -22,7 +22,7 @@ function varargout = DPABI_Utilities(varargin)
 
 % Edit the above text to modify the response to help DPABI_Utilities
 
-% Last Modified by GUIDE v2.5 15-May-2015 18:19:24
+% Last Modified by GUIDE v2.5 16-Apr-2016 14:24:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -134,4 +134,9 @@ function pushbuttonICC_Callback(hObject, eventdata, handles)
 DPABI_ICC_TOOL
 
 
-
+% --- Executes on button press in pushbuttonDualRegression.
+function pushbuttonDualRegression_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonDualRegression (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABI_DualRegression

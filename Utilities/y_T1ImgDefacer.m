@@ -20,7 +20,9 @@ if ischar(AutoDataProcessParameter)  %If inputed a .mat file name. (Cfg inside)
     AutoDataProcessParameter=Cfg;
 end
 
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
+%[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
+[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+ProgramPath=fullfile(DPABIPath, 'DPARSF');
 AutoDataProcessParameter.SubjectNum=length(AutoDataProcessParameter.SubjectID);
 Error=[];
 addpath([ProgramPath,filesep,'Subfunctions']);

@@ -16,7 +16,7 @@ function [Z P] = y_TFRtoZ(ImgFile,OutputName,Flag,Df1,Df2)
 % Modified by Sandy 20140324 for DPABI_VIEW
 
 if ischar(ImgFile)
-    [Data VoxelSize Header]=rest_readfile(ImgFile);
+    [Data VoxelSize Header]=y_ReadRPI(ImgFile);
 else %Added by Sandy for DPABI_VIEW
     Header=ImgFile;
     Data=Header.Raw;

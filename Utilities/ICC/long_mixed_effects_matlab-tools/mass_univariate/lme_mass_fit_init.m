@@ -74,14 +74,14 @@ end;
 %Modified by YAN Chao-Gan 151117. For parpool
 FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
 if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
-    if (prs==1) || (matlabpool('size') ~= prs)
-        if (matlabpool('size') > 0)
-            matlabpool close;
-        end;
-        if (prs>1)
-            matlabpool(prs);
-        end;
-    end;
+%     if (prs==1) || (matlabpool('size') ~= prs)
+%         if (matlabpool('size') > 0)
+%             matlabpool close;
+%         end;
+%         if (prs>1)
+%             matlabpool(prs);
+%         end;
+%     end;
 else
     poolobj = gcp('nocreate'); % If no pool, do not create new one.
     if isempty(poolobj)

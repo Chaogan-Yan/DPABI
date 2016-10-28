@@ -166,6 +166,11 @@ Header.pinfo = [1;0;0];
 Header.dt    =[16,0];
 if ~isempty(OutputName)
     y_Write(BrainVolume,Header,[OutPath,filesep,'Z_ClusterThresholded_',OutName,OutExt]);
+    if ~strcmpi(Flag,'Z') %Write the thresholded T or F image. YAN Chao-Gan, 160810
+        [BrainVolumeRawStats]=y_ReadRPI(StatsImgFile);
+        BrainVolumeRawStats = BrainVolumeRawStats .* (BrainVolume~=0);
+        y_Write(BrainVolumeRawStats,Header,[OutPath,filesep,'ClusterThresholded_',OutName,OutExt]);
+    end
 end
 
 Data_Corrected=BrainVolume;

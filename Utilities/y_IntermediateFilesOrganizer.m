@@ -10,6 +10,7 @@ function y_IntermediateFilesOrganizer(WorkingDir,SubjectID,OutputDir)
 % Written by YAN Chao-Gan 151129.
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
+% Revised by YAN Chao-Gan, 161004. Change parfor for gzipping each .nii file to parfor for each subject.
 
 
 
@@ -25,11 +26,18 @@ if ~isempty(FunImgARName)
         fprintf('\n\tOrganizing %s.\n',FunImgARName)
         mkdir([OutputDir,filesep,FunImgARName])
         copyfile([WorkingDir,filesep,FunImgARName],[OutputDir,filesep,FunImgARName]);
-        
-        DirNii=y_rdir([OutputDir,filesep,FunImgARName,filesep,'**',filesep,'*.nii']);
-        parfor i=1:length(DirNii)
-            gzip(DirNii(i).name);
-            delete(DirNii(i).name);
+
+%         DirNii=y_rdir([OutputDir,filesep,FunImgARName,filesep,'**',filesep,'*.nii']);
+%         parfor i=1:length(DirNii)
+%             gzip(DirNii(i).name);
+%             delete(DirNii(i).name);
+%         end
+        parfor iSub=1:length(SubjectID) %YAN Chao-Gan, 161004. Change parfor for gzipping each .nii file to parfor for each subject.
+            DirNii=dir([OutputDir,filesep,FunImgARName,filesep,SubjectID{iSub},filesep,'*.nii']);
+            for i=1:length(DirNii)
+                gzip([OutputDir,filesep,FunImgARName,filesep,SubjectID{iSub},filesep,DirNii(i).name]);
+                delete([OutputDir,filesep,FunImgARName,filesep,SubjectID{iSub},filesep,DirNii(i).name]);
+            end
         end
     end
 end
@@ -41,11 +49,19 @@ for iSession=1:length(DirSessionResults)
         mkdir([OutputDir,filesep,DirSessionResults(iSession).name])
         copyfile([WorkingDir,filesep,DirSessionResults(iSession).name],[OutputDir,filesep,DirSessionResults(iSession).name]);
         
-        DirNii=y_rdir([OutputDir,filesep,DirSessionResults(iSession).name,filesep,'**',filesep,'*.nii']);
-        parfor i=1:length(DirNii)
-            gzip(DirNii(i).name);
-            delete(DirNii(i).name);
+%         DirNii=y_rdir([OutputDir,filesep,DirSessionResults(iSession).name,filesep,'**',filesep,'*.nii']);
+%         parfor i=1:length(DirNii)
+%             gzip(DirNii(i).name);
+%             delete(DirNii(i).name);
+%         end
+        parfor iSub=1:length(SubjectID) %YAN Chao-Gan, 161004. Change parfor for gzipping each .nii file to parfor for each subject.
+            DirNii=dir([OutputDir,filesep,DirSessionResults(iSession).name,filesep,SubjectID{iSub},filesep,'*.nii']);
+            for i=1:length(DirNii)
+                gzip([OutputDir,filesep,DirSessionResults(iSession).name,filesep,SubjectID{iSub},filesep,DirNii(i).name]);
+                delete([OutputDir,filesep,DirSessionResults(iSession).name,filesep,SubjectID{iSub},filesep,DirNii(i).name]);
+            end
         end
+
     end
 end
 
@@ -63,10 +79,17 @@ if ~isempty(T1ImgSegmentDirectoryName)
     mkdir([OutputDir,filesep,T1ImgSegmentDirectoryName])
     copyfile([WorkingDir,filesep,T1ImgSegmentDirectoryName],[OutputDir,filesep,T1ImgSegmentDirectoryName]);
     
-    DirNii=y_rdir([OutputDir,filesep,T1ImgSegmentDirectoryName,filesep,'**',filesep,'*.nii']);
-    parfor i=1:length(DirNii)
-        gzip(DirNii(i).name);
-        delete(DirNii(i).name);
+%     DirNii=y_rdir([OutputDir,filesep,T1ImgSegmentDirectoryName,filesep,'**',filesep,'*.nii']);
+%     parfor i=1:length(DirNii)
+%         gzip(DirNii(i).name);
+%         delete(DirNii(i).name);
+%     end
+    parfor iSub=1:length(SubjectID) %YAN Chao-Gan, 161004. Change parfor for gzipping each .nii file to parfor for each subject.
+        DirNii=dir([OutputDir,filesep,T1ImgSegmentDirectoryName,filesep,SubjectID{iSub},filesep,'*.nii']);
+        for i=1:length(DirNii)
+            gzip([OutputDir,filesep,T1ImgSegmentDirectoryName,filesep,SubjectID{iSub},filesep,DirNii(i).name]);
+            delete([OutputDir,filesep,T1ImgSegmentDirectoryName,filesep,SubjectID{iSub},filesep,DirNii(i).name]);
+        end
     end
 end
     
@@ -76,10 +99,17 @@ if exist([WorkingDir,filesep,'RealignParameter'])
     fprintf('\n\tOrganizing Realign Parameters.\n')
     mkdir([OutputDir,filesep,'RealignParameter'])
     copyfile([WorkingDir,filesep,'RealignParameter'],[OutputDir,filesep,'RealignParameter']);
-    DirNii=y_rdir([OutputDir,filesep,'RealignParameter',filesep,'**',filesep,'*.nii']);
-    parfor i=1:length(DirNii)
-        gzip(DirNii(i).name);
-        delete(DirNii(i).name);
+%     DirNii=y_rdir([OutputDir,filesep,'RealignParameter',filesep,'**',filesep,'*.nii']);
+%     parfor i=1:length(DirNii)
+%         gzip(DirNii(i).name);
+%         delete(DirNii(i).name);
+%     end
+    parfor iSub=1:length(SubjectID) %YAN Chao-Gan, 161004. Change parfor for gzipping each .nii file to parfor for each subject.
+        DirNii=dir([OutputDir,filesep,'RealignParameter',filesep,SubjectID{iSub},filesep,'*.nii']);
+        for i=1:length(DirNii)
+            gzip([OutputDir,filesep,'RealignParameter',filesep,SubjectID{iSub},filesep,DirNii(i).name]);
+            delete([OutputDir,filesep,'RealignParameter',filesep,SubjectID{iSub},filesep,DirNii(i).name]);
+        end
     end
 end
 
