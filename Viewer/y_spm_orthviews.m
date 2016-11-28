@@ -991,18 +991,10 @@ function my_delete(handle)
 global st
 curfig=GetCurFig;
 % remove blobs (and colourbars, if any)
-<<<<<<< HEAD
-rmblobs(handle);
-% remove displayed axes
-% Remove loop by Sandy
-handles=guidata(st{curfig}.fig);
-if ~isfield(handles, 'DPABI_fig');
-=======
 if ~isempty(st{curfig}) %YAN Chao-Gan, 161006. For MATLAB2016b compatibility.
     rmblobs(handle);
     % remove displayed axes
     % Remove loop by Sandy
->>>>>>> 05583bc090c817e9a98d3e646e45a6fa2508d9ec
     kids = get(st{curfig}.fig,'Children');
     for j=1:3
         try
@@ -1015,10 +1007,6 @@ if ~isempty(st{curfig}) %YAN Chao-Gan, 161006. For MATLAB2016b compatibility.
     st{curfig}.vols{1} = [];
     st{curfig}=[];
 end
-<<<<<<< HEAD
-=======
-
->>>>>>> 05583bc090c817e9a98d3e646e45a6fa2508d9ec
 
 %==========================================================================
 % function resolution(res)
