@@ -1,5 +1,5 @@
-function [TTestPaired_T,Header] = y_TTestPaired_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates)
-% [TTestPaired_T,Header] = y_TTestPaired_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates)
+function [TTestPaired_T,Header] = y_TTestPaired_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates,PALMSettings)
+% [TTestPaired_T,Header] = y_TTestPaired_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates,PALMSettings)
 % Perform Paired T test.
 % Input:
 %   DependentDirs - the image directory of dependent variable. Cell 1 indicate Condition 1 and Cell 2 indicate Condition 2. The T is corresponding to Condition 1 minus Condition 2. 2 by 1 cell
@@ -7,6 +7,7 @@ function [TTestPaired_T,Header] = y_TTestPaired_Image(DependentDirs,OutputName,M
 %   MaskFile - the mask file.
 %   CovariateDirs - the image directory of covariates, in which the files should be correspond to the DependentDirs. 2 by 1 cell
 %   OtherCovariates - The other covariates. 2 by 1 cell 
+%   PALMSettings - Settings for permutation test with PALM. 161116.
 % Output:
 %   TTestPaired_T - the T value, also write image file out indicated by OutputName
 %___________________________________________________________________________
@@ -70,10 +71,13 @@ else
 end
 Contrast(1) = 1;
 
-[b_OLS_brain, t_OLS_brain, TTestPaired_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header); 
-
-
-%[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
-
+if exist('PALMSettings','var') && (~isempty(PALMSettings)) %YAN Chao-Gan, 161116. Add permutation test.
+    PALMSettings.ExchangeabilityBlocks=[1:nSub,1:nSub]';  %Permutation within subject.
+    y_GroupAnalysis_PermutationTest_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header,PALMSettings);
+    TTestPaired_T=[];
+else
+    [b_OLS_brain, t_OLS_brain, TTestPaired_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header);
+    %[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
+end
 
 fprintf('\n\tPaired T Test Calculation finished.\n');

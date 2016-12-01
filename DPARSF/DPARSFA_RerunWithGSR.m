@@ -79,7 +79,9 @@ for iFunSession=2:Cfg.FunctionalSessionNumber
 end
 for iFunSession=1:Cfg.FunctionalSessionNumber
     if ispc
-        eval(['!mklink /d ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,'global ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName])
+        %YAN Chao-Gan, 161122. Change mklink to copyfile.
+        copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName],[Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,'global']);
+        %eval(['!mklink /d ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,'global ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName])
     else
         eval(['!ln -s ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,' ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,'global'])
     end

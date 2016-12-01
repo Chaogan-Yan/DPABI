@@ -22,7 +22,7 @@ function varargout = DPABI_STAT_TOOL(varargin)
 
 % Edit the above text to modify the response to help DPABI_STAT_TOOL
 
-% Last Modified by GUIDE v2.5 27-Nov-2015 11:44:39
+% Last Modified by GUIDE v2.5 01-Dec-2016 09:26:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -93,6 +93,9 @@ switch upper(Flag)
     case 'R'
         Value=6;
         Lim=4;
+    case 'M' %YAN Chao-Gan, 161130. Mixed effect analysis.
+        Value=7;
+        Lim=4;
 end
 
 function handles=StatType(handles)
@@ -123,6 +126,17 @@ switch Value
         handles.SampleNum=2;
         Prefix='R';
         CorrFlag='On';
+    case 7 %YAN Chao-Gan, 161201. For Mixed Effect Analysis.
+        handles.SampleNum=4;
+        Prefix='M';
+        msgbox({'Mixed Effect Analysis:';...
+            'Perform the within-subject between-subject mixed effect anlaysis.';...
+            'The order of the group images should be: Group1Condition1; Group1Condition2; Group2Condition1; Group2Condition2';...
+            '*_ConditionEffect_T.nii - the T values of condition differences (corresponding to the first condition minus the second condition) (WithinSubjectFactor)';...
+            '*_Interaction_F.nii - the F values of interaction (BetweenSubjectFactor by WithinSubjectFactor)';...
+            '*_Group_TwoT.nii - the T values of group differences (corresponding to the first group minus the second group). Of note: the two conditions will be averaged first for each subject. (BetweenSubjectFactor)';...
+            'The degree of freedom information is stored in the header of the output image file.';...
+            },'Help');
 end
 
 handles=ClearConfigure(handles);
@@ -485,6 +499,13 @@ OutputName=fullfile(OutputDir, [Prefix, '.nii']);
 
 MaskFile=get(handles.MaskEntry, 'String');
 
+%YAN Chao-Gan, 161116. Permutation test
+if get(handles.checkboxPALM, 'Value');
+    PALMSettings=handles.PALMSettings;
+else
+    PALMSettings=[];
+end
+
 Value=get(handles.StatPopup, 'Value');
 switch Value
     case 1 %One-Sample
@@ -493,22 +514,28 @@ switch Value
             errordlg('Invalid Base Value');
             return
         end
-        y_TTest1_Image(S, OutputName, MaskFile, ImageCell, TextCell, Base);
+        y_TTest1_Image(S, OutputName, MaskFile, ImageCell, TextCell, Base, PALMSettings);
     case 2 %Two-Sample
-        y_TTest2_Image(S, OutputName, MaskFile, ImageCell, TextCell);
+        y_TTest2_Image(S, OutputName, MaskFile, ImageCell, TextCell, PALMSettings);
     case 3 %Paired
-        y_TTestPaired_Image(S, OutputName, MaskFile, ImageCell, TextCell);      
+        y_TTestPaired_Image(S, OutputName, MaskFile, ImageCell, TextCell, PALMSettings);  
     case 4 %ANCOVA
-        %y_ANCOVA1_Image(S, OutputName, MaskFile, ImageCell, TextCell);
-        MC_list = {'None';'tukey-kramer';'lsd';'bonferroni';'dunn-sidak';'scheffe';}; %YAN Chao-Gan, 151127. Add multiple comparison test for ANCOVA
-        MC_Value = get(handles.popupmenuMC,'Value');
-        MC_type = MC_list{MC_Value};
-        y_ANCOVA1_Multcompare_Image(S, OutputName, MaskFile, ImageCell, TextCell, MC_type);
+        if exist('PALMSettings','var') && (~isempty(PALMSettings)) %YAN Chao-Gan, 161116. Add permutation test.
+            y_ANCOVA1_Image(S, OutputName, MaskFile, ImageCell, TextCell, PALMSettings);
+        else
+            MC_list = {'None';'tukey-kramer';'lsd';'bonferroni';'dunn-sidak';'scheffe';}; %YAN Chao-Gan, 151127. Add multiple comparison test for ANCOVA
+            MC_Value = get(handles.popupmenuMC,'Value');
+            MC_type = MC_list{MC_Value};
+            y_ANCOVA1_Multcompare_Image(S, OutputName, MaskFile, ImageCell, TextCell, MC_type);
+        end
     case 5 %ANCOVA Repeat
-        y_ANCOVA1_Repeated_Image(S, OutputName, MaskFile, ImageCell, TextCell);
+        y_ANCOVA1_Repeated_Image(S, OutputName, MaskFile, ImageCell, TextCell, PALMSettings);
     case 6 %Corr
-        y_Correlation_Image(S, SeedSeries, OutputName, MaskFile, ImageCell, TextCell);
+        y_Correlation_Image(S, SeedSeries, OutputName, MaskFile, ImageCell, TextCell, PALMSettings);
         %y_Correlation_Image(DependentDirs,SeedSeries,OutputName,MaskFile,CovariateDirs,OtherCovariates)
+    case 7 %YAN Chao-Gan, 161201. For Mixed Effect Analysis.
+        y_MixedEffectsAnalysis_Image(S, OutputName, MaskFile, ImageCell, TextCell, PALMSettings);
+        %y_MixedEffectsAnalysis_Image(DependentDir,OutputName,MaskFile,CovariateDirs,OtherCovariates, PALMSettings)
 end
 
 % --- Executes on button press in HelpButton.
@@ -537,7 +564,7 @@ switch Value
             'The value of each voxel in the output image is a T statistic value (positive means Condition 1 is greater than Condition 2). The degree of freedom information is stored in the header of the output image file.';...
             },'Help');        
     case 4
-        msgbox({'ANOVA or ANCOVA analysis:';...
+        msgbox({'ANOVA or ANCOVA Analysis:';...
             'If only the group images are specified, then perform voxel-wise ANOVA analysis.';...
             'If the covariate images are also specified (e.g. gray matter proportion images), then voxel-wise ANCOVA analysis is performed while take each voxel in the covariate images as a covaraite. Please make sure the correspondence between the group images and the covariate images.';...
             'Text covariate can be also specified as text files. (E.g. age, brain size, IQ etc.)';...
@@ -549,6 +576,15 @@ switch Value
             'If the covariate images are also specified (e.g. gray matter proportion images), then partial correlation analysis is performed while take each voxel in the covariate images as a covaraite. Please make sure the correspondence between the group images and the covariate images.';...
             'Text covariate can be also specified as text files. (E.g. age, brain size, IQ etc.)';...
             'The value of each voxel in the output image is an R statistic value. The degree of freedom information is stored in the header of the output image file.';...
+            },'Help');
+    case 7 %YAN Chao-Gan, 161201. For Mixed Effect Analysis.
+        msgbox({'Mixed Effect Analysis:';...
+            'Perform the within-subject between-subject mixed effect anlaysis.';...
+            'The order of the group images should be: Group1Condition1; Group1Condition2; Group2Condition1; Group2Condition2';...
+            '*_ConditionEffect_T.nii - the T values of condition differences (corresponding to the first condition minus the second condition) (WithinSubjectFactor)';...
+            '*_Interaction_F.nii - the F values of interaction (BetweenSubjectFactor by WithinSubjectFactor)';...
+            '*_Group_TwoT.nii - the T values of group differences (corresponding to the first group minus the second group). Of note: the two conditions will be averaged first for each subject. (BetweenSubjectFactor)';...
+            'The degree of freedom information is stored in the header of the output image file.';...
             },'Help');
 end
 
@@ -681,6 +717,12 @@ function popupmenuMC_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenuMC contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenuMC
+MC_Value = get(handles.popupmenuMC,'Value');
+if MC_Value>1
+    set(handles.checkboxPALM, 'Enable', 'off');
+else
+    set(handles.checkboxPALM, 'Enable', 'on');
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -694,3 +736,28 @@ function popupmenuMC_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in checkboxPALM.
+function checkboxPALM_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxPALM (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkboxPALM
+if get(handles.checkboxPALM,'Value')
+    uiwait(msgbox('Please cite: Winkler, A.M., Ridgway, G.R., Douaud, G., Nichols, T.E., Smith, S.M., 2016. Faster permutation inference in brain imaging. Neuroimage 141, 502-516.'))
+    if isfield(handles,'PALMSettings')&&(~isempty(handles.PALMSettings));
+        PALMSettings=handles.PALMSettings;
+    else
+        PALMSettings.nPerm = 5000;
+        PALMSettings.ClusterInference=1;
+        PALMSettings.ClusterFormingThreshold=2.3;
+        PALMSettings.TFCE=1;
+        PALMSettings.FDR=0;
+        PALMSettings.TwoTailed=0;
+        PALMSettings.AccelerationMethod='NoAcceleration'; % or 'tail', 'gamma', 'negbin', 'lowrank', 'noperm'
+    end
+    handles.PALMSettings=y_PALMSetting(PALMSettings);
+end
+guidata(hObject, handles);

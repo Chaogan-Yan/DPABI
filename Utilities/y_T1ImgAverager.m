@@ -247,6 +247,10 @@ if (AutoDataProcessParameter.IsCalMeanT1Image==1)
         Header.dt = [16,0];
         
         mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}]);
+        
+        Data(find(isnan(Data)))=0; %YAN Chao-Gan, 161116. Clean data.
+        Data(find(isinf(Data)))=0;
+        
         y_Write(Data,Header,[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean',RefDir(1).name]);
         fprintf('\nMean T1 brain for "%s" saved as: %s\n',AutoDataProcessParameter.SubjectID{i}, [AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mean',RefDir(1).name]);
         
