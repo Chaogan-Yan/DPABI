@@ -89,6 +89,7 @@ end
 
 Cfg.Covremove.WholeBrain.IsRemove = 1;
 Cfg.StartingDirName = [StartingDirName,'global'];
+global st; st=[]; %YAN Chao-Gan, 161201. In some cases generating pictures calling y_spm_orthviews may leave something need to be cleared.
 [Error]=DPARSFA_run(Cfg);
 
 
