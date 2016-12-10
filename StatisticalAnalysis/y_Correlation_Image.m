@@ -1,5 +1,5 @@
-function [rCorr,Header]=y_Correlation_Image(DependentDirs,SeedSeries,OutputName,MaskFile,CovariateDirs,OtherCovariates)
-% [rCorr,pCorr,Header]=y_Correlation_Image(DependentDir,SeedSeries,OutputName,MaskFile,CovariateDir,OtherCovariate)
+function [rCorr,Header]=y_Correlation_Image(DependentDirs,SeedSeries,OutputName,MaskFile,CovariateDirs,OtherCovariates,PALMSettings)
+% [rCorr,pCorr,Header]=y_Correlation_Image(DependentDir,SeedSeries,OutputName,MaskFile,CovariateDir,OtherCovariate,PALMSettings)
 % Perform correlation analysis with or without covariate.
 % Input:
 %   DependentDirs - the image directory of the group. 1 by 1 cell
@@ -8,6 +8,7 @@ function [rCorr,Header]=y_Correlation_Image(DependentDirs,SeedSeries,OutputName,
 %   MaskFile - the mask file.
 %   CovariateDirs - the image directory of covariate, in which the files should be correspond to the DependentDir. 1 by 1 cell
 %   OtherCovariates - The other covariate. 1 by 1 cell
+%   PALMSettings - Settings for permutation test with PALM. 161116.
 % Output:
 %   rCorr - Pearson's Correlation Coefficient or partial correlation coeffcient, also write image file out indicated by OutputName
 %___________________________________________________________________________
@@ -68,17 +69,24 @@ else
 end
 Contrast(1) = 1;
 
-[b_OLS_brain, t_OLS_brain, TTest1_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header); 
-%[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
-
-Df_E = size(Regressors,1) - size(Contrast,2);
-
-rCorr = TTest1_T./(sqrt(Df_E+TTest1_T.*TTest1_T));
-%r = t./(sqrt(Df_E+t.*t))
-
-Index = findstr(Header.descrip,'}');
-Header.descrip = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.descrip(Index(1)+1:end));
-
-y_Write(rCorr,Header,OutputName);
-
+if exist('PALMSettings','var') && (~isempty(PALMSettings)) %YAN Chao-Gan, 161116. Add permutation test.
+    PALMSettings.Pearson=1;
+    y_GroupAnalysis_PermutationTest_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header,PALMSettings);
+    rCorr=[];
+else
+    
+    [b_OLS_brain, t_OLS_brain, TTest1_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header);
+    %[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
+    
+    Df_E = size(Regressors,1) - size(Contrast,2);
+    
+    rCorr = TTest1_T./(sqrt(Df_E+TTest1_T.*TTest1_T));
+    %r = t./(sqrt(Df_E+t.*t))
+    
+    Index = findstr(Header.descrip,'}');
+    Header.descrip = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.descrip(Index(1)+1:end));
+    
+    y_Write(rCorr,Header,OutputName);
+    
+end
 fprintf('\n\tCorrelation Calculation finished.\n');

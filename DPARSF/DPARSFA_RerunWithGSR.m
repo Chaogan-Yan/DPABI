@@ -79,7 +79,9 @@ for iFunSession=2:Cfg.FunctionalSessionNumber
 end
 for iFunSession=1:Cfg.FunctionalSessionNumber
     if ispc
-        eval(['!mklink /d ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,'global ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName])
+        %YAN Chao-Gan, 161122. Change mklink to copyfile.
+        copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName],[Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,'global']);
+        %eval(['!mklink /d ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,'global ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName])
     else
         eval(['!ln -s ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,' ',Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,'global'])
     end
@@ -87,6 +89,7 @@ end
 
 Cfg.Covremove.WholeBrain.IsRemove = 1;
 Cfg.StartingDirName = [StartingDirName,'global'];
+global st; st=[]; %YAN Chao-Gan, 161201. In some cases generating pictures calling y_spm_orthviews may leave something need to be cleared.
 [Error]=DPARSFA_run(Cfg);
 
 

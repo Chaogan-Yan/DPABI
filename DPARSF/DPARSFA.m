@@ -34,7 +34,7 @@ end
 
 % --- Executes just before DPARSFA is made visible.
 function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V4.1_160415';
+    Release='V4.2_161201';
     handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
     
     if ispc
@@ -51,7 +51,7 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     fprintf('State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China\n');
     fprintf('Mail to Author:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\n<a href="http://rfmri.org/DPARSF">http://rfmri.org/DPARSF</a>\n');
     fprintf('-----------------------------------------------------------\n');
-    fprintf('Citing Information:\nIf you think DPARSFA is useful for your work, citing it in your paper would be greatly appreciated.\nSomething like "... The preprocessing was performed using the Data Processing Assistant for Resting-State fMRI (DPARSF, Yan and Zang 2010, http://rfmri.org/DPARSF), which is based on Statistical Parametric Mapping (SPM, http://www.fil.ion.ucl.ac.uk/spm) and the toolbox for Data Processing & Analysis of Brain Imaging (DPABI, Yan et al. 2016, http://rfmri.org/DPABI)..."\nReferences: Yan C and Zang Y (2010) DPARSF: a MATLAB toolbox for "pipeline" data analysis of resting-state fMRI. Front. Syst. Neurosci. 4:13. doi:10.3389/fnsys.2010.00013; Yan, C.G., Wang, X.D., Zuo, X.N., Zang, Y.F., 2016. DPABI: Data Processing & Analysis for (Resting-State) Brain Imaging. Neuroinformatics. In press. doi: 10.1007/s12021-016-9299-4\n');
+    fprintf('Citing Information:\nIf you think DPARSFA is useful for your work, citing it in your paper would be greatly appreciated.\nSomething like "... The preprocessing was performed using the Data Processing Assistant for Resting-State fMRI (DPARSF, Yan and Zang 2010, http://rfmri.org/DPARSF), which is based on Statistical Parametric Mapping (SPM, http://www.fil.ion.ucl.ac.uk/spm) and the toolbox for Data Processing & Analysis of Brain Imaging (DPABI, Yan et al. 2016, http://rfmri.org/DPABI)..."\nReferences: Yan C and Zang Y (2010) DPARSF: a MATLAB toolbox for "pipeline" data analysis of resting-state fMRI. Front. Syst. Neurosci. 4:13. doi:10.3389/fnsys.2010.00013; \nYan, C.G., Wang, X.D., Zuo, X.N., Zang, Y.F., 2016. DPABI: Data Processing & Analysis for (Resting-State) Brain Imaging. Neuroinformatics 14, 339-351. doi: 10.1007/s12021-016-9299-4\n');
     
     
     [DPABILatestRelease WebStatus]=urlread('http://rfmri.org/DPABILatestRelease.txt');
@@ -265,7 +265,8 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
             [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
-            [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii']};
+            [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
+            [DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img']}; %YAN Chao-Gan, 161201. Add global signal.
         Cfg.CalFC.IsMultipleLabel = 1;
 %         load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
 %         ROICenter=Dosenbach_Science_160ROIs_Center;
@@ -459,7 +460,7 @@ function LoadSubIDFromTextFile(hObject, eventdata, handles)
     if ischar(SubID_File)
         if exist(SubID_File,'file')==2
             fid = fopen(SubID_File);
-            IDCell = textscan(fid,'%s','\n');
+            IDCell = textscan(fid,'%s\n'); %YAN Chao-Gan. For compatiblity of MALLAB 2014b. IDCell = textscan(fid,'%s','\n');
             fclose(fid);
             handles.Cfg.SubjectID=IDCell{1};
             guidata(hObject, handles);

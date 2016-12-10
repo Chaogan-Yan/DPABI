@@ -1,6 +1,6 @@
-function [TTest1_T,Header] = y_TTest1_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates,Base)
+function [TTest1_T,Header] = y_TTest1_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates,Base,PALMSettings)
 
-% [TTest1_T,Header] = y_TTest1_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates,Base)
+% [TTest1_T,Header] = y_TTest1_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates,Base,PALMSettings)
 % Perform one sample t test.
 % Input:
 %   DependentDirs - the image directory of dependent variable. 1 by 1 cell
@@ -9,6 +9,7 @@ function [TTest1_T,Header] = y_TTest1_Image(DependentDirs,OutputName,MaskFile,Co
 %   CovariateDirs - the image directory of covariates, in which the files should be correspond to the DependentDirs. 1 by 1 cell
 %   OtherCovariates - The other covariates. 1 by 1 cell 
 %   Base - the base of one sample T Test. 0: default.
+%   PALMSettings - Settings for permutation test with PALM. 161116.
 % Output:
 %   TTest1_T - the T value, also write image file out indicated by OutputName
 %___________________________________________________________________________
@@ -84,10 +85,13 @@ else
 end
 Contrast(1) = 1;
 
-[b_OLS_brain, t_OLS_brain, TTest1_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header);
-
-
-%[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
-
+if exist('PALMSettings','var') && (~isempty(PALMSettings)) %YAN Chao-Gan, 161116. Add permutation test.
+    PALMSettings.ISE=1;
+    y_GroupAnalysis_PermutationTest_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header,PALMSettings);
+    TTest1_T=[];
+else
+    [b_OLS_brain, t_OLS_brain, TTest1_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header);
+    %[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
+end
 
 fprintf('\n\tOne Sample T Test Calculation finished.\n');

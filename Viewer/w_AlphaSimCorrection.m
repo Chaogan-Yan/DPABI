@@ -266,6 +266,7 @@ end
 if isnumeric(File)
     return
 end
+[Temp File]=fileparts(File);
 VoxelP=str2double(get(handles.VoxelPEntry, 'String'));
 Iter=str2double(get(handles.IterEntry, 'String'));
 FWHMx=str2double(get(handles.FWHMxEntry, 'String'));
@@ -273,7 +274,10 @@ FWHMy=str2double(get(handles.FWHMyEntry, 'String'));
 FWHMz=str2double(get(handles.FWHMzEntry, 'String'));
 FWHM=[FWHMx, FWHMy, FWHMz];
 RMM=OverlayHeader.RMM;
-y_AlphaSim(MaskFile, Path, File, RMM, FWHM, VoxelP, Iter);
+%y_AlphaSim(MaskFile, Path, File, RMM, FWHM, VoxelP, Iter);
+%YAN Chao-Gan, 161120. Use the updated version of y_AlphaSim.
+y_AlphaSim(MaskFile, Path, File, VoxelP, Iter,'fwhm',FWHM);
+%y_AlphaSim(maskfile,outdir,outname,pthr,iter,algor,fwhm_or_acf)
 
 function IterEntry_Callback(hObject, eventdata, handles)
 % hObject    handle to IterEntry (see GCBO)

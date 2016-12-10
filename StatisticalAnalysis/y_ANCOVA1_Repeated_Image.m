@@ -1,5 +1,5 @@
-function [ANCOVA_F,Header] = y_ANCOVA1_Repeated_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates)
-% [ANCOVA_F,Header] = y_ANCOVA1_Repeated_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates)
+function [ANCOVA_F,Header] = y_ANCOVA1_Repeated_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates,PALMSettings)
+% [ANCOVA_F,Header] = y_ANCOVA1_Repeated_Image(DependentDirs,OutputName,MaskFile,CovariateDirs,OtherCovariates,PALMSettings)
 % Perform one-way ANOVA or ANCOVA analysis (Repeated Measures) on Images
 % Input:
 %   DependentDirs - the image directory of dependent variable, each directory indicate a group. Group number by 1 cell
@@ -8,6 +8,7 @@ function [ANCOVA_F,Header] = y_ANCOVA1_Repeated_Image(DependentDirs,OutputName,M
 %   CovariateDirs - the image directory of covariates, in which the files should be correspond to the DependentDirs. Group number by 1 cell
 %   OtherCovariates - The other covariates. Group number by 1 cell 
 %                     Perform ANOVA analysis if all the covariates are empty.
+%   PALMSettings - Settings for permutation test with PALM. 161116.
 % Output:
 %   ANCOVA_F - the F value, also write image file out indicated by OutputName
 %___________________________________________________________________________
@@ -91,10 +92,21 @@ else
 end
 Contrast(1:Df_Group) = 1;
 
-
-[b_OLS_brain, t_OLS_brain, ANCOVA_F, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'F',0,Header); 
-
-%[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
+if exist('PALMSettings','var') && (~isempty(PALMSettings)) %YAN Chao-Gan, 161116. Add permutation test.
+    PALMSettings.ExchangeabilityBlocks=repmat([1:nSub],1,GroupNumber)'; %Permutation within subject.
+    %Set up t contrast for F.
+    ContrastIndex=find(Contrast);
+    Contrast_T_forF=zeros(length(ContrastIndex),size(Contrast,2));
+    for iContrast=1:size(Contrast_T_forF,1)
+        Contrast_T_forF(iContrast,ContrastIndex(iContrast))=1;
+    end
+    PALMSettings.Contrast_T_forF=Contrast_T_forF;
+    y_GroupAnalysis_PermutationTest_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'F',0,Header,PALMSettings);
+    ANCOVA_F=[];
+else
+    [b_OLS_brain, t_OLS_brain, ANCOVA_F, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'F',0,Header);
+    %[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
+end
 
 fprintf('\n\tANCOVA Test (Repeated Measures) Calculation finished.\n');
 
