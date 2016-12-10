@@ -9,3 +9,5 @@ OverlayHeader.ThrdIndex='';
 OverlayHeader.MaskFile='';
 OverlayHeader.Mask=true(OverlayHeader.dim);
 OverlayHeader.Percentage=100;
+OverlayHeader.AMaskFile='';
+OverlayHeader.AMask=true(OverlayHeader.dim);

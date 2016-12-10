@@ -865,6 +865,7 @@ MainHandle=guidata(curfig);
 if nargin<3
     curblob=st{curfig}.curblob;
 end
+
 Transparency=1-st{curfig}.vols{1}.blobs{curblob}.colour.prop;
 PMax=SendHeader.PMax;
 PMin=SendHeader.PMin;
@@ -883,6 +884,7 @@ cbar=str2double(cbarstring);
 
 OverlayVolume=SendHeader.Raw;
 OverlayVolume(~SendHeader.Mask)=0;
+OverlayVolume(~SendHeader.AMask)=0;
 if NMax >= 0
     OverlayVolume(OverlayVolume<0) = 0;
 end
@@ -898,6 +900,7 @@ OverlayHeader=SendHeader;
 if SendHeader.CSize
     SendHeader=SetCSize(SendHeader);
 end
+
 if ~isempty(SendHeader.ThrdIndex)
     Tokens=regexp(SendHeader.ThrdIndex, '(\d+\.*\d*:?\d*\.*\d*)', 'tokens');
     if ~isempty(Tokens)
@@ -1298,6 +1301,13 @@ switch Value
         OverlayHeader=SetCSize(OverlayHeader);               
         OverlayHeader=SetPosNeg(OverlayHeader, handles); %Add by Sandy to set cluster size at first when someone use Cluster Report       
         y_ClusterReport(OverlayHeader.Data, OverlayHeader, OverlayHeader.RMM);
+    case 11 %Apply a Mask for Additionally Thresholding
+        OverlayHeader=w_ApplyAdditionalMask(OverlayHeader);
+        if isempty(OverlayHeader)
+            return
+        end
+        OverlayHeader=RedrawOverlay(OverlayHeader);
+        handles.OverlayHeaders{index}=OverlayHeader;  
 end
 guidata(hObject, handles);
 % Hints: contents = get(hObject,'String') returns ClusterPopup contents as cell array
