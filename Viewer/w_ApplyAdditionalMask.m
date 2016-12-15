@@ -121,7 +121,7 @@ function AddButton_Callback(hObject, eventdata, handles)
 DPABIPath=fileparts(which('DPABI.m'));
 TemplatePath=fullfile(DPABIPath, 'Templates');
 [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick Underlay File' , TemplatePath);
+    'Pick Underlay File' , pwd); %YAN Chao-Gan, 161210. Chaned from TemplatePath to pwd to better select the current file.
 if isnumeric(File)
     return
 end

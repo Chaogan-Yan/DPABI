@@ -84,7 +84,7 @@ end
 Interaction = WithinSubjectFactor.*BetweenSubjectFactor;
 AllCov = [WithinSubjectFactor,Interaction,SubjectRegressors];
 if exist('OtherCovariates','var') && ~isempty(OtherCovariates)
-    AllCov = [AllCov,OtherCovariates];
+    AllCov = [AllCov,OtherCovariatesMatrix]; %YAN Chao-Gan, 161214. Fixed the bug of OtherCovariates.
 end
 
 if exist('CovariateDirs','var') && ~isempty(CovariateDirs)

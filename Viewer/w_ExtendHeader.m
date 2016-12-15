@@ -8,6 +8,6 @@ OverlayHeader.IsSelected=0;
 OverlayHeader.ThrdIndex='';
 OverlayHeader.MaskFile='';
 OverlayHeader.Mask=true(OverlayHeader.dim);
-OverlayHeader.Percentage=100;
+OverlayHeader.Percentage=0.05; %YAN Chao-Gan 161210. Changed from 100 to 0.05 for applying p mask.
 OverlayHeader.AMaskFile='';
 OverlayHeader.AMask=true(OverlayHeader.dim);

@@ -64,6 +64,7 @@
 # 3) Be cautious with covariates, in most of the cases, the demean or dummy coding steps 
 # does not affect the ICC estimation. However, the intercept (estimated average map) 
 # and its interpretation is dependent on how you deal with covariates (demean, dummy coding).
+# Ref: Zuo et al. (2013): Zuo, X.N., Xu, T., Jiang, L., Yang, Z., Cao, X.Y., He, Y., Zang, Y.F., Castellanos, F.X., Milham, M.P., 2013. Toward reliable characterization of functional homogeneity in the human brain: preprocessing, scan duration, imaging resolution and computational space. Neuroimage 65, 374?386.
 #  
 # ==========================================================================================
 
