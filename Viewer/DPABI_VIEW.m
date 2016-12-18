@@ -1358,7 +1358,7 @@ switch Value
         w_TimeCourse(handles.DPABI_fig, Headers);
     case 3 %Call BrainNet Viewer
         if ~(exist('BrainNet.m'))
-            msgbox('The surface view is based on Mingrui Xia''s BrainNet Viewer. Please install BrainNet Viewer 1.1 or later version at first (http://www.nitrc.org/projects/bnv/).','REST Slice Viewer', 'modal');
+            msgbox('The surface view is based on Mingrui Xia''s BrainNet Viewer. Please install BrainNet Viewer 1.1 or later version at first (http://www.nitrc.org/projects/bnv/).','DPABI_VIEW', 'modal');
             return
         end
         
@@ -1377,7 +1377,7 @@ switch Value
         end
         cbar=str2double(cbarstring);
         
-        if cbar==0 && isfield(SendHeader, 'ColorMap')
+        if cbar==0 && isfield(OverlayHeader, 'ColorMap') %YAN Chao-Gan, 161218. if cbar==0 && isfield(SendHeader, 'ColorMap')
             ColorMap=OverlayHeader.ColorMap;
         else
             if isnan(cbar)
@@ -1559,7 +1559,7 @@ switch Value
         OverlayHeader.cbarstring='0';
         OverlayHeader=RedrawOverlay(OverlayHeader, handles.DPABI_fig);
         
-        handles.OverlayHeader{index}=OverlayHeader;
+        handles.OverlayHeaders{index}=OverlayHeader; %YAN Chao-Gan, 161218. Fixed a bug: handles.OverlayHeader{index}=OverlayHeader;
 end
 guidata(hObject, handles);
 % Hints: contents = get(hObject,'String') returns MorePopup contents as cell array
