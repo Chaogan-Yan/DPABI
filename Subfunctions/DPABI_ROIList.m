@@ -22,7 +22,7 @@ function varargout = DPABI_ROIList(varargin)
 
 % Edit the above text to modify the response to help DPABI_ROIList
 
-% Last Modified by GUIDE v2.5 05-Aug-2014 23:12:14
+% Last Modified by GUIDE v2.5 05-Jan-2017 09:57:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -220,6 +220,19 @@ elseif numel(handles.ROICell) < Value
 end
 set(handles.ROIListbox, 'String', StringCell, 'Value', Value);
 
+
+
+% --- Executes on button press in pushbuttonClearAll.
+function pushbuttonClearAll_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonClearAll (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.ROICell=[];
+guidata(hObject, handles);
+set(handles.ROIListbox, 'String', [], 'Value', 0);
+
+
+
 % --- Executes on button press in OKButton.
 function OKButton_Callback(hObject, eventdata, handles)
 % hObject    handle to OKButton (see GCBO)
@@ -264,3 +277,5 @@ for i=1:numel(ROICell)
     end
 end
 set(handles.ROIListbox, 'String', ROICell, 'Value', numel(ROICell));
+
+

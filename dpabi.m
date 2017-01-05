@@ -55,7 +55,7 @@ function dpabi_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dpabi
 
 
-Release='V2.2_161201';
+Release='V2.3_170105';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -174,6 +174,8 @@ if strcmpi(button,'Yes')
     TemplatePath=fullfile(DPABIPath, 'Templates');
     uiwait(w_Call_DPABI_VIEW([],[],[],[],[],[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'rat97t2w_96x96x30.v6.nii']));
 end
+
+msgbox('If you used DPARSF Rat module, please cite: Yan, C.G., Rincon-Cortes, M., Raineki, C., Sarro, E., Colcombe, S., Guilfoyle, D.N., Yang, Z., Gerum, S., Biswal, B.B., Milham, M.P., Sullivan, R.M., Castellanos, F.X., 2016. Aberrant development of intrinsic brain activity in a rat model of caregiver maltreatment of offspring. Transl Psychiatry 6, e?. doi:10.1038/tp.2016.276');
 
 [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
 DPARSFA([ProgramPath,filesep,'Jobmats',filesep,'Template_RatProcessing.mat']);

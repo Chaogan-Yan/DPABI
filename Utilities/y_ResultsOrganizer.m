@@ -34,7 +34,7 @@ for iMeasure=1:length(MeasureList)
             end
             if iMeasure == 6
                 copyfile([WorkingDir,filesep,'Results',filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.mat'],[OutputDir,filesep,'Results',filesep,DirList(iDir).name]);
-                copyfile([WorkingDir,filesep,'Results',filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.txt'],[OutputDir,filesep,'Results',filesep,DirList(iDir).name]);
+                %copyfile([WorkingDir,filesep,'Results',filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.txt'],[OutputDir,filesep,'Results',filesep,DirList(iDir).name]);
             end
         end
     end
@@ -58,7 +58,7 @@ for iSession=1:length(DirSessionResults)
                 end
                 if iMeasure == 6
                     copyfile([WorkingDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.mat'],[OutputDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name]);
-                    copyfile([WorkingDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.txt'],[OutputDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name]);
+                    %copyfile([WorkingDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.txt'],[OutputDir,filesep,DirSessionResults(iSession).name,filesep,DirList(iDir).name]);
                 end
             end
         end

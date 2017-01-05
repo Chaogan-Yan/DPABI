@@ -34,7 +34,7 @@ end
 
 % --- Executes just before DPARSFA is made visible.
 function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V4.2_161201';
+    Release='V4.3_170105';
     handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
     
     if ispc
@@ -266,7 +266,8 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
             [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
-            [DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img']}; %YAN Chao-Gan, 161201. Add global signal.
+            [DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
+            [DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii']}; %YAN Chao-Gan, 170104. Add Power 264.
         Cfg.CalFC.IsMultipleLabel = 1;
 %         load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
 %         ROICenter=Dosenbach_Science_160ROIs_Center;
@@ -524,7 +525,9 @@ function popupmenuTemplateParameters_Callback(hObject, eventdata, handles)
                 [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
                 [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
                 [DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
-            [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii']};
+                [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
+                [DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
+                [DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii']}; %YAN Chao-Gan, 170104. Add Power 264.
             Cfg.CalFC.IsMultipleLabel = 1;
 %             load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
 %             ROICenter=Dosenbach_Science_160ROIs_Center;
