@@ -42,12 +42,15 @@ end
 
 if exist('SubjectListFile','var') && ~isempty(SubjectListFile)
     fid = fopen(SubjectListFile);
-    IDCell = textscan(fid,'%s','\n');
+    IDCell = textscan(fid,'%s\n'); %YAN Chao-Gan. For compatiblity of MALLAB 2014b. IDCell = textscan(fid,'%s','\n');
     fclose(fid);
     AutoDataProcessParameter.SubjectID=IDCell{1};
 end
 
 if exist('IsAllowGUI','var') && ~isempty(IsAllowGUI)
+    if isdeployed
+        IsAllowGUI=str2num(IsAllowGUI);
+    end
     AutoDataProcessParameter.IsAllowGUI=IsAllowGUI;
 end
 
