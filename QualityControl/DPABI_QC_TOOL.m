@@ -461,13 +461,20 @@ if isnumeric(File)
     return
 end
 SubjList=get(handles.SubjListbox, 'String');
-if ispc
-    OS='pc';
-else
-    OS='unix';
+% if ispc
+%     OS='pc';
+% else
+%     OS='unix';
+% end
+% dlmwrite(fullfile(Path, File), SubjList, 'precision', '%s',...
+%     'delimiter', '', 'newline', OS);
+
+%YAN Chao-Gan, 170223. Use this one for compatibility.
+fid = fopen(fullfile(Path, File),'w');
+for iSub=1:length(SubjList)
+    fprintf(fid,'%s\n',SubjList{iSub});
 end
-dlmwrite(fullfile(Path, File), SubjList, 'precision', '%s',...
-    'delimiter', '', 'newline', OS);
+fclose(fid);
 
 % --- Executes on button press in ThrdCoverageButton.
 function ThrdCoverageButton_Callback(hObject, eventdata, handles)
