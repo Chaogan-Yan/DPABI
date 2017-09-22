@@ -153,7 +153,7 @@ AllCov=[Constant,GroupLabel];
 if exist('OtherCovariates','var') && ~isempty(OtherCovariates)
     OtherCovariatesMean=[];
     for i=1:nSub
-        OtherCovariatesMean(i,:) = mean(OtherCovariates(find(SubjectRegressorsAll==SubIndex(i)),:),1);
+        OtherCovariatesMean(i,:) = mean(OtherCovariatesMatrix(find(SubjectRegressorsAll==SubIndex(i)),:),1); %YAN Chao-Gan, 170817. Fixed the bug of OtherCovariates.
     end
     AllCov = [AllCov,OtherCovariatesMean];
 end

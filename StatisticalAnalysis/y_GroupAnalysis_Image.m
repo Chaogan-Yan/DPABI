@@ -1,4 +1,4 @@
-function [b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header, SSE_OLS_brain] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
+function [b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header, SSE_OLS_brain, Cohen_f2_brain] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
 % function [b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header, SSE_OLS_brain] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
 % Perform regression analysis 
 % Input:
@@ -15,6 +15,7 @@ function [b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header, S
 
 % Output:
 %   OutputName_b.nii, OutputName_T.nii     - beta and t value files results
+%   OutputName_Cohen_f2.nii                - Cohen's f squared (Effect Size) for the contrast.
 %   OutputName_Residual.nii (optional)     - Residual files
 %___________________________________________________________________________
 % Written by YAN Chao-Gan 120823.
@@ -22,6 +23,7 @@ function [b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header, S
 % Child Mind Institute, 445 Park Avenue, New York, NY 10022, USA
 % The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016, USA
 % ycg.yan@gmail.com
+% Revised by YAN Chao-Gan 170714, Added Cohen's f squared (Effect Size)
 
 if ~exist('MaskFile','var')
     MaskFile = '';
@@ -66,6 +68,7 @@ else
 end
 
 TF_ForContrast_brain=zeros(nDim1,nDim2,nDim3);
+Cohen_f2_brain=zeros(nDim1,nDim2,nDim3); %YAN Chao-Gan 170714, Added Cohen's f squared (Effect Size)
 
 %YAN Chao-Gan, 130227
 
@@ -92,11 +95,12 @@ for i=1:nDim1
                 
                 if exist('Contrast','var') && ~isempty(Contrast)
                     
-                    [b,r,SSE,SSR, T, TF_ForContrast] = y_regress_ss(DependentVariable,[Predictor,CovVariable],Contrast,TF_Flag);
+                    [b,r,SSE,SSR, T, TF_ForContrast, Cohen_f2] = y_regress_ss(DependentVariable,[Predictor,CovVariable],Contrast,TF_Flag); %YAN Chao-Gan 170714, Added Cohen's f squared (Effect Size) %[b,r,SSE,SSR, T, TF_ForContrast] = y_regress_ss(DependentVariable,[Predictor,CovVariable],Contrast,TF_Flag);
                     
                     b_OLS_brain(i,j,k,:)=b;
                     t_OLS_brain(i,j,k,:)=T;
                     TF_ForContrast_brain(i,j,k)=TF_ForContrast;
+                    Cohen_f2_brain(i,j,k)=Cohen_f2;
                     
                 else
                     [b,r,SSE,SSR,T] = y_regress_ss(DependentVariable,[Predictor,CovVariable]);
@@ -116,6 +120,7 @@ end
 b_OLS_brain(isnan(b_OLS_brain))=0;
 t_OLS_brain(isnan(t_OLS_brain))=0;
 TF_ForContrast_brain(isnan(TF_ForContrast_brain))=0;
+Cohen_f2_brain(isnan(Cohen_f2_brain))=0;
 
 
 
@@ -139,6 +144,7 @@ if exist('Contrast','var') && ~isempty(Contrast)
     end
     
     y_Write(TF_ForContrast_brain,HeaderTWithDOF,[OutputName]);  %y_Write(TF_ForContrast_brain,HeaderTWithDOF,[OutputName,'_',TF_Flag,'_ForContrast','.nii']);
+    y_Write(Cohen_f2_brain,HeaderTWithDOF,[OutputName,'_Cohen_f2','.nii']); %YAN Chao-Gan 170714, Added Cohen's f squared (Effect Size)
   
     
 else % Output all the T files.

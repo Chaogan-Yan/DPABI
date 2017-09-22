@@ -1,5 +1,5 @@
-function [b,r,SSE,SSR, T, TF_ForContrast] = y_regress_ss(y,X,Contrast,TF_Flag)
-% [b,r,SSE,SSR, T, TF_ForContrast] = y_regress_ss(y,X,Contrast,TF_Flag)
+function [b,r,SSE,SSR, T, TF_ForContrast, Cohen_f2] = y_regress_ss(y,X,Contrast,TF_Flag)
+% [b,r,SSE,SSR, T, TF_ForContrast, Cohen_f2] = y_regress_ss(y,X,Contrast,TF_Flag)
 % Perform regression.
 % Revised from MATLAB's regress in order to speed up the calculation.
 % Input:
@@ -14,6 +14,7 @@ function [b,r,SSE,SSR, T, TF_ForContrast] = y_regress_ss(y,X,Contrast,TF_Flag)
 %   SSR - The sum of squares of regression.
 %   T - T value for each beta.
 %   TF_ForContrast - T or F value (depends on TF_Flag) for the contrast.
+%   Cohen_f2 - Cohen's f squared (Effect Size) for the contrast.
 %   
 %___________________________________________________________________________
 % Written by YAN Chao-Gan 100317.
@@ -24,6 +25,7 @@ function [b,r,SSE,SSR, T, TF_ForContrast] = y_regress_ss(y,X,Contrast,TF_Flag)
 % ycg.yan@gmail.com
 % Revised by YAN Chao-Gan 120519. Also output T value for each beta. Referenced from regstats.m
 % Revised by YAN Chao-Gan 121220. Also support T-test or F-test for a given contrast.
+% Revised by YAN Chao-Gan 170714. Added Cohen's f squared (Effect Size)
 
 [n,ncolX] = size(X);
 [Q,R,perm] = qr(X,0);
@@ -70,6 +72,20 @@ if nargout >= 2
                         end
                         TF_ForContrast = ((SSE0-SSE)/(ncolX-ncolX0))./(SSE/(n-ncolX)); % F-Test
                         
+                    end
+                    
+                    if nargout >= 7
+                        %YAN Chao-Gan 170714. Added Cohen's f squared (Effect Size)
+                        X0 = X(:,~Contrast);
+                        ncolX0 = size(X0,2);
+                        if ncolX0>0
+                            b0 = (X0'*X0)^(-1)*X0'*y; % Regression coefficients (restricted model)
+                            r0 = y-X0*b0;
+                            SSE0 = sum(r0.^2); % Estimate of the residual sum-of-square of the restricted model (SSE0)
+                        else
+                            SSE0 = sum(y.^2,1);
+                        end
+                        Cohen_f2 = (SSE0-SSE)/SSE; % Cohen's f squared (Effect Size)
                     end
                 end
                 

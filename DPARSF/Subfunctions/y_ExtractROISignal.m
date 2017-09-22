@@ -194,6 +194,7 @@ for iROI=1:length(ROIDef)
         
         if IsMultipleLabel == 1
             Element = unique(MaskROI);
+            Element(find(isnan(Element))) = []; % ignore background if encoded as nan. Suggested by Dr. Martin Dyrba
             Element(find(Element==0)) = []; % This is the background 0
             SeedSeries_MultipleLabel = zeros(nDimTimePoints,length(Element));
             for iElement=1:length(Element)
