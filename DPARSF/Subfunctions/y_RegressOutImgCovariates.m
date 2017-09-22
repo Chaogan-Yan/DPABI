@@ -149,7 +149,8 @@ VolumeAfterRemoveCov(isnan(VolumeAfterRemoveCov))=0;
 
 if isfield(CovariablesDef,'IsAddMeanBack') %YAN Chao-Gan, 20160415. Add the mean back.
     if CovariablesDef.IsAddMeanBack==1 || strcmpi(CovariablesDef.IsAddMeanBack, 'Yes')
-        VolumeAfterRemoveCov = VolumeAfterRemoveCov + repmat(MeanBrain,1,1,1,nDim4);
+%         VolumeAfterRemoveCov = VolumeAfterRemoveCov + repmat(MeanBrain,1,1,1,nDim4); % WangLei: Not compatible with matlab2012 
+        VolumeAfterRemoveCov = VolumeAfterRemoveCov + repmat(MeanBrain,[1,1,1,nDim4]);
     end
 end
 
