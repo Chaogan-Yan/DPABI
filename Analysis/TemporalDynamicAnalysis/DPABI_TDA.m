@@ -66,7 +66,7 @@ handles.Cfg.WindowStep = 1;
 handles.Cfg.WindowType = 'hamming';
 handles.Cfg.IsDetrend = 1;
 handles.Cfg.IsALFF = 1;
-handles.Cfg.ALFF.ALowPass_HighCutoff=0.08;
+handles.Cfg.ALFF.ALowPass_HighCutoff=0.1;
 handles.Cfg.ALFF.AHighPass_LowCutoff=0.01;
 handles.Cfg.StartingDirForDCetc = {};
 handles.Cfg.IsReHo = 1;
@@ -76,7 +76,7 @@ handles.Cfg.DC.rThreshold = 0.25;
 handles.Cfg.IsGSCorr = 1;
 handles.Cfg.GSCorr.GlobalMask = 'Default';
 handles.Cfg.GSCorr.GlobalMaskDir = [];
-handles.Cfg.IsFC = 1;
+handles.Cfg.IsFC = 0;
 handles.Cfg.CalFC.ROIDef = {};
 handles.Cfg.CalFC.IsMultipleLabel = 0;
 handles.Cfg.StartingDirForVMHC = {};
@@ -84,7 +84,7 @@ handles.Cfg.IsVMHC = 1;
 handles.Cfg.VoxelWiseConcordance = 1;
 handles.Cfg.VolumeWiseConcordance = 1;
 handles.Cfg.IsSmoothConcordance = 1; 
-handles.Cfg.SmoothConcordance.FWHM = 3;
+handles.Cfg.SmoothConcordance.FWHM = [4 4 4];
 handles.Cfg.ParallelWorkersNumber = 0;
 handles.Cfg.FunctionalSessionNumber = 1; 
 
@@ -254,7 +254,7 @@ function editTimePoints_Callback(hObject, eventdata, handles)
 % hObject    handle to editTimePoints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.TR = get(handles.editTimePoints,'String');
+    handles.Cfg.TR = str2num(get(handles.editTimePoints,'String'));
     guidata(hObject,handles);
 % Hints: get(hObject,'String') returns contents of editTimePoints as text
 %        str2double(get(hObject,'String')) returns contents of editTimePoints as a double
@@ -369,7 +369,7 @@ function editWindowSize_Callback(hObject, eventdata, handles)
 % hObject    handle to editWindowSize (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.WindowSize = get(handles.editWindowSize,'String');
+    handles.Cfg.WindowSize = str2num(get(handles.editWindowSize,'String'));
     guidata(hObject,handles);
 
 % Hints: get(hObject,'String') returns contents of editWindowSize as text
@@ -394,7 +394,7 @@ function editWindowStep_Callback(hObject, eventdata, handles)
 % hObject    handle to editWindowStep (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.WindowStep = get(handles.editWindowStep,'String');
+    handles.Cfg.WindowStep = str2num(get(handles.editWindowStep,'String'));
     guidata(hObject,handles);
 
 % Hints: get(hObject,'String') returns contents of editWindowStep as text
@@ -475,7 +475,7 @@ function editBandLow_Callback(hObject, eventdata, handles)
 % hObject    handle to editBandLow (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.ALFF.AHighPass_LowCutoff = get(handles.editBandLow,'String');
+    handles.Cfg.ALFF.AHighPass_LowCutoff = str2num(get(handles.editBandLow,'String'));
     guidata(hObject,handles);
     
 % Hints: get(hObject,'String') returns contents of editBandLow as text
@@ -500,7 +500,7 @@ function editBandHigh_Callback(hObject, eventdata, handles)
 % hObject    handle to editBandHigh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.ALFF.ALowPass_HighCutoff = get(handles.editBandHigh,'String');
+    handles.Cfg.ALFF.ALowPass_HighCutoff = str2num(get(handles.editBandHigh,'String'));
     guidata(hObject,handles);
 % Hints: get(hObject,'String') returns contents of editBandHigh as text
 %        str2double(get(hObject,'String')) returns contents of editBandHigh as a double
@@ -615,7 +615,7 @@ function editrThreshold_Callback(hObject, eventdata, handles)
 % hObject    handle to editrThreshold (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.DC.rThreshold = get(handles.editrThreshold,'String');
+    handles.Cfg.DC.rThreshold = str2num(get(handles.editrThreshold,'String'));
     guidata(hObject,handles);
     
 % Hints: get(hObject,'String') returns contents of editrThreshold as text
@@ -795,8 +795,45 @@ function editParallelWorkers_Callback(hObject, eventdata, handles)
 % hObject    handle to editParallelWorkers (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.ParallelWorkersNumber = get(handles.editParallelWorkers,'String');
-    guidata(hObject, handles);
+Size_MatlabPool =str2double(get(handles.editParallelWorkers,'String'));
+handles.Cfg.ParallelWorkersNumber = Size_MatlabPool;
+
+% Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
+PCTVer = ver('distcomp');
+if ~isempty(PCTVer)
+    FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+    if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+        if Size_MatlabPool ~= handles.Cfg.ParallelWorkersNumber;
+            if handles.Cfg.ParallelWorkersNumber~=0
+                matlabpool close
+            end
+            if Size_MatlabPool~=0
+                matlabpool(Size_MatlabPool)
+            end
+        end
+        CurrentSize_MatlabPool = matlabpool('size');
+        handles.Cfg.ParallelWorkersNumber = CurrentSize_MatlabPool;
+    else
+        if Size_MatlabPool ~= handles.Cfg.ParallelWorkersNumber;
+            if handles.Cfg.ParallelWorkersNumber~=0
+                poolobj = gcp('nocreate'); % If no pool, do not create new one.
+                delete(poolobj);
+            end
+            if Size_MatlabPool~=0
+                parpool(Size_MatlabPool)
+            end
+        end
+        poolobj = gcp('nocreate'); % If no pool, do not create new one.
+        if isempty(poolobj)
+            CurrentSize_MatlabPool = 0;
+        else
+            CurrentSize_MatlabPool = poolobj.NumWorkers;
+        end
+        handles.Cfg.ParallelWorkersNumber = CurrentSize_MatlabPool;
+    end
+end
+
+guidata(hObject, handles);
     
 % Hints: get(hObject,'String') returns contents of editParallelWorkers as text
 %        str2double(get(hObject,'String')) returns contents of editParallelWorkers as a double
@@ -820,7 +857,7 @@ function editFunctionalSessions_Callback(hObject, eventdata, handles)
 % hObject    handle to editFunctionalSessions (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.FunctionalSessionNumber = get(handles.editFunctionalSessions,'String');
+    handles.Cfg.FunctionalSessionNumber = str2num(get(handles.editFunctionalSessions,'String'));
      guidata(hObject, handles);
      
 % Hints: get(hObject,'String') returns contents of editFunctionalSessions as text
@@ -878,14 +915,12 @@ function btnRun_Callback(hObject, eventdata, handles)
 % hObject    handle to btnRun (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-disp(handles.Cfg);
-disp(handles.Cfg.SubjectID);
-disp(handles.Cfg.ALFF);
-disp(handles.Cfg.ReHo);
-disp(handles.Cfg.DC);
-disp(handles.Cfg.GSCorr);
-disp(handles.Cfg.CalFC);
-disp(handles.Cfg.SmoothConcordance);
+
+Cfg=handles.Cfg; 
+Datetime=fix(clock); 
+save([handles.Cfg.WorkingDir,filesep,'DPABI_TDA_AutoSave_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
+DPABI_TDA_run(handles.Cfg);
+
 
 
 
@@ -930,7 +965,8 @@ function editSmoothConcordanceFWHM_Callback(hObject, eventdata, handles)
 % hObject    handle to editSmoothConcordanceFWHM (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.SmoothConcordance.FWHM = get(handles.editSmoothConcordanceFWHM,'String');
+    FWHM = get(handles.editSmoothConcordanceFWHM,'String');
+    handles.Cfg.SmoothConcordance.FWHM =eval(['[',FWHM,']']);
     guidata(hObject, handles);
 
 % Hints: get(hObject,'String') returns contents of editSmoothConcordanceFWHM as text
@@ -1040,8 +1076,8 @@ function UpdateDisplay(handles)
     
     set(handles.checkboxDetrend,'Value',handles.Cfg.IsDetrend);
     set(handles.checkboxALFFfALFF,'Value',handles.Cfg.IsALFF);
-    set(handles.editBandLow,'String',handles.Cfg.ALFF.AHighPass_LowCutoff);
-    set(handles.editBandHigh,'String',handles.Cfg.ALFF.ALowPass_HighCutoff);
+    set(handles.editBandLow,'String',num2str(handles.Cfg.ALFF.AHighPass_LowCutoff));
+    set(handles.editBandHigh,'String',num2str(handles.Cfg.ALFF.ALowPass_HighCutoff));
     set(handles.editStartingDirectoryForReHoetc,'String',handles.Cfg.StartingDirForDCetc);
     set(handles.checkboxReHo,'Value',handles.Cfg.IsReHo);
     
@@ -1061,7 +1097,7 @@ function UpdateDisplay(handles)
     end
     
     set(handles.checkboxDC,'Value',handles.Cfg.IsDC);
-    set(handles.editrThreshold,'String',handles.Cfg.DC.rThreshold);
+    set(handles.editrThreshold,'String',num2str(handles.Cfg.DC.rThreshold));
     set(handles.checkboxGSCorr,'Value',handles.Cfg.IsGSCorr);  
     set(handles.checkboxFC,'Value',handles.Cfg.IsFC);
     
@@ -1072,9 +1108,9 @@ function UpdateDisplay(handles)
     set(handles.checkboxVoxelWise,'Value',handles.Cfg.VoxelWiseConcordance);
     set(handles.checkboxVolumeWise,'Value',handles.Cfg.VolumeWiseConcordance);
     set(handles.checkboxSmoothConcordance,'Value',handles.Cfg.IsSmoothConcordance);
-    set(handles.editSmoothConcordanceFWHM,'String',handles.Cfg.SmoothConcordance.FWHM);
-    set(handles.editParallelWorkers,'String',handles.Cfg.ParallelWorkersNumber);
-    set(handles.editFunctionalSessions,'String',handles.Cfg.FunctionalSessionNumber);
+    set(handles.editSmoothConcordanceFWHM,'String',mat2str(handles.Cfg.SmoothConcordance.FWHM));
+    set(handles.editParallelWorkers,'String',num2str(handles.Cfg.ParallelWorkersNumber));
+    set(handles.editFunctionalSessions,'String',num2str(handles.Cfg.FunctionalSessionNumber));
     
     % Make uicontrols ubable if therr is no ALFF
     if get(handles.checkboxALFFfALFF,'Value')

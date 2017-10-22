@@ -67,6 +67,8 @@ set(handles.OutputDirEntry, 'String', pwd);
 % Choose default command line output for DPABI_STAT_TOOL
 handles.output = hObject;
 
+uiwait(msgbox('According to our recent study, permutation test with Threshold-Free Cluster Enhancement (TFCE) reaches the best balance between family-wise error rate (under 5%) and test-retest reliability / replicability, thus outperforms the other multiple comparison correction strategies. Please consider use and cite: Chen X, Lu B, Yan CG* (2017) Reproducibility of R-fMRI metrics on the impact of different strategies for multiple comparison correction and sample sizes. Human Brain Mapping. In press.'))
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -746,16 +748,17 @@ function checkboxPALM_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of checkboxPALM
 if get(handles.checkboxPALM,'Value')
-    uiwait(msgbox('Please cite: Winkler, A.M., Ridgway, G.R., Douaud, G., Nichols, T.E., Smith, S.M., 2016. Faster permutation inference in brain imaging. Neuroimage 141, 502-516.'))
+    uiwait(msgbox('According to our recent study, permutation test with Threshold-Free Cluster Enhancement (TFCE) reaches the best balance between family-wise error rate (under 5%) and test-retest reliability / replicability, thus outperforms the other multiple comparison correction strategies. Please consider use and cite: Chen X, Lu B, Yan CG* (2017) Reproducibility of R-fMRI metrics on the impact of different strategies for multiple comparison correction and sample sizes. Human Brain Mapping. In press.'))
+    uiwait(msgbox('If this module is used, please also cite : Winkler, A.M., Ridgway, G.R., Douaud, G., Nichols, T.E., Smith, S.M., 2016. Faster permutation inference in brain imaging. Neuroimage 141, 502-516.'))
     if isfield(handles,'PALMSettings')&&(~isempty(handles.PALMSettings));
         PALMSettings=handles.PALMSettings;
     else
         PALMSettings.nPerm = 5000;
-        PALMSettings.ClusterInference=1;
+        PALMSettings.ClusterInference=0; %YAN Chao-Gan, 171022. Set to 0. PALMSettings.ClusterInference=1;
         PALMSettings.ClusterFormingThreshold=2.3;
         PALMSettings.TFCE=1;
         PALMSettings.FDR=0;
-        PALMSettings.TwoTailed=0;
+        PALMSettings.TwoTailed=1; %YAN Chao-Gan, 171022. Set to 1. PALMSettings.TwoTailed=0;
         PALMSettings.AccelerationMethod='NoAcceleration'; % or 'tail', 'gamma', 'negbin', 'lowrank', 'noperm'
     end
     handles.PALMSettings=y_PALMSetting(PALMSettings);

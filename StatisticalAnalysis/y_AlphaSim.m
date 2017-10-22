@@ -1,4 +1,4 @@
-function y_AlphaSim(maskfile,outdir,outname,pthr,iter,algor,fwhm_or_acf)
+function [ClusterSize_OneTailed_NN6 ClusterSize_OneTailed_NN18 ClusterSize_OneTailed_NN26 ClusterSize_TwoTailed_NN6 ClusterSize_TwoTailed_NN18 ClusterSize_TwoTailed_NN26] = y_AlphaSim(maskfile,outdir,outname,pthr,iter,algor,fwhm_or_acf)
 %   y_AlphaSim(maskfile,outdir,outname,rmm,s,pthr,iter)
 %   Monte Carlo simulation program similar to the AlphaSim in AFNI.
 %   The mechanism is based on AFNI's 3dClustSim, please see more details from http://afni.nimh.nih.gov/pub/dist/doc/manual/AlphaSim.pdf
@@ -14,6 +14,7 @@ function y_AlphaSim(maskfile,outdir,outname,pthr,iter,algor,fwhm_or_acf)
 %                     'acf': alternative to gaussian filtering
 %       fwhm_or_acf - if 'fwhm', [fwhmx, fwhmy, fwhmz], if 'acf', [a, b, c]
 %   Output:
+%       ClusterSize_OneTailed_NN6, ClusterSize_OneTailed_NN18, ...    - The Cluster Size threshold for alpha levels of [0.05 0.025 0.02 0.01]
 %       outdir/outname.txt - You can find the cluster-size thresholds and voxel-wise p-value resulting a corrected P value in this file.
 %   By YAN Chao-Gan, Dong Zhang-Ye and ZHU Wei-Xuan 091108.
 %   State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China, 100875
@@ -39,6 +40,8 @@ function y_AlphaSim(maskfile,outdir,outname,pthr,iter,algor,fwhm_or_acf)
 % (one-tailed and two-tailed) x 3 different connection approaches (surfer, edge and corner)
 % YAN Chao-Gan, 161120. As the two tailed results are 10 voxels less than 3dClusterSim, this function is pending as for now.
 
+
+uiwait(msgbox('According to our recent study, DPABI AlphaSim should not be used, please consider permutation test with TFCE. Please see: Chen X, Lu B, Yan CG* (2017) Reproducibility of R-fMRI metrics on the impact of different strategies for multiple comparison correction and sample sizes. Human Brain Mapping. In press.'));
 
 if ~(exist('spm_conv_vol.m'))
     uiwait(msgbox('This function is based on SPM, please install SPM5 or later version at first.','AlphaSim'));
@@ -126,6 +129,7 @@ for nt=1:iter
     fim2=false(size(fim));   
     fim1(fim>xthr1)=true;
     fim2(fim>xthr2)=true;
+    fim2(fim<-xthr2)=true; %YAN Chao-Gan, 170206. Two tailed should have negative values.
     
     fim1 = fim1.*mask; 		% Katharina Wittfeld, apply mask 
     fim2 = fim2.*mask;
@@ -195,40 +199,117 @@ for nt=1:iter
         nt,a1,a2,zthr1,zthr2,mean);
 end
 
-output_txt(fullfile(outdir, [outfilename, '_OneTailed_NN6.txt']), ...
+AlphaLevels=[0.05 0.025 0.02 0.01];
+
+[ClusterSizeTalbe alpha_table11] = output_txt(fullfile(outdir, [outfilename, '_OneTailed_NN6.txt']), ...
     mt11, ft11,...
     iter, nxyz,...
     algor, fwhm_or_acf,...
     maskname, pthr);
-output_txt(fullfile(outdir, [outfilename, '_OneTailed_NN18.txt']), ...
+
+%YAN Chao-Gan, 170206. Get the Cluster Size
+for iAlpha=1:length(AlphaLevels)
+    Temp=alpha_table11<AlphaLevels(iAlpha);
+    TempIndex=find(Temp);
+    if ~isempty(TempIndex)
+        ClusterSize=ClusterSizeTalbe(TempIndex(1));
+    else
+        ClusterSize=Inf;
+    end
+    ClusterSize_OneTailed_NN6(iAlpha,1)=ClusterSize;
+end
+
+[ClusterSizeTalbe alpha_table11] = output_txt(fullfile(outdir, [outfilename, '_OneTailed_NN18.txt']), ...
     mt12, ft12,...
     iter, nxyz,...
     algor, fwhm_or_acf,...
     maskname, pthr);
-output_txt(fullfile(outdir, [outfilename, '_OneTailed_NN26.txt']), ...
+
+for iAlpha=1:length(AlphaLevels)
+    Temp=alpha_table11<AlphaLevels(iAlpha);
+    TempIndex=find(Temp);
+    if ~isempty(TempIndex)
+        ClusterSize=ClusterSizeTalbe(TempIndex(1));
+    else
+        ClusterSize=Inf;
+    end
+    ClusterSize_OneTailed_NN18(iAlpha,1)=ClusterSize;
+end
+
+[ClusterSizeTalbe alpha_table11] = output_txt(fullfile(outdir, [outfilename, '_OneTailed_NN26.txt']), ...
     mt13, ft13,...
     iter, nxyz,...
     algor, fwhm_or_acf,...
     maskname, pthr);
 
-% YAN Chao-Gan, 161120. As the two tailed results are 10 voxels less than 3dClusterSim, this function is pending as for now.
-% output_txt(fullfile(outdir, [outfilename, '_TwoTailed_NN6.txt']), ...
-%     mt21, ft21,...
-%     iter, nxyz,...
-%     algor, fwhm_or_acf,...
-%     maskname, pthr);
-% output_txt(fullfile(outdir, [outfilename, '_TwoTailed_NN18.txt']), ...
-%     mt22, ft22,...
-%     iter, nxyz,...
-%     algor, fwhm_or_acf,...
-%     maskname, pthr);
-% output_txt(fullfile(outdir, [outfilename, '_TwoTailed_NN26.txt']), ...
-%     mt23, ft23,...
-%     iter, nxyz,...
-%     algor, fwhm_or_acf,...
-%     maskname, pthr);
+for iAlpha=1:length(AlphaLevels)
+    Temp=alpha_table11<AlphaLevels(iAlpha);
+    TempIndex=find(Temp);
+    if ~isempty(TempIndex)
+        ClusterSize=ClusterSizeTalbe(TempIndex(1));
+    else
+        ClusterSize=Inf;
+    end
+    ClusterSize_OneTailed_NN26(iAlpha,1)=ClusterSize;
+end
 
-function output_txt(outputname, mt11, ft11, iter, nxyz, algor, fwhm_or_acf, maskname, pthr)
+% YAN Chao-Gan, 170206. This function could be output now because of the change of including negative values for two tailed.
+[ClusterSizeTalbe alpha_table11] = output_txt(fullfile(outdir, [outfilename, '_TwoTailed_NN6.txt']), ...
+    mt21, ft21,...
+    iter, nxyz,...
+    algor, fwhm_or_acf,...
+    maskname, pthr);
+
+for iAlpha=1:length(AlphaLevels)
+    Temp=alpha_table11<AlphaLevels(iAlpha);
+    TempIndex=find(Temp);
+    if ~isempty(TempIndex)
+        ClusterSize=ClusterSizeTalbe(TempIndex(1));
+    else
+        ClusterSize=Inf;
+    end
+    ClusterSize_TwoTailed_NN6(iAlpha,1)=ClusterSize;
+end
+
+[ClusterSizeTalbe alpha_table11] = output_txt(fullfile(outdir, [outfilename, '_TwoTailed_NN18.txt']), ...
+    mt22, ft22,...
+    iter, nxyz,...
+    algor, fwhm_or_acf,...
+    maskname, pthr);
+
+for iAlpha=1:length(AlphaLevels)
+    Temp=alpha_table11<AlphaLevels(iAlpha);
+    TempIndex=find(Temp);
+    if ~isempty(TempIndex)
+        ClusterSize=ClusterSizeTalbe(TempIndex(1));
+    else
+        ClusterSize=Inf;
+    end
+    ClusterSize_TwoTailed_NN18(iAlpha,1)=ClusterSize;
+end
+
+[ClusterSizeTalbe alpha_table11] = output_txt(fullfile(outdir, [outfilename, '_TwoTailed_NN26.txt']), ...
+    mt23, ft23,...
+    iter, nxyz,...
+    algor, fwhm_or_acf,...
+    maskname, pthr);
+
+for iAlpha=1:length(AlphaLevels)
+    Temp=alpha_table11<AlphaLevels(iAlpha);
+    TempIndex=find(Temp);
+    if ~isempty(TempIndex)
+        ClusterSize=ClusterSizeTalbe(TempIndex(1));
+    else
+        ClusterSize=Inf;
+    end
+    ClusterSize_TwoTailed_NN26(iAlpha,1)=ClusterSize;
+end
+
+
+
+
+
+function [ClusterSizeTalbe alpha_table11] = output_txt(outputname, mt11, ft11, iter, nxyz, algor, fwhm_or_acf, maskname, pthr)
 divisor=iter*nxyz;
 
 g_max_cluster_size11 = find(mt11, 1, 'last' );
@@ -236,6 +317,7 @@ total_num_clusters11 = sum(ft11);
 prob_table11=zeros(1,g_max_cluster_size11);
 alpha_table11=zeros(1,g_max_cluster_size11);
 cum_prop_table11=zeros(1,g_max_cluster_size11);
+ClusterSizeTalbe=[1:g_max_cluster_size11]'; %YAN Chao-Gan, 170206
 for i = 1:g_max_cluster_size11
       prob_table11(i) = i * ft11(i) / divisor;
       alpha_table11(i) = mt11(i) / iter;
@@ -248,28 +330,30 @@ for i = 1:g_max_cluster_size11-1
       cum_prop_table11(i+1) = cum_prop_table11(i)+cum_prop_table11(i+1);
 end
 
-fid=fopen(outputname,'w');
-if(fid)
-    if all(fwhm_or_acf == 4.55)
-        fwhm_or_acf=[4, 4, 4];
-    end     
-    fprintf(fid,'Mask filename = %s\n',maskname);
-    fprintf(fid,'Voxels in mask = %d\n',nxyz);
-    if strcmpi(algor, 'fwhm')
-        fprintf(fid,...
-            'Gaussian filter width (FWHM, in mm) = [%.3f, %.3f, %.3f]\n',...
-            fwhm_or_acf(1), fwhm_or_acf(2), fwhm_or_acf(3));
-    else % acf
+if ~strcmp(outputname(1),'_') %YAN Chao-Gan, 170206. If the outfilename is empty, they will not output text files.
+    fid=fopen(outputname,'w');
+    if(fid)
+        if all(fwhm_or_acf == 4.55)
+            fwhm_or_acf=[4, 4, 4];
+        end
+        fprintf(fid,'Mask filename = %s\n',maskname);
+        fprintf(fid,'Voxels in mask = %d\n',nxyz);
+        if strcmpi(algor, 'fwhm')
+            fprintf(fid,...
+                'Gaussian filter width (FWHM, in mm) = [%.3f, %.3f, %.3f]\n',...
+                fwhm_or_acf(1), fwhm_or_acf(2), fwhm_or_acf(3));
+        else % acf
+            
+        end
+        fprintf(fid,'Individual voxel threshold probability = %.3f\n',pthr);
+        fprintf(fid,'Number of Monte Carlo simulations = %d\n\n\n',iter);
         
+        fprintf(fid,'Cl Size\tFrequency\tCum Prop\tp/Voxel\tMax Freq\tAlpha\n');
+        for i=1:g_max_cluster_size11
+            fprintf(fid,'%d\t\t%d\t\t%f\t%f\t%d\t\t%f\n',i,ft11(i),cum_prop_table11(i),prob_table11(i),mt11(i),alpha_table11(i));
+        end
+        fclose(fid);
     end
-    fprintf(fid,'Individual voxel threshold probability = %.3f\n',pthr);
-    fprintf(fid,'Number of Monte Carlo simulations = %d\n\n\n',iter);
-   
-    fprintf(fid,'Cl Size\tFrequency\tCum Prop\tp/Voxel\tMax Freq\tAlpha\n');
-    for i=1:g_max_cluster_size11
-        fprintf(fid,'%d\t\t%d\t\t%f\t%f\t%d\t\t%f\n',i,ft11(i),cum_prop_table11(i),prob_table11(i),mt11(i),alpha_table11(i));
-    end
-    fclose(fid);
 end
 
 

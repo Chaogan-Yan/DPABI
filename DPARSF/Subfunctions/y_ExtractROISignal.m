@@ -56,6 +56,8 @@ if ~isnumeric(AllVolume)
     [AllVolume,VoxelSize,theImgFileList, Header] =y_ReadAll(AllVolume);
 end
 
+AllVolume(find(isnan(AllVolume))) = 0; %YAN Chao-Gan, 171022. Set the NaN voxels to 0.
+
 [nDim1 nDim2 nDim3 nDimTimePoints]=size(AllVolume);
 BrainSize = [nDim1 nDim2 nDim3];
 VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));

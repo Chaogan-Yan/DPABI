@@ -53,11 +53,11 @@ function y_PALMSetting_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to y_PALMSetting (see VARARGIN)
 if nargin<4
     PALMSettings.nPerm = 5000;
-    PALMSettings.ClusterInference=1;
+    PALMSettings.ClusterInference=0; %YAN Chao-Gan, 171022. Set to 0. PALMSettings.ClusterInference=1;
     PALMSettings.ClusterFormingThreshold=2.3;
     PALMSettings.TFCE=1;
     PALMSettings.FDR=0;
-    PALMSettings.TwoTailed=0;
+    PALMSettings.TwoTailed=1; %YAN Chao-Gan, 171022. Set to 1. PALMSettings.TwoTailed=0;
     PALMSettings.AccelerationMethod='NoAcceleration'; % or 'tail', 'gamma', 'negbin', 'lowrank', 'noperm'
 else
     PALMSettings=varargin{1};

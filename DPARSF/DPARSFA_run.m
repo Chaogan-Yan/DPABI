@@ -1,7 +1,7 @@
 function [Error]=DPARSFA_run(AutoDataProcessParameter,WorkingDir,SubjectListFile,IsAllowGUI)
 % FORMAT [Error]=DPARSFA_run(AutoDataProcessParameter,WorkingDir,SubjectListFile,IsAllowGUI)
 % Input:
-%   AutoDataProcessParameter - the parameters for auto data processing. Read http://wiki.rfmri.org/ConfigDPARSFA_run to learn how to define it.
+%   AutoDataProcessParameter - the parameters for auto data processing. Read http://rfmri.org/content/configurations-dparsfarun to learn how to define it.
 %   WorkingDir - Define the working directory to replace the one defined in AutoDataProcessParameter
 %   SubjectListFile - Define the subject list to replace the one defined in AutoDataProcessParameter. Should be a text file
 %   IsAllowGUI - Set to 0 if you are running on a remote cluster without GUI. Interactively Reorienting will be skipped and pictures for checking normalization will not be generated.
