@@ -92,7 +92,7 @@ handles.Cfg.FunctionalSessionNumber = 1;
 UpdateDisplay(handles);
 
 
-
+uiwait(msgbox('Please cite: Yan CG, Yang Z, Colcombe S, Zuo XN, Milham MP (2017) Concordance among indices of intrinsic brain function: insights from inter-individual variation and temporal dynamics. Science Bulletin. In press.'))
 
 
 

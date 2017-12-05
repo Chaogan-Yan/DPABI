@@ -822,12 +822,23 @@ if (AutoDataProcessParameter.IsRealign==1)
         parfor i=1:AutoDataProcessParameter.SubjectNum
             cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
             mkdir(['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
-            DirImg=dir('*.img');
-            if ~isempty(DirImg)  %YAN Chao-Gan, 111114
-                movefile('r*.img',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
-                movefile('r*.hdr',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
+            DirRR=dir('rr*'); %If the file name before realignment is initialed with 'r', then move the 'rr*' files. YAN Chao-Gan, 171205
+            if isempty(DirRR)
+                DirImg=dir('*.img');
+                if ~isempty(DirImg)  %YAN Chao-Gan, 111114
+                    movefile('r*.img',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
+                    movefile('r*.hdr',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
+                else
+                    movefile('r*.nii',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
+                end
             else
-                movefile('r*.nii',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
+                DirImg=dir('*.img');
+                if ~isempty(DirImg)  %YAN Chao-Gan, 111114
+                    movefile('rr*.img',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
+                    movefile('rr*.hdr',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
+                else
+                    movefile('rr*.nii',['..',filesep,'..',filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'R',filesep,AutoDataProcessParameter.SubjectID{i}])
+                end
             end
             cd('..');
             fprintf(['Moving Head Motion Corrected Files:',AutoDataProcessParameter.SubjectID{i},' OK']);

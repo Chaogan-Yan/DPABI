@@ -141,7 +141,7 @@ end
 if exist('CovariateDirs','var') && (~isempty(CovariateDirs))
     CovVolumeSubjectMean=zeros(nDim1,nDim2,nDim3,nSub);
     for i=1:nSub
-        CovVolumeSubjectMean(:,:,:,i) = mean(CovVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4);
+        CovVolumeSubjectMean(:,:,:,i) = mean(CovariateVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4); %YAN Chao-Gan, 171126. CovVolume is not defined. %CovVolumeSubjectMean(:,:,:,i) = mean(CovVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4);
     end
 else
     CovVolumeSubjectMean=[];
