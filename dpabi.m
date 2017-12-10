@@ -22,7 +22,7 @@ function varargout = dpabi(varargin)
 
 % Edit the above text to modify the response to help dpabi
 
-% Last Modified by GUIDE v2.5 29-Nov-2015 21:32:33
+% Last Modified by GUIDE v2.5 08-Dec-2017 16:29:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,7 @@ function dpabi_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dpabi
 
 
-Release='V2.3_170105';
+Release='V3.0_171210';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -257,3 +257,11 @@ end
 
 DPABI_ResultsOrganizer
 
+
+
+% --- Executes on button press in pushbuttonTDA.
+function pushbuttonTDA_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonTDA (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABI_TDA

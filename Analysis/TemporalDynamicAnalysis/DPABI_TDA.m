@@ -96,6 +96,11 @@ uiwait(msgbox('Please cite: Yan CG, Yang Z, Colcombe S, Zuo XN, Milham MP (2017)
 
 
 
+fprintf('\n\nDPABI Temporal Dynamic Analysis module is based on our previous work, please cite it if this module is used: \n');
+fprintf('Yan CG, Yang Z, Colcombe S, Zuo XN, Milham MP (2017) Concordance among indices of intrinsic brain function: insights from inter-individual variation and temporal dynamics. Science Bulletin. In press.\n');
+
+
+
 % Choose default command line output for DPABI_TDA
 handles.output = hObject;
 

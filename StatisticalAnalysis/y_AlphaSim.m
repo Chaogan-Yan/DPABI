@@ -41,7 +41,7 @@ function [ClusterSize_OneTailed_NN6 ClusterSize_OneTailed_NN18 ClusterSize_OneTa
 % YAN Chao-Gan, 161120. As the two tailed results are 10 voxels less than 3dClusterSim, this function is pending as for now.
 
 
-uiwait(msgbox('According to our recent study, DPABI AlphaSim should not be used, please consider permutation test with TFCE. Please see: Chen X, Lu B, Yan CG* (2017) Reproducibility of R-fMRI metrics on the impact of different strategies for multiple comparison correction and sample sizes. Human Brain Mapping. In press.'));
+uiwait(msgbox('According to our recent study, DPABI AlphaSim should not be used, please consider permutation test with TFCE. Please see: Chen, X., Lu, B., Yan, C.G.*, 2018. Reproducibility of R-fMRI metrics on the impact of different strategies for multiple comparison correction and sample sizes. Hum Brain Mapp 39, 300-318.'));
 
 if ~(exist('spm_conv_vol.m'))
     uiwait(msgbox('This function is based on SPM, please install SPM5 or later version at first.','AlphaSim'));
