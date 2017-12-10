@@ -229,8 +229,10 @@ switch Method
         y_ICC_Image(ImgCells1, ImgCells2, OutputName, MaskFile);
     case 2 % Linear Mixed Models %YAN Chao-Gan, 160415. Adjusted the order. Only two models on the GUI. The 2nd one is LMM.
         y_ICC_Image_LMM(ImgCells1, ImgCells2, OutputName, MaskFile);
-    case 3 % Linear Mixed Models (ReML)
-        y_ICC_Image_ReML(ImgCells1, ImgCells2, OutputName, MaskFile);
+    case 3 % Linear Mixed Models Calling R. %YAN Chao-Gan, 171210.
+        y_ICC_Image_LMM_CallR([ImgCells1, ImgCells2], OutputName, MaskFile,[],[]);
+%     case 3 % Linear Mixed Models (ReML)
+%         y_ICC_Image_ReML(ImgCells1, ImgCells2, OutputName, MaskFile);
 end
 fprintf('Done!\n');
 
@@ -243,6 +245,11 @@ function TypePopup_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns TypePopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from TypePopup
+
+if get(handles.TypePopup, 'Value')==3
+    uiwait(msgbox('This function is based on R, please install R and its modules first (install.packages("nlme") and install.packages("R.matlab")). Of note, Mac OS and Linux users should start matlab in terminal, thus matlab can access Rscript.','ICC'));
+end
+
 
 
 % --- Executes during object creation, after setting all properties.
