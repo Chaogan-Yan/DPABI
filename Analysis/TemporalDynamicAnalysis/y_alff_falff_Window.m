@@ -179,7 +179,8 @@ for iWindow = 1:nWindow
     
     
     % Also generate fALFF
-    fALFF_2D = sum(AllVolumeWindow(idx_LowCutoff:idx_HighCutoff,:)) ./ sum(AllVolumeWindow(2:(paddedLength/2 + 1),:));
+    %fALFF_2D = sum(AllVolumeWindow(idx_LowCutoff:idx_HighCutoff,:)) ./ sum(AllVolumeWindow(2:(paddedLength/2 + 1),:));
+    fALFF_2D = sum(AllVolumeWindow(idx_LowCutoff:idx_HighCutoff,:),1) ./ sum(AllVolumeWindow(2:(paddedLength/2 + 1),:),1); %YAN Chao-Gan, 171218. In case there is only one point
     fALFF_2D(~isfinite(fALFF_2D))=0;
     
     % Get the 3D brain back

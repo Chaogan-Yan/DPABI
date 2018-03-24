@@ -242,7 +242,7 @@ end
 if (AutoDataProcessParameter.IsNeedConvertFunDCM2IMG==1)
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
         cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw']);
-        parfor i=1:AutoDataProcessParameter.SubjectNum
+        for i=1:AutoDataProcessParameter.SubjectNum
             OutputDir=[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,AutoDataProcessParameter.SubjectID{i}];
             mkdir(OutputDir);
             DirDCM=dir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunRaw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.*']);
@@ -267,7 +267,7 @@ end
 %Convert T1 DICOM files to NIFTI images
 if (AutoDataProcessParameter.IsNeedConvertT1DCM2IMG==1)
     cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Raw']);
-    parfor i=1:AutoDataProcessParameter.SubjectNum
+    for i=1:AutoDataProcessParameter.SubjectNum
         OutputDir=[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}];
         mkdir(OutputDir);
         DirDCM=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Raw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Raw',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.*']);
@@ -293,7 +293,7 @@ end
 % YAN Chao-Gan, 111121
 if (AutoDataProcessParameter.IsNeedReorientCropT1Img==1)
     cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img']);
-    parfor i=1:AutoDataProcessParameter.SubjectNum
+    for i=1:AutoDataProcessParameter.SubjectNum
         OutputDir=[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}];
         DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii.gz']);
         if isempty(DirImg)
@@ -2446,8 +2446,9 @@ if (AutoDataProcessParameter.IsCovremove==1) && ((strcmpi(AutoDataProcessParamet
                 end
                 FlowFieldFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 
-                
-                y_WarpBackByDARTEL(NeedWarpMaskNameSet,WarpedMaskNameSet,RefFile,DARTELTemplateFilename,DARTELTemplateMatFilename,FlowFieldFilename,0);
+                if ~isempty(NeedWarpMaskNameSet) %YAN Chao-Gan, 180320. In case there was only txt ROI
+                    y_WarpBackByDARTEL(NeedWarpMaskNameSet,WarpedMaskNameSet,RefFile,DARTELTemplateFilename,DARTELTemplateMatFilename,FlowFieldFilename,0);
+                end
                 
                 for iROI=1:length(NeedWarpMaskNameSet)
                     fprintf('\nWarp %s Mask (%s) for "%s" to individual space using DARTEL flow field (in T1ImgNewSegment) genereated by DARTEL.\n',Suffix,NeedWarpMaskNameSet{iROI}, AutoDataProcessParameter.SubjectID{i});
@@ -2473,7 +2474,7 @@ if (AutoDataProcessParameter.IsCovremove==1) && ((strcmpi(AutoDataProcessParamet
                     [pathstr, name, ext] = fileparts(SubjectROI{iROI});
                     if (strcmpi(ext, '.txt'))
                         fid = fopen(SubjectROI{iROI});
-                        SeedTimeCourseList=textscan(fid,'%s','\n');
+                        SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n'); 
                         fclose(fid);
                         if strcmpi(SeedTimeCourseList{1}{1},'Covariables_List:')
                             SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
@@ -3376,7 +3377,7 @@ if (AutoDataProcessParameter.IsCovremove==1) && ((strcmpi(AutoDataProcessParamet
                     [pathstr, name, ext] = fileparts(SubjectROI{iROI});
                     if (strcmpi(ext, '.txt'))
                         fid = fopen(SubjectROI{iROI});
-                        SeedTimeCourseList=textscan(fid,'%s','\n');
+                        SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n'); 
                         fclose(fid);
                         if strcmpi(SeedTimeCourseList{1}{1},'Covariables_List:')
                             SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
@@ -4010,8 +4011,9 @@ if (~isempty(AutoDataProcessParameter.CalFC.ROIDef)) || (AutoDataProcessParamete
                 end
                 FlowFieldFilename=[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgNewSegment',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 
-                
-                y_WarpBackByDARTEL(NeedWarpMaskNameSet,WarpedMaskNameSet,RefFile,DARTELTemplateFilename,DARTELTemplateMatFilename,FlowFieldFilename,0);
+                if ~isempty(NeedWarpMaskNameSet) %YAN Chao-Gan, 180320. In case there was only txt ROI
+                    y_WarpBackByDARTEL(NeedWarpMaskNameSet,WarpedMaskNameSet,RefFile,DARTELTemplateFilename,DARTELTemplateMatFilename,FlowFieldFilename,0);
+                end
                 
                 for iROI=1:length(NeedWarpMaskNameSet)
                     fprintf('\nWarp %s Mask (%s) for "%s" to individual space using DARTEL flow field (in T1ImgNewSegment) genereated by DARTEL.\n',Suffix,NeedWarpMaskNameSet{iROI}, AutoDataProcessParameter.SubjectID{i});
@@ -4058,7 +4060,7 @@ if (~isempty(AutoDataProcessParameter.CalFC.ROIDef)) || (AutoDataProcessParamete
                 [pathstr, name, ext] = fileparts(SubjectROI{iROI});
                 if (strcmpi(ext, '.txt'))
                     fid = fopen(SubjectROI{iROI});
-                    SeedTimeCourseList=textscan(fid,'%s','\n');
+                    SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n'); 
                     fclose(fid);
                     if strcmpi(SeedTimeCourseList{1}{1},'Seed_Time_Course_List:')
                         SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};

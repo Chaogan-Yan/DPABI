@@ -40,4 +40,4 @@ SWU_4_0025634 IA2 IA2
  
 Of note, SliceOrderInfo_NKI1400.txt and SliceOrderInfo_NKI645.txt are slice timing specifications for MultiBand data in NKI Enhanced Rockland Sample.
 
-http://wiki.rfmri.org/SliceTiming
+http://rfmri.org/SliceTiming
