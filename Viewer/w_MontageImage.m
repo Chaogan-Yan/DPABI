@@ -82,7 +82,7 @@ for index=1:numel(IndexM)
             else
                 AM0 = [ 0 -1 0 +bb(2,2)+1
                         0  0 1 -bb(1,3)+1
-                        1  0 0 -slice
+                        1  0 0 -cent(1)
                         0  0 0 1];
                 AM = inv(AM0*M);
                 AD = Dims([2 3]);
