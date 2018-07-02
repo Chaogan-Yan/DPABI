@@ -2977,6 +2977,8 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             end
             Filename = [AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name];
             
+            global st; clear st; %YAN Chao-Gan, 180611. In some cases generating pictures calling y_spm_orthviews may leave something need to be cleared.
+            
             H = figure;
             H = y_Call_spm_orthviews(Ch2Filename,0,0,0,18,Filename,jet(64),0,250,H,0.8);
             %H = y_Call_spm_orthviews(BrainVolume,NMin,PMin,ClusterSize,ConnectivityCriterion,UnderlayFileName,ColorMap,NMax,PMax,H,Transparency,Position,BrainHeader);
@@ -4642,6 +4644,8 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             end
             Filename = [AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirMean(1).name];
             
+            global st; clear st; %YAN Chao-Gan, 180611. In some cases generating pictures calling y_spm_orthviews may leave something need to be cleared.
+
             H = figure;
             H = y_Call_spm_orthviews(Ch2Filename,0,0,0,18,Filename,jet(64),0,250,H,0.8);
             %H = y_Call_spm_orthviews(BrainVolume,NMin,PMin,ClusterSize,ConnectivityCriterion,UnderlayFileName,ColorMap,NMax,PMax,H,Transparency,Position,BrainHeader);
@@ -4790,4 +4794,6 @@ if ~isempty(Error)
     disp(Error);
     return;
 end
+
+fprintf(['\nCongratulations, the running of DPARSFA is done!!! :)\n\n']);
 
