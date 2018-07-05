@@ -22,7 +22,7 @@ function varargout = DPABI_TDA(varargin)
 
 % Edit the above text to modify the response to help DPABI_TDA
 
-% Last Modified by GUIDE v2.5 18-Sep-2017 12:27:58
+% Last Modified by GUIDE v2.5 02-Jul-2018 14:55:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,6 +81,7 @@ handles.Cfg.CalFC.ROIDef = {};
 handles.Cfg.CalFC.IsMultipleLabel = 0;
 handles.Cfg.StartingDirForVMHC = {};
 handles.Cfg.IsVMHC = 1;
+handles.Cfg.ConcordanceMeasuresSelected = 'fALFF;ReHo;DC;GSCorr;VMHC'; %YAN Chao-Gan, 180704. Added flexibility for concordance
 handles.Cfg.VoxelWiseConcordance = 1;
 handles.Cfg.VolumeWiseConcordance = 1;
 handles.Cfg.IsSmoothConcordance = 1; 
@@ -801,7 +802,6 @@ function editParallelWorkers_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Size_MatlabPool =str2double(get(handles.editParallelWorkers,'String'));
-handles.Cfg.ParallelWorkersNumber = Size_MatlabPool;
 
 % Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
 PCTVer = ver('distcomp');
@@ -904,6 +904,10 @@ function btnLoad_Callback(hObject, eventdata, handles)
         load([pathname,filename]);
         handles.Cfg = Cfg;
     end
+    if ~isfield(handles.Cfg,'ConcordanceMeasuresSelected') %YAN Chao-Gan, 180704. If ConcordanceMeasuresSelected is not defined.
+        handles.Cfg.ConcordanceMeasuresSelected = 'fALFF;ReHo;DC;GSCorr;VMHC'; %YAN Chao-Gan, 180704. Added flexibility for concordance
+    end
+    
     guidata(hObject, handles);
     UpdateDisplay(handles);
 
@@ -1197,37 +1201,16 @@ function UpdateDisplay(handles)
 
     
     
+ 
     
+  
 
-    
-    
-    
-    
-    
-    
-            
-            
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+% --- Executes on button press in pushbuttonSelect.
+function pushbuttonSelect_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonSelect (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+handles.Cfg.ConcordanceMeasuresSelected = DPABI_ConcordanceSelect({handles.Cfg.ConcordanceMeasuresSelected});
+
+guidata(hObject, handles);

@@ -11,6 +11,10 @@ function DPABI_TDA_run(Cfg)
 % ycg.yan@gmail.com
 
 
+if ~isfield(Cfg,'ConcordanceMeasuresSelected') %YAN Chao-Gan, 180704. If ConcordanceMeasuresSelected is not defined.
+    Cfg.ConcordanceMeasuresSelected = 'fALFF;ReHo;DC;GSCorr;VMHC'; %YAN Chao-Gan, 180704. Added flexibility for concordance
+end
+
 
 [SPMversion,c]=spm('Ver');
 SPMversion=str2double(SPMversion(end));
@@ -223,6 +227,8 @@ if (Cfg.VoxelWiseConcordance==1)
     for iFunSession=1:Cfg.FunctionalSessionNumber
         mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'Concordance_VoxelWise']);
         parfor iSub=1:length(Cfg.SubjectID)
+            DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ALFF_*']);
+            ALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ALFF_',Cfg.SubjectID{iSub},'.nii'];
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'fALFF_*']);
             fALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'fALFF_',Cfg.SubjectID{iSub},'.nii'];
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ReHo*']);
@@ -234,7 +240,9 @@ if (Cfg.VoxelWiseConcordance==1)
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'VMHC_*']);
             VMHC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zVMHC_',Cfg.SubjectID{iSub},'.nii'];
            
-            RaterImages={fALFF;ReHo;DC;GSCorr;VMHC};
+            %RaterImages={fALFF;ReHo;DC;GSCorr;VMHC};
+            RaterImages = y_Call_Eval_ConcordanceMeasuresSelected(Cfg.ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr,VMHC);  %YAN Chao-Gan, 180704. Added flexibility for concordance
+            
             OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'Concordance_VoxelWise',filesep,'Concordance_VoxelWise_',Cfg.SubjectID{iSub}];
             [KendallWBrain, Header] = y_KendallW_Image(RaterImages, MaskFile, OutFile);
         end
@@ -247,6 +255,8 @@ if (Cfg.VolumeWiseConcordance==1)
     for iFunSession=1:Cfg.FunctionalSessionNumber
         mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'Concordance_VolumeWise']);
         parfor iSub=1:length(Cfg.SubjectID)
+            DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ALFF_*']);
+            ALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ALFF_',Cfg.SubjectID{iSub},'.nii'];
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'fALFF_*']);
             fALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'fALFF_',Cfg.SubjectID{iSub},'.nii'];
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ReHo*']);
@@ -258,7 +268,9 @@ if (Cfg.VolumeWiseConcordance==1)
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'VMHC_*']);
             VMHC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zVMHC_',Cfg.SubjectID{iSub},'.nii'];
            
-            RaterImages={fALFF;ReHo;DC;GSCorr;VMHC};
+            %RaterImages={fALFF;ReHo;DC;GSCorr;VMHC};
+            RaterImages = y_Call_Eval_ConcordanceMeasuresSelected(Cfg.ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr,VMHC);  %YAN Chao-Gan, 180704. Added flexibility for concordance
+
             OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'Concordance_VolumeWise',filesep,'Concordance_VolumeWise',Cfg.SubjectID{iSub}];
             [KendallW] = y_KendallW_AcrossImages(RaterImages, MaskFile, OutFile);
         end
@@ -280,6 +292,11 @@ if (Cfg.IsSmoothConcordance==1)
     end
 end
 
+
+
+
+function RaterImages = y_Call_Eval_ConcordanceMeasuresSelected(ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr,VMHC)
+eval(['RaterImages={',ConcordanceMeasuresSelected,'};'])
 
 
 
