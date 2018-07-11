@@ -53,7 +53,7 @@ function w_TimeCourse_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to w_TimeCourse (see VARARGIN)
 global st
 
-MainFig=varargin{1};
+MainFig=w_Compatible2014bFig(varargin{1});
 Headers=varargin{2};
 
 for i=1:numel(Headers)
