@@ -1354,7 +1354,7 @@ if (AutoDataProcessParameter.IsBet==1)
     end
 
     %Bet functional image
-    parfor i=1:AutoDataProcessParameter.SubjectNum
+    for i=1:AutoDataProcessParameter.SubjectNum %YAN Chao-Gan, 180824. Cut parfor becuase of losing some processes. %parfor
                 
         % Find the mean* functional image.
         if 7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'RealignParameter',filesep,AutoDataProcessParameter.SubjectID{i}],'dir')
@@ -1422,7 +1422,7 @@ if (AutoDataProcessParameter.IsBet==1)
             end
         end
         
-        parfor i=1:AutoDataProcessParameter.SubjectNum
+        for i=1:AutoDataProcessParameter.SubjectNum %YAN Chao-Gan, 180824. Cut parfor becuase of losing some processes. %parfor
             if UseNoCoT1Image==0
                 %Search the T1 file - first go with "c" initial
                 DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.img']);

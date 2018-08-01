@@ -34,7 +34,7 @@ end
 
 % --- Executes just before DPARSFA is made visible.
 function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V4.3_171210';
+    Release='V4.4_180801';
     handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
     
     if ispc
@@ -66,7 +66,8 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
         end
     end
     
-    handles.hContextMenu =uicontextmenu;
+    %handles.hContextMenu =uicontextmenu; %YAN Chao-Gan, 20180801. To prevent an invalid parent problem when calling through mokey module.
+    handles.hContextMenu =uicontextmenu(handles.figDPARSFAMain);
     set(handles.listSubjectID, 'UIContextMenu', handles.hContextMenu);	%Added by YAN Chao-Gan 091110. Added popup menu to delete selected subject by right click.
 	uimenu(handles.hContextMenu, 'Label', 'Remove the selected participant', 'Callback', 'DPARSFA(''DeleteSelectedSubjectID'',gcbo,[], guidata(gcbo))');
     uimenu(handles.hContextMenu, 'Label', 'Remove all the participants', 'Callback', 'DPARSFA(''DeleteAllSubjects'',gcbo,[], guidata(gcbo))');
@@ -267,7 +268,8 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
             [DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
             [DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
-            [DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii']}; %YAN Chao-Gan, 170104. Add Power 264.
+            [DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii'];... %YAN Chao-Gan, 170104. Add Power 264.
+            [DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii']}; %YAN Chao-Gan, 180824. Add Schaefer 400.
         Cfg.CalFC.IsMultipleLabel = 1;
 %         load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
 %         ROICenter=Dosenbach_Science_160ROIs_Center;
@@ -527,7 +529,10 @@ function popupmenuTemplateParameters_Callback(hObject, eventdata, handles)
                 [DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
                 [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
                 [DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
-                [DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii']}; %YAN Chao-Gan, 170104. Add Power 264.
+                [DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii'];... %YAN Chao-Gan, 170104. Add Power 264.
+                [DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii']}; %YAN Chao-Gan, 180824. Add Schaefer 400.
+            
+            
             Cfg.CalFC.IsMultipleLabel = 1;
 %             load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
 %             ROICenter=Dosenbach_Science_160ROIs_Center;

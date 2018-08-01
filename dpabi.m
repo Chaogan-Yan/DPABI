@@ -55,7 +55,7 @@ function dpabi_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dpabi
 
 
-Release='V3.0_171210';
+Release='V3.1_180801';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -153,6 +153,7 @@ button = questdlg('The origin of monkey atlas is different from human MNI atlas.
 if strcmpi(button,'Yes')
     [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
     TemplatePath=fullfile(DPABIPath, 'Templates');
+    global st; clear st; %YAN Chao-Gan, 180801. In case there was some st struture remain.
     uiwait(w_Call_DPABI_VIEW([],[],[],[],[],[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii']));
 end
 
@@ -172,6 +173,7 @@ button = questdlg('Please make sure you are setting the correct origin of Rat at
 if strcmpi(button,'Yes')
     [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
     TemplatePath=fullfile(DPABIPath, 'Templates');
+    global st; clear st; %YAN Chao-Gan, 180801. In case there was some st struture remain.
     uiwait(w_Call_DPABI_VIEW([],[],[],[],[],[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'rat97t2w_96x96x30.v6.nii']));
 end
 

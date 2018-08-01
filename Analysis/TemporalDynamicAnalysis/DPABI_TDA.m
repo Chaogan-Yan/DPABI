@@ -93,12 +93,12 @@ handles.Cfg.FunctionalSessionNumber = 1;
 UpdateDisplay(handles);
 
 
-uiwait(msgbox('Please cite: Yan CG, Yang Z, Colcombe S, Zuo XN, Milham MP (2017) Concordance among indices of intrinsic brain function: insights from inter-individual variation and temporal dynamics. Science Bulletin. In press.'))
+uiwait(msgbox('Please cite: Yan CG, Yang Z, Colcombe S, Zuo XN, Milham MP (2017) Concordance among indices of intrinsic brain function: insights from inter-individual variation and temporal dynamics. Science Bulletin. 62: 1572-1584.'))
 
 
 
 fprintf('\n\nDPABI Temporal Dynamic Analysis module is based on our previous work, please cite it if this module is used: \n');
-fprintf('Yan CG, Yang Z, Colcombe S, Zuo XN, Milham MP (2017) Concordance among indices of intrinsic brain function: insights from inter-individual variation and temporal dynamics. Science Bulletin. In press.\n');
+fprintf('Yan CG, Yang Z, Colcombe S, Zuo XN, Milham MP (2017) Concordance among indices of intrinsic brain function: insights from inter-individual variation and temporal dynamics. Science Bulletin. 62: 1572-1584.\n');
 
 
 
