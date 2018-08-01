@@ -66,8 +66,12 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
         end
     end
     
-    %handles.hContextMenu =uicontextmenu; %YAN Chao-Gan, 20180801. To prevent an invalid parent problem when calling through mokey module.
-    handles.hContextMenu =uicontextmenu(handles.figDPARSFAMain);
+    FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+    if (FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=8*1000+4)
+        handles.hContextMenu =uicontextmenu(handles.figDPARSFAMain);  %YAN Chao-Gan, 20180801. To prevent an invalid parent problem when calling through mokey module.
+    else
+        handles.hContextMenu =uicontextmenu;
+    end
     set(handles.listSubjectID, 'UIContextMenu', handles.hContextMenu);	%Added by YAN Chao-Gan 091110. Added popup menu to delete selected subject by right click.
 	uimenu(handles.hContextMenu, 'Label', 'Remove the selected participant', 'Callback', 'DPARSFA(''DeleteSelectedSubjectID'',gcbo,[], guidata(gcbo))');
     uimenu(handles.hContextMenu, 'Label', 'Remove all the participants', 'Callback', 'DPARSFA(''DeleteAllSubjects'',gcbo,[], guidata(gcbo))');
