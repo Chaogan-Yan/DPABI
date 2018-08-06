@@ -228,18 +228,41 @@ if (Cfg.VoxelWiseConcordance==1)
         mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'Concordance_VoxelWise']);
         parfor iSub=1:length(Cfg.SubjectID)
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ALFF_*']);
-            ALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ALFF_',Cfg.SubjectID{iSub},'.nii'];
+            if length(DirFile)>=1 % YAN Chao-Gan, 180806. In case some dynamic indices didn't calculate
+                ALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ALFF_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                ALFF = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'fALFF_*']);
-            fALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'fALFF_',Cfg.SubjectID{iSub},'.nii'];
+            if length(DirFile)>=1
+                fALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'fALFF_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                fALFF = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ReHo*']);
-            ReHo = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ReHo_',Cfg.SubjectID{iSub},'.nii'];
+            if length(DirFile)>=1
+                ReHo = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ReHo_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                ReHo = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'DC_*']);
-            DC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'DC_',Cfg.SubjectID{iSub},'_DegreeCentrality_PositiveWeightedSumBrain','.nii'];
+            if length(DirFile)>=1
+                DC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'DC_',Cfg.SubjectID{iSub},'_DegreeCentrality_PositiveWeightedSumBrain','.nii'];
+            else
+                DC = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'GSCorr_*']);
-            GSCorr = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zGSCorr_',Cfg.SubjectID{iSub},'.nii'];
+            if length(DirFile)>=1
+                GSCorr = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zGSCorr_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                GSCorr = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'VMHC_*']);
-            VMHC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zVMHC_',Cfg.SubjectID{iSub},'.nii'];
-           
+            if length(DirFile)>=1
+                VMHC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zVMHC_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                VMHC = [];
+            end
             %RaterImages={fALFF;ReHo;DC;GSCorr;VMHC};
             RaterImages = y_Call_Eval_ConcordanceMeasuresSelected(Cfg.ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr,VMHC);  %YAN Chao-Gan, 180704. Added flexibility for concordance
             
@@ -256,18 +279,42 @@ if (Cfg.VolumeWiseConcordance==1)
         mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'Concordance_VolumeWise']);
         parfor iSub=1:length(Cfg.SubjectID)
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ALFF_*']);
-            ALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ALFF_',Cfg.SubjectID{iSub},'.nii'];
+            if length(DirFile)>=1 % YAN Chao-Gan, 180806. In case some dynamic indices didn't calculate
+                ALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ALFF_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                ALFF = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'fALFF_*']);
-            fALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'fALFF_',Cfg.SubjectID{iSub},'.nii'];
+            if length(DirFile)>=1
+                fALFF = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'fALFF_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                fALFF = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ReHo*']);
-            ReHo = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ReHo_',Cfg.SubjectID{iSub},'.nii'];
+            if length(DirFile)>=1
+                ReHo = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'ReHo_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                ReHo = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'DC_*']);
-            DC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'DC_',Cfg.SubjectID{iSub},'_DegreeCentrality_PositiveWeightedSumBrain','.nii'];
+            if length(DirFile)>=1
+                DC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'DC_',Cfg.SubjectID{iSub},'_DegreeCentrality_PositiveWeightedSumBrain','.nii'];
+            else
+                DC = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'GSCorr_*']);
-            GSCorr = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zGSCorr_',Cfg.SubjectID{iSub},'.nii'];
+            if length(DirFile)>=1
+                GSCorr = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zGSCorr_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                GSCorr = [];
+            end
             DirFile=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'VMHC_*']);
-            VMHC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zVMHC_',Cfg.SubjectID{iSub},'.nii'];
-           
+            if length(DirFile)>=1
+                VMHC = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,DirFile(1).name,filesep,'zVMHC_',Cfg.SubjectID{iSub},'.nii'];
+            else
+                VMHC = [];
+            end
+            
             %RaterImages={fALFF;ReHo;DC;GSCorr;VMHC};
             RaterImages = y_Call_Eval_ConcordanceMeasuresSelected(Cfg.ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr,VMHC);  %YAN Chao-Gan, 180704. Added flexibility for concordance
 
