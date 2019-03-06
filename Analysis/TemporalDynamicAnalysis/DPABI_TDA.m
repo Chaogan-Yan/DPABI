@@ -360,7 +360,7 @@ function btnSelectMask_Callback(hObject, eventdata, handles)
 % hObject    handle to btnSelectMask (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    [MaskFileName,MaskPathName]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, 'Pick a a  mask');
+    [MaskFileName,MaskPathName]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, 'Pick a mask');
     if ~([MaskFileName,MaskPathName]==0)
         handles.Cfg.MaskDir = [MaskPathName,MaskFileName];
         set(handles.editMaskFile,'String',[MaskPathName,MaskFileName]);

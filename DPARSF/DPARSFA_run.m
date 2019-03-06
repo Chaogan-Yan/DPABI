@@ -1292,8 +1292,6 @@ if ~isempty(Error)
 end
 
 
-
-
 %Bet %130801
 if (AutoDataProcessParameter.IsBet==1)
     fprintf('Bet begin...\n');
@@ -1458,6 +1456,11 @@ if (AutoDataProcessParameter.IsBet==1)
    
 end
 
+
+% The parpool might be shut down, restart it.
+if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+    parpool(Cfg.ParallelWorkersNumber);
+end
 
 
 %Coregister T1 Image to Functional space
@@ -2769,6 +2772,11 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
         if (7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'AutoMasks'],'dir'))
             for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
                 AutomaskFile = [AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'AutoMasks',filesep,FunSessionPrefixSet{iFunSession},'AutoMask_',AutoDataProcessParameter.SubjectID{i},'.nii'];
+                AutomaskFileDir = dir(AutomaskFile); %YAN Chao-Gan, 181116. In case Automask.nii was zipped.
+                if isempty(AutomaskFileDir)
+                    gunzip([AutomaskFile,'.gz']);
+                    delete([AutomaskFile,'.gz']);
+                end
                 FileList=[FileList;{AutomaskFile}];
             end
         end
@@ -4465,6 +4473,11 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
         if (7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'AutoMasks'],'dir'))
             for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
                 AutomaskFile = [AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'AutoMasks',filesep,FunSessionPrefixSet{iFunSession},'AutoMask_',AutoDataProcessParameter.SubjectID{i},'.nii'];
+                AutomaskFileDir = dir(AutomaskFile); %YAN Chao-Gan, 181116. In case Automask.nii was zipped.
+                if isempty(AutomaskFileDir)
+                    gunzip([AutomaskFile,'.gz']);
+                    delete([AutomaskFile,'.gz']);
+                end
                 FileList=[FileList;{AutomaskFile}];
             end
         end

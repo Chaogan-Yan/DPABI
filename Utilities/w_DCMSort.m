@@ -43,7 +43,13 @@ for i=1:numel(DICOMCells)
                         sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
                 case 2 %SeriesName/SubjectID
                     DirName=fullfile(OutputDir, sprintf('%.4d_%s', Index, DCM_Info.ProtocolName),...
-                        DCM_Info.PatientID);                
+                        DCM_Info.PatientID);
+                case 3 %SubjectFamilyName/SeriesName %YAN Chao-Gan, 181216. In case PatientID is not defined, use PatientName.FamilyName instead.
+                    DirName=fullfile(OutputDir, DCM_Info.PatientName.FamilyName,...
+                        sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
+                case 4 %SeriesName/SubjectFamilyName %YAN Chao-Gan, 181216. In case PatientID is not defined, use PatientName.FamilyName instead.
+                    DirName=fullfile(OutputDir, sprintf('%.4d_%s', Index, DCM_Info.ProtocolName),...
+                        DCM_Info.PatientName.FamilyName);
             end
             if exist(DirName, 'dir')~=7
                 mkdir(DirName);
@@ -57,7 +63,13 @@ for i=1:numel(DICOMCells)
                         sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
                 case 2 %SeriesName/SubjectID
                     DirName=fullfile(OutputDir, sprintf('%.4d_%s', Index, DCM_Info.ProtocolName),...
-                        DCM_Info.PatientID);                
+                        DCM_Info.PatientID);
+                case 3 %SubjectFamilyName/SeriesName %YAN Chao-Gan, 181216. In case PatientID is not defined, use PatientName.FamilyName instead.
+                    DirName=fullfile(OutputDir, DCM_Info.PatientName.FamilyName,...
+                        sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
+                case 4 %SeriesName/SubjectFamilyName %YAN Chao-Gan, 181216. In case PatientID is not defined, use PatientName.FamilyName instead.
+                    DirName=fullfile(OutputDir, sprintf('%.4d_%s', Index, DCM_Info.ProtocolName),...
+                        DCM_Info.PatientName.FamilyName);
             end
         
             if exist(DirName, 'dir')~=7

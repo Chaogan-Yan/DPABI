@@ -28,23 +28,31 @@ CovariateVolume=[];
 OtherCovariatesMatrix=[];
 for i=1:2
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDirs{i});
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        FinalDim=4;
+    else
+        FinalDim=2;
+    end
     fprintf('\n\tImage Files in Condition %d:\n',i);
     for itheImgFileList=1:length(theImgFileList)
         fprintf('\t%s\n',theImgFileList{itheImgFileList});
     end
-    DependentVolume=cat(4,DependentVolume,AllVolume);
+    DependentVolume=cat(FinalDim,DependentVolume,AllVolume);
     if exist('CovariateDirs','var') && ~isempty(CovariateDirs)
         [AllVolume,VoxelSize,theImgFileList, Header_Covariate] = y_ReadAll(CovariateDirs{i});
         fprintf('\n\tImage Files in Covariate %d:\n',i);
         for itheImgFileList=1:length(theImgFileList)
             fprintf('\t%s\n',theImgFileList{itheImgFileList});
         end
-        CovariateVolume=cat(4,CovariateVolume,AllVolume);
+        CovariateVolume=cat(FinalDim,CovariateVolume,AllVolume);
         
-        if ~all(Header.dim==Header_Covariate.dim)
+        SizeDependentVolume=size(DependentVolume);
+        SizeCovariateVolume=size(CovariateVolume);
+        if ~isequal(SizeDependentVolume,SizeCovariateVolume)
             msgbox('The dimension of covariate image is different from the dimension of condition image, please check them!','Dimension Error','error');
             return;
         end
+
     end
     if exist('OtherCovariates','var') && ~isempty(OtherCovariates)
         OtherCovariatesMatrix=[OtherCovariatesMatrix;OtherCovariates{i}];
@@ -52,14 +60,19 @@ for i=1:2
     clear AllVolume
 end
 
-[nDim1,nDim2,nDim3,nDim4]=size(DependentVolume);
-nSub = nDim4/2;
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
+else
+    [nDimVertex nDimTimePoints]=size(DependentVolume);
+end
+
+nSub = nDimTimePoints/2;
 
 Regressors = [ones(nSub,1);-1*ones(nSub,1)];
 
 for i=1:nSub
-    SubjectRegressors(:,i) = zeros(nDim4,1);
-    SubjectRegressors(i:nSub:nDim4,i) = 1;
+    SubjectRegressors(:,i) = zeros(nDimTimePoints,1);
+    SubjectRegressors(i:nSub:nDimTimePoints,i) = 1;
 end
 
 Regressors = [Regressors,SubjectRegressors,OtherCovariatesMatrix];

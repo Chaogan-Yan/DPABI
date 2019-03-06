@@ -11,7 +11,6 @@ function y_GroupAnalysis_PermutationTest_Image(DependentVolume,Predictor,OutputN
 %   TF_Flag [optional] - 'T' or 'F'. Specify if T-test or F-test need to be performed for the contrast
 %   IsOutputResidual [optional] - SHOULD be 0. This parameter is not used and just for compatibility. 
 %   Header [optional] - If DependentVolume is given as a 4D Brain matrix, then Header should be designated.
-
 % Output:
 %   OutputName_b.nii, OutputName_T.nii     - beta and t value files results
 %   OutputName_Residual.nii (optional)     - Residual files
@@ -19,6 +18,7 @@ function y_GroupAnalysis_PermutationTest_Image(DependentVolume,Predictor,OutputN
 % Written by YAN Chao-Gan 161116.
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
+% Revised by YAN Chao-Gan 181204. Add GIfTI support.
 
 if ~isnumeric(DependentVolume)
     [DependentVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentVolume);
@@ -26,8 +26,12 @@ if ~isnumeric(DependentVolume)
     for itheImgFileList=1:length(theImgFileList)
         fprintf('\t%s\n',theImgFileList{itheImgFileList});
     end
+end
+
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    Suffix='.nii';
 else
-    VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));
+    Suffix='.gii';
 end
 
 if exist('CovVolume','var') && (~isnumeric(CovVolume))
@@ -41,19 +45,36 @@ end
 [Path, fileN, extn] = fileparts(OutputName);
 TempDir=fullfile(Path,'Temp');
 mkdir(TempDir);
-y_Write(DependentVolume,Header,[TempDir,filesep,'DependentVolume.nii']);
+y_Write(DependentVolume,Header,[TempDir,filesep,'DependentVolume',Suffix]);
 if exist('CovVolume','var') && (~isempty(CovVolume))
-    y_Write(CovVolume,Header,[TempDir,filesep,'CovVolume.nii']);
+    y_Write(CovVolume,Header,[TempDir,filesep,'CovVolume',Suffix]);
 end
 
 csvwrite([TempDir,filesep,'Design.csv'],Predictor);
 csvwrite([TempDir,filesep,'Contrast.csv'],Contrast);
 
 fid = fopen([TempDir,filesep,'PALMConfig.txt'],'w');
-fprintf(fid,'-i %s\n',[TempDir,filesep,'DependentVolume.nii']);
-fprintf(fid,'-m %s\n',MaskFile);
+fprintf(fid,'-i %s\n',[TempDir,filesep,'DependentVolume',Suffix]);
+
+%The data type has an effect on the results, thus convert to double
+[MaskData,Temp,theImgFileList, MaskHeader] = y_ReadAll(MaskFile);
+if isfield(Header,'cdata')
+    y_Write(MaskData,gifti(double(MaskData)),[TempDir,filesep,'MaskFile',Suffix]);
+else
+    y_Write(MaskData,MaskHeader,[TempDir,filesep,'MaskFile',Suffix]);
+end
+fprintf(fid,'-m %s\n',[TempDir,filesep,'MaskFile',Suffix]); %fprintf(fid,'-m %s\n',MaskFile);
+
+if isfield(Header,'cdata') %YAN Chao-Gan 181204. If GIfTI data, need surface
+    fprintf(fid,'-s %s',PALMSettings.SurfFile);
+    if isfield(PALMSettings,'SurfAreaFile') && ~isempty(PALMSettings.SurfAreaFile)
+        fprintf(fid,' %s',PALMSettings.SurfAreaFile);
+    end
+    fprintf(fid,'\n');
+end
+
 if exist('CovVolume','var') && (~isempty(CovVolume))
-    fprintf(fid,'-evperdat %s %g\n',[TempDir,filesep,'CovVolume.nii'],length(Contrast));
+    fprintf(fid,'-evperdat %s %g\n',[TempDir,filesep,'CovVolume',Suffix],length(Contrast));
 end
 fprintf(fid,'-d %s\n',[TempDir,filesep,'Design.csv']);
 if strcmpi(TF_Flag,'T')

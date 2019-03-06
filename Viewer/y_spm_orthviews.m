@@ -2970,6 +2970,12 @@ if nargin<2
     curfig=w_Compatible2014bFig(curfig);
     if rem(curfig, 1)
         curfig=gcbf;
+        try
+            if strcmpi(curfig.Name,'DPARSF') %YAN Chao-Gan, 181213. In case calling from DPARSF main
+                curfig=1;
+            end
+        catch
+        end
     end
 else
     curfig=varargin{1};

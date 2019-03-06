@@ -39,20 +39,27 @@ GroupLabel=[];
 OtherCovariatesMatrix=[];
 for i=1:GroupNumber
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDirs{i});
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        FinalDim=4;
+    else
+        FinalDim=2;
+    end
     fprintf('\n\tImage Files in Group %d:\n',i);
     for itheImgFileList=1:length(theImgFileList)
         fprintf('\t%s\n',theImgFileList{itheImgFileList});
     end
-    DependentVolume=cat(4,DependentVolume,AllVolume);
+    DependentVolume=cat(FinalDim,DependentVolume,AllVolume);
     if ~isempty(CovariateDirs)
         [AllVolume,VoxelSize,theImgFileList, Header_Covariate] = y_ReadAll(CovariateDirs{i});
         fprintf('\n\tImage Files in Covariate %d:\n',i);
         for itheImgFileList=1:length(theImgFileList)
             fprintf('\t%s\n',theImgFileList{itheImgFileList});
         end
-        CovariateVolume=cat(4,CovariateVolume,AllVolume);
+        CovariateVolume=cat(FinalDim,CovariateVolume,AllVolume);
         
-        if ~all(Header.dim==Header_Covariate.dim)
+        SizeDependentVolume=size(DependentVolume);
+        SizeCovariateVolume=size(CovariateVolume);
+        if ~isequal(SizeDependentVolume,SizeCovariateVolume)
             msgbox('The dimension of covariate image is different from the dimension of group image, please check them!','Dimension Error','error');
             return;
         end
@@ -60,22 +67,26 @@ for i=1:GroupNumber
     if ~isempty(OtherCovariates)
         OtherCovariatesMatrix=[OtherCovariatesMatrix;OtherCovariates{i}];
     end
-    GroupLabel=[GroupLabel;ones(size(AllVolume,4),1)*i];
+    GroupLabel=[GroupLabel;ones(size(AllVolume,FinalDim),1)*i];
     clear AllVolume
 end
 
-[nDim1,nDim2,nDim3,nDim4]=size(DependentVolume);
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
+else
+    [nDimVertex nDimTimePoints]=size(DependentVolume);
+end
 
 
 GroupLabelUnique=unique(GroupLabel);
 Df_Group=length(GroupLabelUnique)-1;
-GroupDummyVariable=zeros(nDim4,Df_Group);
+GroupDummyVariable=zeros(nDimTimePoints,Df_Group);
 for i=1:Df_Group
     GroupDummyVariable(:,i)=GroupLabel==GroupLabelUnique(i);
 end
 
 
-Regressors = [GroupDummyVariable,ones(nDim4,1),OtherCovariatesMatrix];
+Regressors = [GroupDummyVariable,ones(nDimTimePoints,1),OtherCovariatesMatrix];
 
 if exist('CovariateDirs','var') && ~isempty(CovariateDirs)
     Contrast = zeros(1,size(Regressors,2)+1);

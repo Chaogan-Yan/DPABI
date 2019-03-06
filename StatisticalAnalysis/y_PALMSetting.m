@@ -22,7 +22,7 @@ function varargout = y_PALMSetting(varargin)
 
 % Edit the above text to modify the response to help y_PALMSetting
 
-% Last Modified by GUIDE v2.5 14-Nov-2016 14:58:09
+% Last Modified by GUIDE v2.5 09-Dec-2018 08:20:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,6 +59,9 @@ if nargin<4
     PALMSettings.FDR=0;
     PALMSettings.TwoTailed=1; %YAN Chao-Gan, 171022. Set to 1. PALMSettings.TwoTailed=0;
     PALMSettings.AccelerationMethod='NoAcceleration'; % or 'tail', 'gamma', 'negbin', 'lowrank', 'noperm'
+    
+    PALMSettings.SurfFile=''; %YAN Chao-Gan, 181209. Add surface support.
+    PALMSettings.SurfAreaFile='';
 else
     PALMSettings=varargin{1};
 end
@@ -115,6 +118,8 @@ switch get(handles.MethodPopup,'Value')
     case 6
         PALMSettings.AccelerationMethod='noperm';
 end
+PALMSettings.SurfFile=get(handles.editSurfaceFile,'String'); %YAN Chao-Gan, 181209. Add surface support.
+PALMSettings.SurfAreaFile=get(handles.editSurfaceAreaFile,'String'); %YAN Chao-Gan, 181209. Add surface support.
 handles.PALMSettings=PALMSettings;
 guidata(hObject, handles);
 uiresume(handles.figure1);
@@ -278,3 +283,78 @@ switch Struct.AccelerationMethod
         MethodValue=6;
 end
 set(handles.MethodPopup,'Value', MethodValue);
+set(handles.editSurfaceFile,'String',Struct.SurfFile); %YAN Chao-Gan, 181209. Add surface support.
+set(handles.editSurfaceAreaFile,'String',Struct.SurfAreaFile);
+
+
+function editSurfaceFile_Callback(hObject, eventdata, handles)
+% hObject    handle to editSurfaceFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editSurfaceFile as text
+%        str2double(get(hObject,'String')) returns contents of editSurfaceFile as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editSurfaceFile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editSurfaceFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbuttonSurfaceFile.
+function pushbuttonSurfaceFile_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonSurfaceFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[FileName,PathName]=uigetfile({'*.gii','Surface File (*.gii)';'*.*', 'All Files (*.*)';}, 'Pick a surface file for surface based permutation test', fullfile(fileparts(which('DPABI.m')), 'DPABISurf', 'SurfTemplates'));
+if ~([FileName,PathName]==0)
+    set(handles.editSurfaceFile,'String',[PathName,FileName]);
+end
+guidata(hObject, handles);
+
+
+
+function editSurfaceAreaFile_Callback(hObject, eventdata, handles)
+% hObject    handle to editSurfaceAreaFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editSurfaceAreaFile as text
+%        str2double(get(hObject,'String')) returns contents of editSurfaceAreaFile as a double
+
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function editSurfaceAreaFile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editSurfaceAreaFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in pushbuttonSurfaceAreaFile.
+function pushbuttonSurfaceAreaFile_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonSurfaceAreaFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[FileName,PathName]=uigetfile({'*.gii','Surface Area File (*.gii)';'*.*', 'All Files (*.*)';}, '[Optional] Pick a surface area file for surface based permutation test', fullfile(fileparts(which('DPABI.m')), 'DPABISurf', 'SurfTemplates'));
+if ~([FileName,PathName]==0)
+    set(handles.editSurfaceAreaFile,'String',[PathName,FileName]);
+end
+guidata(hObject, handles);
+

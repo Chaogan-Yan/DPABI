@@ -30,21 +30,28 @@ CovariateVolume=[];
 OtherCovariatesMatrix=[];
 for i=1:1
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDirs{i});
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        FinalDim=4;
+    else
+        FinalDim=2;
+    end
     fprintf('\n\tImage Files in the Group:\n');
     for itheImgFileList=1:length(theImgFileList)
         fprintf('\t%s\n',theImgFileList{itheImgFileList});
     end
-    DependentVolume=cat(4,DependentVolume,AllVolume);
+    DependentVolume=cat(FinalDim,DependentVolume,AllVolume);
     if exist('CovariateDirs','var') && ~isempty(CovariateDirs)
         [AllVolume,VoxelSize,theImgFileList, Header_Covariate] = y_ReadAll(CovariateDirs{i});
         fprintf('\n\tImage Files in Covariate:\n');
         for itheImgFileList=1:length(theImgFileList)
             fprintf('\t%s\n',theImgFileList{itheImgFileList});
         end
-        CovariateVolume=cat(4,CovariateVolume,AllVolume);
+        CovariateVolume=cat(FinalDim,CovariateVolume,AllVolume);
         
-        if ~all(Header.dim==Header_Covariate.dim)
-            msgbox('The dimension of covariate image is different from the dimension of condition image, please check them!','Dimension Error','error');
+        SizeDependentVolume=size(DependentVolume);
+        SizeCovariateVolume=size(CovariateVolume);
+        if ~isequal(SizeDependentVolume,SizeCovariateVolume)
+            msgbox('The dimension of covariate image is different from the dimension of group image, please check them!','Dimension Error','error');
             return;
         end
     end
@@ -55,10 +62,14 @@ for i=1:1
 end
 
 
-[nDim1,nDim2,nDim3,nDim4]=size(DependentVolume);
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
+else
+    [nDimVertex nDimTimePoints]=size(DependentVolume);
+end
 
 
-Regressors = ones(nDim4,1);
+Regressors = ones(nDimTimePoints,1);
 
 Regressors = [SeedSeries,Regressors,OtherCovariatesMatrix];
 

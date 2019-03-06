@@ -1,5 +1,5 @@
-function [AllVolume, Header_Out] = y_Scrubbing(AllVolume, OutputName, MaskData, TemporalMask, ScrubbingMethod, ScrubbingTiming, IsNeedDetrend, Band, TR, Header, CUTNUMBER)
-% [AllVolume, Header_Out] = y_Scrubbing(AllVolume, OutputName, MaskData, TemporalMask, ScrubbingMethod, ScrubbingTiming, IsNeedDetrend, Band, TR, Header, CUTNUMBER)
+function [AllVolumeBrain, Header_Out] = y_Scrubbing(AllVolume, OutputName, MaskData, TemporalMask, ScrubbingMethod, ScrubbingTiming, IsNeedDetrend, Band, TR, Header, CUTNUMBER)
+% [AllVolumeBrain, Header_Out] = y_Scrubbing(AllVolume, OutputName, MaskData, TemporalMask, ScrubbingMethod, ScrubbingTiming, IsNeedDetrend, Band, TR, Header, CUTNUMBER)
 % Do scrubbing
 % Input:
 % 	AllVolume		-	4D data matrix (DimX*DimY*DimZ*DimTimePoints) or the directory of 3D image data file or the filename of one 4D data file
@@ -20,7 +20,7 @@ function [AllVolume, Header_Out] = y_Scrubbing(AllVolume, OutputName, MaskData, 
 %   TR              -   The TR of scanning. (Used for filtering.)
 %   Header          -   If AllVolume is given as a 4D Brain matrix, then Header should be designated.
 % Output:
-%	AllVolume       -   The AllVolume after scrubbing
+%	AllVolumeBrain      -   The AllVolume after scrubbing
 %   Header_Out          -   The NIfTI Header
 %   All the volumes after scrubbing will be output as where OutputName specified.
 %-----------------------------------------------------------
@@ -118,14 +118,14 @@ if exist('TemporalMask','var') && ~isempty(TemporalMask) && strcmpi(ScrubbingTim
     end
 end
 
-
-
-AllVolume=reshape(AllVolume',[nDim1, nDim2, nDim3, nDimTimePoints]);
+AllVolumeBrain = zeros(nDimTimePoints, nDim1*nDim2*nDim3);
+AllVolumeBrain(:,find(MaskDataOneDim)) = AllVolume;
+AllVolumeBrain=reshape(AllVolumeBrain',[nDim1, nDim2, nDim3, nDimTimePoints]);
 
 Header_Out = Header;
 Header_Out.pinfo = [1;0;0];
 Header_Out.dt    = [16,0];
 Header_Out.dim   = [nDim1, nDim2, nDim3, nDimTimePoints];
 
-y_Write(AllVolume,Header_Out,OutputName);
+y_Write(AllVolumeBrain,Header_Out,OutputName);
 

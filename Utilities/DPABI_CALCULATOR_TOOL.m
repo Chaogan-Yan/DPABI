@@ -107,8 +107,9 @@ function ImageAdd_Callback(hObject, eventdata, handles)
 % hObject    handle to ImageAdd (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[Names, Path]=uigetfile({'*.hdr;*.nii;*.nii.gz','NIfTI File (*.txt;*.csv;*.tsv)';'*.*', 'All Files (*.*)';},...
+[Names, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
     'Pick the Images', 'MultiSelect','on');
+
 if isnumeric(Names)
     return
 end
@@ -187,6 +188,11 @@ end
 if isempty(D)
     D=dir(fullfile(Path, '*.nii.gz'));
 end
+
+if isempty(D)
+    D=dir(fullfile(Path, '*.gii'));
+end
+
 NameCell={D.name}';
 Num=numel(NameCell);
 GroupCell=cellfun(@(Name) fullfile(Path, Name), NameCell,...
@@ -328,7 +334,7 @@ ImageCells=handles.ImageCells;
 ImageLabel=handles.ImageLabel;
 for j=1:numel(ImageCells)
     fprintf('%s: %s\n', ImageLabel{j}, ImageCells{j});
-    CMD=sprintf('[%s, VoxelSize, Header] = y_ReadRPI(''%s'');',...
+    CMD=sprintf('[%s, VoxelSize, FileList, Header] = y_ReadAll(''%s'');',... %CMD=sprintf('[%s, VoxelSize, Header] = y_ReadRPI(''%s'');',...
         ImageLabel{j}, ImageCells{j});
     eval(CMD);
 end
@@ -346,19 +352,33 @@ catch
 end
 OutputDir=get(handles.OutputEntry, 'String');
 Prefix=get(handles.PrefixEntry, 'String');
-if ndims(Result)==2
+
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    FinalDim=4;
+else
+    FinalDim=2;
+end
+
+
+if any(strfind(Expression,'w_CORR')) && any(strfind(Expression,'spatial')) %YAN Chao-Gan 190109. gii compatible %ndims(Result)==2
     OutputName=fullfile(OutputDir, [Prefix, '.txt']);
     save(OutputName, 'Result',...
         '-ASCII', '-DOUBLE', '-TABS');
 else
-    if ~isempty(GroupCells) && ~isempty(GroupCells{1}) && (size(Result,4) == numel(GroupCells{1})) %YAN Chao-Gan, 150518
+    if ~isempty(GroupCells) && ~isempty(GroupCells{1}) && (size(Result,FinalDim) == numel(GroupCells{1})) %YAN Chao-Gan, 150518
         for k=1:numel(GroupCells{1})
             [Path, fileN, extn] = fileparts(GroupCells{1}{k});
-            OutputName=fullfile(OutputDir, [Prefix, fileN, '.nii']);
-            y_Write(Result(:,:,:,k), Header, OutputName);
+            OutputName=fullfile(OutputDir, [Prefix, fileN]);
+            
+            if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+                y_Write(Result(:,:,:,k), Header, OutputName);
+            else
+                y_Write(Result(:,k), Header, OutputName);
+            end
+
         end
     else
-        OutputName=fullfile(OutputDir, [Prefix, '.nii']);
+        OutputName=fullfile(OutputDir, [Prefix]);
         y_Write(Result, Header, OutputName);
     end
 end
@@ -411,6 +431,9 @@ if ndims(Volume4D)==3
     Volume3D=Volume4D;
 elseif ndims(Volume4D)==4
     Volume3D=mean(Volume4D, 4);
+    
+elseif ndims(Volume4D)==2 %YAN Chao-Gan 190109. gii compatible
+    Volume3D=mean(Volume4D, 2);
 end
 
 function Volume3D=w_STD(Volume4D)
@@ -418,6 +441,9 @@ if ndims(Volume4D)==3
     Volume3D=zeros(size(Volume4D));
 elseif ndims(Volume4D)==4
     Volume3D=std(Volume4D,0,4); %YAN Chao-Gan, 20150815 Fixed a bug. %Volume3D=std(Volume4D, 4);
+    
+elseif ndims(Volume4D)==2 %YAN Chao-Gan 190109. gii compatible
+    Volume3D=std(Volume4D,0,2);
 end
 
 function Volume4D=w_REPMAT(Volume3D, T)
@@ -425,18 +451,29 @@ if ndims(Volume3D)==3
     Volume4D=repmat(Volume3D, [1, 1, 1, T]);
 elseif ndims(Volume3D)==4
     Volume4D=Volume3D;
+    
+elseif ndims(Volume3D)==2 %YAN Chao-Gan 190109. gii compatible
+    Volume4D=repmat(Volume3D, [1, T]);
 end
 
 function V=w_CORR(V1, V2, Flag)
 if strcmpi(Flag, 'temporal')
-    [n1, n2, n3, n4]=size(V1);
-    V1=reshape(V1, [], n4);
-    V2=reshape(V2, [], n4);
-    V=zeros(n1*n2*n3, 1);
-    for i=1:n1*n2*n3
-        V(i, 1)=corr(V1(i,:)', V2(i,:)');
+    if ndims(V1)==4
+        [n1, n2, n3, n4]=size(V1);
+        V1=reshape(V1, [], n4);
+        V2=reshape(V2, [], n4);
+        V=zeros(n1*n2*n3, 1);
+        for i=1:n1*n2*n3
+            V(i, 1)=corr(V1(i,:)', V2(i,:)');
+        end
+        V=reshape(V, [n1, n2, n3]);
+    elseif ndims(V1)==2 %YAN Chao-Gan 190109. gii compatible
+        [nDimVertex nDimTimePoints]=size(V1);
+        V=zeros(nDimVertex, 1);
+        for i=1:nDimVertex
+            V(i, 1)=corr(V1(i,:)', V2(i,:)');
+        end
     end
-    V=reshape(V, [n1, n2, n3]);
 elseif strcmpi(Flag, 'spatial')
     if ndims(V1)==4 && ndims(V2)==4
         n4=size(V1, 4);
@@ -460,6 +497,22 @@ elseif strcmpi(Flag, 'spatial')
         for i=1:n4
             V(i, 1)=corr(V1(:), V2(:, i));
         end
+        
+    elseif ndims(V1)==2 && ndims(V2)==2 %YAN Chao-Gan 190109. gii compatible
+        nDimTimePoints=max(size(V1, 2),size(V2, 2));
+        
+        if size(V1, 2)==1
+            V1=repmat(V1, [1, nDimTimePoints]);
+        end
+        if size(V2, 2)==1
+            V2=repmat(V2, [1, nDimTimePoints]);
+        end
+
+        V=zeros(nDimTimePoints, 1);
+        for i=1:nDimTimePoints
+            V(i, 1)=corr(V1(:, i), V2(:, i));
+        end
+        
     else
         V=corr(V1(:), V2(:));
     end

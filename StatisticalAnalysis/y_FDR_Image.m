@@ -22,21 +22,27 @@ function [Data_Corrected, Header]=y_FDR_Image(StatsImgFile,qThreshold,OutputName
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 
-if ~exist('VoxelSize','var')
-    VoxelSize = ''; % The voxel size will be defined later
-end
 
 %Read Header in.
 if (~exist('Header','var')) || (exist('Header','var') && isempty(Header))
-    [BrainVolume, VoxelSize, Header]=y_ReadRPI(StatsImgFile);
+    [BrainVolume, VoxelSize, FileList, Header]=y_ReadAll(StatsImgFile);
 end
 
 %Read Mask
-[nDim1 nDim2 nDim3 nDimTimePoints]=size(BrainVolume);
-if ~isempty(MaskFile)
-    [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskFile);
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    [nDim1 nDim2 nDim3 nDimTimePoints]=size(BrainVolume);
+    if ~isempty(MaskFile)
+        [MaskData]=y_ReadRPI(MaskFile);
+    else
+        MaskData=ones(nDim1,nDim2,nDim3);
+    end
 else
-    MaskData=ones(nDim1,nDim2,nDim3);
+    [nDimVertex nDimTimePoints]=size(BrainVolume);
+    if ~isempty(MaskFile)
+        [MaskData]=y_ReadAll(MaskFile);
+    else
+        MaskData=ones(nDimVertex,1);
+    end
 end
 MaskDataOneDim=reshape(MaskData,1,[]);
 MaskIndex = find(MaskDataOneDim);
@@ -51,7 +57,8 @@ end
 
 
 %FDR
-SMap=BrainVolume(MaskIndex)';
+SMap=BrainVolume(MaskIndex);
+SMap=reshape(SMap,[],1);
 switch upper(Flag)
     case 'T'
         PMap=2*(1-tcdf(abs(SMap), Df1));
@@ -76,10 +83,15 @@ if ~isempty(P)
     Thresholded(find(PMap<=P))=1;
 end
 
-AllBrain = zeros(nDim1, nDim2, nDim3);
-AllBrain = reshape(AllBrain,1,[]);
-AllBrain(MaskIndex) = Thresholded;
-AllBrain = reshape(AllBrain,nDim1, nDim2, nDim3);
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    AllBrain = zeros(nDim1, nDim2, nDim3);
+    AllBrain = reshape(AllBrain,1,[]);
+    AllBrain(MaskIndex) = Thresholded;
+    AllBrain = reshape(AllBrain,nDim1, nDim2, nDim3);
+else
+    AllBrain = zeros(nDimVertex,1);
+    AllBrain(MaskIndex) = Thresholded;
+end
 
 Data_Corrected=BrainVolume.*AllBrain;
 

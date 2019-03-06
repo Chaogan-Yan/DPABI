@@ -20,6 +20,7 @@ function [TTest1_T,Header] = y_TTest1_Image(DependentDirs,OutputName,MaskFile,Co
 % Child Mind Institute, 445 Park Avenue, New York, NY 10022, USA
 % The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016, USA
 % ycg.yan@gmail.com
+% Revised by YAN Chao-Gan 181204. Add GIfTI support.
 
 if ~exist('Base','var')
     Base = 0;
@@ -34,20 +35,27 @@ CovariateVolume=[];
 OtherCovariatesMatrix=[];
 for i=1:1
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDirs{i});
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        FinalDim=4;
+    else
+        FinalDim=2;
+    end
     fprintf('\n\tImage Files in the Group:\n');
     for itheImgFileList=1:length(theImgFileList)
         fprintf('\t%s\n',theImgFileList{itheImgFileList});
     end
-    DependentVolume=cat(4,DependentVolume,AllVolume);
+    DependentVolume=cat(FinalDim,DependentVolume,AllVolume);
     if exist('CovariateDirs','var') && ~isempty(CovariateDirs)
         [AllVolume,VoxelSize,theImgFileList, Header_Covariate] = y_ReadAll(CovariateDirs{i});
         fprintf('\n\tImage Files in Covariate:\n');
         for itheImgFileList=1:length(theImgFileList)
             fprintf('\t%s\n',theImgFileList{itheImgFileList});
         end
-        CovariateVolume=cat(4,CovariateVolume,AllVolume);
+        CovariateVolume=cat(FinalDim,CovariateVolume,AllVolume);
         
-        if ~all(Header.dim==Header_Covariate.dim)
+        SizeDependentVolume=size(DependentVolume);
+        SizeCovariateVolume=size(CovariateVolume);
+        if ~isequal(SizeDependentVolume,SizeCovariateVolume)
             msgbox('The dimension of covariate image is different from the dimension of condition image, please check them!','Dimension Error','error');
             return;
         end
@@ -58,23 +66,30 @@ for i=1:1
     clear AllVolume
 end
 
-
-[nDim1,nDim2,nDim3,nDim4]=size(DependentVolume);
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
+else
+    [nDimVertex nDimTimePoints]=size(DependentVolume);
+end
 
 
 %Mean centering the covariates -- since this is testing the effect the constant column
 if exist('CovariateDirs','var') && ~isempty(CovariateDirs)
-    CovariateVolume = CovariateVolume - repmat(mean(CovariateVolume,4),[1,1,1,nDim4]);
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        CovariateVolume = CovariateVolume - repmat(mean(CovariateVolume,FinalDim),[1,1,1,nDimTimePoints]);
+    else
+        CovariateVolume = CovariateVolume - repmat(mean(CovariateVolume,FinalDim),[1,nDimTimePoints]);
+    end
 end
 
 if ~isempty(OtherCovariatesMatrix)
-    OtherCovariatesMatrix = OtherCovariatesMatrix - repmat(mean(OtherCovariatesMatrix,1),[nDim4,1]);
+    OtherCovariatesMatrix = OtherCovariatesMatrix - repmat(mean(OtherCovariatesMatrix,1),[nDimTimePoints,1]);
 end
 
 
 DependentVolume = DependentVolume-Base;
 
-Regressors = ones(nDim4,1);
+Regressors = ones(nDimTimePoints,1);
 
 Regressors = [Regressors,OtherCovariatesMatrix];
 

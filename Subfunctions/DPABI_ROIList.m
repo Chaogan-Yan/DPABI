@@ -138,8 +138,9 @@ function MaskButton_Callback(hObject, eventdata, handles)
 % hObject    handle to MaskButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[Name, Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';},...
-    'Pick the Masks for ROI', 'MultiSelect','on');
+[Name, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+    'Pick the Mask file');
+
 if isnumeric(Name)
     return
 end

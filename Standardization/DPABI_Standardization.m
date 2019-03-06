@@ -326,6 +326,10 @@ if isempty(D)
     D=dir(fullfile(Path, ['*', '.nii.gz']));
 end
 
+if isempty(D)
+    D=dir(fullfile(Path, ['*', '.gii']));
+end
+
 NameCell={D.name}';
 Num=numel(NameCell);
 ImgCell=cellfun(@(Name) fullfile(Path, Name), NameCell,...
@@ -353,7 +357,7 @@ function AddImgTable_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgTable (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';}, ...
     'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
@@ -383,7 +387,7 @@ function AddImgButton_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';}, ...
     'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
@@ -461,7 +465,7 @@ function MaskButton_Callback(hObject, eventdata, handles)
 % hObject    handle to MaskButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[Name, Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';},...
+[Name, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
     'Pick the Mask Image');
 if isnumeric(Name)
     return

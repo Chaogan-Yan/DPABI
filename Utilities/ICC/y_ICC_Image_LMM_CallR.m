@@ -23,12 +23,17 @@ CovW=[];
 CovB=[];
 for i=1:length(RateDir)
     [AllVolumeTemp,VoxelSize,theImgFileList, Header] = y_ReadAll(RateDir{i});
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        FinalDim=4;
+    else
+        FinalDim=2;
+    end
     fprintf('\n\tImage Files in Repetition %d:\n',i);
     for itheImgFileList=1:length(theImgFileList)
         fprintf('\t%s\n',theImgFileList{itheImgFileList});
     end
-    AllVolume=cat(4,AllVolume,AllVolumeTemp);
-    nSubj = size(AllVolumeTemp,4);
+    AllVolume=cat(FinalDim,AllVolume,AllVolumeTemp);
+    nSubj = size(AllVolumeTemp,FinalDim);
     
     if ~isempty(CovWCell)
         CovW=[CovW;CovWCell{i}];
@@ -42,21 +47,34 @@ for i=1:length(RateDir)
     clear AllVolumeTemp
 end
 
-
-[nDim1,nDim2,nDim3,nDim4]=size(AllVolume);
-
-if ~isempty(MaskFile)
-    [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskFile);
+if ~isfield(Header,'cdata') %YAN Chao-Gan 190116. If NIfTI data
+    [nDim1,nDim2,nDim3,nDimTimePoints]=size(AllVolume);
+    if ~isempty(MaskFile)
+        [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskFile);
+    else
+        MaskData=ones(nDim1,nDim2,nDim3);
+    end
+    % Convert into 2D
+    AllVolume=reshape(AllVolume,[],size(AllVolume,4))';
+    MaskDataOneDim=reshape(MaskData,1,[]);
+    MaskIndex = find(MaskDataOneDim);
+    AllVolume=AllVolume(:,MaskIndex);
 else
-    MaskData=ones(nDim1,nDim2,nDim3);
+    [nDimVertex nDimTimePoints]=size(AllVolume);
+    fprintf('\nLoad mask "%s".\n', MaskFile);
+    if ~isempty(MaskFile)
+        MaskData=y_ReadAll(MaskFile);
+        if size(MaskData,1)~=nDimVertex
+            error('The size of Mask (%d) doesn''t match the required size (%d).\n',size(MaskData,1), nDimVertex);
+        end
+        MaskData = double(logical(MaskData));
+    else
+        MaskData=ones(nDimVertex,1);
+    end
+    AllVolume=AllVolume';
+    MaskIndex=find(MaskData);
+    AllVolume=AllVolume(:,MaskIndex);
 end
-
-
-% Convert into 2D
-AllVolume=reshape(AllVolume,[],size(AllVolume,4))';
-MaskDataOneDim=reshape(MaskData,1,[]);
-MaskIndex = find(MaskDataOneDim);
-AllVolume=AllVolume(:,MaskIndex);
 
 %Demean
 if ~isempty(CovW)
@@ -80,12 +98,19 @@ Expression = sprintf('!Rscript %s%sR_Cal_ICC.R %s %s', ProgramPath, filesep,MatN
 eval(Expression);
 load(MatNameRResults);
 
-ICCBrain=zeros(size(MaskDataOneDim));
-ICCBrain(1,MaskIndex)=icc;
-ICCBrain=reshape(ICCBrain,nDim1, nDim2, nDim3);
-    
-Header.pinfo = [1;0;0];
-Header.dt    =[16,0];
+% Get the brain back
+if ~isfield(Header,'cdata') %YAN Chao-Gan 190116. If NIfTI data
+    ICCBrain=zeros(size(MaskDataOneDim));
+    ICCBrain(1,MaskIndex)=icc;
+    ICCBrain=reshape(ICCBrain,nDim1, nDim2, nDim3);
+    Header.pinfo = [1;0;0];
+    Header.dt    =[16,0];
+else
+    ICCBrain = zeros(1, nDimVertex);
+    ICCBrain(1,MaskIndex) = icc;
+    ICCBrain = ICCBrain';
+end
+
 y_Write(ICCBrain,Header,OutputName);
 
 fprintf('\n\tICC calculation finished\n');

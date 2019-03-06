@@ -38,12 +38,17 @@ WithinSubjectFactor=[];
 SubjectRegressorsAll=[];
 for i=1:length(DependentDir)
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDir{i});
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        FinalDim=4;
+    else
+        FinalDim=2;
+    end
     fprintf('\n\tImage Files in Group %g Condition %g:\n',ceil(i/2),i-(ceil(i/2)-1)*2);
     for itheImgFileList=1:length(theImgFileList)
         fprintf('\t%s\n',theImgFileList{itheImgFileList});
     end
-    DependentVolume=cat(4,DependentVolume,AllVolume);
-    nSubjTemp = size(AllVolume,4);
+    DependentVolume=cat(FinalDim,DependentVolume,AllVolume);
+    nSubjTemp = size(AllVolume,FinalDim);
     
     if ~isempty(CovariateDirs)
         [AllVolume,VoxelSize,theImgFileList, Header_Covariate] = y_ReadAll(CovariateDirs{i});
@@ -51,12 +56,15 @@ for i=1:length(DependentDir)
         for itheImgFileList=1:length(theImgFileList)
             fprintf('\t%s\n',theImgFileList{itheImgFileList});
         end
-        CovariateVolume=cat(4,CovariateVolume,AllVolume);
+        CovariateVolume=cat(FinalDim,CovariateVolume,AllVolume);
         
-        if ~all(Header.dim==Header_Covariate.dim)
+        SizeDependentVolume=size(DependentVolume);
+        SizeCovariateVolume=size(CovariateVolume);
+        if ~isequal(SizeDependentVolume,SizeCovariateVolume)
             msgbox('The dimension of covariate image is different from the dimension of group image, please check them!','Dimension Error','error');
             return;
         end
+        
     end
     if ~isempty(OtherCovariates)
         OtherCovariatesMatrix=[OtherCovariatesMatrix;OtherCovariates{i}];
@@ -71,7 +79,12 @@ for i=1:length(DependentDir)
     SubjectRegressorsAll=[SubjectRegressorsAll;(ceil(i/2)-1)*10000+([1:nSubjTemp]')];
     clear AllVolume
 end
-[nDim1,nDim2,nDim3,nDim4]=size(DependentVolume);
+
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
+else
+    [nDimVertex nDimTimePoints]=size(DependentVolume);
+end
 
 SubIndex=unique(SubjectRegressorsAll);
 nSub=length(SubIndex);
@@ -132,16 +145,31 @@ end
 
 
 % For two-sample t-test
-DependentVolumeSubjectMean=zeros(nDim1,nDim2,nDim3,nSub);
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    DependentVolumeSubjectMean=zeros(nDim1,nDim2,nDim3,nSub);
+else
+    DependentVolumeSubjectMean=zeros(nDimVertex,nSub);
+end
 GroupLabel=zeros(nSub,1);
 for i=1:nSub
-    DependentVolumeSubjectMean(:,:,:,i) = mean(DependentVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4);
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        DependentVolumeSubjectMean(:,:,:,i) = mean(DependentVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4);
+    else
+        DependentVolumeSubjectMean(:,i) = mean(DependentVolume(:,find(SubjectRegressorsAll==SubIndex(i))),2);
+    end
     GroupLabel(i,1)=mean(BetweenSubjectFactor(find(SubjectRegressorsAll==SubIndex(i))));
 end
 if exist('CovariateDirs','var') && (~isempty(CovariateDirs))
-    CovVolumeSubjectMean=zeros(nDim1,nDim2,nDim3,nSub);
-    for i=1:nSub
-        CovVolumeSubjectMean(:,:,:,i) = mean(CovariateVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4); %YAN Chao-Gan, 171126. CovVolume is not defined. %CovVolumeSubjectMean(:,:,:,i) = mean(CovVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4);
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        CovVolumeSubjectMean=zeros(nDim1,nDim2,nDim3,nSub);
+        for i=1:nSub
+            CovVolumeSubjectMean(:,:,:,i) = mean(CovariateVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4); %YAN Chao-Gan, 171126. CovVolume is not defined. %CovVolumeSubjectMean(:,:,:,i) = mean(CovVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4);
+        end
+    else
+        CovVolumeSubjectMean=zeros(nDimVertex,nSub);
+        for i=1:nSub
+            CovVolumeSubjectMean(:,i) = mean(CovariateVolume(:,find(SubjectRegressorsAll==SubIndex(i))),2); %YAN Chao-Gan, 171126. CovVolume is not defined. %CovVolumeSubjectMean(:,:,:,i) = mean(CovVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4);
+        end
     end
 else
     CovVolumeSubjectMean=[];

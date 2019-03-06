@@ -22,7 +22,7 @@ function varargout = DPABI_ROISignalExtracter(varargin)
 
 % Edit the above text to modify the response to help DPABI_ROISignalExtracter
 
-% Last Modified by GUIDE v2.5 01-Nov-2014 03:17:01
+% Last Modified by GUIDE v2.5 06-Jan-2019 06:16:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -112,7 +112,8 @@ if isnumeric(Path)
 end
 [handles.CurDir, Name]=fileparts(Path);
 
-[ImgCell, Num]=GetSubNameCell(Path);
+WildcardPattern=get(handles.editWildcardPattern, 'String');
+[ImgCell, Num]=GetSubNameCell(Path,WildcardPattern);
 
 handles.ImgCells{numel(handles.ImgCells)+1}=ImgCell;
 StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
@@ -206,22 +207,27 @@ end
 
 Prefix=get(handles.PrefixEntry, 'String');
 
-parfor i=1:numel(ImgCells)
+parfor i=1:numel(ImgCells) %YAN Chao-Gan, 190105. Here don't need parfor. parfor i=1:numel(ImgCells)
     Img=ImgCells{i};
     
     %By YAN Chao-Gan, 141101.
     if iscell(Img)
-        Path=fileparts(Img{1});
-        [ParentPath, Name, Ext]=fileparts(Path); 
+        [Path, Name, Ext]=fileparts(Img{1});
+        [ParentPath, Name]=fileparts(Path); 
     else
         [Path, Name, Ext]=fileparts(Img);
     end
     
     OutputFile=fullfile(OutputDir, sprintf('%s_%s.txt', Prefix, Name));
     
-    [ROISignals] = y_ExtractROISignal(Img, handles.ROIDef, OutputFile, '', handles.IsMultipleLabel);
-    %[ROISignals] = y_ExtractROISignal(AllVolume, ROIDef, OutputName, MaskData, IsMultipleLabel, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)             
-
+    if strcmpi(Ext,'.gii') %YAN Chao-Gan, 190105. Add GIFTI support.
+        [ROISignals] = y_ExtractROISignal_Surf(Img, handles.ROIDef, OutputFile, '', handles.IsMultipleLabel);
+        %[ROISignals] = y_ExtractROISignal_Surf(AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, GHeader, CUTNUMBER)             
+    else
+        [ROISignals] = y_ExtractROISignal(Img, handles.ROIDef, OutputFile, '', handles.IsMultipleLabel);
+        %[ROISignals] = y_ExtractROISignal(AllVolume, ROIDef, OutputName, MaskData, IsMultipleLabel, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)
+    end
+    
 end
 
 % --- Executes on selection change in TypePopup.
@@ -257,7 +263,8 @@ if isnumeric(Path)
 end
 [handles.CurDir, Name]=fileparts(Path);
 
-[ImgCell, Num]=GetSubNameCell(Path);
+WildcardPattern=get(handles.editWildcardPattern, 'String');
+[ImgCell, Num]=GetSubNameCell(Path,WildcardPattern);
 
 handles.ImgCells{numel(handles.ImgCells)+1}=ImgCell;
 StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
@@ -287,7 +294,7 @@ if isnumeric(Path)
     return
 end
 handles.CurDir=Path;
-Suffix=get(handles.PrefixEntry, 'String');
+%Suffix=get(handles.PrefixEntry, 'String'); %YAN Chao-Gan 190105. This should be void
 
 SubjStruct=dir(Path);
 Index=cellfun(...
@@ -300,8 +307,9 @@ SubjPath=cellfun(@(Name) fullfile(Path, Name), SubjName,...
 
 set(handles.ImgListbox, 'BackgroundColor', 'Green');
 drawnow;
+WildcardPattern=get(handles.editWildcardPattern, 'String');
 for i=1:numel(SubjPath);
-    [ImgCell, Num]=GetSubNameCell(SubjPath{i});
+    [ImgCell, Num]=GetSubNameCell(SubjPath{i},WildcardPattern);
     
     handles.ImgCells{numel(handles.ImgCells)+1}=ImgCell;
     StringOne={sprintf('DIR: [%d] (%s) %s', Num, SubjName{i}, SubjPath{i})};
@@ -327,13 +335,21 @@ function ListContext_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-function [ImgCell, Num]=GetSubNameCell(Path)
-D=dir(fullfile(Path, ['*', '.img']));
-if isempty(D)
-    D=dir(fullfile(Path, ['*', '.nii']));
-end
-if isempty(D)
-    D=dir(fullfile(Path, ['*', '.nii.gz']));
+function [ImgCell, Num]=GetSubNameCell(Path,WildcardPattern)
+
+if ~isempty(WildcardPattern)
+    D=dir(fullfile(Path, WildcardPattern));
+else
+    D=dir(fullfile(Path, ['*', '.img']));
+    if isempty(D)
+        D=dir(fullfile(Path, ['*', '.nii']));
+    end
+    if isempty(D)
+        D=dir(fullfile(Path, ['*', '.nii.gz']));
+    end
+    if isempty(D)
+        D=dir(fullfile(Path, '*.gii'));
+    end
 end
 
 NameCell={D.name}';
@@ -408,12 +424,15 @@ function DefineROI_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 ROIDef=handles.ROIDef;
-if isempty(ROIDef)
-    [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
-    addpath([ProgramPath,filesep,'SubGUIs']);
-    [ROIDef,IsMultipleLabel]=DPARSF_ROI_Template(ROIDef,handles.IsMultipleLabel);
-    handles.IsMultipleLabel = IsMultipleLabel;
-end
+% YAN Chao-Gan, 190105. No longer need to display these templates in this case.
+% if isempty(ROIDef)
+%     [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+%     addpath([ProgramPath,filesep,'SubGUIs']);
+%     [ROIDef,IsMultipleLabel]=DPARSF_ROI_Template(ROIDef,handles.IsMultipleLabel);
+%     handles.IsMultipleLabel = IsMultipleLabel;
+% end
+handles.IsMultipleLabel = 1; % YAN Chao-Gan, 190105. Let's setup IsMultipleLabel always to 1.
+
 
 if handles.IsMultipleLabel
     fprintf('\nIsMultipleLabel is set to 1: There are multiple labels in the ROI mask file.\n');
@@ -433,8 +452,10 @@ function AddImgTable_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgTable (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick NifTi File' , handles.CurDir, 'MultiSelect', 'On');
+
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+    'Pick NIFTI/GIFTI File' , handles.CurDir, 'MultiSelect', 'On');
+
 if isnumeric(File)
     return;
 end
@@ -463,8 +484,9 @@ function AddImgButton_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
-    'Pick NifTi File' , handles.CurDir, 'MultiSelect', 'On');
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+    'Pick NIFTI/GIFTI File' , handles.CurDir, 'MultiSelect', 'On');
+
 if isnumeric(File)
     return;
 end
@@ -487,3 +509,43 @@ else
     AddString(handles.ImgListbox, StringOne);
 end
 guidata(hObject, handles);
+
+
+
+function editWildcardPattern_Callback(hObject, eventdata, handles)
+% hObject    handle to editWildcardPattern (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editWildcardPattern as text
+%        str2double(get(hObject,'String')) returns contents of editWildcardPattern as a double
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function editWildcardPattern_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editWildcardPattern (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over editWildcardPattern.
+function editWildcardPattern_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to editWildcardPattern (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Toggel the "Enable" state to ON
+
+set(hObject, 'Enable', 'On');
+
+% Create UI control
+uicontrol(handles.editWildcardPattern);
+uiwait(msgbox(sprintf('Usually, you just need to leave here "blank". However, if you want to specify a Wildcard Pattern to filter specific files, e.g., if you want to select only the preprocessed surface data of left hemisphere, you need to input "*hemi-L*.gii" and click "Add All".'),'Wildcard Pattern'));

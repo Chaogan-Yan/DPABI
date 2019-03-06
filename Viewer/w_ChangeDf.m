@@ -69,18 +69,22 @@ handles.Info=...
 OverlayHeader=varargin{1};
 Flag=OverlayHeader.TestFlag;
 
-switch upper(Flag)
-    case 'T'
-        Value=2;
-    case 'R'
-        Value=3;
-    case 'F'
-        Value=4;
-        set(handles.Df2Entry, 'Enable', 'On');
-    case 'Z'
-        Value=5;
-    otherwise
-        Value=1;
+if ~isempty(Flag)
+    switch upper(Flag)
+        case 'T'
+            Value=2;
+        case 'R'
+            Value=3;
+        case 'F'
+            Value=4;
+            set(handles.Df2Entry, 'Enable', 'On');
+        case 'Z'
+            Value=5;
+        otherwise
+            Value=1;
+    end
+else
+    Value=1;
 end
 set(handles.FlagPopup, 'Value', Value);
 set(handles.InfoText, 'String', handles.Info{Value});

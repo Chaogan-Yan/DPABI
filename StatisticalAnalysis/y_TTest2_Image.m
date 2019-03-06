@@ -18,7 +18,7 @@ function [TTest2_T,Header] = y_TTest2_Image(DependentDirs,OutputName,MaskFile,Co
 % Child Mind Institute, 445 Park Avenue, New York, NY 10022, USA
 % The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016, USA
 % ycg.yan@gmail.com
-
+% Revised by YAN Chao-Gan 181204. Add GIfTI support.
 
 if nargin<=4
     OtherCovariates=[];
@@ -38,20 +38,27 @@ GroupLabel=[];
 OtherCovariatesMatrix=[];
 for i=1:GroupNumber
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDirs{i});
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        FinalDim=4;
+    else
+        FinalDim=2;
+    end
     fprintf('\n\tImage Files in Group %d:\n',i);
     for itheImgFileList=1:length(theImgFileList)
         fprintf('\t%s\n',theImgFileList{itheImgFileList});
     end
-    DependentVolume=cat(4,DependentVolume,AllVolume);
+    DependentVolume=cat(FinalDim,DependentVolume,AllVolume);
     if ~isempty(CovariateDirs)
         [AllVolume,VoxelSize,theImgFileList, Header_Covariate] = y_ReadAll(CovariateDirs{i});
         fprintf('\n\tImage Files in Covariate %d:\n',i);
         for itheImgFileList=1:length(theImgFileList)
             fprintf('\t%s\n',theImgFileList{itheImgFileList});
         end
-        CovariateVolume=cat(4,CovariateVolume,AllVolume);
+        CovariateVolume=cat(FinalDim,CovariateVolume,AllVolume);
         
-        if ~all(Header.dim==Header_Covariate.dim)
+        SizeDependentVolume=size(DependentVolume);
+        SizeCovariateVolume=size(CovariateVolume);
+        if ~isequal(SizeDependentVolume,SizeCovariateVolume)
             msgbox('The dimension of covariate image is different from the dimension of group image, please check them!','Dimension Error','error');
             return;
         end
@@ -59,15 +66,19 @@ for i=1:GroupNumber
     if ~isempty(OtherCovariates)
         OtherCovariatesMatrix=[OtherCovariatesMatrix;OtherCovariates{i}];
     end
-    GroupLabel=[GroupLabel;ones(size(AllVolume,4),1)*i];
+    GroupLabel=[GroupLabel;ones(size(AllVolume,FinalDim),1)*i];
     clear AllVolume
 end
 
 GroupLabel(GroupLabel==2)=-1;
 
-[nDim1,nDim2,nDim3,nDim4]=size(DependentVolume);
+if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
+else
+    [nDimVertex nDimTimePoints]=size(DependentVolume);
+end
 
-Regressors = [GroupLabel,ones(nDim4,1),OtherCovariatesMatrix];
+Regressors = [GroupLabel,ones(nDimTimePoints,1),OtherCovariatesMatrix];
 
 
 if exist('CovariateDirs','var') && ~isempty(CovariateDirs)

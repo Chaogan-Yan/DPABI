@@ -20,7 +20,7 @@ for i=1:length(Rate1Dir)
     Rate1Series = Rate1Series + Temp;
     fprintf('\n\tImage Files in Rate %d Directory %d:\n',1, i);
     for itheImgFileList=1:length(theImgFileList)
-        fprintf('\t%s%s\n',theImgFileList{itheImgFileList},'.img');
+        fprintf('\t%s%s\n',theImgFileList{itheImgFileList});
     end
 end
 Rate1Series = Rate1Series ./ (length(Rate1Dir));
@@ -32,37 +32,54 @@ for i=1:length(Rate2Dir)
     Rate2Series = Rate2Series + Temp;
     fprintf('\n\tImage Files in Rate %d Directory %d:\n',2, i);
     for itheImgFileList=1:length(theImgFileList)
-        fprintf('\t%s%s\n',theImgFileList{itheImgFileList},'.img');
+        fprintf('\t%s%s\n',theImgFileList{itheImgFileList});
     end
 end
 Rate2Series = Rate2Series ./ (length(Rate2Dir));
 
 
-
-[nDim1,nDim2,nDim3,nDim4]=size(Rate2Series);
-
-
-if ~isempty(MaskFile)
-    [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskFile);
-else
-    MaskData=ones(nDim1,nDim2,nDim3);
-end
-
-ICCBrain=zeros(nDim1,nDim2,nDim3);
-
-for i=1:nDim1
-    for j=1:nDim2
-        for k=1:nDim3
-            if MaskData(i,j,k)
-                xA=squeeze(Rate1Series(i,j,k,:));
-                xB=squeeze(Rate2Series(i,j,k,:));
-                ICCBrain(i,j,k)=IPN_icc([xA,xB],1,'single');
+if ~isfield(Header,'cdata') %YAN Chao-Gan 190116. If NIfTI data
+    [nDim1,nDim2,nDim3,nDim4]=size(Rate2Series);
+    if ~isempty(MaskFile)
+        [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskFile);
+    else
+        MaskData=ones(nDim1,nDim2,nDim3);
+    end
+    ICCBrain=zeros(nDim1,nDim2,nDim3);
+    for i=1:nDim1
+        for j=1:nDim2
+            for k=1:nDim3
+                if MaskData(i,j,k)
+                    xA=squeeze(Rate1Series(i,j,k,:));
+                    xB=squeeze(Rate2Series(i,j,k,:));
+                    ICCBrain(i,j,k)=IPN_icc([xA,xB],1,'single');
+                end
             end
         end
     end
+else
+    [nDimVertex nDimTimePoints]=size(Rate2Series);
+    fprintf('\nLoad mask "%s".\n', MaskFile);
+    if ~isempty(MaskFile)
+        MaskData=y_ReadAll(MaskFile);
+        if size(MaskData,1)~=nDimVertex
+            error('The size of Mask (%d) doesn''t match the required size (%d).\n',size(MaskData,1), nDimVertex);
+        end
+        MaskData = double(logical(MaskData));
+    else
+        MaskData=ones(nDimVertex,1);
+    end
+    ICCBrain=zeros(nDimVertex,1);
+    for i=1:nDimVertex
+        if MaskData(i,1)
+            xA=Rate1Series(i,:)';
+            xB=Rate2Series(i,:)';
+            ICCBrain(i,1)=IPN_icc([xA,xB],1,'single');
+        end
+    end
 end
-ICCBrain(isnan(ICCBrain))=0;
 
+ICCBrain(isnan(ICCBrain))=0;
 y_Write(ICCBrain,Header,OutputName);
 
 
