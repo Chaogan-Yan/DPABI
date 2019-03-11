@@ -320,8 +320,23 @@ end
 if (Cfg.RemoveFirstTimePoints>0)
     
     % The parpool might be shut down, restart it.
-    if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
-        parpool(Cfg.ParallelWorkersNumber);
+    % if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+    %     parpool(Cfg.ParallelWorkersNumber);
+    % end
+    % YAN Chao-Gan, 190312. To be compatible with early matlab versions
+    PCTVer = ver('distcomp');
+    if ~isempty(PCTVer)
+        FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+        if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+            CurrentSize_MatlabPool = matlabpool('size');
+            if (CurrentSize_MatlabPool==0) && (Cfg.ParallelWorkersNumber~=0)
+                matlabpool(Cfg.ParallelWorkersNumber)
+            end
+        else
+            if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+                parpool(Cfg.ParallelWorkersNumber);
+            end
+        end
     end
     
     for iFunSession=1:Cfg.FunctionalSessionNumber
@@ -401,9 +416,25 @@ end
 %Preprocessing with fmriprep
 if (Cfg.Isfmriprep==1)
     % Let's stop parpool before entering fmriprep
-    if ~isempty(gcp('nocreate'))
-        delete(gcp('nocreate'));
+%         if ~isempty(gcp('nocreate'))
+%             delete(gcp('nocreate'));
+%         end
+    % YAN Chao-Gan, 190312. To be compatible with early matlab versions
+    PCTVer = ver('distcomp');
+    if ~isempty(PCTVer)
+        FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+        if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+            CurrentSize_MatlabPool = matlabpool('size');
+            if (CurrentSize_MatlabPool~=0)
+                matlabpool close
+            end
+        else
+            if ~isempty(gcp('nocreate'))
+                delete(gcp('nocreate'));
+            end
+        end
     end
+    
 
     if isdeployed % If running within docker with compiled version
         Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/fsl/5.0 && parallel -j %g /usr/local/miniconda/bin/fmriprep %s/BIDS %s participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
@@ -452,8 +483,23 @@ end
 Cfg.StartingDirName_Volume = ['FunVolu',Cfg.StartingDirName(8:end)];
 
 % The parpool might be shut down, restart it.
-if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
-    parpool(Cfg.ParallelWorkersNumber);
+% if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+%     parpool(Cfg.ParallelWorkersNumber);
+% end
+% YAN Chao-Gan, 190312. To be compatible with early matlab versions
+PCTVer = ver('distcomp');
+if ~isempty(PCTVer)
+    FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+    if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+        CurrentSize_MatlabPool = matlabpool('size');
+        if (CurrentSize_MatlabPool==0) && (Cfg.ParallelWorkersNumber~=0)
+            matlabpool(Cfg.ParallelWorkersNumber)
+        end
+    else
+        if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+            parpool(Cfg.ParallelWorkersNumber);
+        end
+    end
 end
 
 
@@ -865,8 +911,23 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnFunctionalData')
     %Smooth on functional volume data
     if (Cfg.IsProcessVolumeSpace==1)
         % The parpool might be shut down, restart it.
-        if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
-            parpool(Cfg.ParallelWorkersNumber);
+        % if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+        %     parpool(Cfg.ParallelWorkersNumber);
+        % end
+        % YAN Chao-Gan, 190312. To be compatible with early matlab versions
+        PCTVer = ver('distcomp');
+        if ~isempty(PCTVer)
+            FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+            if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+                CurrentSize_MatlabPool = matlabpool('size');
+                if (CurrentSize_MatlabPool==0) && (Cfg.ParallelWorkersNumber~=0)
+                    matlabpool(Cfg.ParallelWorkersNumber)
+                end
+            else
+                if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+                    parpool(Cfg.ParallelWorkersNumber);
+                end
+            end
         end
 
         parfor i=1:Cfg.SubjectNum
