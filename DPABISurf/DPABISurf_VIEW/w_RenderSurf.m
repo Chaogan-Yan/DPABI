@@ -144,6 +144,10 @@ if isempty(CurUnderSurf)
         @(OverlayInd) GetOverlayThres(AxesObj, OverlayInd);
     Fcn.SetOverlayThres=...
         @(OverlayInd, NMax, NMin, PMin, PMax) SetOverlayThres(AxesObj, OverlayInd, NMax, NMin, PMin, PMax);
+    Fcn.GetOverlayGuiData=...
+        @(OverlayInd) GetOverlayGuiData(AxesObj, OverlayInd);
+    Fcn.SetOverlayGuiData=...
+        @(OverlayInd, GuiData) SetOverlayGuiData(AxesObj, OverlayInd, GuiData);      
     Fcn.GetOverlayThresPN_Flag=...
         @(OverlayInd) GetOverlayThresPN_Flag(AxesObj, OverlayInd);
     Fcn.SetOverlayThresPN_Flag=...
@@ -432,11 +436,7 @@ AdjustVA=AdjustVertexAlpha(OverlaySurf.Vertex, OverlaySurf.Alpha,...
     OverlaySurf.ThresPN_Flag,...
     OverlaySurf.NegMin, OverlaySurf.PosMin,...
     OverlaySurf.VMsk, OverlaySurf.CSizeOpt);
-if any(AdjustVA)
-    set(OverlaySurf.Obj, 'Visible', 'On');
-else
-    set(OverlaySurf.Obj, 'Visible', 'Off');
-end
+
 set(OverlaySurf.Obj, ...
     'FaceVertexCData',  AdjustVC,...
     'FaceVertexAlpha',  AdjustVA);
@@ -763,6 +763,34 @@ AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
 setappdata(AxesObj, 'AxesHandle', AxesHandle)
 UpdateOverlay(AxesObj, OverlayInd);
 
+function Opt=GetOverlayGuiData(AxesObj, OverlayInd)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+
+try
+    OverlaySurf=AxesHandle.OverlaySurf(OverlayInd, 1);
+catch 
+    error('Invalid Overlay Index');
+end
+Opt=OverlaySurf.GuiData;
+
+function SetOverlayGuiData(AxesObj, OverlayInd, GuiData)
+if nargin<3
+    error('Invalid Input: OverlayInd, Alpha');
+end
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+
+try
+    OverlaySurf=AxesHandle.OverlaySurf(OverlayInd, 1);
+catch
+    error('Invalid Overlay Index');
+end
+OverlaySurf.GuiData=GuiData;
+
+AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
+setappdata(AxesObj, 'AxesHandle', AxesHandle)
+UpdateOverlay(AxesObj, OverlayInd);
+
+
 function Opt=GetOverlayTimePoint(AxesObj, OverlayInd)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
@@ -887,8 +915,11 @@ if nargin<2+1
 else
     OverlayOpt=VarArgIn{2};
 end
-
 % Other Option
+GuiData.OverlayNegRatio=0;
+GuiData.OverlayPosRatio=0;
+GuiData.OverlayPosNegSync=true;
+
 NumTP=size(AllVertices, 2);
 CurTP=1;
 VMsk=ones(size(Vertex));
@@ -954,6 +985,7 @@ OverlayOpt.Vertex=Vertex;
 OverlayOpt.NumTP=NumTP;
 OverlayOpt.CurTP=CurTP;
 OverlayOpt.VMsk=VMsk;
+OverlayOpt.GuiData=GuiData;
 OverlayOpt.CSizeOpt=CSizeOpt;
 OverlayOpt.StatOpt=StatOpt;
 
@@ -990,6 +1022,8 @@ if strcmpi(ThresPN_Flag, '+') % OnlyPos
     VertexAlpha(Vertex<0)=0;
 elseif strcmpi(ThresPN_Flag, '-') % OnlyNeg
     VertexAlpha(Vertex>0)=0;
+else
+    % Do Nothing
 end
 
 % Adjust Cluster Size

@@ -22,7 +22,7 @@ function varargout = DPABISurf_VIEW(varargin)
 
 % Edit the above text to modify the response to help DPABISurf_VIEW
 
-% Last Modified by GUIDE v2.5 27-Feb-2019 00:34:32
+% Last Modified by GUIDE v2.5 11-Mar-2019 18:05:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,9 +54,6 @@ function DPABISurf_VIEW_OpeningFcn(hObject, eventdata, handles, varargin)
 
 handles.UnderlayFilePath='';
 handles.OverlayInd=0;
-handles.OverlayNegRatio=1;
-handles.OverlayPosRatio=1;
-handles.OverlayPosNegSync=true;
 handles.LabelInd=0;
 
 handles.ColorMapEnum={'Jet';...
@@ -267,23 +264,34 @@ if ~isempty(OverlayFiles)
     set(Handles.OverlayNMinEty, 'Enable', BtnState, 'String', num2str(Thres.NegMin));
     set(Handles.OverlayPMinEty, 'Enable', BtnState, 'String', num2str(Thres.PosMin));
     set(Handles.OverlayPMaxEty, 'Enable', BtnState, 'String', num2str(Thres.PosMax));
-    set(Handles.OverlayThresNegSlider, 'Enable', BtnState, 'Value', 1-Handles.OverlayNegRatio);
-    set(Handles.OverlayThresPosSlider, 'Enable', BtnState, 'Value', Handles.OverlayPosRatio);
-    set(Handles.OverlayThresSyncBtn, 'Enable', BtnState, 'Value', Handles.OverlayPosNegSync);
+    
+    GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+    set(Handles.OverlayThresNegSlider, 'Enable', BtnState, 'Value', 1-GuiData.OverlayNegRatio);
+    set(Handles.OverlayThresPosSlider, 'Enable', BtnState, 'Value', GuiData.OverlayPosRatio);
+    set(Handles.OverlayThresSyncBtn, 'Enable', BtnState, 'Value', GuiData.OverlayPosNegSync);
+    if GuiData.OverlayPosNegSync
+        set(Handles.OverlayThresSyncBtn, 'BackgroundColor', [   1,    0,    0]);
+    else
+        set(Handles.OverlayThresSyncBtn, 'BackgroundColor', [0.75, 0.75, 0.75]);
+    end
     
     Opt=Fcn.GetOverlayThresPN_Flag(OverlayInd);
     ThresPN_Flag=Opt.ThresPN_Flag;
     PNF=false(3, 1);
+    PNF_C=0.75*ones(3, 3);
     if isempty(ThresPN_Flag)
         PNF(3, 1)=true;
+        PNF_C(3, :)=[1, 0, 0];
     elseif strcmpi(ThresPN_Flag, '+')
         PNF(1, 1)=true;
+        PNF_C(1, :)=[1, 0, 0];
     elseif strcmpi(ThresPN_Flag, '-')
         PNF(2, 1)=true;
+        PNF_C(2, :)=[1, 0, 0];
     end
-    set(Handles.OverlayThresOnlyPosBtn, 'Enable', BtnState, 'Value', PNF(1));    
-    set(Handles.OverlayThresOnlyNegBtn, 'Enable', BtnState, 'Value', PNF(2));
-    set(Handles.OverlayThresFullBtn, 'Enable', BtnState, 'Value', PNF(3));
+    set(Handles.OverlayThresOnlyPosBtn, 'Enable', BtnState, 'Value', PNF(1), 'BackgroundColor', PNF_C(1, :));    
+    set(Handles.OverlayThresOnlyNegBtn, 'Enable', BtnState, 'Value', PNF(2), 'BackgroundColor', PNF_C(2, :));
+    set(Handles.OverlayThresFullBtn, 'Enable', BtnState, 'Value', PNF(3), 'BackgroundColor', PNF_C(3, :));
 
     Opt=Fcn.GetOverlayStatOption(OverlayInd);
     set(Handles.StatBtn, 'Enable', BtnState);
@@ -325,11 +333,11 @@ else
     set(Handles.OverlayPMaxEty, 'Enable', BtnState, 'String', '');    
     set(Handles.OverlayThresNegSlider, 'Enable', BtnState, 'Value', 0);
     set(Handles.OverlayThresPosSlider, 'Enable', BtnState, 'Value', 1);
-    set(Handles.OverlayThresSyncBtn, 'Enable', BtnState, 'Value', 0);
+    set(Handles.OverlayThresSyncBtn, 'Enable', BtnState, 'Value', 0, 'BackgroundColor', [0.75, 0.75, 0.75]);
     
-    set(Handles.OverlayThresOnlyNegBtn, 'Enable', BtnState, 'Value', 0);
-    set(Handles.OverlayThresOnlyPosBtn, 'Enable', BtnState, 'Value', 0);
-    set(Handles.OverlayThresFullBtn, 'Enable', BtnState, 'Value', 0);
+    set(Handles.OverlayThresOnlyNegBtn, 'Enable', BtnState, 'Value', 0, 'BackgroundColor', [0.75, 0.75, 0.75]);
+    set(Handles.OverlayThresOnlyPosBtn, 'Enable', BtnState, 'Value', 0, 'BackgroundColor', [0.75, 0.75, 0.75]);
+    set(Handles.OverlayThresFullBtn, 'Enable', BtnState, 'Value', 0, 'BackgroundColor', [0.75, 0.75, 0.75]);
     
     set(Handles.StatBtn, 'Enable', BtnState);
     set(Handles.OverlayTestFlagEty, 'Enable', BtnState, 'String', 'NA');
@@ -361,8 +369,14 @@ NMax=str2num(get(handles.OverlayNMaxEty, 'String'));
 NMin=str2num(get(handles.OverlayNMinEty, 'String'));
 PMin=str2num(get(handles.OverlayPMinEty, 'String'));
 PMax=str2num(get(handles.OverlayPMaxEty, 'String'));
-
 Fcn.SetOverlayThres(OverlayInd, NMax, NMin, PMin, PMax);
+
+GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+GuiData.OverlayNegRatio=0;
+GuiData.OverlayPosRatio=0;
+GuiData.OverlayPosNegSync=0;
+Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+
 UpdateOverlayConfig(hObject);
 
 % Hints: get(hObject,'String') returns contents of OverlayNMaxEty as text
@@ -380,8 +394,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function OverlayNMinEty_Callback(hObject, eventdata, handles)
 % hObject    handle to OverlayNMinEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -393,8 +405,14 @@ NMax=str2num(get(handles.OverlayNMaxEty, 'String'));
 NMin=str2num(get(handles.OverlayNMinEty, 'String'));
 PMin=str2num(get(handles.OverlayPMinEty, 'String'));
 PMax=str2num(get(handles.OverlayPMaxEty, 'String'));
-
 Fcn.SetOverlayThres(OverlayInd, NMax, NMin, PMin, PMax);
+
+GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+GuiData.OverlayNegRatio=0;
+GuiData.OverlayPosRatio=0;
+GuiData.OverlayPosNegSync=0;
+Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+
 UpdateOverlayConfig(hObject);
 % Hints: get(hObject,'String') returns contents of OverlayNMinEty as text
 %        str2double(get(hObject,'String')) returns contents of OverlayNMinEty as a double
@@ -424,8 +442,14 @@ NMax=str2num(get(handles.OverlayNMaxEty, 'String'));
 NMin=str2num(get(handles.OverlayNMinEty, 'String'));
 PMin=str2num(get(handles.OverlayPMinEty, 'String'));
 PMax=str2num(get(handles.OverlayPMaxEty, 'String'));
-
 Fcn.SetOverlayThres(OverlayInd, NMax, NMin, PMin, PMax);
+
+GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+GuiData.OverlayNegRatio=0;
+GuiData.OverlayPosRatio=0;
+GuiData.OverlayPosNegSync=0;
+Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+
 UpdateOverlayConfig(hObject);
 % Hints: get(hObject,'String') returns contents of OverlayPMinEty as text
 %        str2double(get(hObject,'String')) returns contents of OverlayPMinEty as a double
@@ -456,8 +480,14 @@ NMax=str2num(get(handles.OverlayNMaxEty, 'String'));
 NMin=str2num(get(handles.OverlayNMinEty, 'String'));
 PMin=str2num(get(handles.OverlayPMinEty, 'String'));
 PMax=str2num(get(handles.OverlayPMaxEty, 'String'));
-
 Fcn.SetOverlayThres(OverlayInd, NMax, NMin, PMin, PMax);
+
+GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+GuiData.OverlayNegRatio=0;
+GuiData.OverlayPosRatio=0;
+GuiData.OverlayPosNegSync=0;
+Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+
 UpdateOverlayConfig(hObject);
 % Hints: get(hObject,'String') returns contents of OverlayPMaxEty as text
 %        str2double(get(hObject,'String')) returns contents of OverlayPMaxEty as a double
@@ -772,6 +802,40 @@ function OverlayThresNegSlider_Callback(hObject, eventdata, handles)
 % hObject    handle to OverlayThresNegSlider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+Fcn=handles.Fcn;
+OverlayInd=handles.OverlayInd;
+GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+ThresOpt=Fcn.GetOverlayThres(OverlayInd);
+
+NegRatio=1-get(handles.OverlayThresNegSlider, 'Value');
+if NegRatio==1
+    NegRatio=0.9999;
+end
+    
+if GuiData.OverlayPosNegSync
+    Range=ThresOpt.PosMax-ThresOpt.PosMin;
+
+    Origin=Range./(1-GuiData.OverlayPosRatio);
+    PosMin=Origin*NegRatio+(ThresOpt.PosMax-Origin);    
+    
+    PosRatio=NegRatio;    
+    set(handles.OverlayThresPosSlider, 'Value', PosRatio);
+    NegMin=-1*PosMin;
+else
+    Range=ThresOpt.NegMin-ThresOpt.NegMax;
+
+    Origin=Range./(1-GuiData.OverlayNegRatio);
+    NegMin=(ThresOpt.NegMax+Origin)-Origin*NegRatio;
+    
+    PosRatio=GuiData.OverlayPosRatio;
+    PosMin=ThresOpt.PosMin;
+end
+Fcn.SetOverlayThres(OverlayInd, ThresOpt.NegMax, NegMin, PosMin, ThresOpt.PosMax);
+
+GuiData.OverlayPosRatio=PosRatio;
+GuiData.OverlayNegRatio=NegRatio;
+Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+UpdateOverlayConfig(hObject);
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
@@ -794,7 +858,34 @@ function OverlayThresPosSlider_Callback(hObject, eventdata, handles)
 % hObject    handle to OverlayThresPosSlider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+Fcn=handles.Fcn;
+OverlayInd=handles.OverlayInd;
+GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+ThresOpt=Fcn.GetOverlayThres(OverlayInd);
 
+PosRatio=get(handles.OverlayThresPosSlider, 'Value');
+if PosRatio==1
+    PosRatio=0.9999;
+end
+    
+Range=ThresOpt.PosMax-ThresOpt.PosMin;
+
+Origin=Range./(1-GuiData.OverlayPosRatio);
+PosMin=Origin*PosRatio+(ThresOpt.PosMax-Origin);
+if GuiData.OverlayPosNegSync
+    NegRatio=PosRatio;    
+    set(handles.OverlayThresNegSlider, 'Value', 1-NegRatio);
+    NegMin=-1*PosMin;
+else
+    NegRatio=GuiData.OverlayNegRatio;
+    NegMin=ThresOpt.NegMin;
+end
+Fcn.SetOverlayThres(OverlayInd, ThresOpt.NegMax, NegMin, PosMin, ThresOpt.PosMax);
+
+GuiData.OverlayPosRatio=PosRatio;
+GuiData.OverlayNegRatio=NegRatio;
+Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+UpdateOverlayConfig(hObject);
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
@@ -816,16 +907,35 @@ function OverlayThresSyncBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to OverlayThresSyncBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+Fcn=handles.Fcn;
+OverlayInd=handles.OverlayInd;
+GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+GuiData.OverlayPosNegSync=~GuiData.OverlayPosNegSync;
+set(handles.OverlayThresSyncBtn, 'Value', GuiData.OverlayPosNegSync);
+if GuiData.OverlayPosNegSync
+    Value=get(handles.OverlayThresPosSlider, 'Value');
+    set(handles.OverlayThresNegSlider, 'Value', 1-Value);
+    GuiData.OverlayNegRatio=GuiData.OverlayPosRatio;
+    Fcn.SetOverlayGuiData(OverlayInd, GuiData);    
+    
+    Opt=Fcn.GetOverlayThres(OverlayInd);
+    Fcn.SetOverlayThres(OverlayInd, Opt.NegMax, -1*Opt.PosMin, Opt.PosMin, Opt.PosMax);
+else
+    GuiData.OverlayNegRatio=0;   
+    GuiData.OverlayPosRatio=0;    
+    Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+    
+    %Opt=Fcn.GetOverlayThres(OverlayInd);
+    %Fcn.SetOverlayThres(OverlayInd, Opt.NegMax, 0, 0, Opt.PosMax);    
+end
+UpdateOverlayConfig(hObject);
 % Hint: get(hObject,'Value') returns toggle state of OverlayThresSyncBtn
-
 
 % --- Executes during object creation, after setting all properties.
 function OverlayThresSyncBtn_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to OverlayThresSyncBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-
 
 % --- Executes on button press in StatBtn.
 function StatBtn_Callback(hObject, eventdata, handles)
@@ -992,10 +1102,36 @@ function OverlayThresOnlyPosBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to OverlayThresOnlyPosBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+Fcn=handles.Fcn;
+OverlayInd=handles.OverlayInd;
 
+Fcn.SetOverlayThresPN_Flag(OverlayInd, '+');
+UpdateOverlayConfig(hObject);
 % Hint: get(hObject,'Value') returns toggle state of OverlayThresOnlyPosBtn
 
+% --- Executes on button press in OverlayThresOnlyPosBtn.
+function OverlayThresOnlyNegBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to OverlayThresOnlyPosBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Fcn=handles.Fcn;
+OverlayInd=handles.OverlayInd;
 
+Fcn.SetOverlayThresPN_Flag(OverlayInd, '-');
+UpdateOverlayConfig(hObject);
+% Hint: get(hObject,'Value') returns toggle state of OverlayThresOnlyPosBtn
+
+% --- Executes on button press in OverlayThresFullBtn.
+function OverlayThresFullBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to OverlayThresFullBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Fcn=handles.Fcn;
+OverlayInd=handles.OverlayInd;
+
+Fcn.SetOverlayThresPN_Flag(OverlayInd, '');
+UpdateOverlayConfig(hObject);
+% Hint: get(hObject,'Value') returns toggle state of OverlayThresFullBtn
 
 function OverlayTpEty_Callback(hObject, eventdata, handles)
 % hObject    handle to OverlayTpEty (see GCBO)
