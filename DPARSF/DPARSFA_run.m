@@ -1458,8 +1458,8 @@ end
 
 
 % The parpool might be shut down, restart it.
-% if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
-%     parpool(Cfg.ParallelWorkersNumber);
+% if isempty(gcp('nocreate')) && AutoDataProcessParameter.ParallelWorkersNumber~=0
+%     parpool(AutoDataProcessParameter.ParallelWorkersNumber);
 % end
 % YAN Chao-Gan, 190312. To be compatible with early matlab versions
 PCTVer = ver('distcomp');
@@ -1467,12 +1467,12 @@ if ~isempty(PCTVer)
     FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
     if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
         CurrentSize_MatlabPool = matlabpool('size');
-        if (CurrentSize_MatlabPool==0) && (Cfg.ParallelWorkersNumber~=0)
-            matlabpool(Cfg.ParallelWorkersNumber)
+        if (CurrentSize_MatlabPool==0) && (AutoDataProcessParameter.ParallelWorkersNumber~=0)
+            matlabpool(AutoDataProcessParameter.ParallelWorkersNumber)
         end
     else
-        if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
-            parpool(Cfg.ParallelWorkersNumber);
+        if isempty(gcp('nocreate')) && AutoDataProcessParameter.ParallelWorkersNumber~=0
+            parpool(AutoDataProcessParameter.ParallelWorkersNumber);
         end
     end
 end
