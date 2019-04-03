@@ -52,7 +52,6 @@ for i=1:numel(AxeChildObj)
         CurUnderSurf=AxeChildObj(i);
     end
 end
-
 if isempty(CurUnderSurf)
     PatchObj=patch(P,...
         'FaceColor',        FaceColor,...
@@ -124,6 +123,8 @@ if isempty(CurUnderSurf)
         @(IsShow) SetDisplayTextureFlag(AxesObj, IsShow);
     Fcn.AddLabel=...
         @(varargin) AddLabel(AxesObj, varargin);
+    Fcn.SetLabel=...
+        @(LabelInd) SetLabel(AxesObj, LabelInd);    
     Fcn.RemoveLabel=...
         @(LabelInd) RemoveLabel(AxesObj, LabelInd);
     Fcn.GetLabelFiles=...
@@ -183,11 +184,15 @@ if isempty(CurUnderSurf)
     Fcn.UpdateOverlay=...
         @(OverlayInd) UpdateOverlay(AxesObj, OverlayInd);
     Fcn.SaveOverlayClusters=...
-        @(OverlayInd, OutFile) SaveOverlayClusters(AxesObj, OverlayInd, OutFile);    
+        @(OverlayInd, OutFile) SaveOverlayClusters(AxesObj, OverlayInd, OutFile);
+    Fcn.SaveCurrentOverlayCluster=...
+        @(OverlayInd, OutFile) SaveCurrentOverlayCluster(AxesObj, OverlayInd, OutFile);    
     Fcn.ReportOverlayCluster=...
-        @(OverlayInd) ReportOverlayCluster(AxesObj, OverlayInd);
+        @(OverlayInd, LabelInd) ReportOverlayCluster(AxesObj, OverlayInd, LabelInd);
     Fcn.SetBorder=...
         @(varargin) SetBorder(AxesObj, varargin);
+    Fcn.GetDataCursorObj=...
+        @() GetDataCursorObj(AxesObj);
     
     AxesHandle.Fcn=Fcn;
     
@@ -286,6 +291,10 @@ set(FigObj, 'Color', SurfOpt.BackGroundColor);
 
 AxesHandle.SurfOpt=SurfOpt;
 setappdata(AxesObj, 'AxesHandle', AxesHandle)
+
+function DcObj=GetDataCursorObj(AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+DcObj=AxesHandle.DataCursor;
 
 function Opt=GetViewPoint(AxesObj)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -393,7 +402,8 @@ AxesHandle.Border.IsVis=IsVis;
 setappdata(AxesObj, 'AxesHandle', AxesHandle)
 set(PatchObj, 'Visible', IsVis);
 
-function SaveOverlayClusters(AxesObj, OverlayInd, OutFile)
+function ExitCode=SaveOverlayClusters(AxesObj, OverlayInd, OutFile)
+ExitCode=1;
 if nargin<3
     error('Invalid Input: OverlayInd, OutFile');
 end
@@ -414,7 +424,48 @@ Vertex=OverlaySurf.Vertex.*AdjustMsk;
 V=gifti;
 V.cdata=Vertex;
 save(V, OutFile);
+ExitCode=0;
 
+function ExitCode=SaveCurrentOverlayCluster(AxesObj, OverlayInd, OutFile)
+ExitCode=1;
+if nargin<3
+    error('Invalid Input: OverlayInd, OutFile');
+end
+
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+
+try
+    OverlaySurf=AxesHandle.OverlaySurf(OverlayInd, 1);
+catch 
+    error('Invalid Overlay Index');
+end
+% Find Position
+DcObj=AxesHandle.DataCursor;
+Pos=DcObj.getCursorInfo().Position;
+Coord=AxesHandle.UnderSurf.StructData.vertices;
+VInd= Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3);
+
+% Adjust Cluster Size
+AdjustVA=AdjustVertexAlpha(OverlaySurf.Vertex, OverlaySurf.Alpha,...
+    OverlaySurf.ThresPN_Flag,...
+    OverlaySurf.NegMin, OverlaySurf.PosMin,...
+    OverlaySurf.VMsk, OverlaySurf.CSizeOpt);
+AdjustMsk=AdjustVA~=0;
+
+% Find Cluster
+CC=EstimateClustComp(AdjustMsk, OverlaySurf.CSizeOpt);
+CInd=CC.Index(VInd);
+if CInd==0
+    errordlg('Error when select region, please check which overlay file you select!');
+    return
+end
+AdjustMsk=CC.Index==CInd;
+
+Vertex=OverlaySurf.Vertex.*AdjustMsk;
+V=gifti;
+V.cdata=Vertex;
+save(V, OutFile);
+ExitCode=0;
 
 function UpdateOverlay(AxesObj, OverlayInd)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -839,7 +890,27 @@ delete(OverlaySurf.Obj);
 AxesHandle.OverlaySurf(OverlayInd)=[];
 setappdata(AxesObj, 'AxesHandle', AxesHandle)
 
-function Opt=ReportOverlayCluster(AxesObj, OverlayInd)
+function PrintClusterReport(ClusterInfo)
+fprintf('---------------------------Cluster Report---------------------------\n');
+for i=1:numel(ClusterInfo)
+    fprintf('\n');    
+    fprintf('Cluster %d', i);
+    fprintf('\tCluster Size (mm): %g', ClusterInfo{i}.ClusterSize);
+    fprintf('\tPeak Index: %g\n', ClusterInfo{i}.PeakInd);
+    fprintf('\tPeak Coord: X-%g, Y-%g, Z-%g]\n', ...
+        ClusterInfo{i}.PeakCoord(1), ClusterInfo{i}.PeakCoord(2), ClusterInfo{i}.PeakCoord(3));
+    fprintf('\tPeak Value: %g\n', ClusterInfo{i}.Peak);
+    
+    for j=1:size(ClusterInfo{i}.LabelProb, 1)
+        if j==1
+            fprintf('\tLabel Included:\n');
+        end
+        label_info=ClusterInfo{i}.LabelProb(j, :);
+        fprintf('\t\t[%d] %s, %g%%\n', label_info{1}, label_info{2}, label_info{3}*100);
+    end
+end
+
+function Opt=ReportOverlayCluster(AxesObj, OverlayInd, LabelInd)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 try
@@ -848,30 +919,56 @@ catch
     error('Invalid Overlay Index');
 end
 
-Vertex=OverlaySurf.Vertex;
-PMin=OverlaySurf.PosMin;
-NMin=OverlaySurf.NegMin;
-VMsk=OverlaySurf.VMsk;
-CSizeOpt=OverlaySurf.CSizeOpt;
+try
+    LabelSurf=AxesHandle.LabelSurf(LabelInd, 1);
+catch
+    LabelSurf=[];
+end
 
-% Adjust Threshold
-OMsk=(Vertex>PMin) | (Vertex<NMin);
-OMsk(Vertex==0)=0;
+AdjustMsk=AdjustVertexAlpha(OverlaySurf.Vertex, OverlaySurf.Alpha,...
+    OverlaySurf.ThresPN_Flag,...
+    OverlaySurf.NegMin, OverlaySurf.PosMin,...
+    OverlaySurf.VMsk, OverlaySurf.CSizeOpt);
 
-% Adjust Vertex Mask
-OMsk(~VMsk)=0;
-CC=EstimateClustComp(OMsk, CSizeOpt);
-Opt.Index=zeros(size(CC.Index));
-Opt.Size=[];
-x=1;
+CC=EstimateClustComp(AdjustMsk, OverlaySurf.CSizeOpt);
+
+if isempty(CC.Size)
+    Opt.ClusterInfo=[];
+    fprintf('No Cluster Found!\n');
+    return
+else
+    Opt.ClusterInfo=cell(numel(CC.Size), 1);
+end
+
 for i=1:max(CC.Index)
     OneInd=CC.Index==i;
-    if CC.Size(i, 1)>CSizeOpt.Thres
-        Opt.Index(OneInd)=x;
-        Opt.Size=[Opt.Size; CC.Size(i, 1)];
-        x=x+1;
-    end        
+    OneCluster=zeros(size(CC.Index));
+    OneCluster(OneInd)=OverlaySurf.Vertex(OneInd);
+    
+    [~, PeakInd]=max(abs(OneCluster));
+    Opt.ClusterInfo{i}.PeakInd=PeakInd;
+    Peak=OneCluster(PeakInd);
+    Opt.ClusterInfo{i}.Peak=Peak;
+    PeakCoord=OverlaySurf.CSizeOpt.StructData.vertices(PeakInd, :);
+    Opt.ClusterInfo{i}.PeakCoord=PeakCoord;
+    Opt.ClusterInfo{i}.ClusterSize=CC.Size(i, 1);
+
+    if isempty(LabelSurf)
+        Opt.ClusterInfo{i}.LabelProb=[];
+    else
+        LabelInOneInd=LabelSurf.LabelV(OneInd);
+        UInOneInd=unique(LabelInOneInd);
+        LabelProb=cell(numel(UInOneInd), 3);
+        LabelProb(:, 1)=num2cell(UInOneInd);
+        LabelProb(:, 2)=arrayfun(@(u) LabelSurf.LabelName{LabelSurf.LabelU==u}, UInOneInd,...
+            'UniformOutput', false);
+        for j=1:numel(UInOneInd)
+            LabelProb{j, 3}=sum(LabelInOneInd==UInOneInd(j))./length(LabelInOneInd);
+        end
+        Opt.ClusterInfo{i}.LabelProb=LabelProb;
+    end
 end
+PrintClusterReport(Opt.ClusterInfo);
 
 function ExitCode=AddOverlay(AxesObj, VarArgIn)
 ExitCode=1;
@@ -1040,6 +1137,11 @@ end
 VertexAlpha=Alpha.*VertexAlpha;
 
 function CC=EstimateClustComp(Msk, CSizeOpt)
+if all(Msk==0)
+    CC.Index=zeros(size(Msk));
+    CC.Size=[];
+    return
+end
 Msk=logical(Msk);
 CompInd=spm_mesh_clusters(CSizeOpt.StructData, Msk);
 CompInd(isnan(CompInd))=0;
@@ -1263,6 +1365,7 @@ if LabelNumV~=UnderNumV
 end
 
 LabelV=V.cdata;
+LabelU=unique(LabelV);
 if isfield(V, 'labels')
     LabelColor=V.labels.rgba(:, 1:3);
 else
@@ -1299,6 +1402,7 @@ LabelOpt.LabelFile=LabelFile;
 LabelOpt.LabelColor=LabelColor;
 LabelOpt.LabelName=V.labels.name;
 LabelOpt.LabelV=LabelV;
+LabelOpt.LabelU=LabelU;
 LabelOpt.IsShowZeros=IsShowZeros;
 LabelOpt.IsVisible=IsVisible;
 LabelOpt.Alpha=Alpha;
@@ -1494,7 +1598,10 @@ if isfield(AxesHandle, 'LabelSurf')
     [~, NameList, ExtList]=cellfun(@(f) fileparts(f), LabelFiles, 'UniformOutput', false);
     for i=1:numel(NameList)
         LabelKey=AxesHandle.LabelSurf(i).LabelV(VInd);
-        LabelName=AxesHandle.LabelSurf(i).LabelName{LabelKey};
+        LabelU=AxesHandle.LabelSurf(i).LabelU;
+        
+        Ind= LabelU==LabelKey;
+        LabelName=AxesHandle.LabelSurf(i).LabelName{Ind};
         LabelTxt=sprintf('Label %s: %g (%s)', ...
             NameList{i}, LabelKey, LabelName);
         Txt=[Txt, {LabelTxt}];

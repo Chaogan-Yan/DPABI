@@ -266,12 +266,16 @@ if ~isempty(OverlayFiles)
     set(Handles.OverlayPMaxEty, 'Enable', BtnState, 'String', num2str(Thres.PosMax));
     
     GuiData=Fcn.GetOverlayGuiData(OverlayInd);
-    set(Handles.OverlayThresNegSlider, 'Enable', BtnState, 'Value', 1-GuiData.OverlayNegRatio);
-    set(Handles.OverlayThresPosSlider, 'Enable', BtnState, 'Value', GuiData.OverlayPosRatio);
-    set(Handles.OverlayThresSyncBtn, 'Enable', BtnState, 'Value', GuiData.OverlayPosNegSync);
+    
     if GuiData.OverlayPosNegSync
+        set(Handles.OverlayThresNegSlider, 'Enable', 'Off', 'Value', 1);
+        set(Handles.OverlayThresPosSlider, 'Enable', BtnState, 'Value', GuiData.OverlayPosRatio);
+        set(Handles.OverlayThresSyncBtn, 'Enable', BtnState, 'Value', GuiData.OverlayPosNegSync);
         set(Handles.OverlayThresSyncBtn, 'BackgroundColor', [   1,    0,    0]);
     else
+        set(Handles.OverlayThresNegSlider, 'Enable', BtnState, 'Value', 1-GuiData.OverlayNegRatio);
+        set(Handles.OverlayThresPosSlider, 'Enable', BtnState, 'Value', GuiData.OverlayPosRatio);
+        set(Handles.OverlayThresSyncBtn, 'Enable', BtnState, 'Value', GuiData.OverlayPosNegSync);
         set(Handles.OverlayThresSyncBtn, 'BackgroundColor', [0.75, 0.75, 0.75]);
     end
     
@@ -817,7 +821,12 @@ if GuiData.OverlayPosNegSync
 
     Origin=Range./(1-GuiData.OverlayPosRatio);
     PosMin=Origin*NegRatio+(ThresOpt.PosMax-Origin);    
-    
+
+    if PosMin<1e-16
+        PosMin=0;
+    end
+
+
     PosRatio=NegRatio;    
     set(handles.OverlayThresPosSlider, 'Value', PosRatio);
     NegMin=-1*PosMin;
@@ -826,10 +835,15 @@ else
 
     Origin=Range./(1-GuiData.OverlayNegRatio);
     NegMin=(ThresOpt.NegMax+Origin)-Origin*NegRatio;
-    
+
+    if NegMin>-1e-16
+        NegMin=0;
+    end
+
     PosRatio=GuiData.OverlayPosRatio;
     PosMin=ThresOpt.PosMin;
 end
+
 Fcn.SetOverlayThres(OverlayInd, ThresOpt.NegMax, NegMin, PosMin, ThresOpt.PosMax);
 
 GuiData.OverlayPosRatio=PosRatio;
@@ -872,10 +886,17 @@ Range=ThresOpt.PosMax-ThresOpt.PosMin;
 
 Origin=Range./(1-GuiData.OverlayPosRatio);
 PosMin=Origin*PosRatio+(ThresOpt.PosMax-Origin);
+if PosMin<1e-8
+    PosMin=0;
+end
 if GuiData.OverlayPosNegSync
     NegRatio=PosRatio;    
     set(handles.OverlayThresNegSlider, 'Value', 1-NegRatio);
+
     NegMin=-1*PosMin;
+    if NegMin<ThresOpt.NegMax
+        NegMin=ThresOpt.NegMax;
+    end
 else
     NegRatio=GuiData.OverlayNegRatio;
     NegMin=ThresOpt.NegMin;
@@ -919,7 +940,11 @@ if GuiData.OverlayPosNegSync
     Fcn.SetOverlayGuiData(OverlayInd, GuiData);    
     
     Opt=Fcn.GetOverlayThres(OverlayInd);
-    Fcn.SetOverlayThres(OverlayInd, Opt.NegMax, -1*Opt.PosMin, Opt.PosMin, Opt.PosMax);
+    if -1*Opt.PosMin<Opt.NegMax
+        Fcn.SetOverlayThres(OverlayInd, Opt.NegMax, Opt.NegMax, Opt.PosMin, Opt.PosMax);
+    else
+        Fcn.SetOverlayThres(OverlayInd, Opt.NegMax, -1*Opt.PosMin, Opt.PosMin, Opt.PosMax);
+    end
 else
     GuiData.OverlayNegRatio=0;   
     GuiData.OverlayPosRatio=0;    
@@ -1020,6 +1045,7 @@ function OverlayFweOptBtn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 Fcn=handles.Fcn;
 OverlayInd=handles.OverlayInd;
+LabelInd=handles.LabelInd;
 
 Val=get(handles.OverlayFweOptBtn, 'Value');
 switch Val
@@ -1032,6 +1058,8 @@ switch Val
         else
             Fcn.SetOverlayClusterSizeOption(OverlayInd, Opt);
         end
+    case 3 % Cluster Report
+        Opt=Fcn.ReportOverlayCluster(OverlayInd, LabelInd);
 end
 
 % --- Executes on button press in OverlayTcBtn.
@@ -1062,6 +1090,22 @@ switch Val
         end
         OutFilePath=fullfile(Path, File);
         Fcn.SaveOverlayClusters(OverlayInd, OutFilePath);
+    case 3 % Save Current Cluster
+        DcObj=Fcn.GetDataCursorObj();
+        if strcmpi(get(DcObj, 'Enable'), 'off') % No DataCursor
+            errordlg('Please select a region first!');
+            return
+        end
+        
+        [File , Path]=uiputfile({'*.gii', 'All GIfTI Files (*.gii)';...
+            '*.shape.gii;*.func.gii','Vertex Metric (*.shape.gii;*.func.gii)';...
+            '*.*', 'All Files (*.*)';}, ...
+            'Pick Vertex Metric File' , pwd);
+        if isnumeric(File) && File==0
+            return
+        end
+        OutFilePath=fullfile(Path, File);
+        Fcn.SaveCurrentOverlayCluster(OverlayInd, OutFilePath);
 end
 
 % --- Executes on button press in OverlayRmBtn.
@@ -1171,7 +1215,11 @@ function LabelMenu_Callback(hObject, eventdata, handles)
 % hObject    handle to LabelMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+Fcn=handles.Fcn;
+LabelInd=get(handles.LabelMenu, 'Value');
+handles.LabelInd=LabelInd;
+guidata(hObject, handles);
+Fcn.SetLabel(LabelInd)
 % Hints: contents = cellstr(get(hObject,'String')) returns LabelMenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from LabelMenu
 
