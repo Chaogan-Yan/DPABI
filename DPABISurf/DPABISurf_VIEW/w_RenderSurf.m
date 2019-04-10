@@ -148,7 +148,7 @@ if isempty(CurUnderSurf)
     Fcn.GetOverlayGuiData=...
         @(OverlayInd) GetOverlayGuiData(AxesObj, OverlayInd);
     Fcn.SetOverlayGuiData=...
-        @(OverlayInd, GuiData) SetOverlayGuiData(AxesObj, OverlayInd, GuiData);      
+        @(OverlayInd, GuiData) SetOverlayGuiData(AxesObj, OverlayInd, GuiData);  
     Fcn.GetOverlayThresPN_Flag=...
         @(OverlayInd) GetOverlayThresPN_Flag(AxesObj, OverlayInd);
     Fcn.SetOverlayThresPN_Flag=...
@@ -193,6 +193,8 @@ if isempty(CurUnderSurf)
         @(varargin) SetBorder(AxesObj, varargin);
     Fcn.GetDataCursorObj=...
         @() GetDataCursorObj(AxesObj);
+    Fcn.SaveMontage=...
+        @(varargin) SaveMontage(AxesObj, varargin);
     
     AxesHandle.Fcn=Fcn;
     
@@ -576,7 +578,6 @@ catch
     error('Invalid Overlay Index');
 end
 Opt.ThresPN_Flag=OverlaySurf.ThresPN_Flag;
-
 
 function SetOverlayThresPN_Flag(AxesObj, OverlayInd, ThresPN_Flag)
 if nargin<3
@@ -1016,6 +1017,9 @@ end
 GuiData.OverlayNegRatio=0;
 GuiData.OverlayPosRatio=0;
 GuiData.OverlayPosNegSync=true;
+GuiData.VMskFile=[];
+GuiData.VMskThres=[];
+GuiData.VMskSignFlag='<';
 
 NumTP=size(AllVertices, 2);
 CurTP=1;
@@ -1606,4 +1610,58 @@ if isfield(AxesHandle, 'LabelSurf')
             NameList{i}, LabelKey, LabelName);
         Txt=[Txt, {LabelTxt}];
     end
+end
+
+function NewFig=SaveMontage(AxesObj, VarArgIn)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+ChildObj=get(AxesObj, 'Children');
+
+% Montage Style
+if numel(VarArgIn)==1
+    LR_Flag='L';
+else
+    LR_Flag=VarArgIn{1};
+end
+
+MontageOpt=[];
+MontageOpt.FigPos=[0, 0, 600, 800];
+MontageOpt.AxesPos{1}=[0, 0.5, 1, 0.5];
+MontageOpt.AxesPos{2}=[0,   0, 1, 0.5];
+if strcmpi(LR_Flag, 'L')
+    MontageOpt.VP{1}=[-90, 0];
+    MontageOpt.VP{2}=[ 90, 0];
+elseif strcmpi(LR_Flag, 'R')
+    MontageOpt.VP{1}=[ 90, 0];
+    MontageOpt.VP{2}=[-90, 0];
+end
+
+% New Figure
+NewFig=figure('Position', MontageOpt.FigPos, ...
+    'Units', 'normalized', 'Color', [1, 1, 1]);
+set(NewFig, 'Renderer', AxesHandle.SurfOpt.Renderer);
+
+NewAxes=cell(2, 1);
+for i=1:2
+    OneAxes=axes('Parent', NewFig, 'Position', MontageOpt.AxesPos{i});
+    axis(OneAxes, 'tight');
+    axis(OneAxes, 'vis3d');
+    axis(OneAxes, 'off');
+    for j=1:numel(ChildObj)
+        ChildTag=get(ChildObj(j), 'Tag');
+        if ~strcmpi(ChildTag, '')
+            copyobj(ChildObj(j), OneAxes);
+        end
+    end
+    view(OneAxes, MontageOpt.VP{i});
+    Light=camlight(AxesHandle.SurfOpt.LightOrient);
+    set(Light, 'Parent', OneAxes);
+    set(Light, 'style', 'infinite');
+    material(OneAxes, AxesHandle.SurfOpt.Material);
+
+    NewAxes{i}=OneAxes;
+end
+
+if numel(VarArgIn)>1 && ~isempty(VarArgIn{2}) % OutFile
+    OutFile=VarArgIn{2};
+    print(OutFile, '-dtiff', '-r300');
 end

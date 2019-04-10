@@ -1058,7 +1058,29 @@ switch Val
         else
             Fcn.SetOverlayClusterSizeOption(OverlayInd, Opt);
         end
-    case 3 % Cluster Report
+    case 3 % Apply A Vertex-Wise Mask
+        GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+        VMskFile=GuiData.VMskFile;
+        VMskThres=GuiData.VMskThres;
+        VMskSignFlag=GuiData.VMskSignFlag;
+        
+        Opt=Fcn.GetOverlayVertexMask(OverlayInd);
+        Opt.VMskFile=VMskFile;
+        Opt.VMskThres=VMskThres;
+        Opt.VMskSignFlag=VMskSignFlag;
+        
+        Opt=w_ApplyVertexMask(Opt);
+        if isempty(Opt)
+            return
+        end
+        
+        GuiData.VMskFile=Opt.VMskFile;
+        GuiData.VMskFile=Opt.VMskThres;
+        GuiData.VMskSignFlag=Opt.VMskSignFlag;
+        
+        Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+        Fcn.SetOverlayVertexMask(OverlayInd, Opt.VMsk);
+    case 4 % Cluster Report
         Opt=Fcn.ReportOverlayCluster(OverlayInd, LabelInd);
 end
 
