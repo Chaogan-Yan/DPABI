@@ -672,7 +672,7 @@ if (Cfg.IsCovremove==1) && ((strcmpi(Cfg.Covremove.Timing,'AfterNormalize'))&&(C
 end
 
 
-% Non-agressively regressed out the covariates of ICA-AROMA noises.
+% Non-aggressively regressed out the covariates of ICA-AROMA noises.
 if Cfg.NonAgressiveRegressICAAROMANoise==1
     for iFunSession=1:Cfg.FunctionalSessionNumber
         parfor i=1:Cfg.SubjectNum

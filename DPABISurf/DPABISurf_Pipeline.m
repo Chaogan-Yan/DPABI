@@ -1529,7 +1529,7 @@ uiwait(msgbox({'If you do not start with raw DICOM images, you need to specify t
     '';...
     'Abbreviations:';...
     'W - Normalize';...
-    'I - ICA-AROMA Noise non-aggresively regressed';...
+    'I - ICA-AROMA Noise non-aggressively regressed';...
     'C - Covariates Removed';...
     'S - Smooth';...
     'F - Filter';...
@@ -2037,11 +2037,15 @@ function [handles, CheckingPass]=CheckCfgParametersBeforeRun(handles)
                     StartIndex=3;
                 end
                 for i=StartIndex:length(Dir)
-                    handles.Cfg.SubjectID=[handles.Cfg.SubjectID;{Dir(i).name}];
+                    if Dir(i).isdir
+                        if ~strcmpi(Dir(i).name,'logs')
+                            handles.Cfg.SubjectID=[handles.Cfg.SubjectID;{Dir(i).name}];
+                        end
+                    end
                 end
             end
             
-            if (handles.Cfg.TimePoints)>0 % If the number of time points is not set at 0, then check the number of time points.
+            if (handles.Cfg.TimePoints)>0 && ~strcmpi(handles.Cfg.StartingDirName,'fmriprep') % If the number of time points is not set at 0, then check the number of time points.
                 if ~(strcmpi(handles.Cfg.StartingDirName,'T1Raw') || strcmpi(handles.Cfg.StartingDirName,'T1Img') || strcmpi(handles.Cfg.StartingDirName,'T1NiiGZ') ) %If not just use for VBM, check if the time points right. %YAN Chao-Gan, 111130. Also add T1 .nii.gz support.
                     
                     DirImg=dir([handles.Cfg.WorkingDir,filesep,handles.Cfg.StartingDirName,filesep,handles.Cfg.SubjectID{1},filesep,'*.gii']);
