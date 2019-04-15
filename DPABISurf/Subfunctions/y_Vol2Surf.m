@@ -47,9 +47,10 @@ else
     else
         CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/InPath -v %s:/OutPath cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), InPath, OutPath);
     end
-    Command = sprintf('%s mri_vol2surf --src %s --out %s --trgsubject %s --interp %s --hemi lh --mni152reg', CommandInit, fullfile('/InPath',[InfileN, Inextn]),fullfile('/OutPath',[OutfileN,'_lh',Outextn]),TargetSpace,interp);
+    
+    Command = sprintf('%s mri_vol2surf --src %s --out %s --trgsubject %s --interp %s --hemi lh --mni152reg', CommandInit, ['/InPath','/',[InfileN, Inextn]],['/OutPath','/',[OutfileN,'_lh',Outextn]],TargetSpace,interp);
     system(Command);
-    Command = sprintf('%s mri_vol2surf --src %s --out %s --trgsubject %s --interp %s --hemi rh --mni152reg', CommandInit, fullfile('/InPath',[InfileN, Inextn]),fullfile('/OutPath',[OutfileN,'_rh',Outextn]),TargetSpace,interp);
+    Command = sprintf('%s mri_vol2surf --src %s --out %s --trgsubject %s --interp %s --hemi rh --mni152reg', CommandInit, ['/InPath','/',[InfileN, Inextn]],['/OutPath','/',[OutfileN,'_rh',Outextn]],TargetSpace,interp);
     system(Command);
 end
 
