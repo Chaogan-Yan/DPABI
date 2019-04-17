@@ -1341,7 +1341,7 @@ if (~isempty(Cfg.CalFC.ROIDefVolu))
     % Check if the ROI mask is appropriate
     for iROI=1:length(SubjectROI)
         AMaskFilename=SubjectROI{iROI};
-        if exist(SubjectROI{iROI},'file')==2
+        if ischar(SubjectROI{iROI}) && exist(SubjectROI{iROI},'file')==2
             [pathstr, name, ext] = fileparts(SubjectROI{iROI});
             if (~strcmpi(ext, '.txt'))
                 [MaskData,MaskVox,MaskHeader]=y_ReadRPI(AMaskFilename);
