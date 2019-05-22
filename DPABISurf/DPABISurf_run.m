@@ -1011,18 +1011,18 @@ if (Cfg.IsCalALFF==1)
                 FileName=DirName(iFile).name;
                 [ALFFBrain, fALFFBrain, Header] = y_alff_falff_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName),TR, Cfg.CalALFF.ALowPass_HighCutoff, Cfg.CalALFF.AHighPass_LowCutoff, Cfg.MaskFileSurfLH, ...
                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii']});
-                % Get the m* files: divided by the mean within the mask
-                % and the z* files: substract by the mean and then divided by the std within the mask
-                BrainMaskData=gifti(Cfg.MaskFileSurfLH);
-                BrainMaskData=BrainMaskData.cdata;
-                Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'mALFF_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((ALFFBrain - mean(ALFFBrain(find(BrainMaskData)))) ./ std(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'mfALFF_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((fALFFBrain - mean(fALFFBrain(find(BrainMaskData)))) ./ std(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii']);
+%                 % Get the m* files: divided by the mean within the mask
+%                 % and the z* files: substract by the mean and then divided by the std within the mask
+%                 BrainMaskData=gifti(Cfg.MaskFileSurfLH);
+%                 BrainMaskData=BrainMaskData.cdata;
+%                 Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'mALFF_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((ALFFBrain - mean(ALFFBrain(find(BrainMaskData)))) ./ std(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'mfALFF_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((fALFFBrain - mean(fALFFBrain(find(BrainMaskData)))) ./ std(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii']);
             end
             
             % Right Hemi
@@ -1031,19 +1031,24 @@ if (Cfg.IsCalALFF==1)
                 FileName=DirName(iFile).name;
                 [ALFFBrain, fALFFBrain, Header] = y_alff_falff_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName),TR, Cfg.CalALFF.ALowPass_HighCutoff, Cfg.CalALFF.AHighPass_LowCutoff, Cfg.MaskFileSurfRH, ...
                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii']});
-                % Get the m* files: divided by the mean within the mask
-                % and the z* files: substract by the mean and then divided by the std within the mask
-                BrainMaskData=gifti(Cfg.MaskFileSurfRH);
-                BrainMaskData=BrainMaskData.cdata;
-                Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'mALFF_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((ALFFBrain - mean(ALFFBrain(find(BrainMaskData)))) ./ std(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'mfALFF_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((fALFFBrain - mean(fALFFBrain(find(BrainMaskData)))) ./ std(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii']);
+%                 % Get the m* files: divided by the mean within the mask
+%                 % and the z* files: substract by the mean and then divided by the std within the mask
+%                 BrainMaskData=gifti(Cfg.MaskFileSurfRH);
+%                 BrainMaskData=BrainMaskData.cdata;
+%                 Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'mALFF_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((ALFFBrain - mean(ALFFBrain(find(BrainMaskData)))) ./ std(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'mfALFF_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((fALFFBrain - mean(fALFFBrain(find(BrainMaskData)))) ./ std(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii']);
             end
+            
+            % ZStandardization for bilateral hemispheres % YAN Chao-Gan, 190522
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+
             
             % Volume
             if (Cfg.IsProcessVolumeSpace==1)
@@ -1058,12 +1063,12 @@ if (Cfg.IsCalALFF==1)
                 % and the z* files: substract by the mean and then divided by the std within the mask
                 if ~isempty(Cfg.MaskFileVolu) %Added by YAN Chao-Gan 130605. Skip if mask is not defined.
                     BrainMaskData=y_ReadRPI(Cfg.MaskFileVolu);
-                    Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                    y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ALFF_',Cfg.StartingDirName_Volume,filesep,'mALFF_',Cfg.SubjectID{i},'.nii']);
+%                     Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ALFF_',Cfg.StartingDirName_Volume,filesep,'mALFF_',Cfg.SubjectID{i},'.nii']);
                     Temp = ((ALFFBrain - mean(ALFFBrain(find(BrainMaskData)))) ./ std(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ALFF_',Cfg.StartingDirName_Volume,filesep,'zALFF_',Cfg.SubjectID{i},'.nii']);
-                    Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                    y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'fALFF_',Cfg.StartingDirName_Volume,filesep,'mfALFF_',Cfg.SubjectID{i},'.nii']);
+%                     Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'fALFF_',Cfg.StartingDirName_Volume,filesep,'mfALFF_',Cfg.SubjectID{i},'.nii']);
                     Temp = ((fALFFBrain - mean(fALFFBrain(find(BrainMaskData)))) ./ std(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'fALFF_',Cfg.StartingDirName_Volume,filesep,'zfALFF_',Cfg.SubjectID{i},'.nii']);
                 end
@@ -1186,14 +1191,14 @@ if (Cfg.IsCalReHo==1)
                     Cfg.CalReHo.SurfNNeighbor, Cfg.MaskFileSurfLH, ...
                     [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], ...
                     Cfg.SurfFileLH);
-                % Get the m* files: divided by the mean within the mask
-                % and the z* files: substract by the mean and then divided by the std within the mask
-                BrainMaskData=gifti(Cfg.MaskFileSurfLH);
-                BrainMaskData=BrainMaskData.cdata;
-                Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'mReHo_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((ReHoBrain - mean(ReHoBrain(find(BrainMaskData)))) ./ std(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii']);
+%                 % Get the m* files: divided by the mean within the mask
+%                 % and the z* files: substract by the mean and then divided by the std within the mask
+%                 BrainMaskData=gifti(Cfg.MaskFileSurfLH);
+%                 BrainMaskData=BrainMaskData.cdata;
+%                 Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'mReHo_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((ReHoBrain - mean(ReHoBrain(find(BrainMaskData)))) ./ std(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii']);
             end
             
             % Right Hemi
@@ -1204,15 +1209,19 @@ if (Cfg.IsCalReHo==1)
                     Cfg.CalReHo.SurfNNeighbor, Cfg.MaskFileSurfRH, ...
                     [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], ...
                     Cfg.SurfFileRH);
-                % Get the m* files: divided by the mean within the mask
-                % and the z* files: substract by the mean and then divided by the std within the mask
-                BrainMaskData=gifti(Cfg.MaskFileSurfRH);
-                BrainMaskData=BrainMaskData.cdata;
-                Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'mReHo_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((ReHoBrain - mean(ReHoBrain(find(BrainMaskData)))) ./ std(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii']);
+%                 % Get the m* files: divided by the mean within the mask
+%                 % and the z* files: substract by the mean and then divided by the std within the mask
+%                 BrainMaskData=gifti(Cfg.MaskFileSurfRH);
+%                 BrainMaskData=BrainMaskData.cdata;
+%                 Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'mReHo_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((ReHoBrain - mean(ReHoBrain(find(BrainMaskData)))) ./ std(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii']);
             end
+            
+            % ZStandardization for bilateral hemispheres % YAN Chao-Gan, 190522
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+            
             
             % Volume
             if (Cfg.IsProcessVolumeSpace==1)
@@ -1225,8 +1234,8 @@ if (Cfg.IsCalReHo==1)
                 % and the z* files: substract by the mean and then divided by the std within the mask
                 if ~isempty(Cfg.MaskFileVolu) %Added by YAN Chao-Gan 130605. Skip if mask is not defined.
                     BrainMaskData=y_ReadRPI(Cfg.MaskFileVolu);
-                    Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                    y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ReHo_',Cfg.StartingDirName_Volume,filesep,'mReHo_',Cfg.SubjectID{i},'.nii']);
+%                     Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ReHo_',Cfg.StartingDirName_Volume,filesep,'mReHo_',Cfg.SubjectID{i},'.nii']);
                     Temp = ((ReHoBrain - mean(ReHoBrain(find(BrainMaskData)))) ./ std(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ReHo_',Cfg.StartingDirName_Volume,filesep,'zReHo_',Cfg.SubjectID{i},'.nii']);
                 end
@@ -1246,51 +1255,69 @@ if (Cfg.IsCalDegreeCentrality==1)
         end
         parfor i=1:Cfg.SubjectNum
             % Degree Centrality Calculation
-            % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L.func.gii'));
-            for iFile=1:length(DirName)
-                FileName=DirName(iFile).name;
-                [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
-                    Cfg.CalDegreeCentrality.rThreshold, ...
-                    {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
-                    Cfg.MaskFileSurfLH);
-                % Get the m* files: divided by the mean within the mask
-                % and the z* files: substract by the mean and then divided by the std within the mask
-                BrainMaskData=gifti(Cfg.MaskFileSurfLH);
-                BrainMaskData=BrainMaskData.cdata;
-                Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((DegreeCentrality_PositiveWeightedSumBrain - mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
-                
-                Temp = (DegreeCentrality_PositiveBinarizedSumBrain ./ mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((DegreeCentrality_PositiveBinarizedSumBrain - mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
-             end
+%             % Left Hemi
+%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L.func.gii'));
+%             for iFile=1:length(DirName)
+%                 FileName=DirName(iFile).name;
+%                 [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
+%                     Cfg.CalDegreeCentrality.rThreshold, ...
+%                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
+%                     Cfg.MaskFileSurfLH);
+%                 % Get the m* files: divided by the mean within the mask
+%                 % and the z* files: substract by the mean and then divided by the std within the mask
+%                 BrainMaskData=gifti(Cfg.MaskFileSurfLH);
+%                 BrainMaskData=BrainMaskData.cdata;
+%                 Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((DegreeCentrality_PositiveWeightedSumBrain - mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
+%                 
+%                 Temp = (DegreeCentrality_PositiveBinarizedSumBrain ./ mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((DegreeCentrality_PositiveBinarizedSumBrain - mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
+%              end
+%             
+%             % Right Hemi
+%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R.func.gii'));
+%             for iFile=1:length(DirName)
+%                 FileName=DirName(iFile).name;
+%                 [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
+%                     Cfg.CalDegreeCentrality.rThreshold, ...
+%                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
+%                     Cfg.MaskFileSurfRH);
+%                 % Get the m* files: divided by the mean within the mask
+%                 % and the z* files: substract by the mean and then divided by the std within the mask
+%                 BrainMaskData=gifti(Cfg.MaskFileSurfRH);
+%                 BrainMaskData=BrainMaskData.cdata;
+%                 Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((DegreeCentrality_PositiveWeightedSumBrain - mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
+%                 
+%                 Temp = (DegreeCentrality_PositiveBinarizedSumBrain ./ mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
+%                 Temp = ((DegreeCentrality_PositiveBinarizedSumBrain - mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
+%             end
+%             
             
-            % Right Hemi
+            %Degree Centrality Calculation while consider bilateral hemishperes % YAN Chao-Gan, 190521
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L.func.gii'));
+            FileName_LH=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(1).name);
             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R.func.gii'));
-            for iFile=1:length(DirName)
-                FileName=DirName(iFile).name;
-                [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
-                    Cfg.CalDegreeCentrality.rThreshold, ...
-                    {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
-                    Cfg.MaskFileSurfRH);
-                % Get the m* files: divided by the mean within the mask
-                % and the z* files: substract by the mean and then divided by the std within the mask
-                BrainMaskData=gifti(Cfg.MaskFileSurfRH);
-                BrainMaskData=BrainMaskData.cdata;
-                Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((DegreeCentrality_PositiveWeightedSumBrain - mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
-                
-                Temp = (DegreeCentrality_PositiveBinarizedSumBrain ./ mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
-                Temp = ((DegreeCentrality_PositiveBinarizedSumBrain - mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
-            end
+            FileName_RH=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(1).name);
+            
+            y_DegreeCentrality_Bilateral_Surf(FileName_LH, FileName_RH, ...
+                Cfg.CalDegreeCentrality.rThreshold, ...
+                {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
+                {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
+                Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+            
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+            
+
 
             % Volume
             if (Cfg.IsProcessVolumeSpace==1)
@@ -1303,12 +1330,12 @@ if (Cfg.IsCalDegreeCentrality==1)
                 % and the z* files: substract by the mean and then divided by the std within the mask
                 if ~isempty(Cfg.MaskFileVolu) %Added by YAN Chao-Gan 130605. Skip if mask is not defined.
                     BrainMaskData=y_ReadRPI(Cfg.MaskFileVolu);
-                    Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                    y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'mDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.nii']);
+%                     Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'mDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.nii']);
                     Temp = ((DegreeCentrality_PositiveWeightedSumBrain - mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'zDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.nii']);
-                    Temp = (DegreeCentrality_PositiveBinarizedSumBrain ./ mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-                    y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'mDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.nii']);
+%                     Temp = (DegreeCentrality_PositiveBinarizedSumBrain ./ mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
+%                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'mDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.nii']);
                     Temp = ((DegreeCentrality_PositiveBinarizedSumBrain - mean(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveBinarizedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'zDegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.nii']);
                 end

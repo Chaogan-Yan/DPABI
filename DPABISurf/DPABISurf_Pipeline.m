@@ -979,7 +979,12 @@ function radiobuttonRigid6_Callback(hObject, eventdata, handles)
 % hObject    handle to radiobuttonRigid6 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Cfg.Covremove.HeadMotion = 1;
+%handles.Cfg.Covremove.HeadMotion = 1;
+if handles.Cfg.Covremove.HeadMotion~=1
+    handles.Cfg.Covremove.HeadMotion=1;
+else
+    handles.Cfg.Covremove.HeadMotion=0;
+end
 UpdateDisplay(handles);
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of radiobuttonRigid6
@@ -990,7 +995,12 @@ function radiobuttonDerivative12_Callback(hObject, eventdata, handles)
 % hObject    handle to radiobuttonDerivative12 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Cfg.Covremove.HeadMotion = 2;
+%handles.Cfg.Covremove.HeadMotion = 2;
+if handles.Cfg.Covremove.HeadMotion~=2
+    handles.Cfg.Covremove.HeadMotion=2;
+else
+    handles.Cfg.Covremove.HeadMotion=0;
+end
 UpdateDisplay(handles);
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of radiobuttonDerivative12
@@ -1001,7 +1011,12 @@ function radiobuttonFriston24_Callback(hObject, eventdata, handles)
 % hObject    handle to radiobuttonFriston24 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Cfg.Covremove.HeadMotion = 4;
+%handles.Cfg.Covremove.HeadMotion = 4;
+if handles.Cfg.Covremove.HeadMotion~=4
+    handles.Cfg.Covremove.HeadMotion=4;
+else
+    handles.Cfg.Covremove.HeadMotion=0;
+end
 UpdateDisplay(handles);
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of radiobuttonFriston24
@@ -1900,6 +1915,10 @@ function UpdateDisplay_NuisanceRegression(handles)
 set(handles.checkboxNuisanceRegression,'Value',handles.Cfg.IsCovremove);
 set(handles.editPolynomiaTrend,'String',handles.Cfg.Covremove.PolynomialTrend);
 switch handles.Cfg.Covremove.HeadMotion
+    case 0
+        set(handles.radiobuttonRigid6,'Value',0);
+        set(handles.radiobuttonDerivative12,'Value',0);
+        set(handles.radiobuttonFriston24,'Value',0);
     case 1
         set(handles.radiobuttonRigid6,'Value',1);
         set(handles.radiobuttonDerivative12,'Value',0);
