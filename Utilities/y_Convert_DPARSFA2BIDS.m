@@ -129,15 +129,15 @@ if Cfg.FunctionalSessionNumber>=2
             DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.img']);
             if ~isempty(DirImg)
                 [Data Header]=y_Read([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
-                y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-1_T1w.nii'])
+                y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'ses-',num2str(iT1Session),'_T1w.nii'])
             else
                 DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii.gz']);
                 if ~isempty(DirImg)
-                    copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-1_T1w.nii.gz'])
+                    copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'ses-',num2str(iT1Session),'_T1w.nii.gz'])
                 else
                     DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii']);
                     if ~isempty(DirImg)
-                        copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-1_T1w.nii'])
+                        copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'ses-',num2str(iT1Session),'_T1w.nii'])
                     end
                 end
             end
@@ -147,15 +147,15 @@ if Cfg.FunctionalSessionNumber>=2
                 DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.img']);
                 if ~isempty(DirImg)
                     [Data Header]=y_Read([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
-                    y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-1_T1w.nii'])
+                    y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'ses-',num2str(iT1Session),'_T1w.nii'])
                 else
                     DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
                     if ~isempty(DirImg)
-                        copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-1_T1w.nii.gz'])
+                        copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'ses-',num2str(iT1Session),'_T1w.nii.gz'])
                     else
                         DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
                         if ~isempty(DirImg)
-                            copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-1_T1w.nii'])
+                            copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'ses-',num2str(iT1Session),'_T1w.nii'])
                         end
                     end
                 end
