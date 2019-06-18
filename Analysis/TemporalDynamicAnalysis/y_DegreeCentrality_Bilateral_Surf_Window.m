@@ -85,7 +85,7 @@ AllVolume_LH=AllVolume_LH';
 AllVolume_LH=AllVolume_LH(:,MaskIndex_LH);
 AllVolume_RH=AllVolume_RH';
 AllVolume_RH=AllVolume_RH(:,MaskIndex_RH);
-AllVolume=cat(2,AllVolume_LH,AllVolume_RH);
+% AllVolume=cat(2,AllVolume_LH,AllVolume_RH);
 
 nWindow = fix((nDimTimePoints - WindowSize)/WindowStep) + 1;
 nDimTimePoints_WithinWindow = WindowSize;
@@ -98,16 +98,18 @@ if ischar(WindowType)
 end
 WindowMultiplier_LH = repmat(WindowType(:),1,size(AllVolume_LH,2));
 WindowMultiplier_RH = repmat(WindowType(:),1,size(AllVolume_RH,2));
+% WindowMultiplier = repmat(WindowType(:),1,size(AllVolume,2));
 
 
 for iWindow = 1:nWindow
     fprintf('\nProcessing window %g of total %g windows\n', iWindow, nWindow);
     
-    AllVolumeWindow_LH = AllVolume_LH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
-    AllVolumeWindow_LH = AllVolumeWindow_LH.*WindowMultiplier_LH;
-    AllVolumeWindow_RH = AllVolume_RH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
-    AllVolumeWindow_RH = AllVolumeWindow_RH.*WindowMultiplier_RH;
-    AllVolumeWindow=cat(2,AllVolumeWindow_LH,AllVolumeWindow_RH);
+%     AllVolumeWindow_LH = AllVolume_LH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
+%     AllVolumeWindow_LH = AllVolumeWindow_LH.*WindowMultiplier_LH;
+%     AllVolumeWindow_RH = AllVolume_RH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
+%     AllVolumeWindow_RH = AllVolumeWindow_RH.*WindowMultiplier_RH;
+%     AllVolumeWindow=cat(2,AllVolumeWindow_LH,AllVolumeWindow_RH);
+    AllVolumeWindow=cat(2,AllVolume_LH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:).*WindowMultiplier_LH,AllVolume_RH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:).*WindowMultiplier_RH);
 
     % ZeroMeanOneStd
     AllVolumeWindow = (AllVolumeWindow-repmat(mean(AllVolumeWindow),size(AllVolumeWindow,1),1))./repmat(std(AllVolumeWindow),size(AllVolumeWindow,1),1);   %Zero mean and one std
@@ -126,7 +128,7 @@ for iWindow = 1:nWindow
         if iCut~=CUTNUMBER
             Segment = (iCut-1)*SegmentLength+1 : iCut*SegmentLength;
         else
-        Segment = (iCut-1)*SegmentLength+1 : size(AllVolume,2);
+        Segment = (iCut-1)*SegmentLength+1 : size(AllVolumeWindow,2);
         end
     
         FC_Segment = AllVolumeWindow(:,Segment)'*AllVolumeWindow/(nDimTimePoints_WithinWindow-1);
