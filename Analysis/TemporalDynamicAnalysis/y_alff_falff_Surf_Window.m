@@ -1,9 +1,9 @@
-function [ALFFBrain, fALFFBrain, GHeader] = y_alff_falff_Surf_Window(WindowSize, WindowStep, WindowType,InFile,ASamplePeriod, HighCutoff, LowCutoff, AMaskFilename, AResultFilename, CUTNUMBER)
+function [ALFFBrain_AllWindow, fALFFBrain_AllWindow, GHeader] = y_alff_falff_Surf_Window(WindowSize, WindowStep, WindowType,InFile,ASamplePeriod, HighCutoff, LowCutoff, AMaskFilename, AResultFilename, CUTNUMBER)
 % Use dynamic ALFF method to compute the brain and return a ALFF brain map which reflects the "energy" of the voxels' BOLD signal
 % Ref: Zang, Y.F., He, Y., Zhu, C.Z., Cao, Q.J., Sui, M.Q., Liang, M., Tian, L.X., Jiang, T.Z., Wang, Y.F., 2007. Altered baseline brain activity in children with ADHD revealed by resting-state functional MRI. Brain Dev 29, 83-91.
 % And also output the fractional ALFF (fALFF) results.
 % Ref: Zou QH, Zhu CZ, Yang Y, Zuo XN, Long XY, Cao QJ, Wang YF, Zang YF (2008) An improved approach to detection of amplitude of low-frequency fluctuation (ALFF) for resting-state fMRI: fractional ALFF. Journal of neuroscience methods 172:137-141.
-% FORMAT    [ALFFBrain, fALFFBrain, OutHeader] = y_alff_falff_Surf(InFile,ASamplePeriod, HighCutoff, LowCutoff, AMaskFilename, AResultFilename, CUTNUMBER)
+% FORMAT    [ALFFBrain_AllWindow, fALFFBrain_AllWindow, GHeader] = y_alff_falff_Surf_Window(WindowSize, WindowStep, WindowType,InFile,ASamplePeriod, HighCutoff, LowCutoff, AMaskFilename, AResultFilename, CUTNUMBER)
 % Input:
 %   WindowSize      -   the size of the sliding window
 %   WindowStep      -   the step size
@@ -19,13 +19,13 @@ function [ALFFBrain, fALFFBrain, GHeader] = y_alff_falff_Surf_Window(WindowSize,
 %   CUTNUMBER           Cut the data into pieces if small RAM memory e.g. 4GB is available on PC. It can be set to 1 on server with big memory (e.g., 50GB).
 %                       default: 10
 % Output:
-%	ALFFBrain       -   The ALFF results of the windows
-%   fALFFBrain      -   The fALFF results of the windows
+%	ALFFBrain_AllWindow       -   The ALFF results of the windows
+%   fALFFBrain_AllWindow      -   The fALFF results of the windows
 %   GHeader         -   The GIfTI Header
 %	AResultFilename	the filename of ALFF and fALFF results.
 %-----------------------------------------------------------
-% Inherited from y_alff_falff.m
-% Revised by YAN Chao-Gan 181117.
+% Inherited from y_alff_falff_Window.m
+% Revised by YAN Chao-Gan 190625.
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 

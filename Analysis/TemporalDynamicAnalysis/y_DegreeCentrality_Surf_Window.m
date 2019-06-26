@@ -1,8 +1,6 @@
 function [DegreeCentrality_PositiveWeightedSum_AllWindow, DegreeCentrality_PositiveBinarizedSum_AllWindow, GHeader] = y_DegreeCentrality_Surf_Window(WindowSize, WindowStep, WindowType, InFile, rThreshold, OutputName, AMaskFilename, CUTNUMBER)
-% [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, OutHeader] = y_DegreeCentrality_Surf(InFile, rThreshold, OutputName, AMaskFilename, CUTNUMBER)
-% Calculate Degree Centrality
-% Ref: Buckner, R.L., Sepulcre, J., Talukdar, T., Krienen, F.M., Liu, H., Hedden, T., Andrews-Hanna, J.R., Sperling, R.A., Johnson, K.A., 2009. Cortical hubs revealed by intrinsic functional connectivity: mapping, assessment of stability, and relation to Alzheimer's disease. J Neurosci 29, 1860-1873.
-%      Zuo, X.N., Ehmke, R., Mennes, M., Imperati, D., Castellanos, F.X., Sporns, O., Milham, M.P., 2012. Network Centrality in the Human Functional Connectome. Cereb Cortex 22, 1862-1875.
+% [DegreeCentrality_PositiveWeightedSum_AllWindow, DegreeCentrality_PositiveBinarizedSum_AllWindow, GHeader] = y_DegreeCentrality_Surf_Window(WindowSize, WindowStep, WindowType, InFile, rThreshold, OutputName, AMaskFilename, CUTNUMBER)
+% Calculate Dynamic Degree Centrality
 % Input:
 %   WindowSize      -   the size of the sliding window
 %   WindowStep      -   the step size
@@ -16,13 +14,13 @@ function [DegreeCentrality_PositiveWeightedSum_AllWindow, DegreeCentrality_Posit
 %   CUTNUMBER       -   Cut the data into pieces if small RAM memory e.g. 4GB is available on PC. It can be set to 1 on server with big memory (e.g., 50GB).
 %                       default: 10
 % Output:
-%	DegreeCentrality_PositiveWeightedSumBrain       -   The Degree Centrality results Weighted sum of those r with r > rThreshold
-%	DegreeCentrality_PositiveBinarizedSumBrain      -   The Degree Centrality results Binarized sum of those r with r > rThreshold (i.e., count the number of r > rThreshold)
+%	DegreeCentrality_PositiveWeightedSumBrain_AllWindow       -   The Degree Centrality results Weighted sum of those r with r > rThreshold
+%	DegreeCentrality_PositiveBinarizedSumBrain_AllWindow      -   The Degree Centrality results Binarized sum of those r with r > rThreshold (i.e., count the number of r > rThreshold)
 %   GHeader         -   The GIfTI Header
 %   The Degree Centrality image will be output as where OutputName specified.
 %-----------------------------------------------------------
 % Inherited from y_DegreeCentrality_Surf.m
-% Revised by YAN Chao-Gan 181119.
+% Revised by YAN Chao-Gan 190625.
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 

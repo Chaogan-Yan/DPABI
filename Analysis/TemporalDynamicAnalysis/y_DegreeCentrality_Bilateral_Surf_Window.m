@@ -1,6 +1,6 @@
 function [DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow, DegreeCentrality_PositiveWeightedSumBrain_RH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_LH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_RH_AllWindow, GHeader_LH, GHeader_RH] = y_DegreeCentrality_Bilateral_Surf_Window(WindowSize, WindowStep, WindowType, InFile_LH, InFile_RH, rThreshold, OutputName_LH, OutputName_RH, AMaskFilename_LH, AMaskFilename_RH, CUTNUMBER)
-% [DegreeCentrality_PositiveWeightedSumBrain_LH, DegreeCentrality_PositiveWeightedSumBrain_RH, DegreeCentrality_PositiveBinarizedSumBrain_LH, DegreeCentrality_PositiveBinarizedSumBrain_RH, GHeader_LH, GHeader_RH] = y_DegreeCentrality_Bilateral_Surf(InFile_LH, InFile_RH, rThreshold, OutputName_LH, OutputName_RH, AMaskFilename_LH, AMaskFilename_RH, CUTNUMBER)
-% Calculate Degree Centrality for Bilateral Hemishperes
+% [DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow, DegreeCentrality_PositiveWeightedSumBrain_RH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_LH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_RH_AllWindow, GHeader_LH, GHeader_RH] = y_DegreeCentrality_Bilateral_Surf_Window(WindowSize, WindowStep, WindowType, InFile_LH, InFile_RH, rThreshold, OutputName_LH, OutputName_RH, AMaskFilename_LH, AMaskFilename_RH, CUTNUMBER)
+% Calculate Dynamic Degree Centrality for Bilateral Hemishperes
 % Ref: Buckner, R.L., Sepulcre, J., Talukdar, T., Krienen, F.M., Liu, H., Hedden, T., Andrews-Hanna, J.R., Sperling, R.A., Johnson, K.A., 2009. Cortical hubs revealed by intrinsic functional connectivity: mapping, assessment of stability, and relation to Alzheimer's disease. J Neurosci 29, 1860-1873.
 %      Zuo, X.N., Ehmke, R., Mennes, M., Imperati, D., Castellanos, F.X., Sporns, O., Milham, M.P., 2012. Network Centrality in the Human Functional Connectome. Cereb Cortex 22, 1862-1875.
 % Input:
@@ -21,16 +21,16 @@ function [DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow, DegreeCentrali
 %   CUTNUMBER       -   Cut the data into pieces if small RAM memory e.g. 4GB is available on PC. It can be set to 1 on server with big memory (e.g., 50GB).
 %                       default: 10
 % Output:
-%	DegreeCentrality_PositiveWeightedSumBrain_LH       -   The Degree Centrality results Weighted sum of those r with r > rThreshold, for left hemishpere
-%	DegreeCentrality_PositiveWeightedSumBrain_RH       -   The Degree Centrality results Weighted sum of those r with r > rThreshold, for right hemishpere
-%	DegreeCentrality_PositiveBinarizedSumBrain_LH      -   The Degree Centrality results Binarized sum of those r with r > rThreshold (i.e., count the number of r > rThreshold), for left hemishpere
-%	DegreeCentrality_PositiveBinarizedSumBrain_RH      -   The Degree Centrality results Binarized sum of those r with r > rThreshold (i.e., count the number of r > rThreshold), for right hemishpere
+%	DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow       -   The Dynamic Degree Centrality results Weighted sum of those r with r > rThreshold, for left hemishpere
+%	DegreeCentrality_PositiveWeightedSumBrain_RH_AllWindow       -   The Dynamic Degree Centrality results Weighted sum of those r with r > rThreshold, for right hemishpere
+%	DegreeCentrality_PositiveBinarizedSumBrain_LH_AllWindow      -   The Dynamic Degree Centrality results Binarized sum of those r with r > rThreshold (i.e., count the number of r > rThreshold), for left hemishpere
+%	DegreeCentrality_PositiveBinarizedSumBrain_RH_AllWindow      -   The Dynamic Degree Centrality results Binarized sum of those r with r > rThreshold (i.e., count the number of r > rThreshold), for right hemishpere
 %   GHeader_LH         -   The GIfTI Header for for left hemishpere
 %   GHeader_RH         -   The GIfTI Header for for right hemishpere
 %   The Degree Centrality image will be output as where OutputName specified.
 %-----------------------------------------------------------
-% Inherited from y_DegreeCentrality_Surf.m
-% Revised by YAN Chao-Gan 190521.
+% Inherited from y_DegreeCentrality_Bilateral_Surf.m
+% Revised by YAN Chao-Gan 190625.
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 
@@ -85,7 +85,6 @@ AllVolume_LH=AllVolume_LH';
 AllVolume_LH=AllVolume_LH(:,MaskIndex_LH);
 AllVolume_RH=AllVolume_RH';
 AllVolume_RH=AllVolume_RH(:,MaskIndex_RH);
-% AllVolume=cat(2,AllVolume_LH,AllVolume_RH);
 
 nWindow = fix((nDimTimePoints - WindowSize)/WindowStep) + 1;
 nDimTimePoints_WithinWindow = WindowSize;
@@ -158,6 +157,7 @@ for iWindow = 1:nWindow
     DegreeCentrality_PositiveBinarizedSumBrain_RH(MaskIndex_RH,1) = DegreeCentrality_PositiveBinarizedSum(length(MaskIndex_LH)+1:end);
     DegreeCentrality_PositiveBinarizedSumBrain_LH=DegreeCentrality_PositiveBinarizedSumBrain_LH';
     DegreeCentrality_PositiveBinarizedSumBrain_RH=DegreeCentrality_PositiveBinarizedSumBrain_RH';
+    
     DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow(:,iWindow) = DegreeCentrality_PositiveWeightedSumBrain_LH;
     DegreeCentrality_PositiveBinarizedSumBrain_LH_AllWindow(:,iWindow) = DegreeCentrality_PositiveBinarizedSumBrain_LH;
     DegreeCentrality_PositiveWeightedSumBrain_RH_AllWindow(:,iWindow) = DegreeCentrality_PositiveWeightedSumBrain_RH;
