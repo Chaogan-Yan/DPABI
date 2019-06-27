@@ -1,5 +1,5 @@
-function [FCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, GHeader, CUTNUMBER)
-% [FCBrain, GHeader] = y_SCA_Surf(AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, GHeader, CUTNUMBER)
+function [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, GHeader, CUTNUMBER)
+% [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, GHeader, CUTNUMBER)
 % Calculate Dynamic Functional Connectivity by Seed based Correlation Anlyasis
 % Input:
 %   WindowSize      -   the size of the sliding window
@@ -20,12 +20,13 @@ function [FCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep
 %   CUTNUMBER       -   Cut the data into pieces if small RAM memory e.g. 4GB is available on PC. It can be set to 1 on server with big memory (e.g., 50GB).
 %                       default: 10
 % Output:
-%	FCBrain         -   the FC of the final ROI (Only Use it correctly with only one seed)
+%	FCBrain_AllWindow         -   the FC of the ROIs (Only Use it correctly with only one seed)
+%	zFCBrain_AllWindow         -   the FC of the ROIs after Fisher's r to z transformation
 %   GHeader         -   The GIfTI Header
 %   All the FC images will be output as where OutputName specified.
 %-----------------------------------------------------------
-% Inherited from y_SCA.m
-% Revised by YAN Chao-Gan 181127.
+% Inherited from y_SCA_Window.m
+% Revised by YAN Chao-Gan 190625.
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 
@@ -102,7 +103,7 @@ for iROI=1:length(ROIDef)
             if ~strcmpi(int2str(size(MaskROI)),int2str([nDimVertex 1]))
                 error(sprintf('\n\tMask does not match.\n\tMask size is %dx%d, not same with required size %dx%d',size(MaskROI), [nDimVertex 1]));
             end
-
+            
             MaskROIName{iROI} = ROIDef{iROI};
         else
             error(sprintf('Wrong ROI file type, please check: \n%s', ROIDef{iROI}));
@@ -111,7 +112,7 @@ for iROI=1:length(ROIDef)
     else
         error(sprintf('File doesn''t exist or wrong ROI definition, please check: %s.\n', ROIDef{iROI}));
     end
-
+    
     if ~IsDefinedROITimeCourse
         % Speed up! YAN Chao-Gan 101010.
         MaskROI=reshape(MaskROI,1,[]);
@@ -190,36 +191,36 @@ for iWindow = 1:nWindow
     
     SeedSeriesWindow = SeedSeries((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
     SeedSeriesWindow = SeedSeriesWindow.*repmat(WindowType(:),1,size(SeedSeriesWindow,2));
-
-
-% FC calculation
+    
+    
+    % FC calculation
     AllVolumeWindow = AllVolumeWindow-repmat(mean(AllVolumeWindow),size(AllVolumeWindow,1),1);
     AllVolumeSTD= squeeze(std(AllVolumeWindow, 0, 1));
     AllVolumeSTD(find(AllVolumeSTD==0))=inf;
-
+    
     SeedSeriesWindow=SeedSeriesWindow-repmat(mean(SeedSeriesWindow),size(SeedSeriesWindow,1),1);
     SeedSeriesSTD=squeeze(std(SeedSeriesWindow,0,1));
-
-
-    for iROI=1:size(SeedSeriesWindow,2)
     
+    
+    for iROI=1:size(SeedSeriesWindow,2)
+        
         FC=SeedSeriesWindow(:,iROI)'*AllVolumeWindow/(WindowSize-1);
         FC=(FC./AllVolumeSTD)/SeedSeriesSTD(iROI);
-
-    % Get the brain back
+        
+        % Get the brain back
         FCBrain = zeros(size(MaskDataOneDim));
         FCBrain(1,MaskIndex) = FC;
         FCBrain = FCBrain';
-
-    %Also produce the results after Fisher's r to z transformation
+        
+        %Also produce the results after Fisher's r to z transformation
         FCBrain(find(FCBrain>0.999999999))=0.999999999; %Prevent outliers
         FCBrain(find(FCBrain<-0.999999999))=-0.999999999;
         zFCBrain = (0.5 * log((1 + FCBrain)./(1 - FCBrain))) .* (MaskData~=0);
-    
+        
         FCBrain_AllWindow(:,iWindow,iROI) = FCBrain;
         zFCBrain_AllWindow(:,iWindow,iROI) = zFCBrain;
-
-    
+        
+        
     end
 end
 

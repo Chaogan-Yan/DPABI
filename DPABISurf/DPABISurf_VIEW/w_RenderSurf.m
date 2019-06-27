@@ -35,6 +35,7 @@ end
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 FigObj=ancestor(AxesObj, 'figure');
 set(FigObj, 'Renderer', SurfOpt.Renderer);
+set(FigObj, 'Tag', 'DPABISurf_VIEW')
 %set(FigObj, 'Color', SurfOpt.BackGroundColor);
 
 V=gifti(SurfFile);
@@ -99,6 +100,7 @@ if isempty(CurUnderSurf)
     AxesHandle.UnderSurf.Curv=spm_mesh_curvature(P);
     AxesHandle.UnderSurf.IsShowTexture=0;
     AxesHandle.UnderSurf.CCLabel=spm_mesh_label(P);
+    AxesHandle.UnderSurf.IsYoked=false;
     
     AxesHandle.SurfOpt=SurfOpt;
     
@@ -113,6 +115,10 @@ if isempty(CurUnderSurf)
         @() GetViewPoint(AxesObj);
     Fcn.SetViewPoint=...
         @(ViewPoint) SetViewPoint(AxesObj, ViewPoint);
+    Fcn.GetYokedFlag=...
+        @() GetYokedFlag(AxesObj);
+    Fcn.SetYokedFlag=...
+        @(IsYoked) SetYokedFlag(AxesObj, IsYoked);    
     Fcn.GetViewPointCustomFlag=...
         @() GetViewPointCustomFlag(AxesObj);
     Fcn.SetViewPointCustomFlag=...
@@ -195,6 +201,10 @@ if isempty(CurUnderSurf)
         @() GetDataCursorObj(AxesObj);
     Fcn.SaveMontage=...
         @(varargin) SaveMontage(AxesObj, varargin);
+    Fcn.GetDataCursorPos=...
+        @() GetDataCursorPos(AxesObj);
+    Fcn.MoveDataCursor=...
+        @(Pos) MoveDataCursor(AxesObj, Pos);
     
     AxesHandle.Fcn=Fcn;
     
@@ -263,7 +273,7 @@ camlight(AxesHandle.Light, AxesHandle.SurfOpt.LightOrient);
 set(AxesHandle.Light, 'style', 'infinite');
 [X, Y]=view(gca);
 AxesHandle.SurfOpt.ViewPoint=[X, Y];
-setappdata(gca, 'AxesHandle', AxesHandle)
+setappdata(gca, 'AxesHandle', AxesHandle);
 
 SetViewPointCustomFlag(gca, 1);
 FigHandle=guidata(gca);
@@ -292,7 +302,7 @@ set(FigObj, 'Renderer', SurfOpt.Renderer);
 set(FigObj, 'Color', SurfOpt.BackGroundColor);
 
 AxesHandle.SurfOpt=SurfOpt;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
 function DcObj=GetDataCursorObj(AxesObj)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -309,7 +319,17 @@ camlight(AxesHandle.Light, AxesHandle.SurfOpt.LightOrient);
 set(AxesHandle.Light, 'style', 'infinite');
 
 AxesHandle.SurfOpt.ViewPoint=ViewPoint;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
+
+function Opt=GetYokedFlag(AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Opt.IsYoked=AxesHandle.UnderSurf.IsYoked;
+
+function SetYokedFlag(AxesObj, IsYoked)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+
+AxesHandle.UnderSurf.IsYoked=IsYoked;
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
 function Opt=GetViewPointCustomFlag(AxesObj)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -319,7 +339,7 @@ function SetViewPointCustomFlag(AxesObj, CustomFlag)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 AxesHandle.SurfOpt.ViewPointCustomFlag=CustomFlag;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
 function IsShowTexture=GetDisplayTextureFlag(AxesObj)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -328,7 +348,7 @@ IsShowTexture=AxesHandle.UnderSurf.IsShowTexture;
 function SetDisplayTextureFlag(AxesObj, IsShowTexture)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 AxesHandle.UnderSurf.IsShowTexture=IsShowTexture;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 DisplayTexture(AxesObj);
 
 function DisplayTexture(AxesObj)
@@ -401,7 +421,7 @@ AxesHandle.Border.BorderFile=BorderFile;
 AxesHandle.Border.Obj=PatchObj;
 AxesHandle.Border.IsVis=IsVis;
 
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 set(PatchObj, 'Visible', IsVis);
 
 function ExitCode=SaveOverlayClusters(AxesObj, OverlayInd, OutFile)
@@ -499,7 +519,7 @@ colormap(AdjustCM);
 CbObj=colorbar('Units', 'normalized', 'Position', [0.91, 0.05, 0.02, 0.9]);
 set(CbObj, 'YTick', Ticks, 'YTickLabel', TickLabel);
 
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
 function OverlayFiles=GetOverlayFiles(AxesObj)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -532,7 +552,7 @@ for a=1:numel(AllObjs)
 end
 
 AxesHandle.OverlaySurf=AxesHandle.OverlaySurf(OverlayOrder);
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 set(AxesObj, 'Children', AllObjs)
 
 function Opt=GetOverlayThres(AxesObj, OverlayInd)
@@ -566,7 +586,7 @@ OverlaySurf.PosMin=PMin;
 OverlaySurf.PosMax=PMax;
 
 AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 UpdateOverlay(AxesObj, OverlayInd);
 
 function Opt=GetOverlayThresPN_Flag(AxesObj, OverlayInd)
@@ -594,7 +614,7 @@ end
 OverlaySurf.ThresPN_Flag=ThresPN_Flag;
 
 AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 UpdateOverlay(AxesObj, OverlayInd);
 
 function Opt=GetOverlayVertexMask(AxesObj, OverlayInd)
@@ -625,7 +645,7 @@ end
 OverlaySurf.VMsk=VMsk;
 
 AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 UpdateOverlay(AxesObj, OverlayInd)
 
 function Opt=GetOverlayColorMap(AxesObj, OverlayInd)
@@ -672,7 +692,7 @@ OverlaySurf.ColorMap=ColorMap;
 OverlaySurf.PN_Flag=PN_Flag;
 
 AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 UpdateOverlay(AxesObj, OverlayInd);
 
 function Opt=GetOverlayClusterSizeOption(AxesObj, OverlayInd)
@@ -699,7 +719,7 @@ end
 OverlaySurf.CSizeOpt=CSizeOpt;
 
 AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 UpdateOverlay(AxesObj, OverlayInd);
 
 function Opt=GetOverlayStatOption(AxesObj, OverlayInd)
@@ -726,7 +746,7 @@ end
 OverlaySurf.StatOpt=StatOpt;
 
 AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
 function Opt=GetOverlayPThres(AxesObj, OverlayInd)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -812,7 +832,7 @@ end
 OverlaySurf.Alpha=Alpha;
 
 AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 UpdateOverlay(AxesObj, OverlayInd);
 
 function Opt=GetOverlayGuiData(AxesObj, OverlayInd)
@@ -839,7 +859,7 @@ end
 OverlaySurf.GuiData=GuiData;
 
 AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 UpdateOverlay(AxesObj, OverlayInd);
 
 
@@ -872,7 +892,7 @@ OverlaySurf.CurTP=TP;
 OverlaySurf.Vertex=OverlaySurf.AllVertices(:, TP);
 
 AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 UpdateOverlay(AxesObj, OverlayInd);
 
 function RemoveOverlay(AxesObj, OverlayInd)
@@ -889,7 +909,7 @@ catch
 end
 delete(OverlaySurf.Obj);
 AxesHandle.OverlaySurf(OverlayInd)=[];
-setappdata(AxesObj, 'AxesHandle', AxesHandle)
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
 function PrintClusterReport(ClusterInfo)
 fprintf('---------------------------Cluster Report---------------------------\n');
@@ -1665,3 +1685,22 @@ if numel(VarArgIn)>1 && ~isempty(VarArgIn{2}) % OutFile
     OutFile=VarArgIn{2};
     print(OutFile, '-dtiff', '-r300');
 end
+
+function Opt=GetDataCursorPos(AxesObj)
+DataCursorObj=GetDataCursorObj(AxesObj);
+CursorInfo=DataCursorObj.getCursorInfo();
+if isempty(CursorInfo)
+    Opt.Pos=[];
+else
+    Opt.Pos=CursorInfo.Position;
+end
+
+function MoveDataCursor(AxesObj, Pos)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+DataCursorObj=GetDataCursorObj(AxesObj);
+
+UnderSurf=AxesHandle.UnderSurf;
+set(DataCursorObj, 'Enable', 'On');
+DataCursorObj.removeAllDataCursors();
+DataTipObj=DataCursorObj.createDatatip(UnderSurf.Obj);
+set(DataTipObj, 'Position', Pos);

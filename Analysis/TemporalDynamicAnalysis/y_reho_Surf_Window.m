@@ -1,6 +1,6 @@
-function [ReHoBrain, GHeader] = y_reho_Surf_Window(WindowSize, WindowStep, WindowType,InFile, NNeighbor, AMaskFilename, AResultFilename, SurfFile, CUTNUMBER)
-% Calculate regional homogeneity (i.e. ReHo) from the 2D surface brain 
-% FORMAT     [ReHoBrain, OutHeader] = y_reho_Surf(InFile, NNeighbor, AMaskFilename, AResultFilename, SurfFile, CUTNUMBER)
+function [ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(WindowSize, WindowStep, WindowType,InFile, NNeighbor, AMaskFilename, AResultFilename, SurfFile, CUTNUMBER)
+% Calculate dynamic regional homogeneity (i.e. ReHo) from the 2D surface brain
+% FORMAT     [ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(WindowSize, WindowStep, WindowType,InFile, NNeighbor, AMaskFilename, AResultFilename, SurfFile, CUTNUMBER)
 % Input:
 %   WindowSize      -   the size of the sliding window
 %   WindowStep      -   the step size
@@ -13,12 +13,12 @@ function [ReHoBrain, GHeader] = y_reho_Surf_Window(WindowSize, WindowStep, Windo
 %   CUTNUMBER       -   Cut the data into pieces if small RAM memory e.g. 4GB is available on PC. It can be set to 1 on server with big memory (e.g., 50GB).
 %                       default: 10
 % Output:
-%	ReHoBrain       -   The ReHo results
+%	ReHoBrain_AllWindow       -   The ReHo results of the windows
 %   GHeader         -   The GIfTI Header
 %	AResultFilename	the filename of ReHo result
 %-----------------------------------------------------------
-% Inherited from y_reho.m
-% Revised by YAN Chao-Gan 181119.
+% Inherited from y_reho_Window.m
+% Revised by YAN Chao-Gan 190625.
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 
@@ -31,7 +31,7 @@ theElapsedTime =cputime;
 % Examine the NNeighbor
 % --------------------------------------------------------------------------
 if NNeighbor ~= 1 & NNeighbor ~= 2
-    error('The number of vertex neighbor should be 1 or 2. Please re-exmamin it.');
+    error('The number of vertex neighbor should be 1 or 2. Please re-examine it.');
 end
 
 fprintf('\nComputing ReHo...\n');
@@ -42,7 +42,7 @@ AllVolume=GHeader.cdata;
 
 %Get the neighbors (algorithm written by Xi-Nian Zuo at IPCAS)
 Surf = gifti(SurfFile);
-edge = spm_mesh_adjacency(Surf); 
+edge = spm_mesh_adjacency(Surf);
 edge2 = edge^2; %length-two paths
 edge12 = edge + edge2;
 nbrs = cell(nDimVertex,1) ; nbrs2 = cell(nDimVertex,1);
@@ -81,11 +81,11 @@ for iWindow = 1:nWindow
     
     AllVolumeWindow = AllVolume((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
     AllVolumeWindow = AllVolumeWindow.*WindowMultiplier;
-% Calcualte the rank
+    % Calcualte the rank
     fprintf('\n\t Rank calculating...\n');
-
+    
     Ranks_AllVolume = repmat(zeros(1,size(AllVolumeWindow,2)), [size(AllVolumeWindow,1), 1]);
-
+    
     SegmentLength = ceil(size(AllVolumeWindow,2) / CUTNUMBER);
     for iCut=1:CUTNUMBER
         if iCut~=CUTNUMBER
@@ -93,17 +93,17 @@ for iWindow = 1:nWindow
         else
             Segment = (iCut-1)*SegmentLength+1 : size(AllVolumeWindow,2);
         end
-    
+        
         AllVolume_Piece = AllVolumeWindow(:,Segment);
         nVoxels_Piece = size(AllVolume_Piece,2);
-    
+        
         [AllVolume_Piece,SortIndex] = sort(AllVolume_Piece,1);
         db=diff(AllVolume_Piece,1,1);
         db = db == 0;
         sumdb=sum(db,1);
-    
+        
         SortedRanks = repmat([1:WindowSize]',[1,nVoxels_Piece]);
-    % For those have the same values at the current time point and previous time point (ties)
+        % For those have the same values at the current time point and previous time point (ties)
         if any(sumdb(:))
             TieAdjustIndex=find(sumdb);
             for i=1:length(TieAdjustIndex)
@@ -121,7 +121,7 @@ for iWindow = 1:nWindow
                     end
                     % Compute mean of tied ranks
                     ranks(tiestart:tiestart+ntied-1) = ...
-                    sum(ranks(tiestart:tiestart+ntied-1)) / ntied;
+                        sum(ranks(tiestart:tiestart+ntied-1)) / ntied;
                     tiecount = tiecount + 1;
                 end
                 SortedRanks(:,TieAdjustIndex(i))=ranks;
@@ -138,13 +138,13 @@ for iWindow = 1:nWindow
         Ranks_AllVolume(:,Segment) = Ranks_Piece;
         fprintf('.');
     end
-
-
-
-% calulate the kcc for the data set
-% ------------------------------------------------------------------------
+    
+    
+    
+    % calulate the kcc for the data set
+    % ------------------------------------------------------------------------
     fprintf('\n\t Calculate the kcc on vertex by vertex for the data set.\n');
-    ReHoBrain = zeros(nDimVertex,1); 
+    ReHoBrain = zeros(nDimVertex,1);
     for i = 1:nDimVertex
         if MaskData(i)~=0
             if NNeighbor==1
