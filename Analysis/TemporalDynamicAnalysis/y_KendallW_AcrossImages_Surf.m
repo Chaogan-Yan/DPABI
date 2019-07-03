@@ -24,17 +24,17 @@ theElapsedTime =cputime;
 
 fprintf('\n\tKendall''s W computation Start...\n');
 
-[AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(RaterImages{1});
-
-[nDim1 nDim2 nDim3 nDimTimePoints]=size(AllVolume);
-BrainSize = [nDim1 nDim2 nDim3];
-VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));
+GHeader = gifti(RaterImages{1});
+AllVolume=GHeader.cdata;
+[nDimVertex, nDimTimePoints]=size(AllVolume);
+BrainSize = nDimVertex;
 
 if ischar(MaskData)
     if ~isempty(MaskData)
-        [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskData);
+        MaskData=gifti(MaskData);
+        MaskData=MaskData.cdata;
     else
-        MaskData=ones(nDim1,nDim2,nDim3);
+        MaskData=ones(nDimVertex,1);
     end
 end
 
@@ -49,15 +49,16 @@ RankSet = repmat((zeros(length(MaskIndex),1)),[1,nDimTimePoints,length(RaterImag
 
 for iRater = 1:length(RaterImages)
 
-    [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(RaterImages{iRater});
+    AllVolume = gifti(RaterImages{iRater});
+    AllVolume=AllVolume.cdata;
     % Convert into 2D
-    AllVolume=reshape(AllVolume,[],nDimTimePoints);
-    AllVolume=AllVolume(MaskIndex,:);
+    AllVolume=reshape(AllVolume,[],nDimTimePoints)';
+    AllVolume=AllVolume(:,MaskIndex);
     
     [R,TIEADJ] = tiedrank(AllVolume);
     
     
-    RankSet(:,:,iRater) = R;
+    RankSet(:,:,iRater) = R';
     
 end
 

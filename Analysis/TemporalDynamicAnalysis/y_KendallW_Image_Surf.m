@@ -1,4 +1,4 @@
-function [KendallWBrain, Header] = y_KendallW_Image_Surf(RaterImages, MaskData, AResultFilename)
+function [KendallWBrain, GHeader] = y_KendallW_Image_Surf(RaterImages, MaskData, AResultFilename)
 % Calculate Kendall's W for sets of images. (e.g., different raters or Test Re-Test)
 % FORMAT     [KendallWBrain, Header] = y_KendallW_Image(RaterImages, MaskData, AResultFilename)
 % Input:
@@ -24,17 +24,17 @@ theElapsedTime =cputime;
 
 fprintf('\n\tKendall''s W computation Start...\n');
 
-[AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(RaterImages{1});
-
-[nDim1 nDim2 nDim3 nDimTimePoints]=size(AllVolume);
-BrainSize = [nDim1 nDim2 nDim3];
-VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));
+GHeader = gifti(RaterImages{1});
+AllVolume=GHeader.cdata;
+[nDimVertex,nDimTimePoints]=size(AllVolume);
+BrainSize = nDimVertex;
 
 if ischar(MaskData)
     if ~isempty(MaskData)
-        [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskData);
+        MaskData=gifti(MaskData);
+        MaskData=MaskData.cdata;
     else
-        MaskData=ones(nDim1,nDim2,nDim3);
+        MaskData=ones(nDimVertex,1);
     end
 end
 
@@ -43,13 +43,13 @@ MaskDataOneDim=reshape(MaskData,1,[]);
 MaskIndex = find(MaskDataOneDim);
 
 
-
 %RankSet = zeros(nDimTimePoints,length(MaskIndex),length(RaterImages));
 RankSet = repmat((zeros(nDimTimePoints,1)),[1,length(MaskIndex),length(RaterImages)]);
 
 for iRater = 1:length(RaterImages)
 
-    [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(RaterImages{iRater});
+    AllVolume = gifti(RaterImages{iRater});
+    AllVolume=AllVolume.cdata;
     % Convert into 2D
     AllVolume=reshape(AllVolume,[],nDimTimePoints)';
     AllVolume=AllVolume(:,MaskIndex);
@@ -110,12 +110,9 @@ end
 
 KendallWBrain=zeros(size(MaskDataOneDim));
 KendallWBrain(1,MaskIndex)=KendallW;
-KendallWBrain=reshape(KendallWBrain,nDim1, nDim2, nDim3);
+KendallWBrain=reshape(KendallWBrain,nDimVertex, []);
 
-Header.pinfo = [1;0;0];
-Header.dt    =[16,0];
-
-y_Write(KendallWBrain, Header, AResultFilename);
+y_Write(KendallWBrain, GHeader, AResultFilename);
 
 
 theElapsedTime =cputime - theElapsedTime;
