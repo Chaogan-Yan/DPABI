@@ -22,10 +22,10 @@ function varargout = DPABISurf_VIEW(varargin)
 
 % Edit the above text to modify the response to help DPABISurf_VIEW
 
-% Last Modified by GUIDE v2.5 11-Mar-2019 18:05:41
+% Last Modified by GUIDE v2.5 05-Jul-2019 10:44:57
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
+gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @DPABISurf_VIEW_OpeningFcn, ...
@@ -72,7 +72,7 @@ handles.ColorMapEnum={'Jet';...
 
 % Choose default command line output for DPABISurf_VIEW
 handles.output = hObject;
-axis(handles.SurfaceAxes, 'off');
+axis(handles.SurfaceAxes, 'on');
 % Update handles structure
 guidata(hObject, handles);
 
@@ -540,6 +540,13 @@ function YokeCheckBox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of YokeCheckBox
+Fcn=handles.Fcn;
+YokeFlag=Fcn.GetYokedFlag();
+Fcn.SetYokedFlag(~YokeFlag.IsYoked);
+YokeFlag=Fcn.GetYokedFlag();
+YokePos=Fcn.GetDataCursorPos();
+
+
 
 
 % --- Executes on button press in TextureCheckBox.
@@ -1148,12 +1155,20 @@ function NewBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+DPABISurf_VIEW;
+% New=figure(DPABISurf_VIEW);
+% movegui(New, 'onscreen');
+
 
 % --- Executes on button press in MontageBtn.
 function MontageBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to MontageBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+Fcn=handles.Fcn;
+Flag=get(handles.HemiMenu, 'string');
+MVP=Fcn.GetViewPoint();
+Fcn.SaveMontage(handles.SurfaceAxes, 'L', 'MontageFigure1');
 
 
 % --- Executes on button press in OverlayColorCustomBtn.
