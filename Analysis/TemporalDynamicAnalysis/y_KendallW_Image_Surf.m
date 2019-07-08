@@ -1,20 +1,20 @@
 function [KendallWBrain, GHeader] = y_KendallW_Image_Surf(RaterImages, MaskData, AResultFilename)
 % Calculate Kendall's W for sets of images. (e.g., different raters or Test Re-Test)
-% FORMAT     [KendallWBrain, Header] = y_KendallW_Image(RaterImages, MaskData, AResultFilename)
+% FORMAT     [KendallWBrain, GHeader] = y_KendallW_Image_Surf(RaterImages, MaskData, AResultFilename)
 % Input:
 % 	RaterImages     -	Cells of raters (nRater * 1 cells), each rater could be:
-%                       1. The directory of 3D image data
-%                       2. The filename of one 4D data file
-%                       3. a Cell (nFile * 1 cells) of filenames of 3D image data
-% 	MaskData		-   the mask file name or 3D mask matrix
+%                       1. The directory of 2D image data
+%                       2. The filename of one 1D data file
+%                       3. a Cell (nFile * 1 cells) of filenames of 1D image data
+% 	MaskData		-   the mask file name or 1D mask matrix
 %	AResultFilename		the output filename
 
 % Output:
 %	KendallWBrain   -   The Kendall's W results
-%   Header          -   The NIfTI Header
+%   Header          -   The GIfTI Header
 %	AResultFilename	the filename of Kendall's W result
 %___________________________________________________________________________
-% Written by YAN Chao-Gan 171001.
+% Written by YAN Chao-Gan 190704.
 % The R-fMRI Lab, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 
@@ -24,36 +24,34 @@ theElapsedTime =cputime;
 
 fprintf('\n\tKendall''s W computation Start...\n');
 
-GHeader = gifti(RaterImages{1});
-AllVolume=GHeader.cdata;
+[AllVolume,VoxelSize,theImgFileList, GHeader] = y_ReadAll(RaterImages{1});
+
 [nDimVertex,nDimTimePoints]=size(AllVolume);
-BrainSize = nDimVertex;
 
 if ischar(MaskData)
     if ~isempty(MaskData)
         MaskData=gifti(MaskData);
         MaskData=MaskData.cdata;
+        if size(MaskData,1)~=nDimVertex
+            error('The size of Mask (%d) doesn''t match the required size (%d).\n',size(MaskData,1), nDimVertex);
+        end
+        MaskData = double(logical(MaskData));
     else
         MaskData=ones(nDimVertex,1);
     end
 end
-
     
 MaskDataOneDim=reshape(MaskData,1,[]);
 MaskIndex = find(MaskDataOneDim);
 
-
-%RankSet = zeros(nDimTimePoints,length(MaskIndex),length(RaterImages));
 RankSet = repmat((zeros(nDimTimePoints,1)),[1,length(MaskIndex),length(RaterImages)]);
 
 for iRater = 1:length(RaterImages)
 
-    AllVolume = gifti(RaterImages{iRater});
-    AllVolume=AllVolume.cdata;
+    AllVolume = y_ReadAll(RaterImages{iRater});
     % Convert into 2D
-    AllVolume=reshape(AllVolume,[],nDimTimePoints)';
+    AllVolume=AllVolume';
     AllVolume=AllVolume(:,MaskIndex);
-    
     
     [AllVolume,SortIndex] = sort(AllVolume,1);
     db=diff(AllVolume,1,1);
@@ -92,8 +90,7 @@ for iRater = 1:length(RaterImages)
     SortIndex=SortIndex+SortIndexBase;
     clear SortIndexBase;
     I(SortIndex)=SortedRanks;
-    clear SortIndex SortedRanks;
-    %I=uint16(I); 
+    clear SortIndex SortedRanks; 
     
     I = reshape(I,nDimTimePoints,[]);
     

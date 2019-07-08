@@ -258,6 +258,11 @@ end
 fclose(fid);
 
 
+% Detrend
+if exist('IsNeedDetrend','var') && IsNeedDetrend==1
+    SeedSeries=detrend(SeedSeries);
+end
+
 
 nWindow = fix((nDimTimePoints - WindowSize)/WindowStep) + 1;
 nDimTimePoints_WithinWindow = WindowSize;

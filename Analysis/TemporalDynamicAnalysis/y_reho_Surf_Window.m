@@ -1,4 +1,4 @@
-function [ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(WindowSize, WindowStep, WindowType,InFile, NNeighbor, AMaskFilename, AResultFilename, SurfFile, CUTNUMBER)
+function [ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(WindowSize, WindowStep, WindowType,InFile, NNeighbor, AMaskFilename, AResultFilename, SurfFile, IsNeedDetrend, CUTNUMBER)
 % Calculate dynamic regional homogeneity (i.e. ReHo) from the 2D surface brain
 % FORMAT     [ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(WindowSize, WindowStep, WindowType,InFile, NNeighbor, AMaskFilename, AResultFilename, SurfFile, CUTNUMBER)
 % Input:
@@ -10,6 +10,7 @@ function [ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(WindowSize, WindowS
 % 	AMaskFilename		the mask file name, only compute the point within the mask
 %	AResultFilename		the output filename
 %   SurfFile        -   The surface file
+%   IsNeedDetrend       0: Dot not detrend; 1: Use Matlab's detrend
 %   CUTNUMBER       -   Cut the data into pieces if small RAM memory e.g. 4GB is available on PC. It can be set to 1 on server with big memory (e.g., 50GB).
 %                       default: 10
 % Output:
@@ -40,6 +41,26 @@ GHeader=gifti(InFile);
 AllVolume=GHeader.cdata;
 [nDimVertex nDimTimePoints]=size(AllVolume);
 
+% First dimension is time
+AllVolume=AllVolume';
+
+% Detrend
+if exist('IsNeedDetrend','var') && IsNeedDetrend==1
+    %AllVolume=detrend(AllVolume);
+    fprintf('\n\t Detrending...');
+    SegmentLength = ceil(size(AllVolume,2) / CUTNUMBER);
+    for iCut=1:CUTNUMBER
+        if iCut~=CUTNUMBER
+            Segment = (iCut-1)*SegmentLength+1 : iCut*SegmentLength;
+        else
+            Segment = (iCut-1)*SegmentLength+1 : size(AllVolume,2);
+        end
+        AllVolume(:,Segment) = detrend(AllVolume(:,Segment));
+        fprintf('.');
+    end
+end
+
+
 %Get the neighbors (algorithm written by Xi-Nian Zuo at IPCAS)
 Surf = gifti(SurfFile);
 edge = spm_mesh_adjacency(Surf);
@@ -64,9 +85,6 @@ else
 end
 MaskDataOneDim=reshape(MaskData,1,[]);
 
-
-% First dimension is time
-AllVolume=AllVolume';
 
 nWindow = fix((nDimTimePoints - WindowSize)/WindowStep) + 1;
 
