@@ -1,4 +1,4 @@
-function [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, GHeader, CUTNUMBER)
+function [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, IsNeedDetrend, GHeader, CUTNUMBER)
 % [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, GHeader, CUTNUMBER)
 % Calculate Dynamic Functional Connectivity by Seed based Correlation Anlyasis
 % Input:
@@ -16,6 +16,7 @@ function [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(Wi
 % 	AMaskFilename   -   Mask file name
 %   IsMultipleLabel -   1: There are multiple labels in the ROI mask file. Will extract each of them. (e.g., for aal.nii, extract all the time series for 116 regions)
 %                       0 (default): All the non-zero values will be used to define the only ROI
+%   IsNeedDetrend   -   0: Dot not detrend; 1: Use Matlab's detrend
 %   GHeader         -   If AllVolume is given as a 2D Brain matrix, then Header should be designated.
 %   CUTNUMBER       -   Cut the data into pieces if small RAM memory e.g. 4GB is available on PC. It can be set to 1 on server with big memory (e.g., 50GB).
 %                       default: 10
@@ -68,6 +69,23 @@ MaskDataOneDim=reshape(MaskData,1,[]);
 AllVolume=AllVolume';
 MaskIndex = find(MaskDataOneDim);
 AllVolume=AllVolume(:,MaskIndex);
+
+% Detrend
+if exist('IsNeedDetrend','var') && IsNeedDetrend==1
+    %AllVolume=detrend(AllVolume);
+    fprintf('\n\t Detrending...');
+    SegmentLength = ceil(size(AllVolume,2) / CUTNUMBER);
+    for iCut=1:CUTNUMBER
+        if iCut~=CUTNUMBER
+            Segment = (iCut-1)*SegmentLength+1 : iCut*SegmentLength;
+        else
+            Segment = (iCut-1)*SegmentLength+1 : size(AllVolume,2);
+        end
+        AllVolume(:,Segment) = detrend(AllVolume(:,Segment));
+        fprintf('.');
+    end
+end
+
 
 % Extract the Seed Time Courses
 SeedSeries = [];
@@ -171,6 +189,12 @@ else
     end
 end
 fclose(fid);
+
+% Detrend
+if exist('IsNeedDetrend','var') && IsNeedDetrend==1
+    SeedSeries=detrend(SeedSeries);
+end
+
 
 nWindow = fix((nDimTimePoints - WindowSize)/WindowStep) + 1;
 nDimTimePoints_WithinWindow = WindowSize;

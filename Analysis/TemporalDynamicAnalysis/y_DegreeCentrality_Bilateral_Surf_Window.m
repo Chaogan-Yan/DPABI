@@ -1,4 +1,4 @@
-function [DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow, DegreeCentrality_PositiveWeightedSumBrain_RH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_LH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_RH_AllWindow, GHeader_LH, GHeader_RH] = y_DegreeCentrality_Bilateral_Surf_Window(WindowSize, WindowStep, WindowType, InFile_LH, InFile_RH, rThreshold, OutputName_LH, OutputName_RH, AMaskFilename_LH, AMaskFilename_RH, CUTNUMBER)
+function [DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow, DegreeCentrality_PositiveWeightedSumBrain_RH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_LH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_RH_AllWindow, GHeader_LH, GHeader_RH] = y_DegreeCentrality_Bilateral_Surf_Window(WindowSize, WindowStep, WindowType, InFile_LH, InFile_RH, rThreshold, OutputName_LH, OutputName_RH, AMaskFilename_LH, AMaskFilename_RH, IsNeedDetrend, CUTNUMBER)
 % [DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow, DegreeCentrality_PositiveWeightedSumBrain_RH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_LH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_RH_AllWindow, GHeader_LH, GHeader_RH] = y_DegreeCentrality_Bilateral_Surf_Window(WindowSize, WindowStep, WindowType, InFile_LH, InFile_RH, rThreshold, OutputName_LH, OutputName_RH, AMaskFilename_LH, AMaskFilename_RH, CUTNUMBER)
 % Calculate Dynamic Degree Centrality for Bilateral Hemishperes
 % Ref: Buckner, R.L., Sepulcre, J., Talukdar, T., Krienen, F.M., Liu, H., Hedden, T., Andrews-Hanna, J.R., Sperling, R.A., Johnson, K.A., 2009. Cortical hubs revealed by intrinsic functional connectivity: mapping, assessment of stability, and relation to Alzheimer's disease. J Neurosci 29, 1860-1873.
@@ -18,6 +18,7 @@ function [DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow, DegreeCentrali
 %                       or   string: will be seperated by suffix: _DegreeCentrality_PositiveWeightedSumBrain and _DegreeCentrality_PositiveBinarizedSumBrain
 % 	AMaskFilename_LH	the mask file name ofr left hemishpere, only compute the point within the mask
 % 	AMaskFilename_RH	the mask file name ofr right hemishpere, only compute the point within the mask
+%   IsNeedDetrend       0: Dot not detrend; 1: Use Matlab's detrend
 %   CUTNUMBER       -   Cut the data into pieces if small RAM memory e.g. 4GB is available on PC. It can be set to 1 on server with big memory (e.g., 50GB).
 %                       default: 10
 % Output:
@@ -85,6 +86,34 @@ AllVolume_LH=AllVolume_LH';
 AllVolume_LH=AllVolume_LH(:,MaskIndex_LH);
 AllVolume_RH=AllVolume_RH';
 AllVolume_RH=AllVolume_RH(:,MaskIndex_RH);
+
+% Detrend
+if exist('IsNeedDetrend','var') && IsNeedDetrend==1
+    %AllVolume=detrend(AllVolume);
+    fprintf('\n\t Detrending...');
+    SegmentLength = ceil(size(AllVolume_LH,2) / CUTNUMBER);
+    for iCut=1:CUTNUMBER
+        if iCut~=CUTNUMBER
+            Segment = (iCut-1)*SegmentLength+1 : iCut*SegmentLength;
+        else
+            Segment = (iCut-1)*SegmentLength+1 : size(AllVolume_LH,2);
+        end
+        AllVolume_LH(:,Segment) = detrend(AllVolume_LH(:,Segment));
+        fprintf('.');
+    end
+    
+    SegmentLength = ceil(size(AllVolume_RH,2) / CUTNUMBER);
+    for iCut=1:CUTNUMBER
+        if iCut~=CUTNUMBER
+            Segment = (iCut-1)*SegmentLength+1 : iCut*SegmentLength;
+        else
+            Segment = (iCut-1)*SegmentLength+1 : size(AllVolume_RH,2);
+        end
+        AllVolume_RH(:,Segment) = detrend(AllVolume_RH(:,Segment));
+        fprintf('.');
+    end
+end
+
 
 nWindow = fix((nDimTimePoints - WindowSize)/WindowStep) + 1;
 nDimTimePoints_WithinWindow = WindowSize;
