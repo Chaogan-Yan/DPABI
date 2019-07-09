@@ -22,7 +22,7 @@ function varargout = DPABISurf_VIEW(varargin)
 
 % Edit the above text to modify the response to help DPABISurf_VIEW
 
-% Last Modified by GUIDE v2.5 05-Jul-2019 10:44:57
+% Last Modified by GUIDE v2.5 09-Jul-2019 10:17:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -55,7 +55,7 @@ function DPABISurf_VIEW_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.UnderlayFilePath='';
 handles.OverlayInd=0;
 handles.LabelInd=0;
-
+% handles.IsYoked=false;
 handles.ColorMapEnum={'Jet';...
     'HSV';...
     'Hot';...
@@ -77,7 +77,7 @@ axis(handles.SurfaceAxes, 'on');
 guidata(hObject, handles);
 
 % UIWAIT makes DPABISurf_VIEW wait for user response (see UIRESUME)
-% uiwait(handles.MainFig);
+% uiwait(handles.Surf_VIEW);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = DPABISurf_VIEW_OutputFcn(hObject, eventdata, handles) 
@@ -541,10 +541,17 @@ function YokeCheckBox_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of YokeCheckBox
 Fcn=handles.Fcn;
-YokeFlag=Fcn.GetYokedFlag();
-Fcn.SetYokedFlag(~YokeFlag.IsYoked);
-YokeFlag=Fcn.GetYokedFlag();
-YokePos=Fcn.GetDataCursorPos();
+YokeInfo=struct('Flag',Fcn.GetYokedFlag(),'Pos',Fcn.GetDataCursorPos());
+Fcn.SetYokedFlag(~YokeInfo.Flag.IsYoked);
+YokeInfo.Flag=Fcn.GetYokedFlag();
+handles.IsYoked=YokeInfo.Flag.IsYoked;
+% YokeInfo.Pos.Pos;
+% assignin('base','YokePosition',YokeInfo.Pos.Pos);
+if YokeInfo.Flag.IsYoked
+    YokePos=evalin('base','YokePosition');
+    Fcn.MoveDataCursor(YokePos);
+end
+    
 
 
 
@@ -1441,4 +1448,71 @@ function LabelUtilitiesMenu_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function YokeCheckBox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to YokeCheckBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on key press with focus on YokeCheckBox and none of its controls.
+function YokeCheckBox_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to YokeCheckBox (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on Surf_VIEW or any of its controls.
+function Surf_VIEW_WindowKeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Surf_VIEW (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+Fcn=handles.Fcn;
+key = get(handles.figure1,'CurrentKey'); 
+switch key
+    case 'space'
+        if isfield(handles, 'IsYoked')
+            if handles.IsYoked==1
+                YokePos=evalin('base','YokePosition');
+                Fcn.MoveDataCursor(YokePos);
+            end
+        end
+    case 'a'
+        fprintf('aaa');
+                
+    
+
+end
+
+
+% --- Executes on mouse press over axes background.
+function SurfaceAxes_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to SurfaceAxes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Fcn=handles.Fcn;
+pos=get(handles.SurfaceAxes,'CurrentPoint')
+assignin('base','YokePosition',pos);
+
+
+% --- Executes on mouse press over figure background, over a disabled or
+% --- inactive control, or over an axes background.
+function Surf_VIEW_WindowButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Surf_VIEW (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isfield(handles, 'IsYoked')
+      if handles.IsYoked==1
+             YokePos=evalin('base','YokePosition');
+             Fcn.MoveDataCursor(YokePos);
+      end
 end

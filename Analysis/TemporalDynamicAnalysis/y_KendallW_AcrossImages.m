@@ -10,7 +10,7 @@ function [KendallW] = y_KendallW_AcrossImages(RaterImages, MaskData, AResultFile
 %	AResultFilename		the output filename
 
 % Output:
-%	KendallWBrain   -   The Kendall's W results
+%	KendallW   -   The Kendall's W results
 %   Header          -   The NIfTI Header
 %	AResultFilename	the filename of Kendall's W result
 %___________________________________________________________________________

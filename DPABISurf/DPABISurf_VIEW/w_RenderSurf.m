@@ -1599,7 +1599,7 @@ AxesHandle=getappdata(AxesObj, 'AxesHandle');
 Coord=AxesHandle.UnderSurf.StructData.vertices;
 VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));%找到坐标对应的Coord指数
 Curv=AxesHandle.UnderSurf.Curv(VInd);
-
+% assignin('base','YokePosition',Pos);
 Txt={...
     ['X: ',     num2str(Pos(1))],...
     ['Y: ',     num2str(Pos(2))],...
@@ -1709,11 +1709,4 @@ set(DataCursorObj, 'Enable', 'On');
 DataCursorObj.removeAllDataCursors();
 DataTipObj=DataCursorObj.createDatatip(UnderSurf.Obj);
 set(DataTipObj, 'Position', Pos);
-% 
-% function ChangeView(AxesObj)
-% AxesHandle=getappdata(AxesObj, 'AxesHandle');
-% ViewPoint=AxesHandle.SurfOpt.ViewPoint;
-% new_ViewPoint=ViewPoint;
-% AxesHandle.SurfOpt.ViewPoint=new_ViewPoint;
-% view(AxesObj, new_ViewPoint);
-% setappdata(AxesObj, 'AxesHandle', AxesHandle);
+
