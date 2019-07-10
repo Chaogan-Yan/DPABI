@@ -11,67 +11,67 @@ function [AxesObj, Fcn]=w_RenderSurf(varargin)
 % Copyright (C) 2011-2018 McGill Centre for Integrative Neuroscience (MCIN)
 % Sandy Wang
 if nargin<1
-    error('Gifti Surface needed!');%没有选择Underlay文件时报错
+    error('Gifti Surface needed!');
 else
-    SurfFile=varargin{1};%读取皮层文件
+    SurfFile=varargin{1};
 end
 
-% Axes Object 读取右侧坐标系？或是说右侧图像？描述起来更像是包含了左侧一切数据信息的图像，作为一个大结构类
+% Axes Object 
 if nargin<2
     figure
-    AxesObj=axes;%没有图像时则为空，新建图像
+    AxesObj=axes;
 else
-    AxesObj=varargin{2};%有图像时则读取当前图像内的数据
+    AxesObj=varargin{2};
 end
 %cla(AxesObj)
 
-% Surface Option 读取其他属性，可能为VIEW的其它选项？
+% Surface Option 
 if nargin<3
-    SurfOpt=DefaultSurfOpt;%若左侧还未设置时则为默认选项，代入计算
+    SurfOpt=DefaultSurfOpt;
 else
-    SurfOpt=varargin{3};%设置后则读取左侧选项数据
+    SurfOpt=varargin{3};
 end
 
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取坐标轴结构大类
-FigObj=ancestor(AxesObj, 'figure');%坐标轴对应的图片？
-set(FigObj, 'Renderer', SurfOpt.Renderer);%设置为对应的Renderer？
-set(FigObj, 'Tag', 'DPABISurf_VIEW')%设置标签为DPABISurf-VIEW
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+FigObj=ancestor(AxesObj, 'figure');
+set(FigObj, 'Renderer', SurfOpt.Renderer);
+set(FigObj, 'Tag', 'DPABISurf_VIEW')
 %set(FigObj, 'Color', SurfOpt.BackGroundColor);
 
-V=gifti(SurfFile);%读取皮层文件
-M=export(V, 'patch');%转换为struct
-P=struct('vertices', M.vertices, 'faces', M.faces);%新建struct: P，将皮层文件的坐标信息存入
+V=gifti(SurfFile);
+M=export(V, 'patch');
+P=struct('vertices', M.vertices, 'faces', M.faces);
 %%%
-FaceColor=[0.75, 0.75, 0.75];%设置颜色
-FaceAlpha=1;%透明度
+FaceColor=[0.75, 0.75, 0.75];
+FaceAlpha=1;
 %%%
-AxeChildObj=get(AxesObj, 'Children');%坐标轴对应的子类？
-CurUnderSurf='';%？
-for i=1:numel(AxeChildObj)%检查子类中是否有标签为UnderSurf的子条目，如有则赋值
+AxeChildObj=get(AxesObj, 'Children');
+CurUnderSurf='';
+for i=1:numel(AxeChildObj)
     Tag=get(AxeChildObj(i), 'Tag');
     if strcmpi(Tag, 'UnderSurf')
         CurUnderSurf=AxeChildObj(i);
     end
 end
-if isempty(CurUnderSurf)%若未查到相关子条目
-    PatchObj=patch(P,...  %设置图像属性（默认）
-        'FaceColor',        FaceColor,...%表面颜色（灰）
+if isempty(CurUnderSurf)
+    PatchObj=patch(P,...  
+        'FaceColor',        FaceColor,...
         'CDataMapping',     'direct',...
-        'FaceAlpha',        FaceAlpha,...%表面透明度
+        'FaceAlpha',        FaceAlpha,...
         'AlphaDataMapping', 'none',...
-        'EdgeColor',        'none',...%边缘颜色
+        'EdgeColor',        'none',...
         'FaceLighting',     SurfOpt.FaceLighting,...
         'SpecularStrength', SurfOpt.SpecularStrength,...
         'AmbientStrength',  SurfOpt.AmbientStrength,...
         'DiffuseStrength',  SurfOpt.DiffuseStrength,...
         'SpecularExponent', SurfOpt.SpecularExponent,...
         'Clipping',         SurfOpt.Clipping,...
-        'Visible',          'Off',...%不可见
+        'Visible',          'Off',...
         'CDataMapping',     'direct',...
-        'Tag',              'UnderSurf',...%标签为UnderSurf
+        'Tag',              'UnderSurf',...
         'Parent',           AxesObj);
     
-    % Set the Axis of Axes 设置坐标？
+    % Set the Axis of Axes 
     axis(AxesObj, 'image');
     axis(AxesObj, 'auto');
     axis(AxesObj, 'off');
@@ -83,15 +83,15 @@ if isempty(CurUnderSurf)%若未查到相关子条目
     set(Light, 'Parent', AxesObj);
     set(Light, 'style', 'infinite');
     
-    % Rotate Obj 旋转功能？
+    % Rotate Obj 
     Rotate3d=rotate3d(AxesObj);
-    set(Rotate3d, 'Enable', 'On');%打开旋转功能？
-    set(Rotate3d, 'ActionPostCallback', @RotateLight);%使其响应函数为：RotateLight --line 260
-    %归入AxesHandle
+    set(Rotate3d, 'Enable', 'On');
+    set(Rotate3d, 'ActionPostCallback', @RotateLight);
+
     AxesHandle.Light=Light;
     AxesHandle.Rotate3d=Rotate3d;
     
-    % Under Surface Object  子类UnderSurf结构
+    % Under Surface Object  
     AxesHandle.UnderSurf.Obj=PatchObj;
     AxesHandle.UnderSurf.SurfFile=SurfFile;
     AxesHandle.UnderSurf.FaceColor=FaceColor;
@@ -104,7 +104,7 @@ if isempty(CurUnderSurf)%若未查到相关子条目
     
     AxesHandle.SurfOpt=SurfOpt;
     
-    % Class Function各种函数
+    % Class Function
     Fcn.DefaultSurfOpt=...
         @() DefaultSurfOpt;
     Fcn.SetSurfOpt=...
@@ -128,7 +128,7 @@ if isempty(CurUnderSurf)%若未查到相关子条目
     Fcn.SetDisplayTextureFlag=...
         @(IsShow) SetDisplayTextureFlag(AxesObj, IsShow);
     Fcn.AddLabel=...
-        @(varargin) AddLabel(AxesObj, varargin);%是否是一个varargin？不明白何时调用
+        @(varargin) AddLabel(AxesObj, varargin);
     Fcn.SetLabel=...
         @(LabelInd) SetLabel(AxesObj, LabelInd);    
     Fcn.RemoveLabel=...
@@ -206,51 +206,51 @@ if isempty(CurUnderSurf)%若未查到相关子条目
     Fcn.MoveDataCursor=...
         @(Pos) MoveDataCursor(AxesObj, Pos);
     
-    AxesHandle.Fcn=Fcn;%？？？
+    AxesHandle.Fcn=Fcn;
     
-    set(PatchObj, 'Visible', 'On');%设置完一切函数后打开可见？皮层图像此时出现？
+    set(PatchObj, 'Visible', 'On');
     
     FigObj=ancestor(AxesObj, 'figure');
-    DataCursor=datacursormode(FigObj);%更新鼠标点击的显示函数
-    set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));%改为GetPosInfo函数-1575
-    AxesHandle.DataCursor=DataCursor;%归入坐标轴结构
+    DataCursor=datacursormode(FigObj);
+    set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
+    AxesHandle.DataCursor=DataCursor;
     
-    setappdata(AxesObj, 'AxesHandle', AxesHandle);%更新数据信息
+    setappdata(AxesObj, 'AxesHandle', AxesHandle);
     
     FigHandle=guidata(AxesObj);
     if isfield(FigHandle, 'ViewPointMenu')
         set(FigHandle.ViewPointMenu, 'Value', 2);
     end
-else %若拥有UnderSurf子结构
-    if isfield(AxesHandle, 'OverlaySurf') %若已设置Overlay层
-        if size(AxesHandle.OverlaySurf(1).Vertex, 1)~=size(P.vertices, 1) %检查与Underlay个规格是否相等，若不相等
-            errordlg('Number of Vertices Not Match Between Selected Overlay and Underlay!'); %弹出错误提示
-            Fcn=AxesHandle.Fcn;%？？？
+else 
+    if isfield(AxesHandle, 'OverlaySurf') 
+        if size(AxesHandle.OverlaySurf(1).Vertex, 1)~=size(P.vertices, 1) 
+            errordlg('Number of Vertices Not Match Between Selected Overlay and Underlay!'); 
+            Fcn=AxesHandle.Fcn;
             return;
         end
-        for i=1:numel(AxesHandle.OverlaySurf) %将P中的坐标信息放入Overlay中的点？不确定为何要用循环，是因为可能有多个Overlay？另外不太确定是否为一一对应关系
+        for i=1:numel(AxesHandle.OverlaySurf) 
             set(AxesHandle.OverlaySurf(i).Obj, 'Faces', P.faces,...
                 'Vertices', P.vertices);
         end
     end
     
-    if isfield(AxesHandle, 'LabelSurf') %若已设置Label层
-        if size(AxesHandle.LabelSurf(1).LabelV, 1)~=size(P.vertices, 1)%检查与Underlay个规格是否相等，若不相等
-            errordlg('Number of Vertices Not Match Between Selected Label and Underlay!');%弹出错误提示，同上
+    if isfield(AxesHandle, 'LabelSurf') 
+        if size(AxesHandle.LabelSurf(1).LabelV, 1)~=size(P.vertices, 1)
+            errordlg('Number of Vertices Not Match Between Selected Label and Underlay!');
             Fcn=AxesHandle.Fcn;
             return;
         end
-        for i=1:numel(AxesHandle.LabelSurf)%将P中的坐标信息放入Label中的点？问题同上
+        for i=1:numel(AxesHandle.LabelSurf)
             set(AxesHandle.LabelSurf(i).Obj, 'Faces', P.faces,...
                 'Vertices', P.vertices);
         end
     end     
     
     set(AxesHandle.UnderSurf.Obj, 'Faces', P.faces,...
-        'Vertices', P.vertices);%将坐标信息存入Underlay
+        'Vertices', P.vertices);
     axis(AxesObj, 'auto');
     axis(AxesObj, 'off');
-    %存入UnderSurf的各个参数，过程基本与if处相同
+
     AxesHandle.UnderSurf.SurfFile=SurfFile;
     AxesHandle.UnderSurf.FaceColor=FaceColor;
     AxesHandle.UnderSurf.FaceAlpha=FaceAlpha;
@@ -259,13 +259,13 @@ else %若拥有UnderSurf子结构
     AxesHandle.UnderSurf.IsShowTexture=0;
     AxesHandle.UnderSurf.CCLabel=spm_mesh_label(P);
     
-    AxesHandle.SurfOpt=SurfOpt;%存入坐标结构中
+    AxesHandle.SurfOpt=SurfOpt;
     setappdata(AxesObj, 'AxesHandle', AxesHandle);
     Fcn=AxesHandle.Fcn;
 end
 
 % Display Sth
-DisplayTexture(AxesObj);%此时出现皮层图像？
+DisplayTexture(AxesObj);
 
 function RotateLight(varargin)
 AxesHandle=getappdata(gca, 'AxesHandle');
@@ -281,11 +281,11 @@ if isfield(FigHandle, 'ViewPointMenu')
     set(FigHandle.ViewPointMenu, 'Value', 8);
 end
 
-function SurfOpt=GetSurfOpt(AxesObj)%获取皮层图像其它选项的值得函数
+function SurfOpt=GetSurfOpt(AxesObj)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 SurfOpt=AxesHandle.SurfOpt;
 
-function SetSurfOpt(AxesObj, SurfOpt)%设置皮层图像其它选项函数，原理？
+function SetSurfOpt(AxesObj, SurfOpt)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 FigObj=ancestor(AxesObj, 'figure');
 
@@ -304,22 +304,22 @@ set(FigObj, 'Color', SurfOpt.BackGroundColor);
 AxesHandle.SurfOpt=SurfOpt;
 setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
-function DcObj=GetDataCursorObj(AxesObj)%获取显示点的函数
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
-DcObj=AxesHandle.DataCursor;%赋值
+function DcObj=GetDataCursorObj(AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+DcObj=AxesHandle.DataCursor;
 
-function Opt=GetViewPoint(AxesObj)%获取视角函数
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%读取当前数据
-Opt.ViewPoint=AxesHandle.SurfOpt.ViewPoint;%赋值
+function Opt=GetViewPoint(AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Opt.ViewPoint=AxesHandle.SurfOpt.ViewPoint;
 
-function SetViewPoint(AxesObj, ViewPoint)%设置视角函数
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
-view(AxesObj, ViewPoint);%调整视角
-camlight(AxesHandle.Light, AxesHandle.SurfOpt.LightOrient);%调整光线角度
-set(AxesHandle.Light, 'style', 'infinite');%设置Light
+function SetViewPoint(AxesObj, ViewPoint)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+view(AxesObj, ViewPoint);
+camlight(AxesHandle.Light, AxesHandle.SurfOpt.LightOrient);
+set(AxesHandle.Light, 'style', 'infinite');
 
-AxesHandle.SurfOpt.ViewPoint=ViewPoint;%赋值
-setappdata(AxesObj, 'AxesHandle', AxesHandle);%更新数据
+AxesHandle.SurfOpt.ViewPoint=ViewPoint;
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
 function Opt=GetYokedFlag(AxesObj)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -331,34 +331,34 @@ AxesHandle=getappdata(AxesObj, 'AxesHandle');
 AxesHandle.UnderSurf.IsYoked=IsYoked;
 setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
-function Opt=GetViewPointCustomFlag(AxesObj)%获取视角标签
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前状态
-Opt.CustomFlag=AxesHandle.SurfOpt.ViewPointCustomFlag;%给结果赋值
+function Opt=GetViewPointCustomFlag(AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Opt.CustomFlag=AxesHandle.SurfOpt.ViewPointCustomFlag;
 
-function SetViewPointCustomFlag(AxesObj, CustomFlag)%设置视角标签
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
+function SetViewPointCustomFlag(AxesObj, CustomFlag)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
-AxesHandle.SurfOpt.ViewPointCustomFlag=CustomFlag;%赋值
-setappdata(AxesObj, 'AxesHandle', AxesHandle);%更新数据
+AxesHandle.SurfOpt.ViewPointCustomFlag=CustomFlag;
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
-function IsShowTexture=GetDisplayTextureFlag(AxesObj)%获取判断是否纹理标签函数
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
-IsShowTexture=AxesHandle.UnderSurf.IsShowTexture;%给结果赋值
+function IsShowTexture=GetDisplayTextureFlag(AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+IsShowTexture=AxesHandle.UnderSurf.IsShowTexture;
 
-function SetDisplayTextureFlag(AxesObj, IsShowTexture)%设置是否显示纹理标签
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
-AxesHandle.UnderSurf.IsShowTexture=IsShowTexture;%赋值
-setappdata(AxesObj, 'AxesHandle', AxesHandle);%更新数据
-DisplayTexture(AxesObj);%重新显示图像？
+function SetDisplayTextureFlag(AxesObj, IsShowTexture)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+AxesHandle.UnderSurf.IsShowTexture=IsShowTexture;
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
+DisplayTexture(AxesObj);
 
-function DisplayTexture(AxesObj)%显示皮层图像？
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
-FaceColor=AxesHandle.UnderSurf.FaceColor;%颜色文件
-if AxesHandle.UnderSurf.IsShowTexture %如果显示图像
-    Curv=AxesHandle.UnderSurf.Curv;%获取分类标签？
-    Curv=Curv>0;%将标签大于0的数变为1，相当于Mask？
-    NumV=size(Curv, 1);%数据量
-    if size(Curv, 2) == 1%当只有一层标签时
+function DisplayTexture(AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+FaceColor=AxesHandle.UnderSurf.FaceColor;
+if AxesHandle.UnderSurf.IsShowTexture 
+    Curv=AxesHandle.UnderSurf.Curv;
+    Curv=Curv>0;
+    NumV=size(Curv, 1);
+    if size(Curv, 2) == 1
         C = repmat(FaceColor, [NumV, 1]).*repmat(Curv,[1, 3]) + repmat(0.6*FaceColor, [NumV, 1]).*repmat(~Curv, [1, 3]);
     end
     set(AxesHandle.UnderSurf.Obj,...
@@ -489,13 +489,13 @@ V.cdata=Vertex;
 save(V, OutFile);
 ExitCode=0;
 
-function UpdateOverlay(AxesObj, OverlayInd)%更新Overlay的参数？并执行对应的操作（更新图像）？
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取最新的数据
-if numel(AxesHandle.OverlaySurf)==0%若没有Overlay（被移除）
-    colorbar('delete');%删除颜色条
+function UpdateOverlay(AxesObj, OverlayInd)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+if numel(AxesHandle.OverlaySurf)==0
+    colorbar('delete');
     return
 end
-OverlaySurf=AxesHandle.OverlaySurf(OverlayInd);%操作目标设为当前的Overlay
+OverlaySurf=AxesHandle.OverlaySurf(OverlayInd);
 
 [AdjustCM, Ticks, TickLabel]=AdjustColorMap(OverlaySurf.ColorMap, AxesHandle.UnderSurf.FaceColor, ...
     OverlaySurf.NegMax, OverlaySurf.NegMin, ...
@@ -514,25 +514,25 @@ set(OverlaySurf.Obj, ...
     'FaceVertexCData',  AdjustVC,...
     'FaceVertexAlpha',  AdjustVA);
 
-colorbar('delete');%删除颜色条
+colorbar('delete');
 colormap(AdjustCM);
 CbObj=colorbar('Units', 'normalized', 'Position', [0.91, 0.05, 0.02, 0.9]);
 set(CbObj, 'YTick', Ticks, 'YTickLabel', TickLabel);
 
-setappdata(AxesObj, 'AxesHandle', AxesHandle);%更新数据
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
-function OverlayFiles=GetOverlayFiles(AxesObj)%获取Overlay文件函数
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取最新数据
-OverlayFiles={AxesHandle.OverlaySurf.OverlayFile}';%对应文件
+function OverlayFiles=GetOverlayFiles(AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+OverlayFiles={AxesHandle.OverlaySurf.OverlayFile}';
 
-function SetOverlayOrder(AxesObj, OverlayOrder)%调整Overlay的顺序
+function SetOverlayOrder(AxesObj, OverlayOrder)
 if nargin<2
-    error('Invalid Input: OverlayOrder');%若Overlay数量小于2则报错
+    error('Invalid Input: OverlayOrder');
 end
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 if numel(AxesHandle.OverlaySurf)~=numel(OverlayOrder)
-    error('Invalid Number of Order Index');%若输入的顺序不符则报错
+    error('Invalid Number of Order Index');
 end
 
 OverlayObjs={AxesHandle.OverlaySurf.Obj}';
@@ -555,39 +555,39 @@ AxesHandle.OverlaySurf=AxesHandle.OverlaySurf(OverlayOrder);
 setappdata(AxesObj, 'AxesHandle', AxesHandle);
 set(AxesObj, 'Children', AllObjs)
 
-function Opt=GetOverlayThres(AxesObj, OverlayInd) %获取Overlay的阈值，NMax,NMin,PMax,PMin
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前的数据
+function Opt=GetOverlayThres(AxesObj, OverlayInd) 
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 try
-    OverlaySurf=AxesHandle.OverlaySurf(OverlayInd, 1);%？？数据结构不太了解
+    OverlaySurf=AxesHandle.OverlaySurf(OverlayInd, 1);
 catch 
     error('Invalid Overlay Index');
 end
-Opt.NegMax=OverlaySurf.NegMax;%将阈值数据输入到结果，依此类推
+Opt.NegMax=OverlaySurf.NegMax;
 Opt.NegMin=OverlaySurf.NegMin;
 Opt.PosMin=OverlaySurf.PosMin;
 Opt.PosMax=OverlaySurf.PosMax;
 
-function SetOverlayThres(AxesObj, OverlayInd, NMax, NMin, PMin, PMax)%设置Overlay的阈值，NMax,NMin,PMax,PMin
+function SetOverlayThres(AxesObj, OverlayInd, NMax, NMin, PMin, PMax)
 if nargin<6
-    error('Invalid Input: OverlayInd, NMax, NMin, PMin, PMax');%若输入变量小于6，报错
+    error('Invalid Input: OverlayInd, NMax, NMin, PMin, PMax');
 end
 
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%更新数据
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 try
-    OverlaySurf=AxesHandle.OverlaySurf(OverlayInd, 1);%？？数据结构不太了解，同上
+    OverlaySurf=AxesHandle.OverlaySurf(OverlayInd, 1);
 catch
     error('Invalid Overlay Index');
 end
-OverlaySurf.NegMax=NMax;%将对应的值储存（更新），依此类推
+OverlaySurf.NegMax=NMax;
 OverlaySurf.NegMin=NMin;
 OverlaySurf.PosMin=PMin;
 OverlaySurf.PosMax=PMax;
 
-AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;%将当前Overlay推入母结构
-setappdata(AxesObj, 'AxesHandle', AxesHandle);%更新数据
-UpdateOverlay(AxesObj, OverlayInd);%更新Overlay，执行相应操作
+AxesHandle.OverlaySurf(OverlayInd)=OverlaySurf;
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
+UpdateOverlay(AxesObj, OverlayInd);
 
 function Opt=GetOverlayThresPN_Flag(AxesObj, OverlayInd)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -618,7 +618,7 @@ setappdata(AxesObj, 'AxesHandle', AxesHandle);
 UpdateOverlay(AxesObj, OverlayInd);
 
 function Opt=GetOverlayVertexMask(AxesObj, OverlayInd)
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 try
     OverlaySurf=AxesHandle.OverlaySurf(OverlayInd, 1);
@@ -991,7 +991,7 @@ for i=1:max(CC.Index)
 end
 PrintClusterReport(Opt.ClusterInfo);
 
-function ExitCode=AddOverlay(AxesObj, VarArgIn)%类似AddLabellay，并增加部分功能
+function ExitCode=AddOverlay(AxesObj, VarArgIn)
 ExitCode=1;
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 FigObj=ancestor(AxesObj, 'figure');
@@ -1369,41 +1369,41 @@ end
 Ticks=Ticks(Ia);
 TickLabel=TickLabel(Ia);
 
-function ExitCode=AddLabel(AxesObj, VarArgIn)%添加Label层
-ExitCode=1;%退出指令，默认为1
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
-FigObj=ancestor(AxesObj, 'figure');%获取当前图像
-SurfOpt=AxesHandle.SurfOpt;%当前的皮层设置
+function ExitCode=AddLabel(AxesObj, VarArgIn)
+ExitCode=1;
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+FigObj=ancestor(AxesObj, 'figure');
+SurfOpt=AxesHandle.SurfOpt;
 
-if nargin<1+1%若没有输出文件
-    error('Label File Needed!')%报错
+if nargin<1+1
+    error('Label File Needed!')
 end
-LabelFile=VarArgIn{1};%读取Label文件
-V=gifti(LabelFile);%读取
+LabelFile=VarArgIn{1};
+V=gifti(LabelFile);
 
-UnderNumV=size(AxesHandle.UnderSurf.StructData.vertices, 1);%获取当前皮层点总数
-LabelNumV=size(V.cdata, 1);%载入的Label文件数据点
+UnderNumV=size(AxesHandle.UnderSurf.StructData.vertices, 1);
+LabelNumV=size(V.cdata, 1);
 if LabelNumV~=UnderNumV
-    errordlg('Number of Vertices Not Match Between Selected Label and Underlay!');%若二者不相等，则报错
+    errordlg('Number of Vertices Not Match Between Selected Label and Underlay!');
     return
 end
 
-LabelV=V.cdata;%Label层的全部数据
-LabelU=unique(LabelV);%调出不重复的数据
-if isfield(V, 'labels')%如果含有Label结构
-    LabelColor=V.labels.rgba(:, 1:3);%标签颜色
+LabelV=V.cdata;
+LabelU=unique(LabelV);
+if isfield(V, 'labels')
+    LabelColor=V.labels.rgba(:, 1:3);
 else
-    errordlg('Invalid Label File, No labels Structure!');%没有Label时报错，说明不是Label文件
+    errordlg('Invalid Label File, No labels Structure!');
     ExitCode=1;
     return
 end
-if nargin<2+1%若有IsVisible信息则调用，没有则按默认选项
+if nargin<2+1
     IsVisible='On';
 else
     IsVisible=VarArgIn{2};
 end
 
-if nargin<3+1%是否显示0信息
+if nargin<3+1
     IsShowZeros=0;
 else
     IsShowZeros=VarArgIn{3};
@@ -1411,17 +1411,17 @@ end
 
 % Generate Colormap and Alpha
 if IsShowZeros
-    TmpLabelColor=LabelColor;%显示标签颜色
+    TmpLabelColor=LabelColor;
 else
     TmpLabelColor=LabelColor;
-    TmpLabelColor(1, :)=AxesHandle.UnderSurf.FaceColor;%显示标签色后将0替换为底色
+    TmpLabelColor(1, :)=AxesHandle.UnderSurf.FaceColor;
 end
-AdjustVC=squeeze(ind2rgb(LabelV, TmpLabelColor));%数据结构不太理解？？
+AdjustVC=squeeze(ind2rgb(LabelV, TmpLabelColor));
 Alpha=1;
-AdjustVA=Alpha*ones(size(LabelV));%透明度参数？
+AdjustVA=Alpha*ones(size(LabelV));
 
 
-% LabelOpt 设置Label层参数
+% LabelOpt 
 LabelOpt.LabelFile=LabelFile;
 LabelOpt.LabelColor=LabelColor;
 LabelOpt.LabelName=V.labels.name;
@@ -1431,16 +1431,16 @@ LabelOpt.IsShowZeros=IsShowZeros;
 LabelOpt.IsVisible=IsVisible;
 LabelOpt.Alpha=Alpha;
 
-if isfield(AxesHandle, 'LabelSurf') && numel(AxesHandle.LabelSurf)>0 %若已含有Label层数据
-    Num=numel(AxesHandle.LabelSurf);%Label层数量
-    LabelOpt.Obj=AxesHandle.LabelSurf(1).Obj;%读取第一层所有数据
-    set(LabelOpt.Obj,...%更改这几部分的选项
-        'FaceVertexCData',  AdjustVC,... %不太理解？？？
+if isfield(AxesHandle, 'LabelSurf') && numel(AxesHandle.LabelSurf)>0 
+    Num=numel(AxesHandle.LabelSurf);
+    LabelOpt.Obj=AxesHandle.LabelSurf(1).Obj;
+    set(LabelOpt.Obj,...
+        'FaceVertexCData',  AdjustVC,... 
         'FaceVertexAlpha',  AdjustVA,...
         'Visible',          IsVisible);
     
-    AxesHandle.LabelSurf(Num+1, 1)=LabelOpt; %更新数据至新的一层
-else%若还没有Label则按默认设置如下
+    AxesHandle.LabelSurf(Num+1, 1)=LabelOpt; 
+else
     PatchObj=patch(AxesHandle.UnderSurf.StructData,...
         'FaceColor',        'flat',...
         'FaceAlpha',        'flat',...
@@ -1460,26 +1460,26 @@ else%若还没有Label则按默认设置如下
         'Parent',           AxesObj);
     material(FigObj, SurfOpt.Material);
     LabelOpt.Obj=PatchObj;
-    AxesHandle.LabelSurf=LabelOpt;%将Label的设置推入LabelSurf结构
+    AxesHandle.LabelSurf=LabelOpt;
 end
 
-setappdata(AxesObj, 'AxesHandle', AxesHandle);%更新数据
-ResortSurf(AxesObj)%？？？此函数尚未理解
-ExitCode=0;%返回参数设为0，还不完全理解？
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
+ResortSurf(AxesObj)
+ExitCode=0;
 
-function SetLabel(AxesObj, LabelInd)%设置Label函数（进行更新图像等操作？）
+function SetLabel(AxesObj, LabelInd)
 if nargin<2
-    error('Invalid Input: LabelInd');%若输入小于2，报错
+    error('Invalid Input: LabelInd');
 end
 
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 try
-    LabelSurf=AxesHandle.LabelSurf(LabelInd, 1);%获取当前的Label层
+    LabelSurf=AxesHandle.LabelSurf(LabelInd, 1);
 catch
-    error('Invalid Label Index');%Label层指数不对时报错
+    error('Invalid Label Index');
 end
-%获取相应子项参数
+
 LabelV=LabelSurf.LabelV;
 LabelColor=LabelSurf.LabelColor;
 IsShowZeros=LabelSurf.IsShowZeros;
@@ -1500,22 +1500,22 @@ set(LabelSurf.Obj,...
     'FaceVertexAlpha',  AdjustVA,...
     'Visible',          IsVisible);
 
-function SetLabelAlpha(AxesObj, LabelInd, Alpha)%设置Label层显示的透明度
+function SetLabelAlpha(AxesObj, LabelInd, Alpha)
 if nargin<2
-    error('Invalid Input: LabelInd, Alpha');%若输入变量小于2时报错
+    error('Invalid Input: LabelInd, Alpha');
 end
 
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 try
-    LabelSurf=AxesHandle.LabelSurf(LabelInd, 1);%获取当前的Label层
+    LabelSurf=AxesHandle.LabelSurf(LabelInd, 1);
 catch
-    error('Invalid Label Index');%若指数不对时报错
+    error('Invalid Label Index');
 end
-LabelSurf.Alpha=Alpha;%更新透明度值
-AxesHandle.LabelSurf(LabelInd, 1)=LabelSurf;%将当前子LabelSurf结构推入上级结构
-setappdata(AxesObj, 'AxesHandle', AxesHandle);%更新数据
-SetLabel(AxesObj, LabelInd);%更新Label层
+LabelSurf.Alpha=Alpha;
+AxesHandle.LabelSurf(LabelInd, 1)=LabelSurf;
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
+SetLabel(AxesObj, LabelInd);
 
 function Alpha=GetLabelAlpha(AxesObj, LabelInd)
 if nargin<2
@@ -1531,12 +1531,12 @@ catch
 end
 Alpha=LabelSurf.Alpha;
 
-function RemoveLabel(AxesObj, LabelInd)%移除Label层函数
+function RemoveLabel(AxesObj, LabelInd)
 if nargin<2
-    error('Invalid Input: LabelInd');%若输入小于2，报错
+    error('Invalid Input: LabelInd');
 end
 
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 try
     LabelSurf=AxesHandle.LabelSurf(LabelInd, 1);
@@ -1544,20 +1544,20 @@ catch
     error('Invalid Label Index');
 end
 
-if numel(AxesHandle.LabelSurf)==1%若当前只有1个Label层
-    delete(LabelSurf.Obj);%删除LabelSurf.Obj子结构
+if numel(AxesHandle.LabelSurf)==1
+    delete(LabelSurf.Obj);
 end
-AxesHandle.LabelSurf(LabelInd)=[];%将当前Label层数据全部清空
-setappdata(AxesObj, 'AxesHandle', AxesHandle);%更新数据
-if numel(AxesHandle.LabelSurf)>=1%若此时仍有1个以上Label层选项
-    SetLabel(AxesObj, 1);    %调节为第一个Label
+AxesHandle.LabelSurf(LabelInd)=[];
+setappdata(AxesObj, 'AxesHandle', AxesHandle);
+if numel(AxesHandle.LabelSurf)>=1
+    SetLabel(AxesObj, 1);
 end
 
-function LabelFiles=GetLabelFiles(AxesObj)%获取Label文件
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前界面数据
-LabelFiles={AxesHandle.LabelSurf.LabelFile}';%对应的Label文件
+function LabelFiles=GetLabelFiles(AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+LabelFiles={AxesHandle.LabelSurf.LabelFile}';
 
-function SurfOpt=DefaultSurfOpt %默认属性
+function SurfOpt=DefaultSurfOpt
 SurfOpt.FaceLighting='phong';
 SurfOpt.SpecularStrength=0.7;
 SurfOpt.AmbientStrength=0.1;
@@ -1572,17 +1572,17 @@ SurfOpt.Renderer='OpenGL';
 SurfOpt.BackGroundColor=[1, 1, 1];
 
 function ResortSurf(AxesObj)
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
-ChildObj=get(AxesObj, 'Children');%获得所有子结构
-OverlayObjInd=arrayfun(@(obj) strcmpi(get(obj, 'Tag'), 'Overlay'), ChildObj);%获得所有Ovelay指数？
-if any(OverlayObjInd)%若有至少1个Overlay
-    OverlayObj={AxesHandle.OverlaySurf.Obj}';%全部Overlay的Obj
-    X=find(OverlayObjInd);%=OverlayObjInd??? 数据结构不太了解
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+ChildObj=get(AxesObj, 'Children');
+OverlayObjInd=arrayfun(@(obj) strcmpi(get(obj, 'Tag'), 'Overlay'), ChildObj);
+if any(OverlayObjInd)
+    OverlayObj={AxesHandle.OverlaySurf.Obj}';
+    X=find(OverlayObjInd);
     for i=1:numel(X)
-        ChildObj(X(i))=OverlayObj{i};%不太理解具体的操作
+        ChildObj(X(i))=OverlayObj{i};
     end
 end
-%对此事ChildObj的结构不太了解
+
 UnderSurfObjInd=arrayfun(@(obj) strcmpi(get(obj, 'Tag'), 'UnderSurf'), ChildObj);
 LabelObjInd=arrayfun(@(obj) strcmpi(get(obj, 'Tag'), 'Label'), ChildObj);
 BorderObjInd=arrayfun(@(obj) strcmpi(get(obj, 'Tag'), 'Border'), ChildObj);
@@ -1590,57 +1590,59 @@ OtherObjInd=~(UnderSurfObjInd | OverlayObjInd | LabelObjInd | BorderObjInd);
 
 NewChildObj=[ChildObj(BorderObjInd);ChildObj(OverlayObjInd);ChildObj(LabelObjInd);...
     ChildObj(OtherObjInd);ChildObj(UnderSurfObjInd)];
-set(AxesObj, 'Children', NewChildObj);%更新子结构
+set(AxesObj, 'Children', NewChildObj);
 
-function Txt=GetPosInfo(~, event_obj, AxesObj)%获取位置信息函数
-Pos=get(event_obj, 'Position');%获得光标处坐标
+function Txt=GetPosInfo(~, event_obj, AxesObj)
+Pos=get(event_obj, 'Position');
 
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 Coord=AxesHandle.UnderSurf.StructData.vertices;
-VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));%找到坐标对应的Coord指数
+VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
 Curv=AxesHandle.UnderSurf.Curv(VInd);
-% assignin('base','YokePosition',Pos);
+if AxesHandle.UnderSurf.IsYoked
+    assignin('base','YokePosition',Pos);
+end
 Txt={...
     ['X: ',     num2str(Pos(1))],...
     ['Y: ',     num2str(Pos(2))],...
     ['Z: ',     num2str(Pos(3))],...
     ['Index: ', num2str(VInd)],...
     ['Curv: ',  num2str(Curv)]...
-    };%显示的信息
-if isfield(AxesHandle, 'OverlaySurf')%如果有Overlay层？
-    OverlayFiles=AxesHandle.Fcn.GetOverlayFiles();%获取Overlay文件信息
-    [~, NameList, ExtList]=cellfun(@(f) fileparts(f), OverlayFiles, 'UniformOutput', false);%？？？
-    for i=1:numel(NameList)%如有多个文件？
+    };
+if isfield(AxesHandle, 'OverlaySurf')
+    OverlayFiles=AxesHandle.Fcn.GetOverlayFiles();
+    [~, NameList, ExtList]=cellfun(@(f) fileparts(f), OverlayFiles, 'UniformOutput', false);
+    for i=1:numel(NameList)
         OverlayTxt=sprintf('Overlay %s: %g', ...
-            NameList{i}, AxesHandle.OverlaySurf(i).Vertex(VInd));%额外显示的信息
-        Txt=[Txt, {OverlayTxt}];%加到输出字符中
+            NameList{i}, AxesHandle.OverlaySurf(i).Vertex(VInd));
+        Txt=[Txt, {OverlayTxt}];
     end
 end
 
-if isfield(AxesHandle, 'LabelSurf')%如果有Label层？
-    LabelFiles=AxesHandle.Fcn.GetLabelFiles();%获取Label文件信息
-    [~, NameList, ExtList]=cellfun(@(f) fileparts(f), LabelFiles, 'UniformOutput', false);%？？？同上
-    for i=1:numel(NameList)%如有多个文件？同上
-        LabelKey=AxesHandle.LabelSurf(i).LabelV(VInd);%查找到相应Label值？
+if isfield(AxesHandle, 'LabelSurf')
+    LabelFiles=AxesHandle.Fcn.GetLabelFiles();
+    [~, NameList, ExtList]=cellfun(@(f) fileparts(f), LabelFiles, 'UniformOutput', false);
+    for i=1:numel(NameList)
+        LabelKey=AxesHandle.LabelSurf(i).LabelV(VInd);
         LabelU=AxesHandle.LabelSurf(i).LabelU;
         
-        Ind= LabelU==LabelKey;%？？
-        LabelName=AxesHandle.LabelSurf(i).LabelName{Ind};%？？ 可能是LABEL的结构没太搞懂
+        Ind= LabelU==LabelKey;
+        LabelName=AxesHandle.LabelSurf(i).LabelName{Ind};
         LabelTxt=sprintf('Label %s: %g (%s)', ...
-            NameList{i}, LabelKey, LabelName);%额外显示的信息，同上
-        Txt=[Txt, {LabelTxt}];%加到输出字符中，同上
+            NameList{i}, LabelKey, LabelName);
+        Txt=[Txt, {LabelTxt}];
     end
 end
 
 function NewFig=SaveMontage(AxesObj, VarArgIn)
-AxesHandle=getappdata(AxesObj, 'AxesHandle');%获取当前数据
-ChildObj=get(AxesObj, 'Children');%为Axes的子类
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+ChildObj=get(AxesObj, 'Children');
 
 % Montage Style
-if numel(VarArgIn)==1 %若只有一个输入项则默认为左脑
+if numel(VarArgIn)==1 
     LR_Flag='L';
 else
-    LR_Flag=VarArgIn{1};%否则按输入项标记左右
+    LR_Flag=VarArgIn{1};
 end
 
 MontageOpt=[];
@@ -1649,46 +1651,46 @@ MontageOpt.AxesPos{1}=[0, 0.5, 1, 0.5];
 MontageOpt.AxesPos{2}=[0,   0, 1, 0.5];
 MontageOpt.VP{1}=[-90, 0];
 MontageOpt.VP{2}=[ 90, 0];
-if strcmpi(LR_Flag, 'L')%左脑视角
+if strcmpi(LR_Flag, 'L')
     MontageOpt.VP{1}=[-90, 0];
     MontageOpt.VP{2}=[ 90, 0];
-elseif strcmpi(LR_Flag, 'R')%右脑视角
+elseif strcmpi(LR_Flag, 'R')
     MontageOpt.VP{1}=[ 90, 0];
     MontageOpt.VP{2}=[-90, 0];
 end
 
 % New Figure
 NewFig=figure('Position', MontageOpt.FigPos, ...
-    'Units', 'normalized', 'Color', [1, 1, 1]);%弹出新窗口
-set(NewFig, 'Renderer', AxesHandle.SurfOpt.Renderer);%将绘图Renderer信息存入
-if numel(VarArgIn)>1 && ~isempty(VarArgIn{2}) % OutFile 若输入含有要输出的文件名称
-    OutFile=VarArgIn{2};%读取输出文件名称
+    'Units', 'normalized', 'Color', [1, 1, 1]);
+set(NewFig, 'Renderer', AxesHandle.SurfOpt.Renderer);
+if numel(VarArgIn)>1 && ~isempty(VarArgIn{2}) % OutFile 
+    OutFile=VarArgIn{2};
 
 end
 NewAxes=cell(2, 1);
-for i=1:2%分别绘制两图？
+for i=1:2
     OneAxes=axes('Parent', NewFig, 'Position', MontageOpt.AxesPos{i});
-    axis(OneAxes, 'tight');%使坐标长度紧贴数据长度
-    axis(OneAxes, 'vis3d');%打开3D视图功能？
-    axis(OneAxes, 'off');%关闭坐标轴显示
-    for j=1:numel(ChildObj)%？？？数据结构不明朗
-        ChildTag=get(ChildObj(j), 'Tag');%获取子类标签
+    axis(OneAxes, 'tight');
+    axis(OneAxes, 'vis3d');
+    axis(OneAxes, 'off');
+    for j=1:numel(ChildObj)
+        ChildTag=get(ChildObj(j), 'Tag');
         if ~strcmpi(ChildTag, '')
-            copyobj(ChildObj(j), OneAxes);%？？？
+            copyobj(ChildObj(j), OneAxes);
         end
     end
-%    ChangeView(AxesObj)
-    view(OneAxes, MontageOpt.VP{i});%设置视角
-    Light=camlight(AxesHandle.SurfOpt.LightOrient);%调整3D光线角度
+
+    view(OneAxes, MontageOpt.VP{i});
+    Light=camlight(AxesHandle.SurfOpt.LightOrient);
     set(Light, 'Parent', OneAxes);
     set(Light, 'style', 'infinite');
-    material(OneAxes, AxesHandle.SurfOpt.Material);%设置显示材质
-    NewAxes{i}=OneAxes;%储存在NewAxes中，不知在哪里会用到？
+    material(OneAxes, AxesHandle.SurfOpt.Material);
+    NewAxes{i}=OneAxes;
 
    DisplayTexture(AxesObj);
 end
-    DataCursor=datacursormode;%更新鼠标点击的显示函数
-    set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));%改为GetPosInfo函数-1575
+    DataCursor=datacursormode;
+    set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
 %     AxesHandle.DataCursor=DataCursor;
 
 function Opt=GetDataCursorPos(AxesObj)

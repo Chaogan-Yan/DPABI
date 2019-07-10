@@ -1173,7 +1173,7 @@ function MontageBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Fcn=handles.Fcn;
-Flag=get(handles.HemiMenu, 'string');
+Flag=get(handles.HemiMenu, 'string')
 MVP=Fcn.GetViewPoint();
 Fcn.SaveMontage(handles.SurfaceAxes, 'L', 'MontageFigure1');
 
@@ -1468,6 +1468,7 @@ function YokeCheckBox_KeyPressFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
+
 % --- Executes on key press with focus on Surf_VIEW or any of its controls.
 function Surf_VIEW_WindowKeyPressFcn(hObject, eventdata, handles)
 % hObject    handle to Surf_VIEW (see GCBO)
@@ -1486,8 +1487,6 @@ switch key
                 Fcn.MoveDataCursor(YokePos);
             end
         end
-    case 'a'
-        fprintf('aaa');
                 
     
 
@@ -1499,9 +1498,7 @@ function SurfaceAxes_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to SurfaceAxes (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Fcn=handles.Fcn;
-pos=get(handles.SurfaceAxes,'CurrentPoint')
-assignin('base','YokePosition',pos);
+
 
 
 % --- Executes on mouse press over figure background, over a disabled or
@@ -1510,9 +1507,9 @@ function Surf_VIEW_WindowButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to Surf_VIEW (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isfield(handles, 'IsYoked')
-      if handles.IsYoked==1
-             YokePos=evalin('base','YokePosition');
-             Fcn.MoveDataCursor(YokePos);
-      end
-end
+% if isfield(handles, 'IsYoked')
+%       if handles.IsYoked==1
+%              YokePos=evalin('base','YokePosition');
+%              Fcn.MoveDataCursor(YokePos);
+%       end
+% end
