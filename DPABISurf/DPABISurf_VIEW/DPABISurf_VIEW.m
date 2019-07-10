@@ -1162,9 +1162,10 @@ function NewBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-DPABISurf_VIEW;
-% New=figure(DPABISurf_VIEW);
-% movegui(New, 'onscreen');
+% DPABISurf_VIEW;
+New=figure(DPABISurf_VIEW);
+movegui(New, 'onscreen');
+
 
 
 % --- Executes on button press in MontageBtn.
