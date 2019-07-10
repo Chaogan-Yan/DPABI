@@ -1172,7 +1172,7 @@ function MontageBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Fcn=handles.Fcn;
-Flag=get(handles.HemiMenu, 'string')
+Flag=get(handles.HemiMenu, 'string');
 MVP=Fcn.GetViewPoint();
 Fcn.SaveMontage(handles.SurfaceAxes, 'L', 'MontageFigure1');
 
