@@ -540,17 +540,15 @@ function YokeCheckBox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of YokeCheckBox
-Fcn=handles.Fcn;
-YokeInfo=struct('Flag',Fcn.GetYokedFlag(),'Pos',Fcn.GetDataCursorPos());
-Fcn.SetYokedFlag(~YokeInfo.Flag.IsYoked);
-YokeInfo.Flag=Fcn.GetYokedFlag();
-handles.IsYoked=YokeInfo.Flag.IsYoked;
-% YokeInfo.Pos.Pos;
-% assignin('base','YokePosition',YokeInfo.Pos.Pos);
-if YokeInfo.Flag.IsYoked
-    YokePos=evalin('base','YokePosition');
-    Fcn.MoveDataCursor(YokePos);
-end
+% Fcn=handles.Fcn;
+% YokeInfo=struct('Flag',Fcn.GetYokedFlag(),'Pos',Fcn.GetDataCursorPos());
+% Fcn.SetYokedFlag(~YokeInfo.Flag.IsYoked);
+% YokeInfo.Flag=Fcn.GetYokedFlag();
+% handles.IsYoked=YokeInfo.Flag.IsYoked;
+% if YokeInfo.Flag.IsYoked
+%     YokePos=evalin('base','YokePosition');
+%     Fcn.MoveDataCursor(YokePos);
+% end
     
 
 
@@ -1478,20 +1476,20 @@ function Surf_VIEW_WindowKeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-Fcn=handles.Fcn;
-key = get(handles.figure1,'CurrentKey'); 
-switch key
-    case 'space'
-        if isfield(handles, 'IsYoked')
-            if handles.IsYoked==1
-                YokePos=evalin('base','YokePosition');
-                Fcn.MoveDataCursor(YokePos);
-            end
-        end
-                
-    
-
-end
+% Fcn=handles.Fcn;
+% key = get(handles.figure1,'CurrentKey'); 
+% switch key
+%     case 'space'
+%         if isfield(handles, 'IsYoked')
+%             if handles.IsYoked==1
+%                 YokePos=evalin('base','YokePosition');
+%                 Fcn.MoveDataCursor(YokePos);
+%             end
+%         end
+%                 
+%     
+% 
+% end
 
 
 % --- Executes on mouse press over axes background.

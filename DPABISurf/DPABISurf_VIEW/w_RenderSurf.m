@@ -1599,9 +1599,9 @@ AxesHandle=getappdata(AxesObj, 'AxesHandle');
 Coord=AxesHandle.UnderSurf.StructData.vertices;
 VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
 Curv=AxesHandle.UnderSurf.Curv(VInd);
-if AxesHandle.UnderSurf.IsYoked
-    assignin('base','YokePosition',Pos);
-end
+% if AxesHandle.UnderSurf.IsYoked
+%     assignin('base','YokePosition',Pos);
+% end
 Txt={...
     ['X: ',     num2str(Pos(1))],...
     ['Y: ',     num2str(Pos(2))],...
