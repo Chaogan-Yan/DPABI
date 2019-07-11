@@ -829,6 +829,16 @@ if (Cfg.IsSmoothConcordance==1)
 end
 
 
+%Delete Dynamic 4D Files to save disk space
+if (Cfg.IsDelete4D==1)
+    delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D']);
+    delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D']);
+    delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D']);
+end
+
+
+
+
 function RaterImages = y_Call_Eval_ConcordanceMeasuresSelected(ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr)
 eval(['RaterImages={',ConcordanceMeasuresSelected,'};'])
 
