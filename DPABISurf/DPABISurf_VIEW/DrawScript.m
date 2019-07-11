@@ -13,5 +13,6 @@
 % figure, montage({'Test_L.tif', 'Test_R.tif'})
 
 [AxesObj, Fcn]=w_RenderSurf('../SurfTemplates/fsaverage5_rh_inflated.surf.gii');
-%Fcn.MoveDataCursor([0, 0, 0]);
-Fcn.GetDataCursorPos()
+Fcn.SetYokedFlag(1);
+%Fcn.MoveDataCursor([-32.6368 54.6919 21.3212]);
+%Fcn.UpdateAllYokedViewer();

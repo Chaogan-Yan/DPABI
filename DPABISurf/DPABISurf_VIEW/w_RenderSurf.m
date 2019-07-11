@@ -23,6 +23,7 @@ if nargin<2
 else
     AxesObj=varargin{2};
 end
+set(AxesObj, 'Tag', 'DPABISurf_VIEW_AxeObj');
 %cla(AxesObj)
 
 % Surface Option 
@@ -205,6 +206,8 @@ if isempty(CurUnderSurf)
         @() GetDataCursorPos(AxesObj);
     Fcn.MoveDataCursor=...
         @(Pos) MoveDataCursor(AxesObj, Pos);
+    Fcn.UpdateAllYokedViewer=...
+        @() UpdateAllYokedViewer(AxesObj);
     
     AxesHandle.Fcn=Fcn;
     
@@ -1633,6 +1636,9 @@ if isfield(AxesHandle, 'LabelSurf')
         Txt=[Txt, {LabelTxt}];
     end
 end
+if ancestor(AxesObj, 'figure')==gcf
+    UpdateAllYokedViewer(AxesObj);
+end
 
 function NewFig=SaveMontage(AxesObj, VarArgIn)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
@@ -1707,8 +1713,42 @@ AxesHandle=getappdata(AxesObj, 'AxesHandle');
 DataCursorObj=GetDataCursorObj(AxesObj);
 
 UnderSurf=AxesHandle.UnderSurf;
+V=get(UnderSurf.Obj, 'Vertices');
+Dis=sqrt(sum((V-repmat(Pos, [size(V, 1), 1])).^2, 2));
+if all(Dis>1e-4)
+    return
+end
+[Min, Ind]=min(Dis);
+Pos=V(Ind, :);
 set(DataCursorObj, 'Enable', 'On');
 DataCursorObj.removeAllDataCursors();
 DataTipObj=DataCursorObj.createDatatip(UnderSurf.Obj);
 set(DataTipObj, 'Position', Pos);
 
+function UpdateAllYokedViewer(AxesObj)
+Opt=GetDataCursorPos(AxesObj);
+Pos=Opt.Pos;
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+CurCoord=AxesHandle.UnderSurf.StructData.vertices;
+Opt=GetYokedFlag(AxesObj);
+if ~Opt.IsYoked % Not Yoked
+    return
+end
+AllAxesObjs=findall(0, 'Tag', 'DPABISurf_VIEW_AxeObj');
+for i=1:numel(AllAxesObjs)
+    OneAxesObj=AllAxesObjs(i);
+    if AxesObj==OneAxesObj
+        continue;
+    end
+    
+    OneOpt=GetYokedFlag(OneAxesObj);
+    if ~OneOpt.IsYoked
+        continue;
+    end
+    
+    OneAxesHandle=getappdata(OneAxesObj, 'AxesHandle');
+    OneCoord=OneAxesHandle.UnderSurf.StructData.vertices;
+    if isequal(CurCoord, OneCoord)
+        MoveDataCursor(OneAxesObj, Pos)
+    end
+end
