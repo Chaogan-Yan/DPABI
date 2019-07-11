@@ -539,8 +539,12 @@ function YokeCheckBox_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hint: get(hObject,'Value') returns toggle state of YokeCheckBox
-Fcn=handles.Fcn;
 State=get(handles.YokeCheckBox, 'Value');
+if ~isfield(handles, 'Fcn')
+    set(handles.YokeCheckBox, 'Value', ~State);
+    return
+end
+Fcn=handles.Fcn;
 Fcn.SetYokedFlag(State);
 if State
     Opt=Fcn.GetDataCursorPos();

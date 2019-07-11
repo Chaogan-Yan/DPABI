@@ -207,7 +207,7 @@ if isempty(CurUnderSurf)
     Fcn.MoveDataCursor=...
         @(Pos) MoveDataCursor(AxesObj, Pos);
     Fcn.UpdateAllYokedViewer=...
-        @() UpdateAllYokedViewer(AxesObj);
+        @(Pos) UpdateAllYokedViewer(AxesObj, Pos);
     
     AxesHandle.Fcn=Fcn;
     
@@ -1598,46 +1598,9 @@ set(AxesObj, 'Children', NewChildObj);
 function Txt=GetPosInfo(~, event_obj, AxesObj)
 Pos=get(event_obj, 'Position');
 
-AxesHandle=getappdata(AxesObj, 'AxesHandle');
-Coord=AxesHandle.UnderSurf.StructData.vertices;
-VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
-Curv=AxesHandle.UnderSurf.Curv(VInd);
-% if AxesHandle.UnderSurf.IsYoked
-%     assignin('base','YokePosition',Pos);
-% end
-Txt={...
-    ['X: ',     num2str(Pos(1))],...
-    ['Y: ',     num2str(Pos(2))],...
-    ['Z: ',     num2str(Pos(3))],...
-    ['Index: ', num2str(VInd)],...
-    ['Curv: ',  num2str(Curv)]...
-    };
-if isfield(AxesHandle, 'OverlaySurf')
-    OverlayFiles=AxesHandle.Fcn.GetOverlayFiles();
-    [~, NameList, ExtList]=cellfun(@(f) fileparts(f), OverlayFiles, 'UniformOutput', false);
-    for i=1:numel(NameList)
-        OverlayTxt=sprintf('Overlay %s: %g', ...
-            NameList{i}, AxesHandle.OverlaySurf(i).Vertex(VInd));
-        Txt=[Txt, {OverlayTxt}];
-    end
-end
-
-if isfield(AxesHandle, 'LabelSurf')
-    LabelFiles=AxesHandle.Fcn.GetLabelFiles();
-    [~, NameList, ExtList]=cellfun(@(f) fileparts(f), LabelFiles, 'UniformOutput', false);
-    for i=1:numel(NameList)
-        LabelKey=AxesHandle.LabelSurf(i).LabelV(VInd);
-        LabelU=AxesHandle.LabelSurf(i).LabelU;
-        
-        Ind= LabelU==LabelKey;
-        LabelName=AxesHandle.LabelSurf(i).LabelName{Ind};
-        LabelTxt=sprintf('Label %s: %g (%s)', ...
-            NameList{i}, LabelKey, LabelName);
-        Txt=[Txt, {LabelTxt}];
-    end
-end
-if ancestor(AxesObj, 'figure')==gcf
-    UpdateAllYokedViewer(AxesObj);
+Txt=GetPos(Pos, AxesObj);
+if AxesObj==gca
+    UpdateAllYokedViewer(AxesObj, Pos);
 end
 
 function NewFig=SaveMontage(AxesObj, VarArgIn)
@@ -1708,9 +1671,10 @@ else
     Opt.Pos=CursorInfo.Position;
 end
 
-function MoveDataCursor(AxesObj, Pos)
+function MoveDataCursor(AxesObj, Pos, VP)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 DataCursorObj=GetDataCursorObj(AxesObj);
+SetViewPoint(AxesObj, VP);
 
 UnderSurf=AxesHandle.UnderSurf;
 V=get(UnderSurf.Obj, 'Vertices');
@@ -1724,16 +1688,23 @@ set(DataCursorObj, 'Enable', 'On');
 DataCursorObj.removeAllDataCursors();
 DataTipObj=DataCursorObj.createDatatip(UnderSurf.Obj);
 set(DataTipObj, 'Position', Pos);
+DataCursorObj.updateDataCursors();
+%Txt=GetPos(Pos, AxesObj);
+%set(DataTipObj, 'String', Txt);
+%set(DataCursorObj, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
 
-function UpdateAllYokedViewer(AxesObj)
-Opt=GetDataCursorPos(AxesObj);
-Pos=Opt.Pos;
+function UpdateAllYokedViewer(AxesObj, Pos)
+%Opt=GetDataCursorPos(AxesObj);
+%Pos=Opt.Pos;
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
-CurCoord=AxesHandle.UnderSurf.StructData.vertices;
 Opt=GetYokedFlag(AxesObj);
 if ~Opt.IsYoked % Not Yoked
     return
 end
+CurCoord=AxesHandle.UnderSurf.StructData.vertices;
+Opt=GetViewPoint(AxesObj);
+CurVP=Opt.ViewPoint;
+
 AllAxesObjs=findall(0, 'Tag', 'DPABISurf_VIEW_AxeObj');
 for i=1:numel(AllAxesObjs)
     OneAxesObj=AllAxesObjs(i);
@@ -1749,6 +1720,44 @@ for i=1:numel(AllAxesObjs)
     OneAxesHandle=getappdata(OneAxesObj, 'AxesHandle');
     OneCoord=OneAxesHandle.UnderSurf.StructData.vertices;
     if isequal(CurCoord, OneCoord)
-        MoveDataCursor(OneAxesObj, Pos)
+        MoveDataCursor(OneAxesObj, Pos, CurVP);
+    end
+end
+
+function Txt=GetPos(Pos, AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Coord=AxesHandle.UnderSurf.StructData.vertices;
+VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
+Curv=AxesHandle.UnderSurf.Curv(VInd);
+
+Txt={...
+    ['X: ',     num2str(Pos(1))],...
+    ['Y: ',     num2str(Pos(2))],...
+    ['Z: ',     num2str(Pos(3))],...
+    ['Index: ', num2str(VInd)],...
+    ['Curv: ',  num2str(Curv)]...
+    };
+if isfield(AxesHandle, 'OverlaySurf')
+    OverlayFiles=AxesHandle.Fcn.GetOverlayFiles();
+    [~, NameList, ExtList]=cellfun(@(f) fileparts(f), OverlayFiles, 'UniformOutput', false);
+    for i=1:numel(NameList)
+        OverlayTxt=sprintf('Overlay %s: %g', ...
+            NameList{i}, AxesHandle.OverlaySurf(i).Vertex(VInd));
+        Txt=[Txt, {OverlayTxt}];
+    end
+end
+
+if isfield(AxesHandle, 'LabelSurf')
+    LabelFiles=AxesHandle.Fcn.GetLabelFiles();
+    [~, NameList, ExtList]=cellfun(@(f) fileparts(f), LabelFiles, 'UniformOutput', false);
+    for i=1:numel(NameList)
+        LabelKey=AxesHandle.LabelSurf(i).LabelV(VInd);
+        LabelU=AxesHandle.LabelSurf(i).LabelU;
+        
+        Ind= LabelU==LabelKey;
+        LabelName=AxesHandle.LabelSurf(i).LabelName{Ind};
+        LabelTxt=sprintf('Label %s: %g (%s)', ...
+            NameList{i}, LabelKey, LabelName);
+        Txt=[Txt, {LabelTxt}];
     end
 end

@@ -12,7 +12,7 @@
 % 
 % figure, montage({'Test_L.tif', 'Test_R.tif'})
 
-[AxesObj, Fcn]=w_RenderSurf('../SurfTemplates/fsaverage5_rh_inflated.surf.gii');
+[AxesObj, Fcn]=w_RenderSurf('../SurfTemplates/fsaverage5_lh_inflated.surf.gii');
 Fcn.SetYokedFlag(1);
 %Fcn.MoveDataCursor([-32.6368 54.6919 21.3212]);
 %Fcn.UpdateAllYokedViewer();
