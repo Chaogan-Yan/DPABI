@@ -22,10 +22,10 @@ function varargout = DPABISurf_VIEW(varargin)
 
 % Edit the above text to modify the response to help DPABISurf_VIEW
 
-% Last Modified by GUIDE v2.5 11-Mar-2019 18:05:41
+% Last Modified by GUIDE v2.5 11-Jul-2019 09:32:58
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
+gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @DPABISurf_VIEW_OpeningFcn, ...
@@ -55,7 +55,7 @@ function DPABISurf_VIEW_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.UnderlayFilePath='';
 handles.OverlayInd=0;
 handles.LabelInd=0;
-
+% handles.IsYoked=false;
 handles.ColorMapEnum={'Jet';...
     'HSV';...
     'Hot';...
@@ -72,12 +72,12 @@ handles.ColorMapEnum={'Jet';...
 
 % Choose default command line output for DPABISurf_VIEW
 handles.output = hObject;
-axis(handles.SurfaceAxes, 'off');
+axis(handles.SurfaceAxes, 'on');
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes DPABISurf_VIEW wait for user response (see UIRESUME)
-% uiwait(handles.MainFig);
+% uiwait(handles.Surf_VIEW);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = DPABISurf_VIEW_OutputFcn(hObject, eventdata, handles) 
@@ -538,9 +538,24 @@ function YokeCheckBox_Callback(hObject, eventdata, handles)
 % hObject    handle to YokeCheckBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 % Hint: get(hObject,'Value') returns toggle state of YokeCheckBox
-
+State=get(handles.YokeCheckBox, 'Value');
+if ~isfield(handles, 'Fcn')
+    set(handles.YokeCheckBox, 'Value', ~State);
+    return
+end
+Fcn=handles.Fcn;
+Fcn.SetYokedFlag(State);
+if State
+    Opt=Fcn.GetDataCursorPos();
+    if isempty(Opt.Pos)
+        return
+    end
+    
+else
+    %DataCursorObj=Fcn.GetDataCursorObj();
+    %DataCursorObj.removeAllDataCursors();
+end
 
 % --- Executes on button press in TextureCheckBox.
 function TextureCheckBox_Callback(hObject, eventdata, handles)
@@ -559,7 +574,9 @@ function ViewPointMenu_Callback(hObject, eventdata, handles)
 handles=guidata(hObject);
 Val=get(handles.ViewPointMenu, 'Value');
 
-
+if ~isfield(handles, 'Fcn')
+    return
+end
 switch Val
     case 1 % DO NOTING
         return 
@@ -1148,12 +1165,21 @@ function NewBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% DPABISurf_VIEW;
+New=figure(DPABISurf_VIEW);
+movegui(New, 'onscreen');
+
+
 
 % --- Executes on button press in MontageBtn.
 function MontageBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to MontageBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+Fcn=handles.Fcn;
+Flag=get(handles.HemiMenu, 'string');
+MVP=Fcn.GetViewPoint();
+Fcn.SaveMontage(handles.SurfaceAxes, 'L', 'MontageFigure1');
 
 
 % --- Executes on button press in OverlayColorCustomBtn.
@@ -1427,3 +1453,67 @@ function LabelUtilitiesMenu_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes during object creation, after setting all properties.
+function YokeCheckBox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to YokeCheckBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on key press with focus on YokeCheckBox and none of its controls.
+function YokeCheckBox_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to YokeCheckBox (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+% --- Executes on key press with focus on Surf_VIEW or any of its controls.
+function Surf_VIEW_WindowKeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to Surf_VIEW (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+% Fcn=handles.Fcn;
+% key = get(handles.figure1,'CurrentKey'); 
+% switch key
+%     case 'space'
+%         if isfield(handles, 'IsYoked')
+%             if handles.IsYoked==1
+%                 YokePos=evalin('base','YokePosition');
+%                 Fcn.MoveDataCursor(YokePos);
+%             end
+%         end
+%                 
+%     
+% 
+% end
+
+
+% --- Executes on mouse press over axes background.
+function SurfaceAxes_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to SurfaceAxes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+% --- Executes on mouse press over figure background, over a disabled or
+% --- inactive control, or over an axes background.
+function Surf_VIEW_WindowButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to Surf_VIEW (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% if isfield(handles, 'IsYoked')
+%       if handles.IsYoked==1
+%              YokePos=evalin('base','YokePosition');
+%              Fcn.MoveDataCursor(YokePos);
+%       end
+% end

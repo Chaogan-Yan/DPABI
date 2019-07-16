@@ -16,16 +16,17 @@ else
     SurfFile=varargin{1};
 end
 
-% Axes Object
+% Axes Object 
 if nargin<2
     figure
     AxesObj=axes;
 else
     AxesObj=varargin{2};
 end
+set(AxesObj, 'Tag', 'DPABISurf_VIEW_AxeObj');
 %cla(AxesObj)
 
-% Surface Option
+% Surface Option 
 if nargin<3
     SurfOpt=DefaultSurfOpt;
 else
@@ -54,7 +55,7 @@ for i=1:numel(AxeChildObj)
     end
 end
 if isempty(CurUnderSurf)
-    PatchObj=patch(P,...
+    PatchObj=patch(P,...  
         'FaceColor',        FaceColor,...
         'CDataMapping',     'direct',...
         'FaceAlpha',        FaceAlpha,...
@@ -71,7 +72,7 @@ if isempty(CurUnderSurf)
         'Tag',              'UnderSurf',...
         'Parent',           AxesObj);
     
-    % Set the Axis of Axes
+    % Set the Axis of Axes 
     axis(AxesObj, 'image');
     axis(AxesObj, 'auto');
     axis(AxesObj, 'off');
@@ -83,15 +84,15 @@ if isempty(CurUnderSurf)
     set(Light, 'Parent', AxesObj);
     set(Light, 'style', 'infinite');
     
-    % Rotate Obj
+    % Rotate Obj 
     Rotate3d=rotate3d(AxesObj);
     set(Rotate3d, 'Enable', 'On');
     set(Rotate3d, 'ActionPostCallback', @RotateLight);
-    
+
     AxesHandle.Light=Light;
     AxesHandle.Rotate3d=Rotate3d;
     
-    % Under Surface Object
+    % Under Surface Object  
     AxesHandle.UnderSurf.Obj=PatchObj;
     AxesHandle.UnderSurf.SurfFile=SurfFile;
     AxesHandle.UnderSurf.FaceColor=FaceColor;
@@ -118,7 +119,7 @@ if isempty(CurUnderSurf)
     Fcn.GetYokedFlag=...
         @() GetYokedFlag(AxesObj);
     Fcn.SetYokedFlag=...
-        @(IsYoked) SetYokedFlag(AxesObj, IsYoked);    
+        @(IsYoked) SetYokedFlag(AxesObj, IsYoked);
     Fcn.GetViewPointCustomFlag=...
         @() GetViewPointCustomFlag(AxesObj);
     Fcn.SetViewPointCustomFlag=...
@@ -205,6 +206,8 @@ if isempty(CurUnderSurf)
         @() GetDataCursorPos(AxesObj);
     Fcn.MoveDataCursor=...
         @(Pos) MoveDataCursor(AxesObj, Pos);
+    Fcn.UpdateAllYokedViewer=...
+        @(Pos) UpdateAllYokedViewer(AxesObj, Pos);
     
     AxesHandle.Fcn=Fcn;
     
@@ -212,6 +215,8 @@ if isempty(CurUnderSurf)
     
     FigObj=ancestor(AxesObj, 'figure');
     DataCursor=datacursormode(FigObj);
+    %set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj),...
+    %    'SnapToDataVertex', 'Off');
     set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
     AxesHandle.DataCursor=DataCursor;
     
@@ -221,20 +226,20 @@ if isempty(CurUnderSurf)
     if isfield(FigHandle, 'ViewPointMenu')
         set(FigHandle.ViewPointMenu, 'Value', 2);
     end
-else
-    if isfield(AxesHandle, 'OverlaySurf')
-        if size(AxesHandle.OverlaySurf(1).Vertex, 1)~=size(P.vertices, 1)
-            errordlg('Number of Vertices Not Match Between Selected Overlay and Underlay!');
+else 
+    if isfield(AxesHandle, 'OverlaySurf') 
+        if size(AxesHandle.OverlaySurf(1).Vertex, 1)~=size(P.vertices, 1) 
+            errordlg('Number of Vertices Not Match Between Selected Overlay and Underlay!'); 
             Fcn=AxesHandle.Fcn;
             return;
         end
-        for i=1:numel(AxesHandle.OverlaySurf)
+        for i=1:numel(AxesHandle.OverlaySurf) 
             set(AxesHandle.OverlaySurf(i).Obj, 'Faces', P.faces,...
                 'Vertices', P.vertices);
         end
     end
     
-    if isfield(AxesHandle, 'LabelSurf')
+    if isfield(AxesHandle, 'LabelSurf') 
         if size(AxesHandle.LabelSurf(1).LabelV, 1)~=size(P.vertices, 1)
             errordlg('Number of Vertices Not Match Between Selected Label and Underlay!');
             Fcn=AxesHandle.Fcn;
@@ -250,7 +255,7 @@ else
         'Vertices', P.vertices);
     axis(AxesObj, 'auto');
     axis(AxesObj, 'off');
-    
+
     AxesHandle.UnderSurf.SurfFile=SurfFile;
     AxesHandle.UnderSurf.FaceColor=FaceColor;
     AxesHandle.UnderSurf.FaceAlpha=FaceAlpha;
@@ -354,7 +359,7 @@ DisplayTexture(AxesObj);
 function DisplayTexture(AxesObj)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 FaceColor=AxesHandle.UnderSurf.FaceColor;
-if AxesHandle.UnderSurf.IsShowTexture
+if AxesHandle.UnderSurf.IsShowTexture 
     Curv=AxesHandle.UnderSurf.Curv;
     Curv=Curv>0;
     NumV=size(Curv, 1);
@@ -555,7 +560,7 @@ AxesHandle.OverlaySurf=AxesHandle.OverlaySurf(OverlayOrder);
 setappdata(AxesObj, 'AxesHandle', AxesHandle);
 set(AxesObj, 'Children', AllObjs)
 
-function Opt=GetOverlayThres(AxesObj, OverlayInd)
+function Opt=GetOverlayThres(AxesObj, OverlayInd) 
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 
 try
@@ -1049,7 +1054,7 @@ CSizeOpt.StructData=AxesHandle.UnderSurf.StructData;
 CSizeOpt.VAreaFile=[];
 CSizeOpt.VArea=[];
 
-DfS=w_ReadDF(V);
+DfS=w_ReadDF(V);%
 TestFlag=DfS.TestFlag;
 Df=DfS.Df;
 Df2=DfS.Df2;
@@ -1421,7 +1426,7 @@ Alpha=1;
 AdjustVA=Alpha*ones(size(LabelV));
 
 
-% LabelOpt
+% LabelOpt 
 LabelOpt.LabelFile=LabelFile;
 LabelOpt.LabelColor=LabelColor;
 LabelOpt.LabelName=V.labels.name;
@@ -1431,15 +1436,15 @@ LabelOpt.IsShowZeros=IsShowZeros;
 LabelOpt.IsVisible=IsVisible;
 LabelOpt.Alpha=Alpha;
 
-if isfield(AxesHandle, 'LabelSurf') && numel(AxesHandle.LabelSurf)>0
+if isfield(AxesHandle, 'LabelSurf') && numel(AxesHandle.LabelSurf)>0 
     Num=numel(AxesHandle.LabelSurf);
     LabelOpt.Obj=AxesHandle.LabelSurf(1).Obj;
     set(LabelOpt.Obj,...
-        'FaceVertexCData',  AdjustVC,...
+        'FaceVertexCData',  AdjustVC,... 
         'FaceVertexAlpha',  AdjustVA,...
         'Visible',          IsVisible);
     
-    AxesHandle.LabelSurf(Num+1, 1)=LabelOpt;    
+    AxesHandle.LabelSurf(Num+1, 1)=LabelOpt; 
 else
     PatchObj=patch(AxesHandle.UnderSurf.StructData,...
         'FaceColor',        'flat',...
@@ -1550,7 +1555,7 @@ end
 AxesHandle.LabelSurf(LabelInd)=[];
 setappdata(AxesObj, 'AxesHandle', AxesHandle);
 if numel(AxesHandle.LabelSurf)>=1
-    SetLabel(AxesObj, 1);    
+    SetLabel(AxesObj, 1);
 end
 
 function LabelFiles=GetLabelFiles(AxesObj)
@@ -1592,9 +1597,136 @@ NewChildObj=[ChildObj(BorderObjInd);ChildObj(OverlayObjInd);ChildObj(LabelObjInd
     ChildObj(OtherObjInd);ChildObj(UnderSurfObjInd)];
 set(AxesObj, 'Children', NewChildObj);
 
-function Txt=GetPosInfo(empt, event_obj, AxesObj)
+function Txt=GetPosInfo(~, event_obj, AxesObj)
 Pos=get(event_obj, 'Position');
 
+Txt=GetPos(Pos, AxesObj);
+if AxesObj==gca
+    UpdateAllYokedViewer(AxesObj, Pos);
+end
+
+function NewFig=SaveMontage(AxesObj, VarArgIn)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+ChildObj=get(AxesObj, 'Children');
+
+% Montage Style
+if numel(VarArgIn)==1 
+    LR_Flag='L';
+else
+    LR_Flag=VarArgIn{1};
+end
+
+MontageOpt=[];
+MontageOpt.FigPos=[0, 0, 600, 800];
+MontageOpt.AxesPos{1}=[0, 0.5, 1, 0.5];
+MontageOpt.AxesPos{2}=[0,   0, 1, 0.5];
+MontageOpt.VP{1}=[-90, 0];
+MontageOpt.VP{2}=[ 90, 0];
+if strcmpi(LR_Flag, 'L')
+    MontageOpt.VP{1}=[-90, 0];
+    MontageOpt.VP{2}=[ 90, 0];
+elseif strcmpi(LR_Flag, 'R')
+    MontageOpt.VP{1}=[ 90, 0];
+    MontageOpt.VP{2}=[-90, 0];
+end
+
+% New Figure
+NewFig=figure('Position', MontageOpt.FigPos, ...
+    'Units', 'normalized', 'Color', [1, 1, 1]);
+set(NewFig, 'Renderer', AxesHandle.SurfOpt.Renderer);
+if numel(VarArgIn)>1 && ~isempty(VarArgIn{2}) % OutFile 
+    OutFile=VarArgIn{2};
+
+end
+NewAxes=cell(2, 1);
+for i=1:2
+    OneAxes=axes('Parent', NewFig, 'Position', MontageOpt.AxesPos{i});
+    axis(OneAxes, 'tight');
+    axis(OneAxes, 'vis3d');
+    axis(OneAxes, 'off');
+    for j=1:numel(ChildObj)
+        ChildTag=get(ChildObj(j), 'Tag');
+        if ~strcmpi(ChildTag, '')
+            copyobj(ChildObj(j), OneAxes);
+        end
+    end
+
+    view(OneAxes, MontageOpt.VP{i});
+    Light=camlight(AxesHandle.SurfOpt.LightOrient);
+    set(Light, 'Parent', OneAxes);
+    set(Light, 'style', 'infinite');
+    material(OneAxes, AxesHandle.SurfOpt.Material);
+    NewAxes{i}=OneAxes;
+
+   DisplayTexture(AxesObj);
+end
+    DataCursor=datacursormode;
+    set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
+%     AxesHandle.DataCursor=DataCursor;
+
+function Opt=GetDataCursorPos(AxesObj)
+DataCursorObj=GetDataCursorObj(AxesObj);
+CursorInfo=DataCursorObj.getCursorInfo();
+if isempty(CursorInfo)
+    Opt.Pos=[];
+else
+    Opt.Pos=CursorInfo.Position;
+end
+
+function MoveDataCursor(AxesObj, Pos, VP)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Fig=ancestor(AxesObj, 'figure');
+Frm=get(AxesObj, 'Parent');
+DataCursorObj=GetDataCursorObj(AxesObj);
+SetViewPoint(AxesObj, VP);
+
+UnderSurf=AxesHandle.UnderSurf;
+V=get(UnderSurf.Obj, 'Vertices');
+Dis=sqrt(sum((V-repmat(Pos, [size(V, 1), 1])).^2, 2));
+if all(Dis>1e-4)
+    return
+end
+[Min, Ind]=min(Dis);
+Pos=V(Ind, :);
+set(AxesObj, 'Parent', Fig);
+set(DataCursorObj, 'Enable', 'On');
+DataCursorObj.removeAllDataCursors();
+DataTipObj=DataCursorObj.createDatatip(UnderSurf.Obj);
+set(DataTipObj, 'Position', Pos);
+set(AxesObj, 'Parent', Frm);
+
+function UpdateAllYokedViewer(AxesObj, Pos)
+%Opt=GetDataCursorPos(AxesObj);
+%Pos=Opt.Pos;
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Opt=GetYokedFlag(AxesObj);
+if ~Opt.IsYoked % Not Yoked
+    return
+end
+CurCoord=AxesHandle.UnderSurf.StructData.vertices;
+Opt=GetViewPoint(AxesObj);
+CurVP=Opt.ViewPoint;
+
+AllAxesObjs=findall(0, 'Tag', 'DPABISurf_VIEW_AxeObj');
+for i=1:numel(AllAxesObjs)
+    OneAxesObj=AllAxesObjs(i);
+    if AxesObj==OneAxesObj
+        continue;
+    end
+    
+    OneOpt=GetYokedFlag(OneAxesObj);
+    if ~OneOpt.IsYoked
+        continue;
+    end
+    
+    OneAxesHandle=getappdata(OneAxesObj, 'AxesHandle');
+    OneCoord=OneAxesHandle.UnderSurf.StructData.vertices;
+    if isequal(CurCoord, OneCoord)
+        MoveDataCursor(OneAxesObj, Pos, CurVP);
+    end
+end
+
+function Txt=GetPos(Pos, AxesObj)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
 Coord=AxesHandle.UnderSurf.StructData.vertices;
 VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
@@ -1631,76 +1763,3 @@ if isfield(AxesHandle, 'LabelSurf')
         Txt=[Txt, {LabelTxt}];
     end
 end
-
-function NewFig=SaveMontage(AxesObj, VarArgIn)
-AxesHandle=getappdata(AxesObj, 'AxesHandle');
-ChildObj=get(AxesObj, 'Children');
-
-% Montage Style
-if numel(VarArgIn)==1
-    LR_Flag='L';
-else
-    LR_Flag=VarArgIn{1};
-end
-
-MontageOpt=[];
-MontageOpt.FigPos=[0, 0, 600, 800];
-MontageOpt.AxesPos{1}=[0, 0.5, 1, 0.5];
-MontageOpt.AxesPos{2}=[0,   0, 1, 0.5];
-if strcmpi(LR_Flag, 'L')
-    MontageOpt.VP{1}=[-90, 0];
-    MontageOpt.VP{2}=[ 90, 0];
-elseif strcmpi(LR_Flag, 'R')
-    MontageOpt.VP{1}=[ 90, 0];
-    MontageOpt.VP{2}=[-90, 0];
-end
-
-% New Figure
-NewFig=figure('Position', MontageOpt.FigPos, ...
-    'Units', 'normalized', 'Color', [1, 1, 1]);
-set(NewFig, 'Renderer', AxesHandle.SurfOpt.Renderer);
-
-NewAxes=cell(2, 1);
-for i=1:2
-    OneAxes=axes('Parent', NewFig, 'Position', MontageOpt.AxesPos{i});
-    axis(OneAxes, 'tight');
-    axis(OneAxes, 'vis3d');
-    axis(OneAxes, 'off');
-    for j=1:numel(ChildObj)
-        ChildTag=get(ChildObj(j), 'Tag');
-        if ~strcmpi(ChildTag, '')
-            copyobj(ChildObj(j), OneAxes);
-        end
-    end
-    view(OneAxes, MontageOpt.VP{i});
-    Light=camlight(AxesHandle.SurfOpt.LightOrient);
-    set(Light, 'Parent', OneAxes);
-    set(Light, 'style', 'infinite');
-    material(OneAxes, AxesHandle.SurfOpt.Material);
-
-    NewAxes{i}=OneAxes;
-end
-
-if numel(VarArgIn)>1 && ~isempty(VarArgIn{2}) % OutFile
-    OutFile=VarArgIn{2};
-    print(OutFile, '-dtiff', '-r300');
-end
-
-function Opt=GetDataCursorPos(AxesObj)
-DataCursorObj=GetDataCursorObj(AxesObj);
-CursorInfo=DataCursorObj.getCursorInfo();
-if isempty(CursorInfo)
-    Opt.Pos=[];
-else
-    Opt.Pos=CursorInfo.Position;
-end
-
-function MoveDataCursor(AxesObj, Pos)
-AxesHandle=getappdata(AxesObj, 'AxesHandle');
-DataCursorObj=GetDataCursorObj(AxesObj);
-
-UnderSurf=AxesHandle.UnderSurf;
-set(DataCursorObj, 'Enable', 'On');
-DataCursorObj.removeAllDataCursors();
-DataTipObj=DataCursorObj.createDatatip(UnderSurf.Obj);
-set(DataTipObj, 'Position', Pos);
