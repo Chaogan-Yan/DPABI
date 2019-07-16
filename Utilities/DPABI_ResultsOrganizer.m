@@ -22,7 +22,7 @@ function varargout = DPABI_ResultsOrganizer(varargin)
 
 % Edit the above text to modify the response to help DPABI_ResultsOrganizer
 
-% Last Modified by GUIDE v2.5 29-Nov-2015 15:23:06
+% Last Modified by GUIDE v2.5 14-Jul-2019 10:23:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,6 +53,24 @@ function DPABI_ResultsOrganizer_OpeningFcn(hObject, eventdata, handles, varargin
 % varargin   command line arguments to DPABI_ResultsOrganizer (see VARARGIN)
 
 handles.SubjString=[];
+if ~isempty(varargin)
+    if varargin{1} == 1
+        set(handles.radiobuttonSurface,'Value',0);
+        set(handles.radiobuttonVolume,'Value',1);
+        set(handles.pushbuttonInterFiles,'Enable','on');
+        handles.IsDPARSF = 1;
+    else
+        set(handles.radiobuttonSurface,'Value',1);
+        set(handles.radiobuttonVolume,'Value',0);
+        set(handles.pushbuttonInterFiles,'Enable','off');
+        handles.IsDPARSF = 0;
+    end
+else
+    set(handles.radiobuttonSurface,'Value',1);
+    set(handles.radiobuttonVolume,'Value',0);
+    set(handles.pushbuttonInterFiles,'Enable','off');
+    handles.IsDPARSF = 0;
+end
 % Choose default command line output for DPABI_ResultsOrganizer
 handles.output = hObject;
 
@@ -374,4 +392,34 @@ WorkingDir=get(handles.WorkDirEntry, 'String');
 SubjectID=get(handles.SubjListbox, 'String');
 OutputDir=get(handles.OutputDirEntry, 'String');
 
-y_ResultsOrganizer(WorkingDir,SubjectID,OutputDir);
+if handles.IsDPARSF
+    y_ResultsOrganizer(WorkingDir,SubjectID,OutputDir);
+else
+    y_ResultsOrganizer_Surf(WorkingDir,SubjectID,OutputDir);
+end
+
+
+% --- Executes on button press in radiobuttonSurface.
+function radiobuttonSurface_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonSurface (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.radiobuttonSurface,'Value',1);
+set(handles.radiobuttonVolume,'Value',0);
+set(handles.pushbuttonInterFiles,'Enable','off');
+handles.IsDPARSF = 0;
+guidata(hObject, handles);
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonSurface
+
+
+% --- Executes on button press in radiobuttonVolume.
+function radiobuttonVolume_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonVolume (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.radiobuttonSurface,'Value',0);
+set(handles.radiobuttonVolume,'Value',1);
+set(handles.pushbuttonInterFiles,'Enable','on');
+handles.IsDPARSF = 1;
+guidata(hObject, handles);
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonVolume

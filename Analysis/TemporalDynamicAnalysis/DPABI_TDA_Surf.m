@@ -82,8 +82,7 @@ handles.Cfg.SurfFileRH=fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplat
 handles.Cfg.IsDegreeCentrality = 1;
 handles.Cfg.DegreeCentrality.rThreshold = 0.25;
 handles.Cfg.IsGSCorr = 1;
-handles.Cfg.GSCorr.GlobalMask = 'Default';
-handles.Cfg.GSCorr.GlobalMaskVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_61x73x61.img'); 
+handles.Cfg.GSCorr.GlobalMaskVolu = handles.Cfg.MaskFileVolu;
 handles.Cfg.IsFC = 0;
 handles.Cfg.CalFC.ROIDefVolu={};
 handles.Cfg.CalFC.ROIDefSurfLH={};
@@ -606,40 +605,40 @@ guidata(hObject,handles);
     
 % Hint: get(hObject,'Value') returns toggle state of checkboxGSCorr
 
-
-% --- Executes on button press in rbtnGSDefaultMask.
-function rbtnGSDefaultMask_Callback(hObject, eventdata, handles)
-% hObject    handle to rbtnGSDefaultMask (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-set(handles.rbtnGSDefaultMask, 'Value', 1);
-set(handles.rbtnGSUserMask, 'Value', 0);
-set(handles.editGSUserMask, 'Enable','off');
-set(handles.editGSUserMask, 'String', 'Default Mask');
-set(handles.btnGSSelectMask, 'Enable','off');
-handles.Cfg.GSCorr.GlobalMask = 'Default';
-handles.Cfg.GSCorr.GlobalMaskVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_61x73x61.img'); 
-UpdateDisplay(handles);
-guidata(hObject,handles);
-
-% Hint: get(hObject,'Value') returns toggle state of rbtnGSDefaultMask
-
-
-% --- Executes on button press in rbtnGSUserMask.
-function rbtnGSUserMask_Callback(hObject, eventdata, handles)
-% hObject    handle to rbtnGSUserMask (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-set(handles.rbtnGSDefaultMask, 'Value', 0);
-set(handles.rbtnGSUserMask, 'Value', 1);
-set(handles.editGSUserMask, 'Enable','on');
-set(handles.editGSUserMask, 'String', '');
-set(handles.btnGSSelectMask, 'Enable','on');
-handles.Cfg.GSCorr.GlobalMask = 'UserMask';
-UpdateDisplay(handles);
-guidata(hObject,handles);
-    
-% Hint: get(hObject,'Value') returns toggle state of rbtnGSUserMask
+% 
+% % --- Executes on button press in rbtnGSDefaultMask.
+% function rbtnGSDefaultMask_Callback(hObject, eventdata, handles)
+% % hObject    handle to rbtnGSDefaultMask (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% set(handles.rbtnGSDefaultMask, 'Value', 1);
+% set(handles.rbtnGSUserMask, 'Value', 0);
+% set(handles.editGSUserMask, 'Enable','off');
+% set(handles.editGSUserMask, 'String', 'Default Mask');
+% set(handles.btnGSSelectMask, 'Enable','off');
+% handles.Cfg.GSCorr.GlobalMask = 'Default';
+% handles.Cfg.GSCorr.GlobalMaskVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_61x73x61.img'); 
+% UpdateDisplay(handles);
+% guidata(hObject,handles);
+% 
+% % Hint: get(hObject,'Value') returns toggle state of rbtnGSDefaultMask
+% 
+% 
+% % --- Executes on button press in rbtnGSUserMask.
+% function rbtnGSUserMask_Callback(hObject, eventdata, handles)
+% % hObject    handle to rbtnGSUserMask (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% set(handles.rbtnGSDefaultMask, 'Value', 0);
+% set(handles.rbtnGSUserMask, 'Value', 1);
+% set(handles.editGSUserMask, 'Enable','on');
+% set(handles.editGSUserMask, 'String', '');
+% set(handles.btnGSSelectMask, 'Enable','on');
+% handles.Cfg.GSCorr.GlobalMask = 'UserMask';
+% UpdateDisplay(handles);
+% guidata(hObject,handles);
+%     
+% % Hint: get(hObject,'Value') returns toggle state of rbtnGSUserMask
 
 
 
@@ -675,7 +674,7 @@ if ~([MaskFileName,MaskPathName]==0)
     handles.Cfg.GSCorr.GlobalMaskVolu = [MaskPathName,MaskFileName];
     set(handles.editGSUserMask,'String',[MaskPathName,MaskFileName]);
 end
-handles.Cfg.GSCorr.GlobalMask = 'UserMask';
+
 UpdateDisplay(handles);
 guidata(hObject, handles);
 
@@ -994,6 +993,8 @@ if PathName~=0
     set(handles.editMaskVolu, 'String', fullfile(PathName,FileName));
 end
 handles.Cfg.MaskFileVolu = fullfile(PathName,FileName);
+handles.Cfg.GSCorr.GlobalMaskVolu = handles.Cfg.MaskFileVolu;
+UpdateDisplay(handles);
 guidata(hObject,handles);
 
 
@@ -1210,25 +1211,27 @@ if (isempty(Cfg.StartingDirForDCetc) | strcmp(Cfg.StartingDirForDCetc{1},'')) & 
 end
 Datetime=fix(clock); 
 save([handles.Cfg.WorkingDir,filesep,'DPABI_TDA_Surf_AutoSave_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
-% DPABI_TDA_Surf_run(handles.Cfg);
-clc;
-disp(handles.Cfg)
-disp('')
-disp(handles.Cfg.SubjectID)
-disp('')
-disp(handles.Cfg.ALFF)
-disp('')
-disp(handles.Cfg.ReHo)
-disp('')
-disp(handles.Cfg.DegreeCentrality)
-disp('')
-disp(handles.Cfg.GSCorr)
-disp('')
-disp(handles.Cfg.CalFC)
-disp('')
-disp(handles.Cfg.IsSmoothConcordance)
-disp('')
-disp(handles.Cfg.SmoothConcordance)
+
+DPABI_TDA_Surf_run(handles.Cfg);
+
+% clc;
+% disp(handles.Cfg)
+% disp('')
+% disp(handles.Cfg.SubjectID)
+% disp('')
+% disp(handles.Cfg.ALFF)
+% disp('')
+% disp(handles.Cfg.ReHo)
+% disp('')
+% disp(handles.Cfg.DegreeCentrality)
+% disp('')
+% disp(handles.Cfg.GSCorr)
+% disp('')
+% disp(handles.Cfg.CalFC)
+% disp('')
+% disp(handles.Cfg.IsSmoothConcordance)
+% disp('')
+% disp(handles.Cfg.SmoothConcordance)
 
 
 %% Update All the uiControls' display on the GUI
@@ -1366,27 +1369,10 @@ end
 % GSCorr
 set(handles.checkboxGSCorr,'Value',handles.Cfg.IsGSCorr);
 if get(handles.checkboxGSCorr,'Value')
-    set(handles.textGlobalMask,'Enable','on');
-    set(handles.rbtnGSDefaultMask,'Enable','on');
-    set(handles.rbtnGSUserMask,'Enable','on');
-    switch lower(handles.Cfg.GSCorr.GlobalMask)
-        case 'default'
-            set(handles.rbtnGSDefaultMask, 'Value', 1);
-            set(handles.rbtnGSUserMask, 'Value', 0);
-            set(handles.editGSUserMask, 'Enable','off');
-            set(handles.editGSUserMask, 'String', handles.Cfg.GSCorr.GlobalMaskVolu);
-            set(handles.btnGSSelectMask, 'Enable','off');
-        case 'usermask'
-            set(handles.rbtnGSDefaultMask, 'Value', 0);
-            set(handles.rbtnGSUserMask, 'Value', 1);
-            set(handles.editGSUserMask, 'Enable','on');
-            set(handles.editGSUserMask, 'String',handles.Cfg.GSCorr.GlobalMaskVolu);
-            set(handles.btnGSSelectMask, 'Enable','on');
-    end
+    set(handles.editGSUserMask,'Enable','on');
+    set(handles.editGSUserMask, 'String',handles.Cfg.GSCorr.GlobalMaskVolu);
+    set(handles.btnGSSelectMask, 'Enable','on');
 else
-    set(handles.textGlobalMask,'Enable','off');
-    set(handles.rbtnGSDefaultMask,'Enable','off');
-    set(handles.rbtnGSUserMask,'Enable','off');
     set(handles.editGSUserMask,'Enable','off');
     set(handles.btnGSSelectMask,'Enable','off');
 end

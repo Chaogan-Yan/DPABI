@@ -1,9 +1,11 @@
-function [StandardizedBrain, Header, OutNameList] = y_Standardization(ImgCells, MaskData, MethodType, OutputDir, Suffix)
-% [StandardizedBrain, Header, OutNameList] = y_Standardization(ImgCells, MaskData, MethodType, OutputDir, Suffix)
+function [StandardizedBrain_LH, StandardizedBrain_RH, Header_LH, Header_RH, OutNameList_LH, OutNameList_RH] = y_Standardization_Surf(ImgCells_LH, ImgCells_RH, MaskData_LH, MaskData_RH, MethodType, OutputDir, Suffix)
+% [StandardizedBrain_LH, StandardizedBrain_RH, Header_LH, Header_RH, OutNameList_LH, OutNameList_RH] = y_Standardization_Surf(ImgCells_LH, ImgCells_RH, MaskData_LH, MaskData_RH, MethodType, OutputDir, Suffix)
 % Standardize the brains for Statistical Analysis. Ref: Yan, C.G., Craddock, R.C., Zuo, X.N., Zang, Y.F., Milham, M.P., 2013. Standardizing the intrinsic brain: towards robust measurement of inter-individual variation in 1000 functional connectomes. Neuroimage 80, 246-262.
 % Input:
-% 	ImgCells		-	Input Data. 1 by N cells. For each cell, can be: 1. a single file; 2. N by 1 cell of filenames.
-%   MaskData        -   The mask file, within which the standardization is performed.
+% 	ImgCells_LH		-	Left Hemisphere, Input Data. 1 by N cells. For each cell, can be: 1. a single file; 2. N by 1 cell of filenames.
+% 	ImgCells_RH		-	Right Hemisphere, Input Data. 1 by N cells. For each cell, can be: 1. a single file; 2. N by 1 cell of filenames.
+%   MaskData_LH     -   Left Hemisphere, The mask file, within which the standardization is performed.
+%   MaskData_RH     -   Right Hemisphere, The mask file, within which the standardization is performed.
 %	MethodType  	-	The type of Standardization, can be:
 %                       Mean Regression
 %                       Mean Regression & SD Division
@@ -23,74 +25,44 @@ function [StandardizedBrain, Header, OutNameList] = y_Standardization(ImgCells, 
 %   Header                    -   The NIfTI Header
 %   All the standardized brains will be output as where OutputDir specified.
 %-----------------------------------------------------------
-% Written by YAN Chao-Gan 140815.
-% The Nathan Kline Institute for Psychiatric Research, 140 Old Orangeburg Road, Orangeburg, NY 10962, USA
-% Child Mind Institute, 445 Park Avenue, New York, NY 10022, USA
-% The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016, USA
+% Written by YAN Chao-Gan 190716.
+% Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
-% Revised by YAN Chao-Gan 181204. Add GIfTI support.
+
+
+%For Left Hemisphere
+ImgCells=ImgCells_LH; MaskData=MaskData_LH;
 
 AllVolumeSet = [];
 OutputFileNames = [];
 fprintf('\nReading Data...\n');
 for i=1:numel(ImgCells)
     ImgFiles=ImgCells{i};
-    
     [AllVolume,VoxelSize,theImgFileList, Header] =y_ReadAll(ImgFiles);
-    
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
-        
-        [nDim1 nDim2 nDim3 nDimTimePoints]=size(AllVolume);
-        BrainSize = [nDim1 nDim2 nDim3];
-        VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));
-        
-        if ischar(MaskData)
-            fprintf('\nLoad mask "%s".\n', MaskData);
-            if ~isempty(MaskData)
-                [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskData);
-                if ~all(size(MaskData)==[nDim1 nDim2 nDim3])
-                    error('The size of Mask (%dx%dx%d) doesn''t match the required size (%dx%dx%d).\n',size(MaskData), [nDim1 nDim2 nDim3]);
-                end
-                MaskData = double(logical(MaskData));
-            else
-                MaskData=ones(nDim1,nDim2,nDim3);
+    [nDimVertex nDimTimePoints]=size(AllVolume);
+    if ischar(MaskData)
+        fprintf('\nLoad mask "%s".\n', MaskData);
+        if ~isempty(MaskData)
+            MaskData=gifti(MaskData);
+            MaskData=MaskData.cdata;
+            if size(MaskData,1)~=nDimVertex
+                error('The size of Mask (%d) doesn''t match the required size (%d).\n',size(MaskData,1), nDimVertex);
             end
+            MaskData = double(logical(MaskData));
+        else
+            MaskData=ones(nDimVertex,1);
         end
-        
-        % Convert into 2D. NOTE: here the first dimension is voxels,
-        % and the second dimension is subjects. This is different from
-        % the way used in y_bandpass.
-        %AllVolume=reshape(AllVolume,[],nDimTimePoints)';
-        AllVolume=reshape(AllVolume,[],nDimTimePoints);
-        
-    else
-        [nDimVertex nDimTimePoints]=size(AllVolume);
-        if ischar(MaskData)
-            fprintf('\nLoad mask "%s".\n', MaskData);
-            if ~isempty(MaskData)
-                MaskData=gifti(MaskData);
-                MaskData=MaskData.cdata;
-                if size(MaskData,1)~=nDimVertex
-                    error('The size of Mask (%d) doesn''t match the required size (%d).\n',size(MaskData,1), nDimVertex);
-                end
-                MaskData = double(logical(MaskData));
-            else
-                MaskData=ones(nDimVertex,1);
-            end
-        end
-        % Convert into 2D. NOTE: here the first dimension is voxels,
-        % and the second dimension is subjects. This is different from
-        % the way used in y_bandpass.
     end
-    
+    % Convert into 2D. NOTE: here the first dimension is voxels,
+    % and the second dimension is subjects. This is different from
+    % the way used in y_bandpass.
+
     MaskDataOneDim=reshape(MaskData,[],1);
     MaskIndex = find(MaskDataOneDim);
     nVoxels = length(MaskIndex);
     %AllVolume=AllVolume(:,MaskIndex);
     AllVolume=AllVolume(MaskIndex,:);
-    
     AllVolumeSet = [AllVolumeSet,AllVolume];
-    
     if iscell(ImgFiles)
         OutputFileNames = [OutputFileNames;ImgFiles];
     else
@@ -100,8 +72,68 @@ for i=1:numel(ImgCells)
     end
 end
 
-AllVolume = AllVolumeSet;
-clear AllVolumeSet
+AllVolumeSet_LH=AllVolumeSet;
+OutputFileNames_LH=OutputFileNames;
+nDimVertex_LH=nDimVertex;
+MaskIndex_LH=MaskIndex;
+Header_LH=Header;
+
+
+%For Right Hemisphere
+ImgCells=ImgCells_RH; MaskData=MaskData_RH;
+
+AllVolumeSet = [];
+OutputFileNames = [];
+fprintf('\nReading Data...\n');
+for i=1:numel(ImgCells)
+    ImgFiles=ImgCells{i};
+    [AllVolume,VoxelSize,theImgFileList, Header] =y_ReadAll(ImgFiles);
+    [nDimVertex nDimTimePoints]=size(AllVolume);
+    if ischar(MaskData)
+        fprintf('\nLoad mask "%s".\n', MaskData);
+        if ~isempty(MaskData)
+            MaskData=gifti(MaskData);
+            MaskData=MaskData.cdata;
+            if size(MaskData,1)~=nDimVertex
+                error('The size of Mask (%d) doesn''t match the required size (%d).\n',size(MaskData,1), nDimVertex);
+            end
+            MaskData = double(logical(MaskData));
+        else
+            MaskData=ones(nDimVertex,1);
+        end
+    end
+    % Convert into 2D. NOTE: here the first dimension is voxels,
+    % and the second dimension is subjects. This is different from
+    % the way used in y_bandpass.
+
+    MaskDataOneDim=reshape(MaskData,[],1);
+    MaskIndex = find(MaskDataOneDim);
+    nVoxels = length(MaskIndex);
+    %AllVolume=AllVolume(:,MaskIndex);
+    AllVolume=AllVolume(MaskIndex,:);
+    AllVolumeSet = [AllVolumeSet,AllVolume];
+    if iscell(ImgFiles)
+        OutputFileNames = [OutputFileNames;ImgFiles];
+    else
+        %OutputFileNames = [OutputFileNames;{ImgFiles}];
+        %OutputFileNames{end,2} = size(AllVolume,2);
+        OutputFileNames = [OutputFileNames;{ImgFiles}, size(AllVolume,2)]; %Thanks to the Report by Andrew Owenson
+    end
+end
+
+AllVolumeSet_RH=AllVolumeSet;
+OutputFileNames_RH=OutputFileNames;
+nDimVertex_RH=nDimVertex;
+MaskIndex_RH=MaskIndex;
+Header_RH=Header;
+
+
+
+
+%Now processing
+
+AllVolume = [AllVolumeSet_LH;AllVolumeSet_RH];
+clear AllVolumeSet AllVolumeSet_LH AllVolumeSet_RH;
 
 %Calculate the standardization parameters
 Mean_AllSub = mean(AllVolume)';
@@ -229,42 +261,50 @@ switch MethodType
         end        
 end
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
-    StandardizedBrain = (zeros(nDim1*nDim2*nDim3, size(AllVolume,2)));
-    StandardizedBrain(MaskIndex,:) = AllVolume;
-    StandardizedBrain=reshape(StandardizedBrain,[nDim1, nDim2, nDim3, size(AllVolume,2)]);
-    Header.pinfo = [1;0;0];
-    Header.dt    =[16,0];
-else
-    StandardizedBrain = (zeros(nDimVertex, size(AllVolume,2)));
-    StandardizedBrain(MaskIndex,:) = AllVolume;
-end
+
+StandardizedBrain_LH = (zeros(nDimVertex_LH, size(AllVolume,2)));
+StandardizedBrain_LH(MaskIndex_LH,:) = AllVolume(1:length(MaskIndex_LH),:);
+
+StandardizedBrain_RH = (zeros(nDimVertex_RH, size(AllVolume,2)));
+StandardizedBrain_RH(MaskIndex_RH,:) = AllVolume((length(MaskIndex_LH)+1):end,:);
+
 
 %Write to file
 fprintf('\nWriting to files...\n');
+%For Left Hemisphere
 iPoint = 0;
-OutNameList=[];
-for iFile = 1:size(OutputFileNames,1)
-    [Path, File, Ext]=fileparts(OutputFileNames{iFile,1});
+OutNameList_LH=[];
+for iFile = 1:size(OutputFileNames_LH,1)
+    [Path, File, Ext]=fileparts(OutputFileNames_LH{iFile,1});
     TempIndex = strfind(Path,filesep);
-    [status,message,messageid] = mkdir(fullfile(OutputDir,[Path(TempIndex(end)+1:end),Suffix]));
-    OutName = fullfile(OutputDir,[Path(TempIndex(end)+1:end),Suffix],[File, Ext]);
-    if size(OutputFileNames,2)>=2 && (~isempty(OutputFileNames{iFile,2}))
-        if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
-            y_Write(squeeze(StandardizedBrain(:,:,:,iPoint+1:iPoint+OutputFileNames{iFile,2})),Header,OutName);
-        else
-            y_Write(squeeze(StandardizedBrain(:,iPoint+1:iPoint+OutputFileNames{iFile,2})),Header,OutName);
-        end
-        iPoint=iPoint+OutputFileNames{iFile,2};
+    [status,message,messageid] = mkdir(fullfile(OutputDir,'LH',[Path(TempIndex(end)+1:end),Suffix]));
+    OutName = fullfile(OutputDir,'LH',[Path(TempIndex(end)+1:end),Suffix],[File, Ext]);
+    if size(OutputFileNames_LH,2)>=2 && (~isempty(OutputFileNames_LH{iFile,2}))
+        y_Write(squeeze(StandardizedBrain_LH(:,iPoint+1:iPoint+OutputFileNames_LH{iFile,2})),Header_LH,OutName);
+        iPoint=iPoint+OutputFileNames_LH{iFile,2};
     else
-        if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
-            y_Write(squeeze(StandardizedBrain(:,:,:,iPoint+1)),Header,OutName);
-        else
-            y_Write(squeeze(StandardizedBrain(:,iPoint+1)),Header,OutName);
-        end
+        y_Write(squeeze(StandardizedBrain_LH(:,iPoint+1)),Header_LH,OutName);
         iPoint=iPoint+1;
     end
-    OutNameList=[OutNameList;{OutName}];
+    OutNameList_LH=[OutNameList_LH;{OutName}];
+end
+
+%For Right Hemisphere
+iPoint = 0;
+OutNameList_RH=[];
+for iFile = 1:size(OutputFileNames_RH,1)
+    [Path, File, Ext]=fileparts(OutputFileNames_RH{iFile,1});
+    TempIndex = strfind(Path,filesep);
+    [status,message,messageid] = mkdir(fullfile(OutputDir,'RH',[Path(TempIndex(end)+1:end),Suffix]));
+    OutName = fullfile(OutputDir,'RH',[Path(TempIndex(end)+1:end),Suffix],[File, Ext]);
+    if size(OutputFileNames_RH,2)>=2 && (~isempty(OutputFileNames_RH{iFile,2}))
+        y_Write(squeeze(StandardizedBrain_RH(:,iPoint+1:iPoint+OutputFileNames_RH{iFile,2})),Header_RH,OutName);
+        iPoint=iPoint+OutputFileNames_RH{iFile,2};
+    else
+        y_Write(squeeze(StandardizedBrain_RH(:,iPoint+1)),Header_RH,OutName);
+        iPoint=iPoint+1;
+    end
+    OutNameList_RH=[OutNameList_RH;{OutName}];
 end
 
 fprintf('\nStandardization finished.\n');
