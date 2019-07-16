@@ -215,6 +215,8 @@ if isempty(CurUnderSurf)
     
     FigObj=ancestor(AxesObj, 'figure');
     DataCursor=datacursormode(FigObj);
+    %set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj),...
+    %    'SnapToDataVertex', 'Off');
     set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
     AxesHandle.DataCursor=DataCursor;
     
@@ -1673,6 +1675,8 @@ end
 
 function MoveDataCursor(AxesObj, Pos, VP)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Fig=ancestor(AxesObj, 'figure');
+Frm=get(AxesObj, 'Parent');
 DataCursorObj=GetDataCursorObj(AxesObj);
 SetViewPoint(AxesObj, VP);
 
@@ -1684,14 +1688,12 @@ if all(Dis>1e-4)
 end
 [Min, Ind]=min(Dis);
 Pos=V(Ind, :);
+set(AxesObj, 'Parent', Fig);
 set(DataCursorObj, 'Enable', 'On');
 DataCursorObj.removeAllDataCursors();
 DataTipObj=DataCursorObj.createDatatip(UnderSurf.Obj);
 set(DataTipObj, 'Position', Pos);
-DataCursorObj.updateDataCursors();
-%Txt=GetPos(Pos, AxesObj);
-%set(DataTipObj, 'String', Txt);
-%set(DataCursorObj, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
+set(AxesObj, 'Parent', Frm);
 
 function UpdateAllYokedViewer(AxesObj, Pos)
 %Opt=GetDataCursorPos(AxesObj);
