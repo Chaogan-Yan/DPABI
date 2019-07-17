@@ -208,6 +208,8 @@ if isempty(CurUnderSurf)
         @(Pos) MoveDataCursor(AxesObj, Pos);
     Fcn.UpdateAllYokedViewer=...
         @(Pos) UpdateAllYokedViewer(AxesObj, Pos);
+    Fcn.MoveDataCursor_byIndex=...
+        @(Ind) MoveDataCursor_byIndex(AxesObj, Ind);
     
     AxesHandle.Fcn=Fcn;
     
@@ -1601,8 +1603,15 @@ function Txt=GetPosInfo(~, event_obj, AxesObj)
 Pos=get(event_obj, 'Position');
 
 Txt=GetPos(Pos, AxesObj);
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Coord=AxesHandle.UnderSurf.StructData.vertices;
+VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
+Fig=ancestor(AxesObj, 'figure');
+FigHandle=guidata(Fig);
+set(FigHandle.Index,'string',num2str(VInd));
 if AxesObj==gca
     UpdateAllYokedViewer(AxesObj, Pos);
+
 end
 
 function NewFig=SaveMontage(AxesObj, VarArgIn)
@@ -1675,11 +1684,11 @@ end
 
 function MoveDataCursor(AxesObj, Pos, VP)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
+
 Fig=ancestor(AxesObj, 'figure');
 Frm=get(AxesObj, 'Parent');
 DataCursorObj=GetDataCursorObj(AxesObj);
 SetViewPoint(AxesObj, VP);
-
 UnderSurf=AxesHandle.UnderSurf;
 V=get(UnderSurf.Obj, 'Vertices');
 Dis=sqrt(sum((V-repmat(Pos, [size(V, 1), 1])).^2, 2));
@@ -1731,7 +1740,6 @@ AxesHandle=getappdata(AxesObj, 'AxesHandle');
 Coord=AxesHandle.UnderSurf.StructData.vertices;
 VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
 Curv=AxesHandle.UnderSurf.Curv(VInd);
-
 Txt={...
     ['X: ',     num2str(Pos(1))],...
     ['Y: ',     num2str(Pos(2))],...
@@ -1763,3 +1771,16 @@ if isfield(AxesHandle, 'LabelSurf')
         Txt=[Txt, {LabelTxt}];
     end
 end
+
+function Pos=GetPos_byIndex(Index, AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Coord=AxesHandle.UnderSurf.StructData.vertices;
+Pos=[Coord(Index,1),Coord(Index,2),Coord(Index,3)];
+
+function MoveDataCursor_byIndex(AxesObj, Index)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Pos=GetPos_byIndex(Index, AxesObj);
+Opt=GetViewPoint(AxesObj);
+CurVP=Opt.ViewPoint;
+MoveDataCursor(AxesObj, Pos, CurVP);
+
