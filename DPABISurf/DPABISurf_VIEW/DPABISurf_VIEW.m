@@ -22,7 +22,7 @@ function varargout = DPABISurf_VIEW(varargin)
 
 % Edit the above text to modify the response to help DPABISurf_VIEW
 
-% Last Modified by GUIDE v2.5 09-Jul-2019 10:17:33
+% Last Modified by GUIDE v2.5 11-Jul-2019 09:32:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -538,21 +538,24 @@ function YokeCheckBox_Callback(hObject, eventdata, handles)
 % hObject    handle to YokeCheckBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 % Hint: get(hObject,'Value') returns toggle state of YokeCheckBox
-% Fcn=handles.Fcn;
-% YokeInfo=struct('Flag',Fcn.GetYokedFlag(),'Pos',Fcn.GetDataCursorPos());
-% Fcn.SetYokedFlag(~YokeInfo.Flag.IsYoked);
-% YokeInfo.Flag=Fcn.GetYokedFlag();
-% handles.IsYoked=YokeInfo.Flag.IsYoked;
-% if YokeInfo.Flag.IsYoked
-%     YokePos=evalin('base','YokePosition');
-%     Fcn.MoveDataCursor(YokePos);
-% end
+State=get(handles.YokeCheckBox, 'Value');
+if ~isfield(handles, 'Fcn')
+    set(handles.YokeCheckBox, 'Value', ~State);
+    return
+end
+Fcn=handles.Fcn;
+Fcn.SetYokedFlag(State);
+if State
+    Opt=Fcn.GetDataCursorPos();
+    if isempty(Opt.Pos)
+        return
+    end
     
-
-
-
+else
+    %DataCursorObj=Fcn.GetDataCursorObj();
+    %DataCursorObj.removeAllDataCursors();
+end
 
 % --- Executes on button press in TextureCheckBox.
 function TextureCheckBox_Callback(hObject, eventdata, handles)
@@ -571,7 +574,9 @@ function ViewPointMenu_Callback(hObject, eventdata, handles)
 handles=guidata(hObject);
 Val=get(handles.ViewPointMenu, 'Value');
 
-
+if ~isfield(handles, 'Fcn')
+    return
+end
 switch Val
     case 1 % DO NOTING
         return 

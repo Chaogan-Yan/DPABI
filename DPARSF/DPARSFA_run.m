@@ -1367,7 +1367,7 @@ if (AutoDataProcessParameter.IsBet==1)
                 
                 %eval(['!bet ',MeanFile,' ',OutputFile_Temp,' -f 0.3'])
                 
-                y_Call_bet(MeanFile, OutputFile_Temp, '-f 0.3');
+                y_Call_bet(MeanFile, OutputFile_Temp, '-f 0.3', AutoDataProcessParameter.DataProcessDir); %YAN Chao-Gan, 190710. y_Call_bet(MeanFile, OutputFile_Temp, '-f 0.3');
                 
             end
         end
@@ -1448,7 +1448,7 @@ if (AutoDataProcessParameter.IsBet==1)
             
             %eval(['!bet ',T1File,' ',OutputFile_Temp])
             
-            y_Call_bet(T1File, OutputFile_Temp, '');
+            y_Call_bet(T1File, OutputFile_Temp, '', AutoDataProcessParameter.DataProcessDir); %YAN Chao-Gan, 190710. y_Call_bet(T1File, OutputFile_Temp, '');
             
         end
     end

@@ -70,7 +70,7 @@ if ischar(MaskData)
     if ~isempty(MaskData)
         [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskData);
         if ~all(size(MaskData)==[nDim1 nDim2 nDim3])
-            error('The size of Mask (%dx%dx%d) doesn''t match the required size (%dx%dx%d).\n',size(MaskData), [nDim1 nDim2 nDim3]);
+            error('The size of Mask (%dx%dx%d) doesn''t match the required size (%dx%dx%d).\n',size(MaskData,1),size(MaskData,2),size(MaskData,3), nDim1, nDim2, nDim3);
         end
         MaskData = double(logical(MaskData));
     else

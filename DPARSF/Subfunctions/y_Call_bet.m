@@ -1,4 +1,4 @@
-function y_Call_bet(InputFilename, OutputFilename, Option)
+function y_Call_bet(InputFilename, OutputFilename, Option, WorkingDir)
 % function y_Call_bet(InputFilename, OutputFilename, Option)
 % Call FSL's bet under Linux or Mac OS
 % Call Chris Rorden's revised bet (distributed with MRIcroN) under Windows. ('eval' is not suitable for 'parfor')
@@ -6,6 +6,7 @@ function y_Call_bet(InputFilename, OutputFilename, Option)
 % 	InputFilename	 -   The Input File name. Could be one T1 image or functional image.
 %   OutputFilename   -   The output file name.
 % 	Option       	 -   The option for calling bet. E.g. '-f 0.3': for functional images.
+%   WorkingDir       -   If need to call dpabi docker, then need the WorkingDir
 % Output:
 %	                 -   The NIfTI image after bet
 %-----------------------------------------------------------
@@ -20,7 +21,25 @@ if ~exist('Option','var')
 end
 
 if ~ispc
-    eval(['!bet ',InputFilename,' ',OutputFilename,' ',Option]);
+    HasFSL = system('which bet'); %Test if FSL installed %YAN CHao-Gan, 190710
+    
+    if HasFSL == 0
+        %If yes, call FSL's bet directly
+        eval(['!bet ',InputFilename,' ',OutputFilename,' ',Option]);
+    else
+        %If not, use FSL's bet in dpabi docker
+        [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+        CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
+        if isdeployed % If running within docker with compiled version
+            CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', WorkingDir);
+        end
+        
+        InputFilename = strrep(InputFilename,WorkingDir,'/data'); %Replace the path for docker
+        OutputFilename = strrep(OutputFilename,WorkingDir,'/data');
+        Command = [CommandInit, ' bet ',InputFilename,' ',OutputFilename,' ',Option];
+        system(Command);
+    end
+    
 else
     [ProgramPath, fileN, extn] = fileparts(which('DPARSF.m'));
     OldDirTemp=pwd;

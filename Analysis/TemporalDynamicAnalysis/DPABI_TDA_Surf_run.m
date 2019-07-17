@@ -86,8 +86,8 @@ if (Cfg.IsALFF==1)
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
-                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii']
-                OutFile2 = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii']
+                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'];;
+                OutFile2 = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii'];
                 %[ALFFBrain_AllWindow, fALFFBrain_AllWindow, GHeader] = y_alff_falff_Surf_Window(WindowSize, WindowStep, WindowType,InFile,ASamplePeriod, HighCutoff, LowCutoff, AMaskFilename, AResultFilename, CUTNUMBER)
                 [ALFFBrain_AllWindow, fALFFBrain_AllWindow, GHeader] = y_alff_falff_Surf_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, Cfg.TR, Cfg.ALFF.ALowPass_HighCutoff, Cfg.ALFF.AHighPass_LowCutoff, Cfg.MaskFileSurfLH, {OutFile;OutFile2});
                 
@@ -110,8 +110,8 @@ if (Cfg.IsALFF==1)
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
-                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii']
-                OutFile2 = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii']
+                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'];
+                OutFile2 = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii'];
                 %[ALFFBrain_AllWindow, fALFFBrain_AllWindow, GHeader] = y_alff_falff_Surf_Window(WindowSize, WindowStep, WindowType,InFile,ASamplePeriod, HighCutoff, LowCutoff, AMaskFilename, AResultFilename, CUTNUMBER)
                 [ALFFBrain_AllWindow, fALFFBrain_AllWindow, GHeader] = y_alff_falff_Surf_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, Cfg.TR, Cfg.ALFF.ALowPass_HighCutoff, Cfg.ALFF.AHighPass_LowCutoff, Cfg.MaskFileSurfRH, {OutFile;OutFile2});
                 
@@ -184,7 +184,7 @@ if (Cfg.IsReHo==1)
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
-                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii']
+                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'];
                 %[ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(WindowSize, WindowStep, WindowType,InFile, NNeighbor, AMaskFilename, AResultFilename, SurfFile, IsNeedDetrend, CUTNUMBER)
                 [ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, Cfg.ReHo.SurfNNeighbor, Cfg.MaskFileSurfLH, OutFile, Cfg.SurfFileLH, Cfg.IsDetrend);
 
@@ -201,7 +201,7 @@ if (Cfg.IsReHo==1)
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
-                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii']
+                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'];
                 %[ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(WindowSize, WindowStep, WindowType,InFile, NNeighbor, AMaskFilename, AResultFilename, SurfFile, IsNeedDetrend, CUTNUMBER)
                 [ReHoBrain_AllWindow, GHeader] = y_reho_Surf_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, Cfg.ReHo.SurfNNeighbor, Cfg.MaskFileSurfRH, OutFile, Cfg.SurfFileRH, Cfg.IsDetrend);
 
@@ -288,7 +288,7 @@ if (Cfg.IsDegreeCentrality==1)
             % Volume
             if (Cfg.IsProcessVolumeSpace==1)
                 InFiles = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i}];
-                OutFile = {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.niii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.nii']};
+                OutFile = {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.nii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.nii']};
 
                 %[DegreeCentrality_PositiveWeightedSumBrain_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_AllWindow, Header] = y_DegreeCentrality_Window(WindowSize, WindowStep, WindowType, AllVolume, rThreshold, OutputName, MaskData, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)
                 [DegreeCentrality_PositiveWeightedSumBrain_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_AllWindow, Header] = y_DegreeCentrality_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, Cfg.DegreeCentrality.rThreshold, OutFile, Cfg.MaskFileVolu, Cfg.IsDetrend);
@@ -340,7 +340,7 @@ if (Cfg.IsGSCorr==1)
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
-                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'GSCorr_',Cfg.StartingDirName,filesep,'GSCorr_',Cfg.SubjectID{i},'.func.gii']
+                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'GSCorr_',Cfg.StartingDirName,filesep,'GSCorr_',Cfg.SubjectID{i},'.func.gii'];
                                 
                 %[FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, IsNeedDetrend, GHeader, CUTNUMBER)
                 [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, ROIDef, OutFile, Cfg.MaskFileSurfLH, IsMultipleLabel, Cfg.IsDetrend);
@@ -358,7 +358,7 @@ if (Cfg.IsGSCorr==1)
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
-                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'GSCorr_',Cfg.StartingDirName,filesep,'GSCorr_',Cfg.SubjectID{i},'.func.gii']
+                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'GSCorr_',Cfg.StartingDirName,filesep,'GSCorr_',Cfg.SubjectID{i},'.func.gii'];
                                 
                 %[FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, IsNeedDetrend, GHeader, CUTNUMBER)
                 [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, ROIDef, OutFile, Cfg.MaskFileSurfRH, IsMultipleLabel, Cfg.IsDetrend);
@@ -380,11 +380,11 @@ if (Cfg.IsGSCorr==1)
                 [FCBrain_AllWindow, zFCBrain_AllWindow, Header] = y_SCA_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, ROIDef, OutFile, Cfg.MaskFileVolu, IsMultipleLabel, Cfg.IsDetrend);
                 
                 %Calculate mean and std
-                y_Write(squeeze(mean(zFCBrain_AllWindow,4)),Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'GSCorr_',StartingDirName,filesep,'MeanzGSCorr_',Cfg.SubjectID{i}]);
-                y_Write(squeeze(std(zFCBrain_AllWindow,0,4)),Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'GSCorr_',StartingDirName,filesep,'StdzGSCorr_',Cfg.SubjectID{i}]);
+                y_Write(squeeze(mean(zFCBrain_AllWindow,4)),Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'GSCorr_',Cfg.StartingDirName_Volume,filesep,'MeanzGSCorr_',Cfg.SubjectID{i}]);
+                y_Write(squeeze(std(zFCBrain_AllWindow,0,4)),Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'GSCorr_',Cfg.StartingDirName_Volume,filesep,'StdzGSCorr_',Cfg.SubjectID{i}]);
                 Temp = squeeze(std(zFCBrain_AllWindow,0,4)) ./ squeeze(mean(zFCBrain_AllWindow,4));
                 Temp(find(isnan(Temp)))=0;
-                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'GSCorr_',StartingDirName,filesep,'CVzGSCorr_',Cfg.SubjectID{i}]);
+                y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'GSCorr_',Cfg.StartingDirName_Volume,filesep,'CVzGSCorr_',Cfg.SubjectID{i}]);
                 
             end
         end
@@ -477,7 +477,7 @@ if (Cfg.IsFC==1)
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
-                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'FC_',Cfg.StartingDirName,filesep,'FC_',Cfg.SubjectID{i},'.func.gii']
+                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'FC_',Cfg.StartingDirName,filesep,'FC_',Cfg.SubjectID{i},'.func.gii'];
                                 
                 %[FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, IsNeedDetrend, GHeader, CUTNUMBER)
                 [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, ROIDef, OutFile, Cfg.MaskFileSurfLH, IsMultipleLabel, Cfg.IsDetrend);
@@ -497,7 +497,7 @@ if (Cfg.IsFC==1)
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
-                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'FC_',Cfg.StartingDirName,filesep,'FC_',Cfg.SubjectID{i},'.func.gii']
+                OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'FC_',Cfg.StartingDirName,filesep,'FC_',Cfg.SubjectID{i},'.func.gii'];
                 
                 %[FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, IsNeedDetrend, GHeader, CUTNUMBER)
                 [FCBrain_AllWindow, zFCBrain_AllWindow, GHeader] = y_SCA_Surf_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, ROIDef, OutFile, Cfg.MaskFileSurfRH, IsMultipleLabel, Cfg.IsDetrend);
@@ -668,7 +668,7 @@ if (Cfg.VolumeWiseConcordance==1)
         if (Cfg.IsProcessVolumeSpace==1)
             mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'Concordance_VolumeWise']);
         end
-        parfor iSub=1:length(Cfg.SubjectID)
+        for iSub=1:length(Cfg.SubjectID)
             
             % Left Hemi Files
             DataDir=[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D'];
@@ -739,9 +739,9 @@ if (Cfg.VolumeWiseConcordance==1)
             RaterImages_RH = y_Call_Eval_ConcordanceMeasuresSelected(Cfg.ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr);  
             
             %Calculate Hemi Concordance
-            OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'Concordance_VolumeWise',filesep,'Concordance_VolumeWise',Cfg.SubjectID{iSub}];
+            OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'Concordance_VolumeWise',filesep,'Concordance_VolumeWise',Cfg.SubjectID{iSub},'.mat'];
             [KendallW] = y_KendallW_AcrossImages_Surf(RaterImages_LH, RaterImages_RH, Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH, OutFile);
-            copyfile(OutFile,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'Concordance_VolumeWise',filesep,'Concordance_VolumeWise',Cfg.SubjectID{iSub}]);
+            copyfile(OutFile,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'Concordance_VolumeWise',filesep,'Concordance_VolumeWise',Cfg.SubjectID{iSub},'.mat']);
 
             % Volume
             if (Cfg.IsProcessVolumeSpace==1)
@@ -778,7 +778,7 @@ if (Cfg.VolumeWiseConcordance==1)
                 end
                 RaterImages = y_Call_Eval_ConcordanceMeasuresSelected(Cfg.ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr);
                 OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'Concordance_VolumeWise',filesep,'Concordance_VolumeWise',Cfg.SubjectID{iSub}];
-                [KendallWBrain, GHeader] = y_KendallW_AcrossImages(RaterImages, Cfg.MaskFileVolu, OutFile);
+                KendallW = y_KendallW_AcrossImages(RaterImages, Cfg.MaskFileVolu, OutFile);
             end
         end
     end
@@ -802,19 +802,19 @@ if (Cfg.IsSmoothConcordance==1)
     for iSub=1:length(Cfg.SubjectID)
         for iFunSession=1:Cfg.FunctionalSessionNumber
             %OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'Concordance_VertexWise',filesep,'Concordance_VertexWise_',Cfg.SubjectID{iSub},'.func.gii'];
-            Command = sprintf('%s parallel -j %g mri_surf2surf --s %s --hemi lh --sval /data/%s/FunSurfLH/TemporalDynamics/Concordance_VertexWise/Concordance_VertexWise_%s.func.gii --fwhm %g --cortex --tval /data/%s/FunSurfLH/TemporalDynamics/Concordance_VertexWise/sConcordance_VertexWise_%s.func.gii', ...
-                CommandInit, Cfg.ParallelWorkersNumber, SpaceName, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{iSub}, Cfg.Smooth.FWHMSurf, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{iSub});
+            Command = sprintf('%s mri_surf2surf --s %s --hemi lh --sval /data/%s/FunSurfLH/TemporalDynamics/Concordance_VertexWise/Concordance_VertexWise_%s.func.gii --fwhm %g --cortex --tval /data/%s/FunSurfLH/TemporalDynamics/Concordance_VertexWise/sConcordance_VertexWise_%s.func.gii', ...
+                CommandInit, SpaceName, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{iSub}, Cfg.SmoothConcordance.FWHMSurf, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{iSub});
             system(Command);
             
-            Command = sprintf('%s parallel -j %g mri_surf2surf --s %s --hemi rh --sval /data/%s/FunSurfRH/TemporalDynamics/Concordance_VertexWise/Concordance_VertexWise_%s.func.gii --fwhm %g --cortex --tval /data/%s/FunSurfRH/TemporalDynamics/Concordance_VertexWise/sConcordance_VertexWise_%s.func.gii', ...
-                CommandInit, Cfg.ParallelWorkersNumber, SpaceName, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{iSub}, Cfg.Smooth.FWHMSurf, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{iSub});
+            Command = sprintf('%s mri_surf2surf --s %s --hemi rh --sval /data/%s/FunSurfRH/TemporalDynamics/Concordance_VertexWise/Concordance_VertexWise_%s.func.gii --fwhm %g --cortex --tval /data/%s/FunSurfRH/TemporalDynamics/Concordance_VertexWise/sConcordance_VertexWise_%s.func.gii', ...
+                CommandInit, SpaceName, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{iSub}, Cfg.SmoothConcordance.FWHMSurf, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{iSub});
             system(Command);
         end
     end
     
     % Volume
     if (Cfg.IsProcessVolumeSpace==1)
-        parfor iSub=1:length(Cfg.SubjectID)
+        for iSub=1:length(Cfg.SubjectID)
             FileList=[];
             for iFunSession=1:Cfg.FunctionalSessionNumber
                 FileList=[FileList;{[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'Concordance_VoxelWise',filesep,'Concordance_VoxelWise_',Cfg.SubjectID{iSub},'.nii']}];
@@ -827,6 +827,18 @@ if (Cfg.IsSmoothConcordance==1)
         end
     end
 end
+
+
+%Delete Dynamic 4D Files to save disk space
+if (Cfg.IsDelete4D==1)
+    for iFunSession=1:Cfg.FunctionalSessionNumber
+        delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D']);
+        delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D']);
+        delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D']);
+    end
+end
+
+
 
 
 function RaterImages = y_Call_Eval_ConcordanceMeasuresSelected(ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr)

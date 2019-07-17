@@ -1,4 +1,4 @@
-function varargout = DPABI_Standardization(varargin)
+function varargout = DPABI_Standardization_Surf(varargin)
 % DPABI_Standardization MATLAB code for DPABI_Standardization.fig
 %      DPABI_Standardization, by itself, creates a new DPABI_Standardization or raises the existing
 %      singleton*.
@@ -22,7 +22,7 @@ function varargout = DPABI_Standardization(varargin)
 
 % Edit the above text to modify the response to help DPABI_Standardization
 
-% Last Modified by GUIDE v2.5 16-Jul-2019 14:56:22
+% Last Modified by GUIDE v2.5 16-Jul-2019 07:03:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,7 +54,8 @@ function DPABI_Standardization_OpeningFcn(hObject, eventdata, handles, varargin)
 
 fprintf('Standardize the brains for Statistical Analysis. \nRef: Yan, C.G., Craddock, R.C., Zuo, X.N., Zang, Y.F., Milham, M.P., 2013. Standardizing the intrinsic brain: towards robust measurement of inter-individual variation in 1000 functional connectomes. Neuroimage 80, 246-262.\n');
 
-handles.ImgCells={};
+handles.ImgLeft={};
+handles.ImgRight={};
 handles.CurDir=pwd;
 
 set(handles.OutputDirEntry, 'String', pwd);
@@ -79,19 +80,19 @@ function varargout = DPABI_Standardization_OutputFcn(hObject, eventdata, handles
 varargout{1} = handles.output;
 
 
-% --- Executes on selection change in ImgListbox.
-function ImgListbox_Callback(hObject, eventdata, handles)
-% hObject    handle to ImgListbox (see GCBO)
+% --- Executes on selection change in ListboxLeft.
+function ListboxLeft_Callback(hObject, eventdata, handles)
+% hObject    handle to ListboxLeft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns ImgListbox contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ImgListbox
+% Hints: contents = cellstr(get(hObject,'String')) returns ListboxLeft contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ListboxLeft
 
 
 % --- Executes during object creation, after setting all properties.
-function ImgListbox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ImgListbox (see GCBO)
+function ListboxLeft_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ListboxLeft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -101,9 +102,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes on button press in AddButton.
-function AddButton_Callback(hObject, eventdata, handles)
-% hObject    handle to AddButton (see GCBO)
+% --- Executes on button press in AddButtonLeft.
+function AddButtonLeft_Callback(hObject, eventdata, handles)
+% hObject    handle to AddButtonLeft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Path=uigetdir(handles.CurDir, 'Pick Image Directory');
@@ -114,22 +115,22 @@ end
 
 [ImgCell, Num]=GetSubNameCell(Path);
 
-handles.ImgCells{numel(handles.ImgCells)+1}=ImgCell;
+handles.ImgLeft{numel(handles.ImgLeft)+1}=ImgCell;
 StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
-AddString(handles.ImgListbox, StringOne);
+AddString(handles.ListboxLeft, StringOne);
 guidata(hObject, handles);
 
-% --- Executes on button press in RemoveButton.
-function RemoveButton_Callback(hObject, eventdata, handles)
-% hObject    handle to RemoveButton (see GCBO)
+% --- Executes on button press in RemoveButtonLeft.
+function RemoveButtonLeft_Callback(hObject, eventdata, handles)
+% hObject    handle to RemoveButtonLeft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Value=get(handles.ImgListbox, 'Value');
+Value=get(handles.ListboxLeft, 'Value');
 if Value==0
     return
 end
-handles.ImgCells(Value)=[];
-RemoveString(handles.ImgListbox, Value);
+handles.ImgLeft(Value)=[];
+RemoveString(handles.ListboxLeft, Value);
 guidata(hObject, handles);
 
 function SuffixEntry_Callback(hObject, eventdata, handles)
@@ -194,12 +195,15 @@ function ComputeButton_Callback(hObject, eventdata, handles)
 % hObject    handle to ComputeButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isempty(handles.ImgCells)
+if isempty(handles.ImgLeft) || isempty(handles.ImgRight)
     return
 end
-ImgCells=handles.ImgCells;
 
-MaskFile=get(handles.MaskEntry, 'String');
+ImgLeft=handles.ImgLeft;
+ImgRight=handles.ImgRight;
+
+MaskLeft=get(handles.MaskEntryLeft, 'String');
+MaskRight=get(handles.MaskEntryRight, 'String');
 
 MethodType=get(handles.MethodPopup, 'Value');
 
@@ -209,21 +213,52 @@ if isempty(OutputDir)
 end
 
 Suffix=get(handles.SuffixEntry, 'String');
-IsSmooth=get(handles.SmoothButton, 'Value');
-FWHMtemp = get(handles.editFWHM,'String');
-FWHM = eval(FWHMtemp);
+IsSmooth = get(handles.SmoothButton, 'Value');
+FWHM = get(handles.editFWHM,'String');
 
-%[StandardizedBrain, Header, OutNameList] = y_Standardization(ImgCells, MaskData, MethodType, OutputDir, Suffix)
-[StandardizedBrain, Header, OutNameList] = y_Standardization(ImgCells, MaskFile, MethodType, OutputDir, Suffix); % [StandardizedBrain, Header] = y_Standardization(ImgCells, MaskFile, MethodType, OutputDir, Suffix, IsSmooth, FWHM);
+
+%[StandardizedBrain_LH, StandardizedBrain_RH, Header_LH, Header_RH, OutNameList_LH, OutNameList_RH] = y_Standardization_Surf(ImgCells_LH, ImgCells_RH, MaskData_LH, MaskData_RH, MethodType, OutputDir, Suffix)
+[StandardizedBrain_LH, StandardizedBrain_RH, Header_LH, Header_RH, OutNameList_LH, OutNameList_RH] = y_Standardization_Surf(ImgLeft, ImgRight, MaskLeft, MaskRight, MethodType, OutputDir, Suffix);
 
 if IsSmooth
     [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
-    SPMJOB = load([DPABIPath,filesep,'DPARSF',filesep,'Jobmats',filesep,'Smooth.mat']);
-    SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.data = OutNameList;
-    SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.fwhm = FWHM;
-    spm_jobman('run',SPMJOB.matlabbatch);
+    %For Left Hemisphere
+    for iFile=1:length(OutNameList_LH)
+        [WorkingDir, File, Ext]=fileparts(OutNameList_LH{iFile,1});
+        if ispc
+            CommandInit=sprintf('docker run -i --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir); %YAN Chao-Gan, 181214. Remove -t because there is a tty issue in windows
+        else
+            CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
+        end
+        if isdeployed % If running within docker with compiled version
+            CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', WorkingDir);
+        end
+        
+        SpaceName='fsaverage5';
+        Command = sprintf('%s mri_surf2surf --s %s --hemi lh --sval /data/%s --fwhm %g --cortex --tval /data/s%s', ...
+            CommandInit, SpaceName, [File, Ext], FWHM, [File, Ext]);
+        system(Command);
+    end
+    
+    %For Right Hemisphere
+    for iFile=1:length(OutNameList_RH)
+        [WorkingDir, File, Ext]=fileparts(OutNameList_RH{iFile,1});
+        if ispc
+            CommandInit=sprintf('docker run -i --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir); %YAN Chao-Gan, 181214. Remove -t because there is a tty issue in windows
+        else
+            CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
+        end
+        if isdeployed % If running within docker with compiled version
+            CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', WorkingDir);
+        end
+        
+        SpaceName='fsaverage5';
+        Command = sprintf('%s mri_surf2surf --s %s --hemi rh --sval /data/%s --fwhm %g --cortex --tval /data/s%s', ...
+            CommandInit, SpaceName, [File, Ext], FWHM, [File, Ext]);
+        system(Command);
+    end
+    
 end
-
 
 
 % --- Executes on selection change in MethodPopup.
@@ -250,8 +285,8 @@ end
 
 
 % --------------------------------------------------------------------
-function AddTable_Callback(hObject, eventdata, handles)
-% hObject    handle to AddTable (see GCBO)
+function AddTable_Left_Callback(hObject, eventdata, handles)
+% hObject    handle to AddTable_Left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Path=uigetdir(handles.CurDir, 'Pick Image Directory');
@@ -262,27 +297,27 @@ end
 
 [ImgCell, Num]=GetSubNameCell(Path);
 
-handles.ImgCells{numel(handles.ImgCells)+1}=ImgCell;
+handles.ImgLeft{numel(handles.ImgLeft)+1}=ImgCell;
 StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
-AddString(handles.ImgListbox, StringOne);
+AddString(handles.ListboxLeft, StringOne);
 guidata(hObject, handles);
 
 % --------------------------------------------------------------------
-function RemoveTable_Callback(hObject, eventdata, handles)
-% hObject    handle to RemoveTable (see GCBO)
+function RemoveTable_Left_Callback(hObject, eventdata, handles)
+% hObject    handle to RemoveTable_Left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Value=get(handles.ImgListbox, 'Value');
+Value=get(handles.ListboxLeft, 'Value');
 if Value==0
     return
 end
-handles.ImgCells(Value)=[];
-RemoveString(handles.ImgListbox, Value);
+handles.ImgLeft(Value)=[];
+RemoveString(handles.ListboxLeft, Value);
 guidata(hObject, handles);
 
 % --------------------------------------------------------------------
-function AddAll_Callback(hObject, eventdata, handles)
-% hObject    handle to AddAll (see GCBO)
+function AddAll_Left_Callback(hObject, eventdata, handles)
+% hObject    handle to AddAll_Left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Path=uigetdir(handles.CurDir, 'Pick Image Parent Directory');
@@ -290,7 +325,6 @@ if isnumeric(Path)
     return
 end
 handles.CurDir=Path;
-Suffix=get(handles.SuffixEntry, 'String');
 
 SubjStruct=dir(Path);
 Index=cellfun(...
@@ -301,47 +335,45 @@ SubjName={SubjStruct.name}';
 SubjPath=cellfun(@(Name) fullfile(Path, Name), SubjName,...
     'UniformOutput', false);
 
-set(handles.ImgListbox, 'BackgroundColor', 'Green');
+set(handles.ListboxLeft, 'BackgroundColor', 'Green');
 drawnow;
-for i=1:numel(SubjPath);
+for i=1:numel(SubjPath)
     [ImgCell, Num]=GetSubNameCell(SubjPath{i});
     
-    handles.ImgCells{numel(handles.ImgCells)+1}=ImgCell;
+    handles.ImgLeft{numel(handles.ImgLeft)+1}=ImgCell;
     StringOne={sprintf('DIR: [%d] (%s) %s', Num, SubjName{i}, SubjPath{i})};
-    AddString(handles.ImgListbox, StringOne);
+    AddString(handles.ListboxLeft, StringOne);
     drawnow;
 end
-set(handles.ImgListbox, 'BackgroundColor', 'White');
+set(handles.ListboxLeft, 'BackgroundColor', 'White');
 guidata(hObject, handles);
 
 % --------------------------------------------------------------------
-function RemoveAll_Callback(hObject, eventdata, handles)
-% hObject    handle to RemoveAll (see GCBO)
+function RemoveAll_Left_Callback(hObject, eventdata, handles)
+% hObject    handle to RemoveAll_Left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-set(handles.ImgListbox, 'String', '');
-handles.ImgCells={};
+set(handles.ListboxLeft, 'String', '');
+handles.ImgLeft={};
 
 guidata(hObject, handles);
 
 % --------------------------------------------------------------------
-function ListContext_Callback(hObject, eventdata, handles)
-% hObject    handle to ListContext (see GCBO)
+function ListContext_left_Callback(hObject, eventdata, handles)
+% hObject    handle to ListContext_left (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% --------------------------------------------------------------------
+function ListContext_Right_Callback(hObject, eventdata, handles)
+% hObject    handle to ListContext_left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 function [ImgCell, Num]=GetSubNameCell(Path)
-D=dir(fullfile(Path, ['*', '.img']));
-if isempty(D)
-    D=dir(fullfile(Path, ['*', '.nii']));
-end
-if isempty(D)
-    D=dir(fullfile(Path, ['*', '.nii.gz']));
-end
-
-if isempty(D)
-    D=dir(fullfile(Path, ['*', '.gii']));
-end
+D1=dir(fullfile(Path, ['*', '.gii']));
+D2=dir(fullfile(Path, ['*', '.gii.gz']));
+D=[D1;D2];
 
 NameCell={D.name}';
 Num=numel(NameCell);
@@ -366,11 +398,11 @@ set(ListboxHandle, 'String', StringCell, 'Value', Value);
 
 
 % --------------------------------------------------------------------
-function AddImgTable_Callback(hObject, eventdata, handles)
-% hObject    handle to AddImgTable (see GCBO)
+function AddImgTable_Left_Callback(hObject, eventdata, handles)
+% hObject    handle to AddImgTable_Left (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';}, ...
+[File , Path]=uigetfile({'*.gii;*.gii.gz','Brain Image Files (*.gii;*.gii.gz)';'*.*', 'All Files (*.*)';}, ...
     'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
@@ -385,22 +417,22 @@ if iscell(File)
         ImgCell{1, i}=ImgFile;
         StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
     end
-    handles.ImgCells=[handles.ImgCells, ImgCell];
-    AddString(handles.ImgListbox, StringCell);
+    handles.ImgLeft=[handles.ImgLeft, ImgCell];
+    AddString(handles.ListboxLeft, StringCell);
 else
     ImgFile=fullfile(Path, File);
-    handles.ImgCells{numel(handles.ImgCells)+1}=ImgFile;
+    handles.ImgLeft{numel(handles.ImgLeft)+1}=ImgFile;
     StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
-    AddString(handles.ImgListbox, StringOne);
+    AddString(handles.ListboxLeft, StringOne);
 end
 guidata(hObject, handles);
 
-% --- Executes on button press in AddImgButton.
-function AddImgButton_Callback(hObject, eventdata, handles)
-% hObject    handle to AddImgButton (see GCBO)
+% --- Executes on button press in AddImgButtonLeft.
+function AddImgButtonLeft_Callback(hObject, eventdata, handles)
+% hObject    handle to AddImgButtonLeft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';}, ...
+[File , Path]=uigetfile({'*.gii;*.gii.gz','Brain Image Files (*.gii;*.gii.gz)';'*.*', 'All Files (*.*)';}, ...
     'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
@@ -415,13 +447,13 @@ if iscell(File)
         ImgCell{1, i}=ImgFile;
         StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
     end
-    handles.ImgCells=[handles.ImgCells, ImgCell];
-    AddString(handles.ImgListbox, StringCell);
+    handles.ImgLeft=[handles.ImgLeft, ImgCell];
+    AddString(handles.ListboxLeft, StringCell);
 else
     ImgFile=fullfile(Path, File);
-    handles.ImgCells{numel(handles.ImgCells)+1}=ImgFile;
+    handles.ImgLeft{numel(handles.ImgLeft)+1}=ImgFile;
     StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
-    AddString(handles.ImgListbox, StringOne);
+    AddString(handles.ListboxLeft, StringOne);
 end
 guidata(hObject, handles);
 
@@ -450,19 +482,9 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
-function MaskEntry_Callback(hObject, eventdata, handles)
-% hObject    handle to MaskEntry (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of MaskEntry as text
-%        str2double(get(hObject,'String')) returns contents of MaskEntry as a double
-
-
 % --- Executes during object creation, after setting all properties.
-function MaskEntry_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to MaskEntry (see GCBO)
+function MaskEntryLeft_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to MaskEntryLeft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -473,17 +495,17 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in MaskButton.
-function MaskButton_Callback(hObject, eventdata, handles)
-% hObject    handle to MaskButton (see GCBO)
+% --- Executes on button press in MaskButtonLeft.
+function MaskButtonLeft_Callback(hObject, eventdata, handles)
+% hObject    handle to MaskButtonLeft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[Name, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+[Name, Path]=uigetfile({'*.gii','Brain Image Files (*.gii)';'*.*', 'All Files (*.*)';},...
     'Pick the Mask Image');
 if isnumeric(Name)
     return
 end
-set(handles.MaskEntry, 'String', fullfile(Path, Name));
+set(handles.MaskEntryLeft, 'String', fullfile(Path, Name));
 
 
 
@@ -505,6 +527,235 @@ else
 end
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of SmoothButton
+
+
+% --- Executes on selection change in ListboxRight.
+function ListboxRight_Callback(hObject, eventdata, handles)
+% hObject    handle to ListboxRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns ListboxRight contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ListboxRight
+
+
+% --- Executes during object creation, after setting all properties.
+function ListboxRight_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ListboxRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in AddButtonRight.
+function AddButtonRight_Callback(hObject, eventdata, handles)
+% hObject    handle to AddButtonRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Path=uigetdir(handles.CurDir, 'Pick Image Directory');
+if isnumeric(Path)
+    return
+end
+[handles.CurDir, Name]=fileparts(Path);
+
+[ImgCell, Num]=GetSubNameCell(Path);
+
+handles.ImgRight{numel(handles.ImgRight)+1}=ImgCell;
+StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
+AddString(handles.ListboxRight, StringOne);
+guidata(hObject, handles);
+
+
+% --- Executes on button press in RemoveButtonRight.
+function RemoveButtonRight_Callback(hObject, eventdata, handles)
+% hObject    handle to RemoveButtonRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Value=get(handles.ListboxRight, 'Value');
+if Value==0
+    return
+end
+handles.ImgRight(Value)=[];
+RemoveString(handles.ListboxRight, Value);
+guidata(hObject, handles);
+
+
+% --- Executes on button press in AddImgButtonRight.
+function AddImgButtonRight_Callback(hObject, eventdata, handles)
+% hObject    handle to AddImgButtonRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[File , Path]=uigetfile({'*.gii;*gii.gz','Brain Image Files (*.gii;*gii.gz)';'*.*', 'All Files (*.*)';}, ...
+    'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
+if isnumeric(File)
+    return;
+end
+
+if iscell(File)
+    N=numel(File);
+    ImgCell=cell(1, N);
+    StringCell=cell(N, 1);
+    for i=1:N
+        ImgFile=fullfile(Path, File{i});
+        ImgCell{1, i}=ImgFile;
+        StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+    end
+    handles.ImgRight=[handles.ImgRight, ImgCell];
+    AddString(handles.ListboxRight, StringCell);
+else
+    ImgFile=fullfile(Path, File);
+    handles.ImgRight{numel(handles.ImgRight)+1}=ImgFile;
+    StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
+    AddString(handles.ListboxRight, StringOne);
+end
+guidata(hObject, handles);
+
+
+function MaskEntryRight_Callback(hObject, eventdata, handles)
+% hObject    handle to MaskEntryRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of MaskEntryRight as text
+%        str2double(get(hObject,'String')) returns contents of MaskEntryRight as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function MaskEntryRight_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to MaskEntryRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in MaskButtonRight.
+function MaskButtonRight_Callback(hObject, eventdata, handles)
+% hObject    handle to MaskButtonRight (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[Name, Path]=uigetfile({'*.gii','Brain Image Files (*.gii)';'*.*', 'All Files (*.*)';},...
+    'Pick the Mask Image');
+if isnumeric(Name)
+    return
+end
+set(handles.MaskEntryRight, 'String', fullfile(Path, Name));
+
+
+
+
+% --------------------------------------------------------------------
+function AddTable_Right_Callback(hObject, eventdata, handles)
+% hObject    handle to AddTable_Right (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Path=uigetdir(handles.CurDir, 'Pick Image Directory');
+if isnumeric(Path)
+    return
+end
+[handles.CurDir, Name]=fileparts(Path);
+
+[ImgCell, Num]=GetSubNameCell(Path);
+
+handles.ImgRight{numel(handles.ImgRight)+1}=ImgCell;
+StringOne={sprintf('DIR: [%d] (%s) %s', Num, Name, Path)};
+AddString(handles.ListboxRight, StringOne);
+guidata(hObject, handles);
+
+% --------------------------------------------------------------------
+function AddImgTable_Right_Callback(hObject, eventdata, handles)
+% hObject    handle to AddImgTable_Right (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[File , Path]=uigetfile({'*.gii;*.gii.gz','Brain Image Files (*.gii;*.gii.gz)';'*.*', 'All Files (*.*)';}, ...
+    'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
+if isnumeric(File)
+    return;
+end
+
+if iscell(File)
+    N=numel(File);
+    ImgCell=cell(1, N);
+    StringCell=cell(N, 1);
+    for i=1:N
+        ImgFile=fullfile(Path, File{i});
+        ImgCell{1, i}=ImgFile;
+        StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+    end
+    handles.ImgRight=[handles.ImgRight, ImgCell];
+    AddString(handles.ListboxRight, StringCell);
+else
+    ImgFile=fullfile(Path, File);
+    handles.ImgRight{numel(handles.ImgRight)+1}=ImgFile;
+    StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
+    AddString(handles.ListboxRight, StringOne);
+end
+guidata(hObject, handles);
+
+% --------------------------------------------------------------------
+function RemoveTable_Right_Callback(hObject, eventdata, handles)
+% hObject    handle to RemoveTable_Right (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Value=get(handles.ListboxRight, 'Value');
+if Value==0
+    return
+end
+handles.ImgRight(Value)=[];
+RemoveString(handles.ListboxRight, Value);
+guidata(hObject, handles);
+
+% --------------------------------------------------------------------
+function AddAll_Right_Callback(hObject, eventdata, handles)
+% hObject    handle to AddAll_Right (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Path=uigetdir(handles.CurDir, 'Pick Image Parent Directory');
+if isnumeric(Path)
+    return
+end
+handles.CurDir=Path;
+
+SubjStruct=dir(Path);
+Index=cellfun(...
+    @(IsDir, NotDot) IsDir && (~strcmpi(NotDot, '.') && ~strcmpi(NotDot, '..') && ~strcmpi(NotDot, '.DS_Store')),...
+    {SubjStruct.isdir}, {SubjStruct.name});
+SubjStruct=SubjStruct(Index);
+SubjName={SubjStruct.name}';
+SubjPath=cellfun(@(Name) fullfile(Path, Name), SubjName,...
+    'UniformOutput', false);
+
+set(handles.ListboxRight, 'BackgroundColor', 'Green');
+drawnow;
+for i=1:numel(SubjPath)
+    [ImgCell, Num]=GetSubNameCell(SubjPath{i});
+    
+    handles.ImgRight{numel(handles.ImgRight)+1}=ImgCell;
+    StringOne={sprintf('DIR: [%d] (%s) %s', Num, SubjName{i}, SubjPath{i})};
+    AddString(handles.ListboxRight, StringOne);
+    drawnow;
+end
+set(handles.ListboxRight, 'BackgroundColor', 'White');
+guidata(hObject, handles);
+
+% --------------------------------------------------------------------
+function RemoveAll_Right_Callback(hObject, eventdata, handles)
+% hObject    handle to RemoveAll_Right (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.ListboxRight, 'String', '');
+handles.ImgRight={};
+
+guidata(hObject, handles);
 
 
 
