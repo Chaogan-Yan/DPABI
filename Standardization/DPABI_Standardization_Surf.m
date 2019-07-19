@@ -22,7 +22,7 @@ function varargout = DPABI_Standardization_Surf(varargin)
 
 % Edit the above text to modify the response to help DPABI_Standardization
 
-% Last Modified by GUIDE v2.5 16-Jul-2019 07:03:09
+% Last Modified by GUIDE v2.5 17-Jul-2019 09:41:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,6 +57,7 @@ fprintf('Standardize the brains for Statistical Analysis. \nRef: Yan, C.G., Crad
 handles.ImgLeft={};
 handles.ImgRight={};
 handles.CurDir=pwd;
+handles.Space='fsaverage5';
 
 set(handles.OutputDirEntry, 'String', pwd);
 % Choose default command line output for DPABI_Standardization
@@ -201,6 +202,7 @@ end
 
 ImgLeft=handles.ImgLeft;
 ImgRight=handles.ImgRight;
+SpaceName=handles.Space;
 
 MaskLeft=get(handles.MaskEntryLeft, 'String');
 MaskRight=get(handles.MaskEntryRight, 'String');
@@ -214,7 +216,7 @@ end
 
 Suffix=get(handles.SuffixEntry, 'String');
 IsSmooth = get(handles.SmoothButton, 'Value');
-FWHM = get(handles.editFWHM,'String');
+FWHM = str2num(get(handles.editFWHM,'String'));
 
 
 %[StandardizedBrain_LH, StandardizedBrain_RH, Header_LH, Header_RH, OutNameList_LH, OutNameList_RH] = y_Standardization_Surf(ImgCells_LH, ImgCells_RH, MaskData_LH, MaskData_RH, MethodType, OutputDir, Suffix)
@@ -226,15 +228,14 @@ if IsSmooth
     for iFile=1:length(OutNameList_LH)
         [WorkingDir, File, Ext]=fileparts(OutNameList_LH{iFile,1});
         if ispc
-            CommandInit=sprintf('docker run -i --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir); %YAN Chao-Gan, 181214. Remove -t because there is a tty issue in windows
+            CommandInit=sprintf('docker run -i --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir); %YAN Chao-Gan, 181214. Remove -t because there is a tty issue in windows
         else
-            CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
+            CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
         end
         if isdeployed % If running within docker with compiled version
             CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', WorkingDir);
         end
         
-        SpaceName='fsaverage5';
         Command = sprintf('%s mri_surf2surf --s %s --hemi lh --sval /data/%s --fwhm %g --cortex --tval /data/s%s', ...
             CommandInit, SpaceName, [File, Ext], FWHM, [File, Ext]);
         system(Command);
@@ -244,15 +245,14 @@ if IsSmooth
     for iFile=1:length(OutNameList_RH)
         [WorkingDir, File, Ext]=fileparts(OutNameList_RH{iFile,1});
         if ispc
-            CommandInit=sprintf('docker run -i --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir); %YAN Chao-Gan, 181214. Remove -t because there is a tty issue in windows
+            CommandInit=sprintf('docker run -i --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir); %YAN Chao-Gan, 181214. Remove -t because there is a tty issue in windows
         else
-            CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
+            CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
         end
         if isdeployed % If running within docker with compiled version
             CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', WorkingDir);
         end
         
-        SpaceName='fsaverage5';
         Command = sprintf('%s mri_surf2surf --s %s --hemi rh --sval /data/%s --fwhm %g --cortex --tval /data/s%s', ...
             CommandInit, SpaceName, [File, Ext], FWHM, [File, Ext]);
         system(Command);
@@ -775,6 +775,35 @@ function editFWHM_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenuSpace.
+function popupmenuSpace_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenuSpace (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Index = get(hObject,'Value');
+if Index == 1
+    handles.Space = 'fsaverage5';
+elseif Index == 2
+    handles.Space = 'fsaverage';
+end
+guidata(hObject, handles);
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuSpace contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenuSpace
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenuSpace_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuSpace (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');

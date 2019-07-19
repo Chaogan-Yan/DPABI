@@ -141,7 +141,7 @@ function pushbutton_Standardization_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_Standardization (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-DPABI_Standardization
+DPABI_Standardization_Surf
 
 % --- Executes on button press in pushbuttonStats.
 function pushbuttonStats_Callback(hObject, eventdata, handles)
