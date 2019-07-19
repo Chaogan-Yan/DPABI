@@ -27,11 +27,11 @@ function varargout = DPABI_TDA(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @DPABI_TDA_OpeningFcn, ...
-                   'gui_OutputFcn',  @DPABI_TDA_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @DPABI_TDA_OpeningFcn, ...
+    'gui_OutputFcn',  @DPABI_TDA_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -57,14 +57,14 @@ function DPABI_TDA_OpeningFcn(hObject, eventdata, handles, varargin)
 Path = which('dpabi');
 [filepath,name,ext] = fileparts(Path);
 handles.Cfg.DPABIPath = filepath;
-handles.Cfg.WorkingDir = pwd; 
-handles.Cfg.StartingDirName = 'FunSurfWC'; 
+handles.Cfg.WorkingDir = pwd;
+handles.Cfg.StartingDirName = 'FunSurfWC';
 handles.Cfg.SubjectID = [];
 handles.Cfg.TR = 0;
 handles.Cfg.IsProcessVolumeSpace = 1;
-handles.Cfg.MaskFileSurfLH=fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_cortex.label.gii'); 
-handles.Cfg.MaskFileSurfRH=fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_cortex.label.gii'); 
-handles.Cfg.MaskFileVolu=fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_91x109x91.img'); 
+handles.Cfg.MaskFileSurfLH=fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_cortex.label.gii');
+handles.Cfg.MaskFileSurfRH=fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_cortex.label.gii');
+handles.Cfg.MaskFileVolu=fullfile(handles.Cfg.WorkingDir, 'Masks','AllResampled_BrainMask_05_91x109x91.nii');
 handles.Cfg.WindowSize = 30;
 handles.Cfg.WindowStep = 1;
 handles.Cfg.WindowType = 'hamming';
@@ -99,7 +99,7 @@ handles.Cfg.SmoothConcordance.FWHMSurf = 10;
 handles.Cfg.SmoothConcordance.FWHMVolu = [6 6 6];
 
 handles.Cfg.ParallelWorkersNumber = 0;
-handles.Cfg.FunctionalSessionNumber = 1; 
+handles.Cfg.FunctionalSessionNumber = 1;
 handles.Cfg.IsDelete4D = 0;
 
 
@@ -127,7 +127,7 @@ guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = DPABI_TDA_OutputFcn(hObject, eventdata, handles) 
+function varargout = DPABI_TDA_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -171,6 +171,8 @@ function WorkDirEntry_Callback(hObject, eventdata, handles)
 GetSubjList(hObject, handles);
 handles.Cfg.SubjectID = get(handles.SubjListbox, 'String');
 handles.Cfg.WorkingDir = get(handles.WorkDirEntry,'String');
+handles.Cfg.MaskFileVolu=fullfile(handles.Cfg.WorkingDir, 'Masks','AllResampled_BrainMask_05_91x109x91.nii');
+UpdateDisplay(handles);
 guidata(hObject,handles);
 % Hints: get(hObject,'String') returns contents of WorkDirEntry as text
 %        str2double(get(hObject,'String')) returns contents of WorkDirEntry as a double
@@ -207,6 +209,8 @@ set(handles.WorkDirEntry, 'String', Path);
 GetSubjList(hObject, handles);
 handles.Cfg.SubjectID = get(handles.SubjListbox, 'String');
 handles.Cfg.WorkingDir = get(handles.WorkDirEntry,'String');
+handles.Cfg.MaskFileVolu=fullfile(handles.Cfg.WorkingDir, 'Masks','AllResampled_BrainMask_05_91x109x91.nii');
+UpdateDisplay(handles);
 guidata(hObject,handles);
 
 
@@ -218,12 +222,12 @@ WorkDir=get(handles.WorkDirEntry, 'String');
 if isempty(handles.Cfg.SubjectID)
     StartDir=get(handles.StartDirEntry, 'String');
     FullDir=fullfile(WorkDir, StartDir);
-
+    
     if isempty(WorkDir) || isempty(StartDir) || ~isdir(FullDir)
         set(handles.SubjListbox, 'String', '', 'Value', 0);
         return
     end
-
+    
     SubjStruct=dir(FullDir);
     Index=cellfun(...
         @(IsDir, NotDot) IsDir && (~strcmpi(NotDot, '.') && ~strcmpi(NotDot, '..') && ~strcmpi(NotDot, '.DS_Store')),...
@@ -319,7 +323,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-    
+
 
 
 
@@ -328,8 +332,8 @@ function editWindowSize_Callback(hObject, eventdata, handles)
 % hObject    handle to editWindowSize (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.WindowSize = str2num(get(handles.editWindowSize,'String'));
-    guidata(hObject,handles);
+handles.Cfg.WindowSize = str2num(get(handles.editWindowSize,'String'));
+guidata(hObject,handles);
 
 % Hints: get(hObject,'String') returns contents of editWindowSize as text
 %        str2double(get(hObject,'String')) returns contents of editWindowSize as a double
@@ -353,8 +357,8 @@ function editWindowStep_Callback(hObject, eventdata, handles)
 % hObject    handle to editWindowStep (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.WindowStep = str2num(get(handles.editWindowStep,'String'));
-    guidata(hObject,handles);
+handles.Cfg.WindowStep = str2num(get(handles.editWindowStep,'String'));
+guidata(hObject,handles);
 
 % Hints: get(hObject,'String') returns contents of editWindowStep as text
 %        str2double(get(hObject,'String')) returns contents of editWindowStep as a double
@@ -379,16 +383,16 @@ function popupmenuWindowType_Callback(hObject, eventdata, handles)
 % hObject    handle to popupmenuWindowType (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    WindowType = get(handles.popupmenuWindowType,'Value');
-    switch WindowType
-        case 1
-            handles.Cfg.WindowType = 'hamming';
-        case 2
-            handles.Cfg.WindowType = 'rectwin';
-        case 3
-            handles.Cfg.WindowType = 'hann';
-    end
-    guidata(hObject,handles);
+WindowType = get(handles.popupmenuWindowType,'Value');
+switch WindowType
+    case 1
+        handles.Cfg.WindowType = 'hamming';
+    case 2
+        handles.Cfg.WindowType = 'rectwin';
+    case 3
+        handles.Cfg.WindowType = 'hann';
+end
+guidata(hObject,handles);
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenuWindowType contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenuWindowType
 
@@ -425,7 +429,7 @@ function checkboxALFFfALFF_Callback(hObject, eventdata, handles)
 handles.Cfg.IsALFF = get(handles.checkboxALFFfALFF,'Value');
 UpdateDisplay(handles);
 guidata(hObject,handles);
-    
+
 % Hint: get(hObject,'Value') returns toggle state of checkboxALFFfALFF
 
 
@@ -436,7 +440,7 @@ function editBandLow_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.ALFF.AHighPass_LowCutoff = str2num(get(handles.editBandLow,'String'));
 guidata(hObject,handles);
-    
+
 % Hints: get(hObject,'String') returns contents of editBandLow as text
 %        str2double(get(hObject,'String')) returns contents of editBandLow as a double
 
@@ -485,7 +489,7 @@ function editStartingDirectoryForReHoetc_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.StartingDirForDCetc = get(handles.editStartingDirectoryForReHoetc,'String');
 guidata(hObject,handles);
-    
+
 % Hints: get(hObject,'String') returns contents of editStartingDirectoryForReHoetc as text
 %        str2double(get(hObject,'String')) returns contents of editStartingDirectoryForReHoetc as a double
 
@@ -520,11 +524,11 @@ function rbtnReHo7_Callback(hObject, eventdata, handles)
 % hObject    handle to rbtnReHo7 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.ReHo.Cluster = 7;
-    set(handles.rbtnReHo7,'Value',1);
-    set(handles.rbtnReHo19,'Value',0);
-    set(handles.rbtnReHo27,'Value',0);
-    guidata(hObject,handles);
+handles.Cfg.ReHo.Cluster = 7;
+set(handles.rbtnReHo7,'Value',1);
+set(handles.rbtnReHo19,'Value',0);
+set(handles.rbtnReHo27,'Value',0);
+guidata(hObject,handles);
 
 % Hint: get(hObject,'Value') returns toggle state of rbtnReHo7
 
@@ -534,11 +538,11 @@ function rbtnReHo19_Callback(hObject, eventdata, handles)
 % hObject    handle to rbtnReHo19 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.ReHo.Cluster = 19;
-    set(handles.rbtnReHo7,'Value',0);
-    set(handles.rbtnReHo19,'Value',1);
-    set(handles.rbtnReHo27,'Value',0);
-    guidata(hObject,handles);
+handles.Cfg.ReHo.Cluster = 19;
+set(handles.rbtnReHo7,'Value',0);
+set(handles.rbtnReHo19,'Value',1);
+set(handles.rbtnReHo27,'Value',0);
+guidata(hObject,handles);
 
 % Hint: get(hObject,'Value') returns toggle state of rbtnReHo19
 
@@ -548,12 +552,12 @@ function rbtnReHo27_Callback(hObject, eventdata, handles)
 % hObject    handle to rbtnReHo27 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    handles.Cfg.ReHo.Cluster = 27;
-    set(handles.rbtnReHo7,'Value',0);
-    set(handles.rbtnReHo19,'Value',0);
-    set(handles.rbtnReHo27,'Value',1);
-    guidata(hObject,handles);
-    
+handles.Cfg.ReHo.Cluster = 27;
+set(handles.rbtnReHo7,'Value',0);
+set(handles.rbtnReHo19,'Value',0);
+set(handles.rbtnReHo27,'Value',1);
+guidata(hObject,handles);
+
 % Hint: get(hObject,'Value') returns toggle state of rbtnReHo27
 
 
@@ -565,7 +569,7 @@ function checkboxDC_Callback(hObject, eventdata, handles)
 handles.Cfg.IsDegreeCentrality = get(handles.checkboxDC,'Value');
 UpdateDisplay(handles);
 guidata(hObject,handles);
-    
+
 % Hint: get(hObject,'Value') returns toggle state of checkboxDC
 
 
@@ -576,7 +580,7 @@ function editrThreshold_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.DegreeCentrality.rThreshold = str2num(get(handles.editrThreshold,'String'));
 guidata(hObject,handles);
-    
+
 % Hints: get(hObject,'String') returns contents of editrThreshold as text
 %        str2double(get(hObject,'String')) returns contents of editrThreshold as a double
 
@@ -602,10 +606,10 @@ function checkboxGSCorr_Callback(hObject, eventdata, handles)
 handles.Cfg.IsGSCorr = get(handles.checkboxGSCorr,'Value');
 UpdateDisplay(handles);
 guidata(hObject,handles);
-    
+
 % Hint: get(hObject,'Value') returns toggle state of checkboxGSCorr
 
-% 
+%
 % % --- Executes on button press in rbtnGSDefaultMask.
 % function rbtnGSDefaultMask_Callback(hObject, eventdata, handles)
 % % hObject    handle to rbtnGSDefaultMask (see GCBO)
@@ -617,13 +621,13 @@ guidata(hObject,handles);
 % set(handles.editGSUserMask, 'String', 'Default Mask');
 % set(handles.btnGSSelectMask, 'Enable','off');
 % handles.Cfg.GSCorr.GlobalMask = 'Default';
-% handles.Cfg.GSCorr.GlobalMaskVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_61x73x61.img'); 
+% handles.Cfg.GSCorr.GlobalMaskVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_61x73x61.img');
 % UpdateDisplay(handles);
 % guidata(hObject,handles);
-% 
+%
 % % Hint: get(hObject,'Value') returns toggle state of rbtnGSDefaultMask
-% 
-% 
+%
+%
 % % --- Executes on button press in rbtnGSUserMask.
 % function rbtnGSUserMask_Callback(hObject, eventdata, handles)
 % % hObject    handle to rbtnGSUserMask (see GCBO)
@@ -637,7 +641,7 @@ guidata(hObject,handles);
 % handles.Cfg.GSCorr.GlobalMask = 'UserMask';
 % UpdateDisplay(handles);
 % guidata(hObject,handles);
-%     
+%
 % % Hint: get(hObject,'Value') returns toggle state of rbtnGSUserMask
 
 
@@ -760,7 +764,7 @@ if ~isempty(PCTVer)
 end
 
 guidata(hObject, handles);
-    
+
 % Hints: get(hObject,'String') returns contents of editParallelWorkers as text
 %        str2double(get(hObject,'String')) returns contents of editParallelWorkers as a double
 
@@ -785,7 +789,7 @@ function editFunctionalSessions_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.FunctionalSessionNumber = str2num(get(handles.editFunctionalSessions,'String'));
 guidata(hObject, handles);
-     
+
 % Hints: get(hObject,'String') returns contents of editFunctionalSessions as text
 %        str2double(get(hObject,'String')) returns contents of editFunctionalSessions as a double
 
@@ -846,9 +850,12 @@ function checkboxVoxelWiseConcordance_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.VoxelWiseConcordance = get(handles.checkboxVoxelWiseConcordance,'Value');
+if ~handles.Cfg.VoxelWiseConcordance
+    handles.Cfg.IsSmoothConcordance=0;
+end
 UpdateDisplay(handles);
 guidata(hObject, handles);
-    
+
 % Hint: get(hObject,'Value') returns toggle state of checkboxVoxelWiseConcordance
 
 
@@ -1201,7 +1208,7 @@ function btnRun_Callback(hObject, eventdata, handles)
 % hObject    handle to btnRun (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Cfg=handles.Cfg; 
+Cfg=handles.Cfg;
 ReHo={'',' ReHo'};DC={'',' DC'};GSCorr={'',' GSCorr'};FC={'',' FC'};
 if (isempty(Cfg.StartingDirForDCetc) | strcmp(Cfg.StartingDirForDCetc{1},'')) & ...
         (Cfg.IsReHo||Cfg.IsDegreeCentrality||Cfg.IsGSCorr||Cfg.IsFC)
@@ -1209,7 +1216,7 @@ if (isempty(Cfg.StartingDirForDCetc) | strcmp(Cfg.StartingDirForDCetc{1},'')) & 
         GSCorr{Cfg.IsGSCorr+1},FC{Cfg.IsFC+1},' are not specified, so the starting directory for them will',...
         ' follow the default setting: [',handles.Cfg.StartingDirName,'].'],'Warning'));
 end
-Datetime=fix(clock); 
+Datetime=fix(clock);
 save([handles.Cfg.WorkingDir,filesep,'DPABI_TDA_Surf_AutoSave_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
 
 DPABI_TDA_Surf_run(handles.Cfg);
@@ -1434,4 +1441,4 @@ set(handles.editFunctionalSessions,'String',num2str(handles.Cfg.FunctionalSessio
 set(handles.checkboxDelete4D,'Value',handles.Cfg.IsDelete4D);
 
 
-    
+

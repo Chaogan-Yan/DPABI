@@ -10,10 +10,10 @@ function [DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow, DegreeCentrali
 % 	InFile_LH	        The input surface time series file for left hemishpere
 % 	InFile_RH	        The input surface time series file for right hemishpere
 %   rThreshold      -   The r (correlation) threshold for Degree Centrality calculation (sum of r > rThreshold).
-%	OutputName_LH  	-	Output filename for left hemishpere. Could be 
+%	OutputName_LH  	-	Output filename for left hemishpere. Could be
 %                            2*1 cells: for DegreeCentrality_PositiveWeightedSumBrain and DegreeCentrality_PositiveBinarizedSumBrain results respectively
 %                       or   string: will be seperated by suffix: _DegreeCentrality_PositiveWeightedSumBrain and _DegreeCentrality_PositiveBinarizedSumBrain
-%	OutputName_RH  	-	Output filename for right hemishpere. Could be 
+%	OutputName_RH  	-	Output filename for right hemishpere. Could be
 %                            2*1 cells: for DegreeCentrality_PositiveWeightedSumBrain and DegreeCentrality_PositiveBinarizedSumBrain results respectively
 %                       or   string: will be seperated by suffix: _DegreeCentrality_PositiveWeightedSumBrain and _DegreeCentrality_PositiveBinarizedSumBrain
 % 	AMaskFilename_LH	the mask file name ofr left hemishpere, only compute the point within the mask
@@ -132,46 +132,46 @@ WindowMultiplier_RH = repmat(WindowType(:),1,size(AllVolume_RH,2));
 for iWindow = 1:nWindow
     fprintf('\nProcessing window %g of total %g windows\n', iWindow, nWindow);
     
-%     AllVolumeWindow_LH = AllVolume_LH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
-%     AllVolumeWindow_LH = AllVolumeWindow_LH.*WindowMultiplier_LH;
-%     AllVolumeWindow_RH = AllVolume_RH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
-%     AllVolumeWindow_RH = AllVolumeWindow_RH.*WindowMultiplier_RH;
-%     AllVolumeWindow=cat(2,AllVolumeWindow_LH,AllVolumeWindow_RH);
+    %     AllVolumeWindow_LH = AllVolume_LH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
+    %     AllVolumeWindow_LH = AllVolumeWindow_LH.*WindowMultiplier_LH;
+    %     AllVolumeWindow_RH = AllVolume_RH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:);
+    %     AllVolumeWindow_RH = AllVolumeWindow_RH.*WindowMultiplier_RH;
+    %     AllVolumeWindow=cat(2,AllVolumeWindow_LH,AllVolumeWindow_RH);
     AllVolumeWindow=cat(2,AllVolume_LH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:).*WindowMultiplier_LH,AllVolume_RH((iWindow-1)*WindowStep+1:(iWindow-1)*WindowStep+WindowSize,:).*WindowMultiplier_RH);
-
+    
     % ZeroMeanOneStd
     AllVolumeWindow = (AllVolumeWindow-repmat(mean(AllVolumeWindow),size(AllVolumeWindow,1),1))./repmat(std(AllVolumeWindow),size(AllVolumeWindow,1),1);   %Zero mean and one std
     AllVolumeWindow(isnan(AllVolumeWindow))=0;
-
+    
     DegreeCentrality_PositiveWeightedSum = zeros(length(MaskIndex_LH)+length(MaskIndex_RH),1);
     DegreeCentrality_PositiveBinarizedSum = zeros(length(MaskIndex_LH)+length(MaskIndex_RH),1);
-
+    
     % Degree Centrality Calculating
     CUTNUMBER = 30*CUTNUMBER; % More cut needed for degree centrality calculation
     fprintf('\n\t Degree Centrality Calculating...');
     SegmentLength = ceil(size(AllVolumeWindow,2) / CUTNUMBER);
     CUTNUMBER = ceil(size(AllVolumeWindow,2) / SegmentLength); % Revise CUTNUMBER in case SegmentLength*CUTNUMBER is too bigger than size(AllVolume,2)
-
+    
     for iCut=1:CUTNUMBER
         if iCut~=CUTNUMBER
             Segment = (iCut-1)*SegmentLength+1 : iCut*SegmentLength;
         else
-        Segment = (iCut-1)*SegmentLength+1 : size(AllVolumeWindow,2);
+            Segment = (iCut-1)*SegmentLength+1 : size(AllVolumeWindow,2);
         end
-    
+        
         FC_Segment = AllVolumeWindow(:,Segment)'*AllVolumeWindow/(nDimTimePoints_WithinWindow-1);
-    
+        
         DegreeCentrality_PositiveWeightedSum(Segment) = sum(FC_Segment.*(FC_Segment > rThreshold),2);
         DegreeCentrality_PositiveBinarizedSum(Segment) = sum(FC_Segment > rThreshold,2);
-
+        
         fprintf('.');
         %fprintf('Block: %d. ',iCut);
     end
-
+    
     DegreeCentrality_PositiveWeightedSum = DegreeCentrality_PositiveWeightedSum - 1; % -1 because we need to substarct the r with itself
     DegreeCentrality_PositiveBinarizedSum = DegreeCentrality_PositiveBinarizedSum - 1; % -1 because we need to substarct the r with itself
-
-
+    
+    
     % Get the brain back
     DegreeCentrality_PositiveWeightedSumBrain_LH = zeros(nDimVertex_LH,1);
     DegreeCentrality_PositiveWeightedSumBrain_LH(MaskIndex_LH,1) = DegreeCentrality_PositiveWeightedSum(1:length(MaskIndex_LH));
@@ -179,7 +179,7 @@ for iWindow = 1:nWindow
     DegreeCentrality_PositiveWeightedSumBrain_RH(MaskIndex_RH,1) = DegreeCentrality_PositiveWeightedSum(length(MaskIndex_LH)+1:end);
     DegreeCentrality_PositiveWeightedSumBrain_LH=DegreeCentrality_PositiveWeightedSumBrain_LH';
     DegreeCentrality_PositiveWeightedSumBrain_RH=DegreeCentrality_PositiveWeightedSumBrain_RH';
-
+    
     DegreeCentrality_PositiveBinarizedSumBrain_LH = zeros(nDimVertex_LH,1);
     DegreeCentrality_PositiveBinarizedSumBrain_LH(MaskIndex_LH,1) = DegreeCentrality_PositiveBinarizedSum(1:length(MaskIndex_LH));
     DegreeCentrality_PositiveBinarizedSumBrain_RH = zeros(nDimVertex_RH,1);
