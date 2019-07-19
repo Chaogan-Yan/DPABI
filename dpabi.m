@@ -198,7 +198,7 @@ if WebStatus
     end
 end
 
-DPABI_ResultsOrganizer
+DPABI_ResultsOrganizer(1)
 
 
 

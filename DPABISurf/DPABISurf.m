@@ -22,7 +22,7 @@ function varargout = DPABISurf(varargin)
 
 % Edit the above text to modify the response to help DPABISurf
 
-% Last Modified by GUIDE v2.5 26-Dec-2018 09:56:45
+% Last Modified by GUIDE v2.5 16-Jul-2019 09:01:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -194,3 +194,32 @@ system(Command);
     
     
     
+
+
+% --- Executes on button press in pushbuttonRMPSurf.
+function pushbuttonRMPSurf_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonRMPSurf (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[DPABIMessage WebStatus]=urlread('http://rfmri.org/RfMRIMapMessage.txt');
+DPABIMessage='With this module, the results could be organized for future use, and to be accumulated for the future R-fMRI maps project.';
+if WebStatus
+    if ~isempty(DPABIMessage)
+        uiwait(msgbox(DPABIMessage,'The R-fMRI Maps Project Message'));
+    end
+    DPABIMessageWeb=urlread('http://rfmri.org/RfMRIMapMessageWeb.txt');
+    if ~isempty(DPABIMessageWeb)
+        web(DPABIMessageWeb);
+    end
+end
+
+DPABI_ResultsOrganizer(0)
+
+
+% --- Executes on button press in pushbuttonTDASurf.
+function pushbuttonTDASurf_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonTDASurf (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+DPABI_TDA_Surf
