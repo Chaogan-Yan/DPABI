@@ -205,9 +205,11 @@ if isempty(CurUnderSurf)
     Fcn.GetDataCursorPos=...
         @() GetDataCursorPos(AxesObj);
     Fcn.MoveDataCursor=...
-        @(Pos) MoveDataCursor(AxesObj, Pos);
+        @(Pos,VP) MoveDataCursor(AxesObj, Pos,VP);
     Fcn.UpdateAllYokedViewer=...
         @(Pos) UpdateAllYokedViewer(AxesObj, Pos);
+    Fcn.GetPos_byIndex=...
+        @(Index) GetPos_byIndex(Index, AxesObj);
     Fcn.MoveDataCursor_byIndex=...
         @(Ind) MoveDataCursor_byIndex(AxesObj, Ind);
     
@@ -217,8 +219,6 @@ if isempty(CurUnderSurf)
     
     FigObj=ancestor(AxesObj, 'figure');
     DataCursor=datacursormode(FigObj);
-    %set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj),...
-    %    'SnapToDataVertex', 'Off');
     set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
     AxesHandle.DataCursor=DataCursor;
     
@@ -1604,14 +1604,14 @@ Pos=get(event_obj, 'Position');
 
 Txt=GetPos(Pos, AxesObj);
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
-Coord=AxesHandle.UnderSurf.StructData.vertices;
-VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
-Fig=ancestor(AxesObj, 'figure');
-FigHandle=guidata(Fig);
-set(FigHandle.Index,'string',num2str(VInd));
+FigHandle=guidata(AxesObj);
+if ~isempty(FigHandle) && isfield(FigHandle, 'DcIndexEty')
+    Coord=AxesHandle.UnderSurf.StructData.vertices;
+    VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
+    set(FigHandle.DcIndexEty, 'String', num2str(VInd));
+end
 if AxesObj==gca
     UpdateAllYokedViewer(AxesObj, Pos);
-
 end
 
 function NewFig=SaveMontage(AxesObj, VarArgIn)
@@ -1779,7 +1779,10 @@ Pos=[Coord(Index,1),Coord(Index,2),Coord(Index,3)];
 
 function MoveDataCursor_byIndex(AxesObj, Index)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
-Pos=GetPos_byIndex(Index, AxesObj);
+UnderSurf=AxesHandle.UnderSurf;
+V=get(UnderSurf.Obj, 'Vertices');
+Pos=V(Index, :);
+
 Opt=GetViewPoint(AxesObj);
 CurVP=Opt.ViewPoint;
 MoveDataCursor(AxesObj, Pos, CurVP);

@@ -22,7 +22,7 @@ function varargout = DPABISurf_VIEW(varargin)
 
 % Edit the above text to modify the response to help DPABISurf_VIEW
 
-% Last Modified by GUIDE v2.5 17-Jul-2019 10:40:55
+% Last Modified by GUIDE v2.5 19-Jul-2019 14:55:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -115,7 +115,7 @@ function UnderlayBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.UnderlayBtn, 'Enable', 'Off');
-set(handles.Index,'Enable','On');
+set(handles.DcIndexEty,'Enable','On', 'String', 'N/A');
 
 [~, Fcn]=w_RenderSurf(handles.UnderlayFilePath, handles.SurfaceAxes);
 handles.Fcn=Fcn;
@@ -1520,23 +1520,30 @@ function Surf_VIEW_WindowButtonDownFcn(hObject, eventdata, handles)
 % end
 
 
-
-function Index_Callback(hObject, eventdata, handles)
-% hObject    handle to Index (see GCBO)
+function DcIndexEty_Callback(hObject, eventdata, handles)
+% hObject    handle to DcIndexEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of Index as text
-%        str2double(get(hObject,'String')) returns contents of Index as a double
+% Hints: get(hObject,'String') returns contents of DcIndexEty as text
+%        str2double(get(hObject,'String')) returns contents of DcIndexEty as a double
 Fcn=handles.Fcn;
-Index=get(handles.Index, 'string');
+Index=get(handles.DcIndexEty, 'string');
 Index=str2num(Index);
+Pos=Fcn.GetPos_byIndex(Index);
 Fcn.MoveDataCursor_byIndex(Index);
+Pos_Current=Fcn.GetDataCursorPos();
+if Pos~=Pos_Current.Pos
+    VP=Fcn.GetViewPoint();
+    VP=-VP.ViewPoint;
+    Fcn.SetViewPoint(VP);
+    Fcn.MoveDataCursor_byIndex(Index);
+end
 
 
 % --- Executes during object creation, after setting all properties.
-function Index_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Index (see GCBO)
+function DcIndexEty_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DcIndexEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
