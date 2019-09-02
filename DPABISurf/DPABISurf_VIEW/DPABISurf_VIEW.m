@@ -22,7 +22,7 @@ function varargout = DPABISurf_VIEW(varargin)
 
 % Edit the above text to modify the response to help DPABISurf_VIEW
 
-% Last Modified by GUIDE v2.5 11-Jul-2019 09:32:58
+% Last Modified by GUIDE v2.5 19-Jul-2019 14:55:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
@@ -114,7 +114,9 @@ function UnderlayBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to UnderlayBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 set(handles.UnderlayBtn, 'Enable', 'Off');
+set(handles.DcIndexEty,'Enable','On', 'String', 'N/A');
 
 [~, Fcn]=w_RenderSurf(handles.UnderlayFilePath, handles.SurfaceAxes);
 handles.Fcn=Fcn;
@@ -785,8 +787,22 @@ function UnderlayEty_Callback(hObject, eventdata, handles)
 % hObject    handle to UnderlayEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-UnderlayFilePath=handles.UnderlayFilePath;
-set(handles.UnderlayEty, 'String', UnderlayFilePath);
+% UnderlayFilePath=handles.UnderlayFilePath;
+% set(handles.UnderlayEty, 'String', UnderlayFilePath);
+if ~isfield(handles, 'Fcn')
+    set(handles.UnderlayBtn, 'Enable', 'Off');
+    set(handles.DcIndexEty,'Enable','On', 'String', 'N/A');
+    handles.UnderlayFile=get(hObject,'String');
+    [~, Fcn]=w_RenderSurf(handles.UnderlayFilePath, handles.SurfaceAxes);
+    handles.Fcn=Fcn;
+    guidata(hObject, handles);
+    set(hObject,'Enable','Off');
+else
+    OverlayFile=get(hObject,'String');
+    AddOverlaysManually(hObject,OverlayFile,handles);
+    set(hObject,'Enable','Off');
+end
+
 % Hints: get(hObject,'String') returns contents of UnderlayEty as text
 %        str2double(get(hObject,'String')) returns contents of UnderlayEty as a double
 
@@ -1517,3 +1533,60 @@ function Surf_VIEW_WindowButtonDownFcn(hObject, eventdata, handles)
 %              Fcn.MoveDataCursor(YokePos);
 %       end
 % end
+
+
+function DcIndexEty_Callback(hObject, eventdata, handles)
+% hObject    handle to DcIndexEty (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DcIndexEty as text
+%        str2double(get(hObject,'String')) returns contents of DcIndexEty as a double
+Fcn=handles.Fcn;
+Index=get(handles.DcIndexEty, 'string');
+Index=str2num(Index);
+Pos=Fcn.GetPos_byIndex(Index);
+Fcn.MoveDataCursor_byIndex(Index);
+Pos_Current=Fcn.GetDataCursorPos();
+if Pos~=Pos_Current.Pos
+    VP=Fcn.GetViewPoint();
+    VP=-VP.ViewPoint;
+    Fcn.SetViewPoint(VP);
+    Fcn.MoveDataCursor_byIndex(Index);
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function DcIndexEty_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DcIndexEty (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function AddOverlaysManually(hObject,OverlayFile,handles)
+if ~isfield(handles, 'UnderlayFilePath') || isempty(handles.UnderlayFilePath)
+    errordlg('Please Indicate Underlay First!');
+    return
+end
+
+if ~isfield(handles, 'Fcn')
+    errordlg('Please Set Underlay First!');
+    return
+end
+
+
+Fcn=handles.Fcn;
+ExitCode=Fcn.AddOverlay(OverlayFile);
+if ExitCode
+    return
+end
+OverlayInd=numel(Fcn.GetOverlayFiles());
+handles.OverlayInd=OverlayInd;
+guidata(hObject, handles);
+
+UpdateOverlayConfig(hObject);

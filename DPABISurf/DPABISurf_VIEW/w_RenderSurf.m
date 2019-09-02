@@ -205,9 +205,13 @@ if isempty(CurUnderSurf)
     Fcn.GetDataCursorPos=...
         @() GetDataCursorPos(AxesObj);
     Fcn.MoveDataCursor=...
-        @(Pos) MoveDataCursor(AxesObj, Pos);
+        @(Pos,VP) MoveDataCursor(AxesObj, Pos,VP);
     Fcn.UpdateAllYokedViewer=...
         @(Pos) UpdateAllYokedViewer(AxesObj, Pos);
+    Fcn.GetPos_byIndex=...
+        @(Index) GetPos_byIndex(Index, AxesObj);
+    Fcn.MoveDataCursor_byIndex=...
+        @(Ind) MoveDataCursor_byIndex(AxesObj, Ind);
     
     AxesHandle.Fcn=Fcn;
     
@@ -215,8 +219,6 @@ if isempty(CurUnderSurf)
     
     FigObj=ancestor(AxesObj, 'figure');
     DataCursor=datacursormode(FigObj);
-    %set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj),...
-    %    'SnapToDataVertex', 'Off');
     set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
     AxesHandle.DataCursor=DataCursor;
     
@@ -1359,8 +1361,12 @@ else
     end
 
 end
-
-if NMin==NMax && NMax==0
+if NMax==0 && PMax==0
+    Ticks=[1,1,100000];
+    NMax_Fake=NMax-1;
+    PMax_Fake=PMax+1;
+    TickLabel={sprintf('%g', NMax_Fake),'0',sprintf('%g', PMax_Fake)};
+elseif NMin==NMax && NMax==0
     Ticks=[1, floor(100000*(PMin./PMax))+1, 100000];
     TickLabel={'0', sprintf('%g', PMin), sprintf('%g', PMax)};    
 elseif PMin==PMax && PMax==0
@@ -1601,6 +1607,13 @@ function Txt=GetPosInfo(~, event_obj, AxesObj)
 Pos=get(event_obj, 'Position');
 
 Txt=GetPos(Pos, AxesObj);
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+FigHandle=guidata(AxesObj);
+if ~isempty(FigHandle) && isfield(FigHandle, 'DcIndexEty')
+    Coord=AxesHandle.UnderSurf.StructData.vertices;
+    VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
+    set(FigHandle.DcIndexEty, 'String', num2str(VInd));
+end
 if AxesObj==gca
     UpdateAllYokedViewer(AxesObj, Pos);
 end
@@ -1675,11 +1688,11 @@ end
 
 function MoveDataCursor(AxesObj, Pos, VP)
 AxesHandle=getappdata(AxesObj, 'AxesHandle');
+
 Fig=ancestor(AxesObj, 'figure');
 Frm=get(AxesObj, 'Parent');
 DataCursorObj=GetDataCursorObj(AxesObj);
 SetViewPoint(AxesObj, VP);
-
 UnderSurf=AxesHandle.UnderSurf;
 V=get(UnderSurf.Obj, 'Vertices');
 Dis=sqrt(sum((V-repmat(Pos, [size(V, 1), 1])).^2, 2));
@@ -1731,7 +1744,6 @@ AxesHandle=getappdata(AxesObj, 'AxesHandle');
 Coord=AxesHandle.UnderSurf.StructData.vertices;
 VInd=find(Coord(:,1)==Pos(1) & Coord(:,2)==Pos(2) & Coord(:,3)==Pos(3));
 Curv=AxesHandle.UnderSurf.Curv(VInd);
-
 Txt={...
     ['X: ',     num2str(Pos(1))],...
     ['Y: ',     num2str(Pos(2))],...
@@ -1763,3 +1775,19 @@ if isfield(AxesHandle, 'LabelSurf')
         Txt=[Txt, {LabelTxt}];
     end
 end
+
+function Pos=GetPos_byIndex(Index, AxesObj)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+Coord=AxesHandle.UnderSurf.StructData.vertices;
+Pos=[Coord(Index,1),Coord(Index,2),Coord(Index,3)];
+
+function MoveDataCursor_byIndex(AxesObj, Index)
+AxesHandle=getappdata(AxesObj, 'AxesHandle');
+UnderSurf=AxesHandle.UnderSurf;
+V=get(UnderSurf.Obj, 'Vertices');
+Pos=V(Index, :);
+
+Opt=GetViewPoint(AxesObj);
+CurVP=Opt.ViewPoint;
+MoveDataCursor(AxesObj, Pos, CurVP);
+
