@@ -1561,6 +1561,61 @@ switch Value
         OverlayHeader=RedrawOverlay(OverlayHeader, handles.DPABI_fig);
         
         handles.OverlayHeaders{index}=OverlayHeader; %YAN Chao-Gan, 161218. Fixed a bug: handles.OverlayHeader{index}=OverlayHeader;
+    case 11 %Surface View with DPABISurf_VIEW
+        View_1=DPABISurf_VIEW;
+        View_2=DPABISurf_VIEW;
+        DPABISurfPath=fileparts(which('DPABISurf.m'));
+        SurfTpmPath=fullfile(DPABISurfPath, 'SurfTemplates');
+        Underlay_Path=findall(0, 'Tag', 'UnderlayEty');
+        Underlay_Menu=findall(0, 'Tag', 'UnderlayMenu');
+        Button_Set=findall(0, 'Tag', 'UnderlayBtn');
+        Hemi_Menu=findall(0, 'Tag', 'HemiMenu');
+        Overlay_All=get(handles.OverlayEntry,'String');
+        Overlay_Ind=get(handles.OverlayEntry,'Value');
+        File=split(Overlay_All{Overlay_Ind},' ');
+        File_name=File(1);
+        File_path=File(2);
+        File_1=split(File_path,'(');
+        File_2=split(File_1(2),')');
+        InFile=strcat(File_2(1),'/',File_name);
+        WriteFile=strcat(File_2(1),'/','CurrentOverlay_2_Surf');
+        WriteFile=WriteFile{1,1};
+        ReadFile=strcat(WriteFile,'.nii');
+        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},WriteFile);
+        OutFile=split(InFile,'.');
+        Surf=cell(2,1);
+        Surf{1,1}=strcat(OutFile{1,1},'_Surf_lh.gii');
+        Surf{2,1}=strcat(OutFile{1,1},'_Surf_rh.gii');
+        OutFile=strcat(OutFile(1),'_Surf.gii');
+        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},'CurrentOverlay_2_Surf');
+        y_Vol2Surf(ReadFile,OutFile{1,1},1,'fsaverage');
+%         y_Vol2Surf(InFile{1,1},OutFile{1,1},0,'fsaverage');
+        Thrd=get(handles.ThrdSlider,'Value');
+        Thrd_Pos=findall(0, 'Tag', 'OverlayThresPosSlider');
+        Thrd_Neg=findall(0, 'Tag', 'OverlayThresNegSlider');
+        for i=1:2
+            if i==1
+                UnderlayFilePath=fullfile(SurfTpmPath, ...
+                    'fsaverage_lh_inflated.surf.gii');
+            elseif i==2
+                UnderlayFilePath=fullfile(SurfTpmPath, ...
+                    'fsaverage_rh_inflated.surf.gii');
+            end
+            File_Surf=Surf{i,1};
+            set(Underlay_Path(i,1), 'String', UnderlayFilePath);
+            set(Underlay_Menu(i,1), 'Value', 2);
+            set(Hemi_Menu(i,1), 'Value', i);
+            set(Button_Set(i,1),'Enable','On');
+            DPABISurf_VIEW('UnderlayMenu_Callback',Underlay_Menu(i,1),eventdata,guidata(Underlay_Menu(i,1)));
+            DPABISurf_VIEW('HemiMenu_Callback',Hemi_Menu(i,1),eventdata,guidata(Hemi_Menu(i,1)));
+            DPABISurf_VIEW('UnderlayBtn_Callback',Button_Set(i,1),eventdata,guidata(Button_Set(i,1)));
+            Original_Path=get(Underlay_Path(i,1),'String');
+            set(Underlay_Path(i,1),'String',File_Surf);
+            DPABISurf_VIEW('UnderlayEty_Callback',Underlay_Path(i,1),eventdata,guidata(Underlay_Path(i,1)));
+            set(Underlay_Path(i,1),'String',Original_Path);
+%             set(Thrd_Pos(i,1),'Value',Thrd);
+%             DPABISurf_VIEW('OverlayThresPosSlider_Callback',Thrd_Pos(i,1),eventdata,guidata(Thrd_Pos(i,1)));
+        end
 end
 guidata(hObject, handles);
 % Hints: contents = get(hObject,'String') returns MorePopup contents as cell array

@@ -1361,8 +1361,12 @@ else
     end
 
 end
-
-if NMin==NMax && NMax==0
+if NMax==0 && PMax==0
+    Ticks=[1,1,100000];
+    NMax_Fake=NMax-1;
+    PMax_Fake=PMax+1;
+    TickLabel={sprintf('%g', NMax_Fake),'0',sprintf('%g', PMax_Fake)};
+elseif NMin==NMax && NMax==0
     Ticks=[1, floor(100000*(PMin./PMax))+1, 100000];
     TickLabel={'0', sprintf('%g', PMin), sprintf('%g', PMax)};    
 elseif PMin==PMax && PMax==0

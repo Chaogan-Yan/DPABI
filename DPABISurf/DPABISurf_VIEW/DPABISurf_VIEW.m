@@ -114,6 +114,7 @@ function UnderlayBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to UnderlayBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 set(handles.UnderlayBtn, 'Enable', 'Off');
 set(handles.DcIndexEty,'Enable','On', 'String', 'N/A');
 
@@ -786,8 +787,22 @@ function UnderlayEty_Callback(hObject, eventdata, handles)
 % hObject    handle to UnderlayEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-UnderlayFilePath=handles.UnderlayFilePath;
-set(handles.UnderlayEty, 'String', UnderlayFilePath);
+% UnderlayFilePath=handles.UnderlayFilePath;
+% set(handles.UnderlayEty, 'String', UnderlayFilePath);
+if ~isfield(handles, 'Fcn')
+    set(handles.UnderlayBtn, 'Enable', 'Off');
+    set(handles.DcIndexEty,'Enable','On', 'String', 'N/A');
+    handles.UnderlayFile=get(hObject,'String');
+    [~, Fcn]=w_RenderSurf(handles.UnderlayFilePath, handles.SurfaceAxes);
+    handles.Fcn=Fcn;
+    guidata(hObject, handles);
+    set(hObject,'Enable','Off');
+else
+    OverlayFile=get(hObject,'String');
+    AddOverlaysManually(hObject,OverlayFile,handles);
+    set(hObject,'Enable','Off');
+end
+
 % Hints: get(hObject,'String') returns contents of UnderlayEty as text
 %        str2double(get(hObject,'String')) returns contents of UnderlayEty as a double
 
@@ -1552,3 +1567,26 @@ function DcIndexEty_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+function AddOverlaysManually(hObject,OverlayFile,handles)
+if ~isfield(handles, 'UnderlayFilePath') || isempty(handles.UnderlayFilePath)
+    errordlg('Please Indicate Underlay First!');
+    return
+end
+
+if ~isfield(handles, 'Fcn')
+    errordlg('Please Set Underlay First!');
+    return
+end
+
+
+Fcn=handles.Fcn;
+ExitCode=Fcn.AddOverlay(OverlayFile);
+if ExitCode
+    return
+end
+OverlayInd=numel(Fcn.GetOverlayFiles());
+handles.OverlayInd=OverlayInd;
+guidata(hObject, handles);
+
+UpdateOverlayConfig(hObject);
