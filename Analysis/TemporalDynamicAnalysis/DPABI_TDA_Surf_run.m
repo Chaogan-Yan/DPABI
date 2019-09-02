@@ -11,22 +11,6 @@ function DPABI_TDA_Surf_run(Cfg)
 % ycg.yan@gmail.com
 
 
-%Cfg.ReHo.SurfNNeighbor
-%Cfg.ReHo.Cluster
-%Cfg.SurfFileLH
-%Cfg.SurfFileRH
-%Cfg.MaskFileSurfLH
-%Cfg.MaskFileSurfRH
-%Cfg.MaskFileVolu
-%Cfg.GSCorr.GlobalMaskVolu %Only volume global mask is needed.
-%Cfg.DegreeCentrality.rThreshold
-%Cfg.IsDegreeCentrality %DegreeCentrality instead of DC
-%Cfg.CalFC.ROIDefSurfLH
-%Cfg.CalFC.ROIDefSurfRH
-%Cfg.CalFC.ROIDefVolu
-%Cfg.SmoothConcordance.FWHMSurf
-%Cfg.SmoothConcordance.FWHMVolu
-
 [SPMversion,c]=spm('Ver');
 SPMversion=str2double(SPMversion(end));
 
@@ -48,7 +32,7 @@ if ~isfield(Cfg,'MaskFileSurfRH')
     Cfg.MaskFileSurfRH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_cortex.label.gii');
 end
 if ~isfield(Cfg,'MaskFileVolu')
-    Cfg.MaskFileVolu = fullfile(DPABIPath, 'Templates','BrainMask_05_91x109x91.img');
+    Cfg.MaskFileVolu=fullfile(Cfg.WorkingDir, 'Masks','AllResampled_BrainMask_05_91x109x91.nii');
 end
 
 Cfg.StartingDirName_Volume = ['FunVolu',Cfg.StartingDirName(8:end)];
@@ -484,11 +468,11 @@ if (Cfg.IsFC==1)
 
                 %Calculate mean and std
                 for iROI=1:size(zFCBrain_AllWindow,3)
-                    y_Write(squeeze(mean(zFCBrain_AllWindow(:,:,iROI),2)),GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',StartingDirName,filesep,'MeanzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
-                    y_Write(squeeze(std(zFCBrain_AllWindow(:,:,iROI),0,2)),GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',StartingDirName,filesep,'StdzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
+                    y_Write(squeeze(mean(zFCBrain_AllWindow(:,:,iROI),2)),GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',Cfg.StartingDirName,filesep,'MeanzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
+                    y_Write(squeeze(std(zFCBrain_AllWindow(:,:,iROI),0,2)),GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',Cfg.StartingDirName,filesep,'StdzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
                     Temp = squeeze(std(zFCBrain_AllWindow(:,:,iROI),0,2)) ./ squeeze(mean(zFCBrain_AllWindow(:,:,iROI),2));
                     Temp(find(isnan(Temp)))=0;
-                    y_Write(Temp,GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',StartingDirName,filesep,'CVzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
+                    y_Write(Temp,GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',Cfg.StartingDirName,filesep,'CVzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
                 end
             end
             
@@ -504,11 +488,11 @@ if (Cfg.IsFC==1)
                 
                 %Calculate mean and std
                 for iROI=1:size(zFCBrain_AllWindow,3)
-                    y_Write(squeeze(mean(zFCBrain_AllWindow(:,:,iROI),2)),GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',StartingDirName,filesep,'MeanzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
-                    y_Write(squeeze(std(zFCBrain_AllWindow(:,:,iROI),0,2)),GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',StartingDirName,filesep,'StdzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
+                    y_Write(squeeze(mean(zFCBrain_AllWindow(:,:,iROI),2)),GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',Cfg.StartingDirName,filesep,'MeanzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
+                    y_Write(squeeze(std(zFCBrain_AllWindow(:,:,iROI),0,2)),GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',Cfg.StartingDirName,filesep,'StdzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
                     Temp = squeeze(std(zFCBrain_AllWindow(:,:,iROI),0,2)) ./ squeeze(mean(zFCBrain_AllWindow(:,:,iROI),2));
                     Temp(find(isnan(Temp)))=0;
-                    y_Write(Temp,GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',StartingDirName,filesep,'CVzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
+                    y_Write(Temp,GHeader,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',Cfg.StartingDirName,filesep,'CVzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
                 end
             end
             
@@ -522,11 +506,11 @@ if (Cfg.IsFC==1)
                 
                 %Calculate mean and std
                 for iROI=1:size(zFCBrain_AllWindow,5)
-                    y_Write(squeeze(mean(zFCBrain_AllWindow(:,:,:,:,iROI),4)),Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',StartingDirName,filesep,'MeanzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
-                    y_Write(squeeze(std(zFCBrain_AllWindow(:,:,:,:,iROI),0,4)),Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',StartingDirName,filesep,'StdzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
+                    y_Write(squeeze(mean(zFCBrain_AllWindow(:,:,:,:,iROI),4)),Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',Cfg.StartingDirName_Volume,filesep,'MeanzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
+                    y_Write(squeeze(std(zFCBrain_AllWindow(:,:,:,:,iROI),0,4)),Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',Cfg.StartingDirName_Volume,filesep,'StdzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
                     Temp = squeeze(std(zFCBrain_AllWindow(:,:,:,:,iROI),0,4)) ./ squeeze(mean(zFCBrain_AllWindow(:,:,:,:,iROI),4));
                     Temp(find(isnan(Temp)))=0;
-                    y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',StartingDirName,filesep,'CVzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
+                    y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamicsMetrics',filesep,'FC_',Cfg.StartingDirName_Volume,filesep,'CVzFC_','ROI',num2str(iROI),'_',Cfg.SubjectID{i}]);
                 end
             end
         end
@@ -832,9 +816,9 @@ end
 %Delete Dynamic 4D Files to save disk space
 if (Cfg.IsDelete4D==1)
     for iFunSession=1:Cfg.FunctionalSessionNumber
-        delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D']);
-        delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D']);
-        delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D']);
+        rmdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D'],'s');
+        rmdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D'],'s');
+        rmdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D'],'s');
     end
 end
 

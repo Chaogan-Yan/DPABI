@@ -55,7 +55,7 @@ function DPABISurf_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABISurf
 
 
-Release='V1.0Beta_190305';
+Release='V1.1_190725';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -66,9 +66,9 @@ fprintf('Welcome: %s, %.4d-%.2d-%.2d %.2d:%.2d \n', UserName,Datetime(1),Datetim
 fprintf('DPABISurf: A Surface-Based Resting-State fMRI Data Analysis Toolbox.\nRelease = %s\n',Release);
 fprintf('Copyright(c) 2019; GNU GENERAL PUBLIC LICENSE\n');
 fprintf('Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; \n');
-fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgrammers: YAN Chao-Gan; WANG Xin-Di; LU Bin\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
+fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgrammers: YAN Chao-Gan; WANG Xin-Di; LU Bin; CHANG Zhi-Kai\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
 fprintf('-----------------------------------------------------------\n');
-fprintf('Citing Information:\nDPABISurf is a surface-based resting-state fMRI data analysis toolbox evolved from DPABI/DPARSF, as easy-to-use as DPABI/DPARSF. DPABISurf is based on fMRIPprep 1.3.0.post3 (Esteban et al., 2018) (RRID:SCR_016216), and based on FreeSurfer 6.0.1 (Dale et al., 1999) (RRID:SCR_001847), ANTs 2.2.0 (Avants et al., 2008) (RRID:SCR_004757), FSL 5.0.9 (Jenkinson et al., 2002) (RRID:SCR_002823), AFNI 20160207 (Cox, 1996) (RRID:SCR_005927), SPM12 (Ashburner, 2012) (RRID:SCR_007037), PALM alpha112 (Winkler et al., 2016), GNU Parallel (Tange, 2011), MATLAB (The MathWorks Inc., Natick, MA, US) (RRID:SCR_001622), Docker (https://docker.com) (RRID:SCR_016445), and DPABI V4.0 (Yan et al., 2016) (RRID:SCR_010501).\n');
+fprintf('Citing Information:\nDPABISurf is a surface-based resting-state fMRI data analysis toolbox evolved from DPABI/DPARSF, as easy-to-use as DPABI/DPARSF. DPABISurf is based on fMRIPprep 1.4.1 (Esteban et al., 2018) (RRID:SCR_016216), and based on FreeSurfer 6.0.1 (Dale et al., 1999) (RRID:SCR_001847), ANTs 2.2.0 (Avants et al., 2008) (RRID:SCR_004757), FSL 5.0.9 (Jenkinson et al., 2002) (RRID:SCR_002823), AFNI 20160207 (Cox, 1996) (RRID:SCR_005927), SPM12 (Ashburner, 2012) (RRID:SCR_007037), PALM alpha112 (Winkler et al., 2016), GNU Parallel (Tange, 2011), MATLAB (The MathWorks Inc., Natick, MA, US) (RRID:SCR_001622), Docker (https://docker.com) (RRID:SCR_016445), and DPABI V4.1 (Yan et al., 2016) (RRID:SCR_010501).\n');
 
 [DPABISurfMessage WebStatus]=urlread('http://rfmri.org/DPABISurfMessage.txt');
 if WebStatus
@@ -141,7 +141,7 @@ function pushbutton_Standardization_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_Standardization (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-DPABI_Standardization
+DPABI_Standardization_Surf
 
 % --- Executes on button press in pushbuttonStats.
 function pushbuttonStats_Callback(hObject, eventdata, handles)

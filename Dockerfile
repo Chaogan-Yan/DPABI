@@ -1,4 +1,4 @@
-FROM poldracklab/fmriprep:1.3.0.post3
+FROM poldracklab/fmriprep:1.4.1
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
@@ -41,6 +41,8 @@ RUN mkdir /opt/DPABI
 COPY . /opt/DPABI
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABI_StandAlone
+RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh
+RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABISurf_run_StandAlone
 
 
 ENTRYPOINT []
