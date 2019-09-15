@@ -494,6 +494,10 @@ Vertex=OverlaySurf.Vertex.*AdjustMsk;
 V=gifti;
 V.cdata=Vertex;
 save(V, OutFile);
+V.cdata(V.cdata~=0)=1;
+OutFile=split(OutFile,'.');
+OutFile=strcat(OutFile{1,1},'_Mask.gii');
+save(V, OutFile);
 ExitCode=0;
 
 function UpdateOverlay(AxesObj, OverlayInd)

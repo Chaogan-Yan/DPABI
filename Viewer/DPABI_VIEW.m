@@ -1562,6 +1562,7 @@ switch Value
         
         handles.OverlayHeaders{index}=OverlayHeader; %YAN Chao-Gan, 161218. Fixed a bug: handles.OverlayHeader{index}=OverlayHeader;
     case 11 %Surface View with DPABISurf_VIEW
+        Index=get(handles.ClusterPopup,'Value');
         Overlay_All=get(handles.OverlayEntry,'String');
         Overlay_Ind=get(handles.OverlayEntry,'Value');
         File=split(Overlay_All{Overlay_Ind},' ');
@@ -1570,16 +1571,27 @@ switch Value
         File_1=split(File_path,'(');
         File_2=split(File_1(2),')');
         InFile=strcat(File_2(1),'/',File_name);
-        WriteFile=strcat(File_2(1),'/','CurrentOverlay_2_Surf');
+        WriteFile=strcat(File_2(1),'/','CurrentOverlay_2_Surf.nii');
         WriteFile=WriteFile{1,1};
+        
+        if Index==11
+            y_Write(handles.OverlayHeaders{1,1}.Data.*2,handles.OverlayHeaders{1,1},WriteFile);
+        else
         y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},WriteFile);
+        end
         OutFile=split(InFile,'.');
         Surf=cell(2,1);
         Surf{1,1}=strcat(OutFile{1,1},'_Surf_lh.gii');
         Surf{2,1}=strcat(OutFile{1,1},'_Surf_rh.gii');
         OutFile=strcat(OutFile(1),'_Surf.gii');
         y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},'CurrentOverlay_2_Surf');
+        
+        if Index==11
+%             y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
+            y_Vol2Surf(WriteFile,OutFile{1,1},1,'fsaverage');
+        else
         y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
+        end
         Thrd=min(abs(handles.OverlayHeaders{1,1}.Data(handles.OverlayHeaders{1,1}.Data~=0)));
         Max=max(handles.OverlayHeaders{1,1}.Data);
         Max=max(Max);
@@ -1593,6 +1605,11 @@ switch Value
         Raw_Min=min(handles.OverlayHeaders{1,1}.Raw);
         Raw_Min=min(Raw_Min);
         Raw_Min=min(Raw_Min);
+        if Index==11
+            Raw_Min=0;
+            Thrd=0;
+            Raw_Max=0;
+        end
         ch_view2Surfview(Surf,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
 end
 guidata(hObject, handles);
