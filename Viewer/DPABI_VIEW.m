@@ -1572,8 +1572,7 @@ switch Value
         File_2=split(File_1(2),')');
         InFile=strcat(File_2(1),'/',File_name);
         WriteFile=strcat(File_2(1),'/','CurrentOverlay_2_Surf.nii');
-        WriteFile=WriteFile{1,1};
-        
+        WriteFile=WriteFile{1,1};       
         if Index==11
             y_Write(handles.OverlayHeaders{1,1}.Data.*2,handles.OverlayHeaders{1,1},WriteFile);
         else
@@ -1584,8 +1583,7 @@ switch Value
         Surf{1,1}=strcat(OutFile{1,1},'_Surf_lh.gii');
         Surf{2,1}=strcat(OutFile{1,1},'_Surf_rh.gii');
         OutFile=strcat(OutFile(1),'_Surf.gii');
-        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},'CurrentOverlay_2_Surf');
-        
+        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},'CurrentOverlay_2_Surf');       
         if Index==11
 %             y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
             y_Vol2Surf(WriteFile,OutFile{1,1},1,'fsaverage');

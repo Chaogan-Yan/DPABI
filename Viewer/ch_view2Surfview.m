@@ -10,7 +10,7 @@ function ch_view2Surfview(Surf,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
 %  Raw_Min - The minimum of the raw data
 %  eventdata - Handle to event object
 %___________________________________________________________________________
-% Written by Chang Zhikai 190906.
+% Written by Zhikai Chang 190906.
   
 View_1=DPABISurf_VIEW;
 View_2=DPABISurf_VIEW;
