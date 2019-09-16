@@ -80,7 +80,7 @@ function pushbutton_InstallDocker_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 uiwait(msgbox('Please make sure your OS is Windows 10 PRO or above, MAC OS X or Linux! Please follow the instructions in the web page to install Docker: https://docs.docker.com/install.','OS Requirements'));
-web('https://docs.docker.com/install');
+web('https://docs.docker.com/install','-browser');
 
 
 % --- Executes on button press in pushbutton_SetUserMemory.

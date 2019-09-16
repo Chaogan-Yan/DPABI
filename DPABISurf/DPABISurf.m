@@ -77,7 +77,7 @@ if WebStatus
     end
     DPABISurfMessageWeb=urlread('http://rfmri.org/DPABISurfMessageWeb.txt');
     if ~isempty(DPABISurfMessageWeb)
-        web(DPABISurfMessageWeb);
+        web(DPABISurfMessageWeb,'-browser');
     end
 end
     
@@ -209,7 +209,7 @@ if WebStatus
     end
     DPABIMessageWeb=urlread('http://rfmri.org/RfMRIMapMessageWeb.txt');
     if ~isempty(DPABIMessageWeb)
-        web(DPABIMessageWeb);
+        web(DPABIMessageWeb,'-browser');
     end
 end
 
