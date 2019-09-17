@@ -1357,7 +1357,68 @@ switch Value
             return;
         end
         w_TimeCourse(handles.DPABI_fig, Headers);
-    case 3 %Call BrainNet Viewer
+    case 3 %Surface View with DPABISurf_VIEW
+        Index=get(handles.ClusterPopup,'Value');
+        Overlay_All=get(handles.OverlayEntry,'String');
+        Overlay_Ind=get(handles.OverlayEntry,'Value');
+        File=split(Overlay_All{Overlay_Ind},' ');
+        File_name=File(1);
+        File_path=File(2);
+        File_1=split(File_path,'(');
+        File_2=split(File_1(2),')');
+        InFile=strcat(File_2(1),'/',File_name);
+        WriteFile=strcat(File_2(1),'/','CurrentOverlay_2_Surf.nii');
+        WriteFile=WriteFile{1,1};
+        MaskFile=strcat(File_2(1),'/','CurrentOverlay_2_Mask.nii');
+        MaskFile=MaskFile{1,1};
+        if Index==11
+            y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},WriteFile);
+        else
+        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},WriteFile);
+        end
+        OutFile=split(InFile,'.');
+        Surf=cell(2,1);
+        Surf{1,1}=strcat(OutFile{1,1},'_Surf_lh.gii');
+        Surf{2,1}=strcat(OutFile{1,1},'_Surf_rh.gii');
+        OverlayFile=strcat(OutFile(1),'_CurrentOverlay.gii');
+        Surf_Mask=cell(2,1);
+        Surf_Mask{1,1}=strcat(OutFile{1,1},'_CurrentOverlay_lh.gii');
+        Surf_Mask{2,1}=strcat(OutFile{1,1},'_CurrentOverlay_rh.gii');
+        OutFile=strcat(OutFile(1),'_Surf.gii');
+        MaskData=handles.OverlayHeaders{1,1}.Data;
+        MaskData(MaskData~=0)=1;
+        %         y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},'CurrentOverlay_2_Surf');
+        %         y_Write(MaskData,handles.OverlayHeaders{1,1},'CurrentOverlay_2_Mask');
+        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},WriteFile);
+        y_Write(MaskData,handles.OverlayHeaders{1,1},MaskFile);
+        if Index==11
+            y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
+            %             y_Vol2Surf(WriteFile,OutFile{1,1},1,'fsaverage');
+        else
+        y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
+        end
+%         y_Vol2Surf(WriteFile,OverlayFile{1,1},0,'fsaverage');
+        y_Vol2Surf(MaskFile,OverlayFile{1,1},0,'fsaverage');
+        Thrd=min(abs(handles.OverlayHeaders{1,1}.Data(handles.OverlayHeaders{1,1}.Data~=0)));
+        Max=max(handles.OverlayHeaders{1,1}.Data);
+        Max=max(Max);
+        Max=max(Max);
+        Min=min(handles.OverlayHeaders{1,1}.Data);
+        Min=min(Min);
+        Min=min(Min);
+        Raw_Max=max(handles.OverlayHeaders{1,1}.Raw);
+        Raw_Max=max(Raw_Max);
+        Raw_Max=max(Raw_Max);
+        Raw_Min=min(handles.OverlayHeaders{1,1}.Raw);
+        Raw_Min=min(Raw_Min);
+        Raw_Min=min(Raw_Min);
+        if Index==11
+            Raw_Min=0;
+            Thrd=0;
+            Raw_Max=0;
+        end
+        ch_view2Surfview(File_name{1,1},Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata);
+    case 4 %Call BrainNet Viewer
         if ~(exist('BrainNet.m'))
             msgbox('The surface view is based on Mingrui Xia''s BrainNet Viewer. Please install BrainNet Viewer 1.1 or later version at first (http://www.nitrc.org/projects/bnv/).','DPABI_VIEW', 'modal');
             return
@@ -1405,7 +1466,7 @@ switch Value
             OverlayHeader.NMax, OverlayHeader.PMax,...
             OverlayHeader,...
             PN_Flag);
-    case 4 % Set Range
+    case 5 % Set Range
         index=HeaderIndex(handles);
         if ~index
             return
@@ -1421,7 +1482,7 @@ switch Value
         OverlayHeader.ThrdIndex=ThrdIndex{1};
         OverlayHeader=RedrawOverlay(OverlayHeader);
         handles.OverlayHeaders{index}=OverlayHeader;
-    case 5 % Set Colorbar Manually
+    case 6 % Set Colorbar Manually
         index=HeaderIndex(handles);
         if ~index
             return
@@ -1430,7 +1491,7 @@ switch Value
         
         colormap(OverlayHeader.ColorMap);
         w_colormapeditor(handles.DPABI_fig);
-    case 6 % Transparency
+    case 7 % Transparency
         Transparency=1-st{curfig}.vols{1}.blobs{curblob}.colour.prop;
         Transparency=inputdlg('Set Transparency (Default = 0.2)',...
             'Transparency of Overlay',...
@@ -1440,7 +1501,7 @@ switch Value
         end
         st{curfig}.vols{1}.blobs{curblob}.colour.prop=1-str2double(Transparency{1});
         y_spm_orthviews('Redraw', curfig);
-    case 7 %Save as Picture
+    case 8 %Save as Picture
         [File, Path] = uiputfile({'*.tiff';'*.jpeg';'*.png';'*.bmp'},...
             'Save Picture As');
         if ~ischar(File)
@@ -1460,7 +1521,7 @@ switch Value
         imwrite(TData.cdata, fullfile(Path, [TName, Ext]));
         imwrite(CData.cdata, fullfile(Path, [CName, Ext]));
         imwrite(SData.cdata, fullfile(Path, [SName, Ext]));
-    case 8 %Save colorbar as Picture
+    case 9 %Save colorbar as Picture
         [File, Path] = uiputfile({'*.tiff';'*.jpeg';'*.png';'*.bmp'},...
             'Save Picture As');
         if ~ischar(File)
@@ -1507,7 +1568,7 @@ switch Value
         
         imwrite(imresize(Scale, [320*L, 200]),...
             ColorMap, fullfile(Path, File));
-    case 9 %Save colorbar as MAT
+    case 10 %Save colorbar as MAT
         index=HeaderIndex(handles);
         if ~index
             return
@@ -1541,7 +1602,7 @@ switch Value
         end
         OverlayHeader.ColorMap=ColorMap;
         save(fullfile(Path, File), 'ColorMap');
-    case 10 %Load colorbar from MAT
+    case 11 %Load colorbar from MAT
         index=HeaderIndex(handles);
         if ~index
             return
@@ -1561,54 +1622,7 @@ switch Value
         OverlayHeader=RedrawOverlay(OverlayHeader, handles.DPABI_fig);
         
         handles.OverlayHeaders{index}=OverlayHeader; %YAN Chao-Gan, 161218. Fixed a bug: handles.OverlayHeader{index}=OverlayHeader;
-    case 11 %Surface View with DPABISurf_VIEW
-        Index=get(handles.ClusterPopup,'Value');
-        Overlay_All=get(handles.OverlayEntry,'String');
-        Overlay_Ind=get(handles.OverlayEntry,'Value');
-        File=split(Overlay_All{Overlay_Ind},' ');
-        File_name=File(1);
-        File_path=File(2);
-        File_1=split(File_path,'(');
-        File_2=split(File_1(2),')');
-        InFile=strcat(File_2(1),'/',File_name);
-        WriteFile=strcat(File_2(1),'/','CurrentOverlay_2_Surf.nii');
-        WriteFile=WriteFile{1,1};       
-        if Index==11
-            y_Write(handles.OverlayHeaders{1,1}.Data.*2,handles.OverlayHeaders{1,1},WriteFile);
-        else
-        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},WriteFile);
-        end
-        OutFile=split(InFile,'.');
-        Surf=cell(2,1);
-        Surf{1,1}=strcat(OutFile{1,1},'_Surf_lh.gii');
-        Surf{2,1}=strcat(OutFile{1,1},'_Surf_rh.gii');
-        OutFile=strcat(OutFile(1),'_Surf.gii');
-        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},'CurrentOverlay_2_Surf');       
-        if Index==11
-%             y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
-            y_Vol2Surf(WriteFile,OutFile{1,1},1,'fsaverage');
-        else
-        y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
-        end
-        Thrd=min(abs(handles.OverlayHeaders{1,1}.Data(handles.OverlayHeaders{1,1}.Data~=0)));
-        Max=max(handles.OverlayHeaders{1,1}.Data);
-        Max=max(Max);
-        Max=max(Max);
-        Min=min(handles.OverlayHeaders{1,1}.Data);
-        Min=min(Min);
-        Min=min(Min);
-        Raw_Max=max(handles.OverlayHeaders{1,1}.Raw);
-        Raw_Max=max(Raw_Max);
-        Raw_Max=max(Raw_Max);
-        Raw_Min=min(handles.OverlayHeaders{1,1}.Raw);
-        Raw_Min=min(Raw_Min);
-        Raw_Min=min(Raw_Min);
-        if Index==11
-            Raw_Min=0;
-            Thrd=0;
-            Raw_Max=0;
-        end
-        ch_view2Surfview(Surf,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
+    
 end
 guidata(hObject, handles);
 % Hints: contents = get(hObject,'String') returns MorePopup contents as cell array
