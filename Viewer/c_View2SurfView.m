@@ -1,4 +1,4 @@
-function ch_view2Surfview(OriginalName,Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
+function c_View2SurfView(OriginalName,Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
 %This is a function which is used to display the result of DPABI_VIEW by DPABISurf_VIEW.
 %FORMAT ch_view2Surfview(Surf,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
 %Input:
