@@ -52,7 +52,6 @@ function DPABISurf_VIEW_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DPABISurf_VIEW (see VARARGIN)
 
-handles.UnderlayFilePath='';
 handles.OverlayInd=0;
 handles.LabelInd=0;
 % handles.IsYoked=false;
@@ -73,6 +72,39 @@ handles.ColorMapEnum={'Jet';...
 % Choose default command line output for DPABISurf_VIEW
 handles.output = hObject;
 axis(handles.SurfaceAxes, 'on');
+if nargin<=3
+    handles.UnderlayFilePath='';
+    handles.Fcn='';    
+elseif nargin==4 || nargin ==5 % Input Underlay
+    UnderlayFilePath=varargin{1};
+    if exist(UnderlayFilePath, 'file')~=2
+        error('Cannot find Underlay File.');
+    end
+    if nargin==4
+        HemiFlag='L';
+    else
+        HemiFlag=varargin{2};
+        if ~strcmpi(HemiFlag, 'L') && ~strcmpi(HemiFlag, 'R')
+            error('Invalid Hemisphere Flag');
+        end
+    end
+    if strcmpi(HemiFlag, 'L')
+        HemiInd=1;
+    else
+        HemiInd=2;
+    end
+    set(handles.HemiMenu, 'Value', HemiInd);
+    set(handles.UnderlayMenu, 'Value', 6);
+    set(handles.UnderlayBtn, 'Enable', 'On');
+    set(handles.UnderlayEty, 'String', UnderlayFilePath);
+    handles.UnderlayFilePath=UnderlayFilePath;
+    
+    set(handles.DcIndexEty,'Enable','On', 'String', 'N/A');
+    [~, Fcn]=w_RenderSurf(handles.UnderlayFilePath, handles.SurfaceAxes);
+    handles.Fcn=Fcn;
+else
+    error('Invalid Input Arguments');
+end
 % Update handles structure
 guidata(hObject, handles);
 
