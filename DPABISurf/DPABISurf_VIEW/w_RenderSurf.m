@@ -274,6 +274,8 @@ end
 % Display Sth
 DisplayTexture(AxesObj);
 
+guidata(AxesObj,Fcn)
+
 function RotateLight(varargin)
 AxesHandle=getappdata(gca, 'AxesHandle');
 camlight(AxesHandle.Light, AxesHandle.SurfOpt.LightOrient);
@@ -1678,6 +1680,7 @@ for i=1:2
    DisplayTexture(AxesObj);
 end
     DataCursor=datacursormode;
+    saveas(gcf,OutFile,'jpg');
     set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
 %     AxesHandle.DataCursor=DataCursor;
 

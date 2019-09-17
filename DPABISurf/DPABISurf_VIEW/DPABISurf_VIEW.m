@@ -1072,49 +1072,56 @@ end
 
 
 % --- Executes on button press in OverlayFweOptBtn.
-function OverlayFweOptBtn_Callback(hObject, eventdata, handles)
+function OverlayFweOptBtn_Callback(hObject, eventdata, handles,varargin)
 % hObject    handle to OverlayFweOptBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Fcn=handles.Fcn;
-OverlayInd=handles.OverlayInd;
-LabelInd=handles.LabelInd;
+if nargin>3
+MaskFile=varargin{1};
 
-Val=get(handles.OverlayFweOptBtn, 'Value');
-switch Val
-    case 1
-    case 2 % Set Cluster Size
-        Opt=Fcn.GetOverlayClusterSizeOption(OverlayInd);
-        Opt=w_SurfClusterSize(Opt);
-        if isempty(Opt)
-            return
-        else
-            Fcn.SetOverlayClusterSizeOption(OverlayInd, Opt);
-        end
-    case 3 % Apply A Vertex-Wise Mask
-        GuiData=Fcn.GetOverlayGuiData(OverlayInd);
-        VMskFile=GuiData.VMskFile;
-        VMskThres=GuiData.VMskThres;
-        VMskSignFlag=GuiData.VMskSignFlag;
-        
-        Opt=Fcn.GetOverlayVertexMask(OverlayInd);
-        Opt.VMskFile=VMskFile;
-        Opt.VMskThres=VMskThres;
-        Opt.VMskSignFlag=VMskSignFlag;
-        
-        Opt=w_ApplyVertexMask(Opt);
-        if isempty(Opt)
-            return
-        end
-        
-        GuiData.VMskFile=Opt.VMskFile;
-        GuiData.VMskFile=Opt.VMskThres;
-        GuiData.VMskSignFlag=Opt.VMskSignFlag;
-        
-        Fcn.SetOverlayGuiData(OverlayInd, GuiData);
-        Fcn.SetOverlayVertexMask(OverlayInd, Opt.VMsk);
-    case 4 % Cluster Report
-        Opt=Fcn.ReportOverlayCluster(OverlayInd, LabelInd);
+    SmartVertexMask(handles,MaskFile)
+else
+    
+    Fcn=handles.Fcn;
+    OverlayInd=handles.OverlayInd;
+    LabelInd=handles.LabelInd;
+    
+    Val=get(handles.OverlayFweOptBtn, 'Value');
+    switch Val
+        case 1
+        case 2 % Set Cluster Size
+            Opt=Fcn.GetOverlayClusterSizeOption(OverlayInd);
+            Opt=w_SurfClusterSize(Opt);
+            if isempty(Opt)
+                return
+            else
+                Fcn.SetOverlayClusterSizeOption(OverlayInd, Opt);
+            end
+        case 3 % Apply A Vertex-Wise Mask
+            GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+            VMskFile=GuiData.VMskFile;
+            VMskThres=GuiData.VMskThres;
+            VMskSignFlag=GuiData.VMskSignFlag;
+            
+            Opt=Fcn.GetOverlayVertexMask(OverlayInd);
+            Opt.VMskFile=VMskFile;
+            Opt.VMskThres=VMskThres;
+            Opt.VMskSignFlag=VMskSignFlag;
+            
+            Opt=w_ApplyVertexMask(Opt);
+            if isempty(Opt)
+                return
+            end
+            
+            GuiData.VMskFile=Opt.VMskFile;
+            GuiData.VMskFile=Opt.VMskThres;
+            GuiData.VMskSignFlag=Opt.VMskSignFlag;
+            
+            Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+            Fcn.SetOverlayVertexMask(OverlayInd, Opt.VMsk);
+        case 4 % Cluster Report
+            Opt=Fcn.ReportOverlayCluster(OverlayInd, LabelInd);
+    end
 end
 
 % --- Executes on button press in OverlayTcBtn.
@@ -1161,6 +1168,14 @@ switch Val
         end
         OutFilePath=fullfile(Path, File);
         Fcn.SaveCurrentOverlayCluster(OverlayInd, OutFilePath);
+        case 4 % Save as picture
+            f = getframe(handles.SurfaceAxes);
+            name=get(handles.OverlayMenu,'String');
+            name=split(name{1,1},'.');
+            name=strcat(name{1,1},'.jpg');
+            Size=size(f.cdata);
+            f.cdata=f.cdata(:,ceil(0.12*Size(2)):ceil(0.88*Size(2)),:);
+            imwrite(f.cdata, name);
 end
 
 % --- Executes on button press in OverlayRmBtn.
@@ -1193,9 +1208,12 @@ function MontageBtn_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Fcn=handles.Fcn;
+name=get(handles.OverlayMenu,'String');
+name=split(name{1,1},'.');
+name=strcat(name{1,1},'_Montage');
 Flag=get(handles.HemiMenu, 'string');
 MVP=Fcn.GetViewPoint();
-Fcn.SaveMontage(handles.SurfaceAxes, 'L', 'MontageFigure1');
+Fcn.SaveMontage( 'L', name);
 
 
 % --- Executes on button press in OverlayColorCustomBtn.
@@ -1590,3 +1608,60 @@ handles.OverlayInd=OverlayInd;
 guidata(hObject, handles);
 
 UpdateOverlayConfig(hObject);
+
+function SmartVertexMask(handles,MaskFile)
+Fcn=handles.Fcn;
+OverlayInd=handles.OverlayInd;
+LabelInd=handles.LabelInd;
+GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+VMskFile=GuiData.VMskFile;
+VMskThres=GuiData.VMskThres;
+VMskSignFlag=GuiData.VMskSignFlag;
+
+Opt=Fcn.GetOverlayVertexMask(OverlayInd);
+Opt.VMskFile=VMskFile;
+Opt.VMskThres=VMskThres;
+Opt.VMskSignFlag=VMskSignFlag;
+
+Opt=c_SmartVertexMask(Opt,MaskFile);
+if isempty(Opt)
+    return
+end
+
+GuiData.VMskFile=Opt.VMskFile;
+GuiData.VMskFile=Opt.VMskThres;
+GuiData.VMskSignFlag=Opt.VMskSignFlag;
+
+Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+Fcn.SetOverlayVertexMask(OverlayInd, Opt.VMsk);
+
+function OverlayHeader=c_SmartVertexMask(varargin)
+OverlayHeader=varargin{1};
+MaskFile=varargin{2};
+VMskFile=MaskFile;
+OverlayHeader.VMskFile=VMskFile;
+VMskThres=0.5;
+
+VMskSignFlag='>';
+
+
+OverlayHeader.VMskThres=VMskThres;
+OverlayHeader.VMskSignFlag=VMskSignFlag;
+
+if ~isempty(OverlayHeader.VMskFile)
+    MskV=gifti(OverlayHeader.VMskFile);
+    if length(MskV.cdata)~=length(OverlayHeader.VMsk)
+        errordlg('Invalid Size of Vertex Mask!');
+        return
+    end
+    if isempty(VMskThres)
+        errordlg('Invalid Threshold!');
+        return
+    end
+    
+    if strcmpi(VMskSignFlag, '<')
+        OverlayHeader.VMsk=MskV.cdata<VMskThres;
+    elseif strcmpi(VMskSignFlag, '>')
+        OverlayHeader.VMsk=MskV.cdata>VMskThres;        
+    end
+end
