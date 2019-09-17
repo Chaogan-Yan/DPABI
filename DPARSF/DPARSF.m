@@ -94,7 +94,7 @@ function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
         end
         DPARSFMessageWeb=urlread('http://rfmri.org/DPARSFMessageWeb.txt');
         if ~isempty(DPARSFMessageWeb)
-            web(DPARSFMessageWeb);
+            web(DPARSFMessageWeb,'-browser');
         end
     end
     
@@ -1073,7 +1073,7 @@ function editParallelWorkersNumber_Callback(hObject, eventdata, handles)
 
 
 function pushbuttonHelp_Callback(hObject, eventdata, handles)
-	web('http://rfmri.org/DPARSF');    
+	web('http://rfmri.org/DPARSF','-browser');
     
 function pushbuttonSave_Callback(hObject, eventdata, handles)
     [filename, pathname] = uiputfile({'*.mat'}, 'Save Parameters As');

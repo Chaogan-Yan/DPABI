@@ -13,11 +13,80 @@ function y_ResultsOrganizer_Surf(WorkingDir,SubjectID,OutputDir)
 % Revised by YAN Chao-Gan, 161004. Change parfor for gzipping each .nii file to parfor for each subject.
 
 %Organize Results
-copyfile([WorkingDir,filesep,'Results'],[OutputDir,filesep,'Results']);
+Spaces={'FunSurfLH','FunSurfRH','FunVolu'};
+MeasureList = {'ALFF';'fALFF';'ReHo';'DegreeCentrality';'ROISignals'};
+MeasurePrefixList = {'ALFF_';'fALFF_';'ReHo_';'DegreeCentrality_PositiveWeightedSumBrain_';'ROISignals_'};
+
 DirSessionResults = dir([WorkingDir,filesep,'S*_Results']);
-for iSession=1:length(DirSessionResults)
-    copyfile([WorkingDir,filesep,DirSessionResults(iSession).name],[OutputDir,filesep,DirSessionResults(iSession).name]);
+FunctionalSessionNumber=length(DirSessionResults)+1;
+% Multiple Sessions Processing
+FunSessionPrefixSet={''}; %The first session doesn't need a prefix. From the second session, need a prefix such as 'S2_';
+for iFunSession=2:FunctionalSessionNumber
+    FunSessionPrefixSet=[FunSessionPrefixSet;{['S',num2str(iFunSession),'_']}];
 end
+
+for iFunSession=1:FunctionalSessionNumber
+    mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results'])
+    copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfLH'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfLH']);
+    copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfRH'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfRH']);
+
+    mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu'])
+    copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'*.tsv'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu']);
+
+    parfor iSub=1:length(SubjectID)
+        mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub}])
+        DirFiles=dir([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub},filesep,'*.nii']);
+        for iFile=1:length(DirFiles)
+            gzip([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub},filesep,DirFiles(iFile).name],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub}]);
+        end
+    end
+    
+    for iSpace=1:length(Spaces)
+        for iMeasure=1:length(MeasureList)
+            fprintf('\n\tOrganizing %s Results for Space: %s.\n',MeasureList{iMeasure},Spaces{iSpace});
+            
+            DirList = dir([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,MeasureList{iMeasure},'*']);
+            for iDir = 1:length(DirList)
+                mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name]);
+                parfor iSub=1:length(SubjectID)
+                    
+                    if strcmp(Spaces{iSpace},'FunVolu')
+                        if iMeasure <= 3
+                            gzip([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.nii'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name]);
+                        end
+                        if iMeasure == 4
+                            gzip([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name,filesep,'DegreeCentrality_PositiveWeightedSumBrain_',SubjectID{iSub},'.nii'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name]);
+                            gzip([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name,filesep,'DegreeCentrality_PositiveBinarizedSumBrain_',SubjectID{iSub},'.nii'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name]);
+                        end
+                        if iMeasure == 5
+                            copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name,filesep,'ROI_OrderKey_',SubjectID{iSub},'.tsv'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name]);
+                        end
+                    else
+                        if iMeasure <= 3
+                            copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name,filesep,MeasurePrefixList{iMeasure},SubjectID{iSub},'.func.gii'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name]);
+                        end
+                        if iMeasure == 4
+                            copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',SubjectID{iSub},'.func.gii'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name]);
+                            copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',SubjectID{iSub},'.func.gii'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name]);
+                        end
+                        if iMeasure == 5
+                            copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name,filesep,'ROI_OrderKey_',SubjectID{iSub},'.tsv'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,Spaces{iSpace},filesep,DirList(iDir).name]);
+                        end
+                    end
+                end
+            end
+        end
+        
+    end
+    
+    mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWCF'])
+    mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWglobalCF'])
+    parfor iSub=1:length(SubjectID)
+        copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWCF',filesep,'ROISignals_',SubjectID{iSub},'.mat'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWCF']);
+        copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWglobalCF',filesep,'ROISignals_',SubjectID{iSub},'.mat'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWglobalCF']);
+    end
+end
+
 
 %Organize Masks
 if exist([WorkingDir,filesep,'Masks'])
@@ -29,23 +98,28 @@ if exist([WorkingDir,filesep,'RealignParameter'])
     copyfile([WorkingDir,filesep,'RealignParameter'],[OutputDir,filesep,'RealignParameter']);
 end
 
-%Organize QC Results
-fprintf('\n\tOrganizing QC Results.\n')
-mkdir([OutputDir,filesep,'QC',filesep,'QC_fmriprep'])
+%Organize fmriprep
+if exist([WorkingDir,filesep,'fmriprep'])
+    copyfile([WorkingDir,filesep,'fmriprep'],[OutputDir,filesep,'fmriprep']);
+end
+%Delete T1 image which may have privacy information such as face
 for iSub=1:length(SubjectID)
-    mkdir([OutputDir,filesep,'QC',filesep,'QC_fmriprep',filesep,SubjectID{iSub}]);
-    copyfile([WorkingDir,filesep,'fmriprep',filesep,SubjectID{iSub},'.html'],[OutputDir,filesep,'QC',filesep,'QC_fmriprep']);
-    copyfile([WorkingDir,filesep,'fmriprep',filesep,SubjectID{iSub},filesep,'figures'],[OutputDir,filesep,'QC',filesep,'QC_fmriprep',filesep,SubjectID{iSub},filesep,'figures']);
+    delete([OutputDir,filesep,'fmriprep',filesep,SubjectID{iSub},filesep,'anat',filesep,'*preproc_T1w.nii.gz']);
 end
 
-
-%Organize stats of freesurfer
-fprintf('\n\tOrganizing stats results of freesurfer.\n')
-mkdir([OutputDir,filesep,'QC',filesep,'Stats_freesurfer'])
-for iSub=1:length(SubjectID)
-    mkdir([OutputDir,filesep,'QC',filesep,'Stats_freesurfer',filesep,SubjectID{iSub}]);
-    copyfile([WorkingDir,filesep,'freesurfer',filesep,SubjectID{iSub},filesep,'stats'],[OutputDir,filesep,'QC',filesep,'Stats_freesurfer',filesep,SubjectID{iSub},filesep,'stats']);
+%Organize freesurfer
+if exist([WorkingDir,filesep,'freesurfer'])
+    copyfile([WorkingDir,filesep,'freesurfer'],[OutputDir,filesep,'freesurfer']);
 end
+%Delete T1 image which may have privacy information such as face
+for iSub=1:length(SubjectID)
+    status = rmdir([OutputDir,filesep,'freesurfer',filesep,SubjectID{iSub},filesep,'mri',filesep,'orig'],'s');
+    delete([OutputDir,filesep,'freesurfer',filesep,SubjectID{iSub},filesep,'mri',filesep,'orig*']);
+    delete([OutputDir,filesep,'freesurfer',filesep,SubjectID{iSub},filesep,'mri',filesep,'nu.mgz']);
+    delete([OutputDir,filesep,'freesurfer',filesep,SubjectID{iSub},filesep,'mri',filesep,'rawavg.mgz']);
+    delete([OutputDir,filesep,'freesurfer',filesep,SubjectID{iSub},filesep,'mri',filesep,'T1.mgz']);
+end
+
 
 fprintf('\n\tResults Organizing Finished.\n')
 

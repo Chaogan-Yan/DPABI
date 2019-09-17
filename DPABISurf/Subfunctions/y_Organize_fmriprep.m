@@ -1,5 +1,5 @@
 function Cfg = y_Organize_fmriprep(Cfg)
-% function Cfg = y_Move_fmriprep(Cfg)
+% function Cfg = y_Organize_fmriprep(Cfg)
 % Organize results by fmriprep.
 %   Input:
 %     Cfg - DPARSFA Cfg structure
@@ -180,6 +180,22 @@ else
 end
 
 
+fprintf('Organize functional mask files...\n');
+if Cfg.FunctionalSessionNumber==1
+    mkdir(fullfile(Cfg.WorkingDir,'Masks','AutoMasks'));
+    parfor i=1:Cfg.SubjectNum
+        copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'func','*space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz'),fullfile(Cfg.WorkingDir,'Masks','AutoMasks'));
+    end
+else
+    for iFunSession=1:Cfg.FunctionalSessionNumber
+        mkdir(fullfile(Cfg.WorkingDir,'Masks',[FunSessionPrefixSet{iFunSession},'AutoMasks']));
+        parfor i=1:Cfg.SubjectNum
+            copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},['ses-',num2str(iFunSession)],'func','*space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz'),fullfile(Cfg.WorkingDir,'Masks',[FunSessionPrefixSet{iFunSession},'AutoMasks']));
+        end
+    end
+end
+
+
 fprintf('Organize ICA-AROMA Noise files...\n');
 if Cfg.FunctionalSessionNumber==1
     DirList=dir(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{1},'func','*_AROMAnoiseICs.csv'));
@@ -298,5 +314,7 @@ for iFunSession=1:Cfg.FunctionalSessionNumber
     
 end
 
+%Generate QC HTML file based on results by fmriprep.
+y_GenerateQCHTML(Cfg);
 
 fprintf('Organize fmriprep files finished!\n');
