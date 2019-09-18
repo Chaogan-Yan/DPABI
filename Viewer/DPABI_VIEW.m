@@ -29,11 +29,11 @@ function varargout = DPABI_VIEW(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @DPABI_VIEW_OpeningFcn, ...
-                   'gui_OutputFcn',  @DPABI_VIEW_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @DPABI_VIEW_OpeningFcn, ...
+    'gui_OutputFcn',  @DPABI_VIEW_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -83,7 +83,7 @@ st{curfig}.xhairs=1;st{curfig}.hld=1;st{curfig}.yoke=0;
 st{curfig}.n=0;st{curfig}.vols=cell(2);st{curfig}.bb=[];
 st{curfig}.Space=eye(4,4);st{curfig}.centre=[0 0 0];
 st{curfig}.callback=';';st{curfig}.mode=1;st{curfig}.snap=[];
-st{curfig}.plugins={'movie'};%'reorient' 'roi'   'rgb'  
+st{curfig}.plugins={'movie'};%'reorient' 'roi'   'rgb'
 st{curfig}.TCFlag=[];st{curfig}.SSFlag=[];
 st{curfig}.MPFlag=[];
 
@@ -114,7 +114,7 @@ y_spm_orthviews('AddContext',1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = DPABI_VIEW_OutputFcn(hObject, eventdata, handles) 
+function varargout = DPABI_VIEW_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -329,7 +329,7 @@ if scale==1
             0, 0, 0, 1];
         Space=M*Space;
     end
-
+    
     if strcmpi(get(handles.PAButton, 'String'),'P')
         M=[ 1, 0, 0, 0;
             0, -1, 0, -Diff(3);
@@ -555,7 +555,7 @@ elseif curTP==numTP
     set(handles.LeftButton, 'Enable', 'On');
 else
     set(handles.RightButton, 'Enable', 'On');
-    set(handles.LeftButton, 'Enable', 'On');    
+    set(handles.LeftButton, 'Enable', 'On');
 end
 OverlayHeader=ChangeTP(OverlayHeader, curTP);
 handles.OverlayHeaders{index}=OverlayHeader;
@@ -606,7 +606,7 @@ if curTP~=oldTP
     else
         OverlayVolume=OverlayVolumes(:,:,:,curTP);
     end
-        
+    
     OverlayHeader.Raw = OverlayVolume;
 else
     return;
@@ -642,7 +642,7 @@ function UnderlayEntry_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 if isempty(handles.UnderlayFileName)
     [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
-
+    
     TemplatePath=fullfile(DPABIPath, 'Templates');
     
     UnderlayFileName=fullfile(TemplatePath,'ch2.nii');
@@ -661,7 +661,7 @@ if ~exist(NewFileName, 'file')
     set(handles.UnderlayEntry, 'String', [Name, Ext]);
 else
     handles.UnderlayFileName=NewFileName;
-    guidata(hObject, handles);    
+    guidata(hObject, handles);
     ShowUnderlay(handles);
 end
 % Hints: get(hObject,'String') returns contents of UnderlayEntry as text
@@ -689,7 +689,7 @@ function UnderlayButton_Callback(hObject, eventdata, handles)
 if isempty(handles.UnderlayFileName)
     [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
         'Pick Underlay File' , pwd);
-else    
+else
     [Path, Name, Ext]=fileparts(handles.UnderlayFileName);
     [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
         'Pick Underlay File' , [Path , filesep , Name , Ext]);
@@ -707,7 +707,7 @@ ShowUnderlay(handles);
 function ShowUnderlay(handles)
 if isempty(handles.UnderlayFileName)
     [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
-
+    
     TemplatePath=fullfile(DPABIPath, 'Templates');
     UnderlayFileName=fullfile(TemplatePath,'ch2.nii');
 else
@@ -1280,14 +1280,14 @@ switch Value
             return
         end
         OverlayHeader=RedrawOverlay(OverlayHeader);
-        handles.OverlayHeaders{index}=OverlayHeader;        
+        handles.OverlayHeaders{index}=OverlayHeader;
     case 7 %FDR
         OverlayHeader=w_FDRCorrection(OverlayHeader);
         if isempty(OverlayHeader)
             return
         end
         OverlayHeader=RedrawOverlay(OverlayHeader, handles.DPABI_fig);
-        handles.OverlayHeaders{index}=OverlayHeader;        
+        handles.OverlayHeaders{index}=OverlayHeader;
     case 8 %GRF
         OverlayHeader=w_GRFCorrection(OverlayHeader);
         if isempty(OverlayHeader)
@@ -1295,12 +1295,12 @@ switch Value
         end
         [OverlayHeader, SendHeader]=RedrawOverlay(OverlayHeader);
         %OverlayHeader.Data = SendHeader.Data; %OverlayHeader=SetCSize(OverlayHeader); %YAN Chao-Gan, 140822. Need to save the data after setting cluster size.
-        handles.OverlayHeaders{index}=OverlayHeader;        
+        handles.OverlayHeaders{index}=OverlayHeader;
     case 9 %AlphaSim
         w_AlphaSimCorrection(OverlayHeader);
     case 10 %Cluster Report
-        OverlayHeader=SetCSize(OverlayHeader);               
-        OverlayHeader=SetPosNeg(OverlayHeader, handles); %Add by Sandy to set cluster size at first when someone use Cluster Report       
+        OverlayHeader=SetCSize(OverlayHeader);
+        OverlayHeader=SetPosNeg(OverlayHeader, handles); %Add by Sandy to set cluster size at first when someone use Cluster Report
         y_ClusterReport(OverlayHeader.Data, OverlayHeader, OverlayHeader.RMM);
     case 11 %Apply a Mask for Additionally Thresholding
         OverlayHeader=w_ApplyAdditionalMask(OverlayHeader);
@@ -1308,7 +1308,7 @@ switch Value
             return
         end
         OverlayHeader=RedrawOverlay(OverlayHeader);
-        handles.OverlayHeaders{index}=OverlayHeader;  
+        handles.OverlayHeaders{index}=OverlayHeader;
 end
 guidata(hObject, handles);
 % Hints: contents = get(hObject,'String') returns ClusterPopup contents as cell array
@@ -1367,37 +1367,21 @@ switch Value
         File_1=split(File_path,'(');
         File_2=split(File_1(2),')');
         InFile=strcat(File_2(1),'/',File_name);
-        WriteFile=strcat(File_2(1),'/','CurrentOverlay_2_Surf.nii');
-        WriteFile=WriteFile{1,1};
-        MaskFile=strcat(File_2(1),'/','CurrentOverlay_2_Mask.nii');
+        MaskFile=strcat(File_2(1),'/','_CurrentOverlay_Mask.nii');
         MaskFile=MaskFile{1,1};
-        if Index==11
-            y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},WriteFile);
-        else
-        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},WriteFile);
-        end
         OutFile=split(InFile,'.');
         Surf=cell(2,1);
         Surf{1,1}=strcat(OutFile{1,1},'_Surf_lh.gii');
         Surf{2,1}=strcat(OutFile{1,1},'_Surf_rh.gii');
-        OverlayFile=strcat(OutFile(1),'_CurrentOverlay.gii');
+        OverlayFile=strcat(OutFile(1),'_CurrentOverlay_Mask.gii');
         Surf_Mask=cell(2,1);
-        Surf_Mask{1,1}=strcat(OutFile{1,1},'_CurrentOverlay_lh.gii');
-        Surf_Mask{2,1}=strcat(OutFile{1,1},'_CurrentOverlay_rh.gii');
+        Surf_Mask{1,1}=strcat(OutFile{1,1},'_CurrentOverlay_Mask_lh.gii');
+        Surf_Mask{2,1}=strcat(OutFile{1,1},'_CurrentOverlay_Mask_rh.gii');
         OutFile=strcat(OutFile(1),'_Surf.gii');
         MaskData=handles.OverlayHeaders{1,1}.Data;
-        MaskData(MaskData~=0)=1;
-        %         y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},'CurrentOverlay_2_Surf');
-        %         y_Write(MaskData,handles.OverlayHeaders{1,1},'CurrentOverlay_2_Mask');
-        y_Write(handles.OverlayHeaders{1,1}.Data,handles.OverlayHeaders{1,1},WriteFile);
+        MaskData=MaskData~=0;
         y_Write(MaskData,handles.OverlayHeaders{1,1},MaskFile);
-        if Index==11
-            y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
-            %             y_Vol2Surf(WriteFile,OutFile{1,1},1,'fsaverage');
-        else
         y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
-        end
-%         y_Vol2Surf(WriteFile,OverlayFile{1,1},0,'fsaverage');
         y_Vol2Surf(MaskFile,OverlayFile{1,1},0,'fsaverage');
         Thrd=min(abs(handles.OverlayHeaders{1,1}.Data(handles.OverlayHeaders{1,1}.Data~=0)));
         Max=max(handles.OverlayHeaders{1,1}.Data);
@@ -1448,17 +1432,17 @@ switch Value
                 ColorMap = y_AFNI_ColorMap(cbar);
             end
         end
-
-%         ColorMap = y_AdjustColorMap(ColorMap,...
-%             [0.75 0.75 0.75],...
-%             OverlayHeader.NMax,...
-%             OverlayHeader.NMin,...
-%             OverlayHeader.PMin,...
-%             OverlayHeader.PMax);
-
+        
+        %         ColorMap = y_AdjustColorMap(ColorMap,...
+        %             [0.75 0.75 0.75],...
+        %             OverlayHeader.NMax,...
+        %             OverlayHeader.NMin,...
+        %             OverlayHeader.PMin,...
+        %             OverlayHeader.PMax);
+        
         [BrainNetViewerPath, fileN, extn] = fileparts(which('BrainNet.m'));
         SurfFileName=[BrainNetViewerPath,filesep,'Data',filesep,'SurfTemplate',filesep,'BrainMesh_ICBM152_smoothed.nv'];
-
+        
         y_CallBrainNetViewer(OverlayHeader.Data,...
             OverlayHeader.NMin, OverlayHeader.PMin,...
             CVSize, OverlayHeader.RMM,...
@@ -1514,7 +1498,7 @@ switch Value
         TData=getframe(st{curfig}.vols{1}.ax{1}.ax);
         CData=getframe(st{curfig}.vols{1}.ax{2}.ax);
         SData=getframe(st{curfig}.vols{1}.ax{3}.ax);
- 
+        
         saveas(curfig, fullfile(Path, [Name, Ext]));
         eval(['print -r300 -dtiff -noui ''',fullfile(Path, [Name, '_300dpi', Ext]),''';']); %YAN Chao-Gan, 140806.
         
@@ -1531,7 +1515,7 @@ switch Value
         index=HeaderIndex(handles);
         if ~index
             return
-        end        
+        end
         OverlayHeader=handles.OverlayHeaders{index};
         
         cbarstring=OverlayHeader.cbarstring;
@@ -1540,7 +1524,7 @@ switch Value
             cbarstring=cbarstring(1:end-1);
         else
             PN_Flag=[];
-        end        
+        end
         cbar=str2double(cbarstring);
         if cbar==0 && isfield(OverlayHeader, 'ColorMap')
             ColorMap=OverlayHeader.ColorMap;
@@ -1579,7 +1563,7 @@ switch Value
         if ~ischar(File)
             return;
         end
-                
+        
         OverlayHeader=handles.OverlayHeaders{index};
         
         cbarstring=OverlayHeader.cbarstring;
@@ -1588,7 +1572,7 @@ switch Value
             cbarstring=cbarstring(1:end-1);
         else
             PN_Flag=[];
-        end        
+        end
         cbar=str2double(cbarstring);
         
         if cbar==0 && isfield(OverlayHeader, 'ColorMap')
@@ -1606,14 +1590,14 @@ switch Value
         index=HeaderIndex(handles);
         if ~index
             return
-        end     
+        end
         
         [File, Path] = uigetfile('*.mat',...
             'Load Colormap from MAT');
         if ~ischar(File)
             return;
         end
-         
+        
         Temp=load(fullfile(Path, File));
         ColorMap=Temp.ColorMap;
         OverlayHeader=handles.OverlayHeaders{index};
@@ -1622,7 +1606,7 @@ switch Value
         OverlayHeader=RedrawOverlay(OverlayHeader, handles.DPABI_fig);
         
         handles.OverlayHeaders{index}=OverlayHeader; %YAN Chao-Gan, 161218. Fixed a bug: handles.OverlayHeader{index}=OverlayHeader;
-    
+        
 end
 guidata(hObject, handles);
 % Hints: contents = get(hObject,'String') returns MorePopup contents as cell array

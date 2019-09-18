@@ -53,15 +53,15 @@ for i=1:2 %Generate the results on DPABISurf_VIEW
     File_Surf=Surf{i,1};
     File_Mask=Surf_Mask{i,1};
     set(Underlay_Path(i,1), 'String', UnderlayFilePath{i,1});
-%     set(Underlay_Menu(i,1), 'Value', 2);
-%     set(Hemi_Menu(i,1), 'Value', i);
-%     set(Button_Set(i,1),'Enable','On');
-%     
-%     DPABISurf_VIEW('UnderlayMenu_Callback',Underlay_Menu(i,1),eventdata,guidata(Underlay_Menu(i,1)));
-%     DPABISurf_VIEW('HemiMenu_Callback',Hemi_Menu(i,1),eventdata,guidata(Hemi_Menu(i,1)));
-%     DPABISurf_VIEW('UnderlayBtn_Callback',Button_Set(i,1),eventdata,guidata(Button_Set(i,1)));
-%     handles=guidata(View{i,1});
-%     Fcn=handles.Fcn;
+    %     set(Underlay_Menu(i,1), 'Value', 2);
+    %     set(Hemi_Menu(i,1), 'Value', i);
+    %     set(Button_Set(i,1),'Enable','On');
+    %
+    %     DPABISurf_VIEW('UnderlayMenu_Callback',Underlay_Menu(i,1),eventdata,guidata(Underlay_Menu(i,1)));
+    %     DPABISurf_VIEW('HemiMenu_Callback',Hemi_Menu(i,1),eventdata,guidata(Hemi_Menu(i,1)));
+    %     DPABISurf_VIEW('UnderlayBtn_Callback',Button_Set(i,1),eventdata,guidata(Button_Set(i,1)));
+    %     handles=guidata(View{i,1});
+    %     Fcn=handles.Fcn;
     Original_Path=get(Underlay_Path(i,1),'String');
     set(Underlay_Path(i,1),'String',File_Surf);
     DPABISurf_VIEW('UnderlayEty_Callback',Underlay_Path(i,1),eventdata,guidata(Underlay_Path(i,1)));
@@ -136,5 +136,5 @@ for i=1:2 %adjust the colorbar
     Fcn.UpdateOverlay(1);
     
 end
-end
+
 
