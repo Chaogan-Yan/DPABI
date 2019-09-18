@@ -70,8 +70,14 @@ if isnumeric(File)
 end
 [GMask, GVox, GHeader]=y_ReadRPI(fullfile(Path, File));
 GMask=logical(GMask);
-MaskList=cellfun(@(subj) fullfile(WorkDir, 'Masks', 'AutoMasks', ['wAutoMask_', subj]), SubjList,...
-    'UniformOutput', false);
+
+if exist(fullfile(WorkDir, 'Masks', 'AutoMasks', ['wAutoMask_', SubjList{1},'.nii'])) % See if is DPARSF or DPABISurf
+    MaskList=cellfun(@(subj) fullfile(WorkDir, 'Masks', 'AutoMasks', ['wAutoMask_', subj]), SubjList,...
+        'UniformOutput', false);
+else
+    MaskList=cellfun(@(subj) fullfile(WorkDir, 'Masks', 'AutoMasks', [subj,'_task-rest_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz']), SubjList,...
+        'UniformOutput', false);
+end
 
 CoverageVector=zeros(size(MaskList));
 for i=1:numel(MaskList)

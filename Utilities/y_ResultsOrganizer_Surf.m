@@ -120,6 +120,8 @@ for iSub=1:length(SubjectID)
     delete([OutputDir,filesep,'freesurfer',filesep,SubjectID{iSub},filesep,'mri',filesep,'T1.mgz']);
 end
 
+%Back up DPABISurf .mat files
+copyfile([WorkingDir,filesep,'*.mat'],[OutputDir]);
 
 fprintf('\n\tResults Organizing Finished.\n')
 
