@@ -1417,7 +1417,7 @@ switch Value
             Thrd=0;
             Raw_Max=0;
         end
-        ch_view2Surfview(File_name{1,1},Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata);
+        c_View2SurfView(File_name{1,1},Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata);
     case 4 %Call BrainNet Viewer
         if ~(exist('BrainNet.m'))
             msgbox('The surface view is based on Mingrui Xia''s BrainNet Viewer. Please install BrainNet Viewer 1.1 or later version at first (http://www.nitrc.org/projects/bnv/).','DPABI_VIEW', 'modal');

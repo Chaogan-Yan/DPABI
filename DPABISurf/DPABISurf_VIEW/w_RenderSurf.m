@@ -274,8 +274,6 @@ end
 % Display Sth
 DisplayTexture(AxesObj);
 
-guidata(AxesObj,Fcn)
-
 function RotateLight(varargin)
 AxesHandle=getappdata(gca, 'AxesHandle');
 camlight(AxesHandle.Light, AxesHandle.SurfOpt.LightOrient);

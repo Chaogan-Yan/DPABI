@@ -1,4 +1,4 @@
-function ch_view2Surfview(OriginalName,Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
+function c_View2SurfView(OriginalName,Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
 %This is a function which is used to display the result of DPABI_VIEW by DPABISurf_VIEW.
 %FORMAT ch_view2Surfview(Surf,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
 %Input:
@@ -11,16 +11,30 @@ function ch_view2Surfview(OriginalName,Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_M
 %  eventdata - Handle to event object
 %___________________________________________________________________________
 % Written by Zhikai Chang 190906.
-  
-View_1=DPABISurf_VIEW;
-View_2=DPABISurf_VIEW;
-%looking for the widgets of DPABISurf_VIEW
 DPABISurfPath=fileparts(which('DPABISurf.m'));
 SurfTpmPath=fullfile(DPABISurfPath, 'SurfTemplates');
+View=cell(2,1);
+UnderlayFilePath=cell(2,1);
+for i=1:2
+    if i==1
+        UnderlayFilePath{i,1}=fullfile(SurfTpmPath, ...
+            'fsaverage_rh_inflated.surf.gii');
+        Flag='R';
+    elseif i==2
+        UnderlayFilePath{i,1}=fullfile(SurfTpmPath, ...
+            'fsaverage_lh_inflated.surf.gii');
+        Flag='L';
+    end
+    View{i,1}=DPABISurf_VIEW(UnderlayFilePath{i,1});
+end
+% View_1=DPABISurf_VIEW;
+% View_2=DPABISurf_VIEW;
+%looking for the widgets of DPABISurf_VIEW
+
 Underlay_Path=findall(0, 'Tag', 'UnderlayEty');
-Underlay_Menu=findall(0, 'Tag', 'UnderlayMenu');
-Button_Set=findall(0, 'Tag', 'UnderlayBtn');
-Hemi_Menu=findall(0, 'Tag', 'HemiMenu');
+% Underlay_Menu=findall(0, 'Tag', 'UnderlayMenu');
+% Button_Set=findall(0, 'Tag', 'UnderlayBtn');
+% Hemi_Menu=findall(0, 'Tag', 'HemiMenu');
 Overlay_Color=findall(0,'Tag','OverlayColorMenu');
 Thrd_Pos=findall(0, 'Tag', 'OverlayThresPosSlider');
 Thrd_Neg=findall(0, 'Tag', 'OverlayThresNegSlider');
@@ -29,28 +43,25 @@ PMin=findall(0,'Tag','OverlayPMinEty');
 PMax=findall(0,'Tag','OverlayPMaxEty');
 NMin=findall(0,'Tag','OverlayNMinEty');
 NMax=findall(0,'Tag','OverlayNMaxEty');
-Picture=findall(0,'Tag','SurfaceAxes');
+Picture=findall(0,'Tag','DPABISurf_VIEW_AxeObj');
 VP_Menu=findall(0,'Tag','ViewPointMenu');
 CData=cell(2,2);
 
 for i=1:2 %Generate the results on DPABISurf_VIEW
-    if i==1
-        UnderlayFilePath=fullfile(SurfTpmPath, ...
-            'fsaverage_lh_inflated.surf.gii');
-    elseif i==2
-        UnderlayFilePath=fullfile(SurfTpmPath, ...
-            'fsaverage_rh_inflated.surf.gii');
-    end
+    handles=guidata(View{i,1});
+    Fcn=handles.Fcn;
     File_Surf=Surf{i,1};
     File_Mask=Surf_Mask{i,1};
-    set(Underlay_Path(i,1), 'String', UnderlayFilePath);
-    set(Underlay_Menu(i,1), 'Value', 2);
-    set(Hemi_Menu(i,1), 'Value', i);
-    set(Button_Set(i,1),'Enable','On');
-    
-    DPABISurf_VIEW('UnderlayMenu_Callback',Underlay_Menu(i,1),eventdata,guidata(Underlay_Menu(i,1)));
-    DPABISurf_VIEW('HemiMenu_Callback',Hemi_Menu(i,1),eventdata,guidata(Hemi_Menu(i,1)));
-    DPABISurf_VIEW('UnderlayBtn_Callback',Button_Set(i,1),eventdata,guidata(Button_Set(i,1)));
+    set(Underlay_Path(i,1), 'String', UnderlayFilePath{i,1});
+%     set(Underlay_Menu(i,1), 'Value', 2);
+%     set(Hemi_Menu(i,1), 'Value', i);
+%     set(Button_Set(i,1),'Enable','On');
+%     
+%     DPABISurf_VIEW('UnderlayMenu_Callback',Underlay_Menu(i,1),eventdata,guidata(Underlay_Menu(i,1)));
+%     DPABISurf_VIEW('HemiMenu_Callback',Hemi_Menu(i,1),eventdata,guidata(Hemi_Menu(i,1)));
+%     DPABISurf_VIEW('UnderlayBtn_Callback',Button_Set(i,1),eventdata,guidata(Button_Set(i,1)));
+%     handles=guidata(View{i,1});
+%     Fcn=handles.Fcn;
     Original_Path=get(Underlay_Path(i,1),'String');
     set(Underlay_Path(i,1),'String',File_Surf);
     DPABISurf_VIEW('UnderlayEty_Callback',Underlay_Path(i,1),eventdata,guidata(Underlay_Path(i,1)));
@@ -113,7 +124,6 @@ for i=1:2 %Generate the results on DPABISurf_VIEW
     CData{i,2}=f.cdata(:,ceil(0.12*Size(2)):ceil(0.88*Size(2)),:);
     set(VP_Menu(i,1),'Value',2);
     DPABISurf_VIEW('ViewPointMenu_Callback',VP_Menu(i,1),eventdata,guidata(VP_Menu(i,1)));
-    
 end
 name=split(OriginalName,'.');
 
@@ -121,14 +131,10 @@ Really_Name=strcat(name{1,1},'.jpg');
 cdata=cell2mat(CData);
 imwrite(cdata,Really_Name);
 for i=1:2 %adjust the colorbar
-    set(Thrd_Pos(i,1),'Value',0.1);
-    DPABISurf_VIEW('OverlayThresPosSlider_Callback',Thrd_Pos(i,1),eventdata,guidata(Thrd_Pos(i,1)));
-    set(Thrd_Pos(i,1),'Value',0);
-    DPABISurf_VIEW('OverlayThresPosSlider_Callback',Thrd_Pos(i,1),eventdata,guidata(Thrd_Pos(i,1)));
+    handles=guidata(View{i,1});
+    Fcn=handles.Fcn;
+    Fcn.UpdateOverlay(1);
+    
 end
-set(Thrd_Pos(1,1),'Value',0.5);
-DPABISurf_VIEW('OverlayThresPosSlider_Callback',Thrd_Pos(1,1),eventdata,guidata(Thrd_Pos(1,1)));
-set(Thrd_Pos(1,1),'Value',0);
-DPABISurf_VIEW('OverlayThresPosSlider_Callback',Thrd_Pos(1,1),eventdata,guidata(Thrd_Pos(1,1)));
 end
 
