@@ -79,11 +79,12 @@ for iFunSession=1:FunctionalSessionNumber
         
     end
     
-    mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWCF'])
-    mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWglobalCF'])
-    parfor iSub=1:length(SubjectID)
-        copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWCF',filesep,'ROISignals_',SubjectID{iSub},'.mat'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWCF']);
-        copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWglobalCF',filesep,'ROISignals_',SubjectID{iSub},'.mat'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_FunSurfWglobalCF']);
+    DirList = dir([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_*']);
+    for iDir = 1:length(DirList)
+        mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,DirList(iDir).name]);
+        parfor iSub=1:length(SubjectID)
+            copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,DirList(iDir).name,filesep,'ROISignals_',SubjectID{iSub},'.mat'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,DirList(iDir).name]);
+        end
     end
 end
 
