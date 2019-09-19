@@ -1401,7 +1401,8 @@ switch Value
             Thrd=0;
             Raw_Max=0;
         end
-        c_View2SurfView(File_name{1,1},Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata);
+        ColorMap=handles.OverlayHeaders{1,1}.ColorMap;
+        c_View2SurfView(File_name{1,1},Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata,ColorMap);
     case 4 %Call BrainNet Viewer
         if ~(exist('BrainNet.m'))
             msgbox('The surface view is based on Mingrui Xia''s BrainNet Viewer. Please install BrainNet Viewer 1.1 or later version at first (http://www.nitrc.org/projects/bnv/).','DPABI_VIEW', 'modal');

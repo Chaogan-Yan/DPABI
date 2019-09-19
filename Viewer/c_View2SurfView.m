@@ -1,4 +1,4 @@
-function c_View2SurfView(OriginalName,Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
+function c_View2SurfView(OriginalName,Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata,ColorMap)
 %This is a function which is used to display the result of DPABI_VIEW by DPABISurf_VIEW.
 %FORMAT ch_view2Surfview(Surf,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
 %Input:
@@ -66,10 +66,14 @@ for i=1:2 %Generate the results on DPABISurf_VIEW
     set(Underlay_Path(i,1),'String',File_Surf);
     DPABISurf_VIEW('UnderlayEty_Callback',Underlay_Path(i,1),eventdata,guidata(Underlay_Path(i,1)));
     set(Underlay_Path(i,1),'String',Original_Path);
-    set(Overlay_Color(i,1),'Value',12);
-    DPABISurf_VIEW('OverlayColorMenu_Callback',Overlay_Color(i,1),eventdata,guidata(Overlay_Color(i,1)));
+    
+%     set(Overlay_Color(i,1),'Value',13);
+%     DPABISurf_VIEW('OverlayColorMenu_Callback',Overlay_Color(i,1),eventdata,guidata(Overlay_Color(i,1)));
     set(Mask_Button(i,1),'Value',3);
     DPABISurf_VIEW('OverlayFweOptBtn_Callback',Mask_Button(i,1),eventdata,guidata(Mask_Button(i,1)),File_Mask);
+    handles=guidata(View{2/i,1});
+    Fcn=handles.Fcn;
+    Fcn.SetOverlayColorMap(1,ColorMap,[]);
     
     if Max>0
         P_Max=get(PMax(i,1),'String');

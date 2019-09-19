@@ -342,7 +342,7 @@ if ~isempty(OverlayFiles)
     CmInd=cellfun(@(s) strcmpi(CmString(1:3), s(1:3)), Handles.ColorMapEnum);
     CmInd=find(CmInd);
     if isempty(CmInd)
-        CmInd=numel(ColorMapEnum)+1;
+        CmInd=numel(Handles.ColorMapEnum)+1;
     end
     set(Handles.OverlayColorMenu, 'Enable', BtnState, ...
         'String', [Handles.ColorMapEnum; 'Customize...'], 'Value', CmInd);
