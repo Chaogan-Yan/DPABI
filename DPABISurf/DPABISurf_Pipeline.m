@@ -53,7 +53,7 @@ function DPABISurf_Pipeline_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to DPABISurf_Pipeline (see VARARGIN)
 
 
-Release='V1.1_190725';
+Release='V1.2_190919';
 handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
 
 if ispc
