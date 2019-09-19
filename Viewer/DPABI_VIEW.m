@@ -1384,25 +1384,29 @@ switch Value
         y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
         y_Vol2Surf(MaskFile,OverlayFile{1,1},0,'fsaverage');
         Thrd=min(abs(handles.OverlayHeaders{1,1}.Data(handles.OverlayHeaders{1,1}.Data~=0)));
-        Max=max(handles.OverlayHeaders{1,1}.Data);
-        Max=max(Max);
-        Max=max(Max);
-        Min=min(handles.OverlayHeaders{1,1}.Data);
-        Min=min(Min);
-        Min=min(Min);
-        Raw_Max=max(handles.OverlayHeaders{1,1}.Raw);
-        Raw_Max=max(Raw_Max);
-        Raw_Max=max(Raw_Max);
-        Raw_Min=min(handles.OverlayHeaders{1,1}.Raw);
-        Raw_Min=min(Raw_Min);
-        Raw_Min=min(Raw_Min);
-        if Index==11
-            Raw_Min=0;
-            Thrd=0;
-            Raw_Max=0;
-        end
+        PMax=max(handles.OverlayHeaders{1,1}.PMax);
+        PMin=max(handles.OverlayHeaders{1,1}.PMin);
+        NMax=max(handles.OverlayHeaders{1,1}.NMax);
+        NMin=max(handles.OverlayHeaders{1,1}.NMin);
+%         Max=max(handles.OverlayHeaders{1,1}.Data);
+%         Max=max(Max);
+%         Max=max(Max);
+%         Min=min(handles.OverlayHeaders{1,1}.Data);
+%         Min=min(Min);
+%         Min=min(Min);
+%         Raw_Max=max(handles.OverlayHeaders{1,1}.Raw);
+%         Raw_Max=max(Raw_Max);
+%         Raw_Max=max(Raw_Max);
+%         Raw_Min=min(handles.OverlayHeaders{1,1}.Raw);
+%         Raw_Min=min(Raw_Min);
+%         Raw_Min=min(Raw_Min);
+%         if Index==11
+%             Raw_Min=0;
+%             Thrd=0;
+%             Raw_Max=0;
+%         end
         ColorMap=handles.OverlayHeaders{1,1}.ColorMap;
-        c_View2SurfView(File_name{1,1},Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata,ColorMap);
+        c_View2SurfView(File_name{1,1},Surf,Surf_Mask,Thrd,PMax,PMin,NMax,NMin,eventdata,ColorMap);
     case 4 %Call BrainNet Viewer
         if ~(exist('BrainNet.m'))
             msgbox('The surface view is based on Mingrui Xia''s BrainNet Viewer. Please install BrainNet Viewer 1.1 or later version at first (http://www.nitrc.org/projects/bnv/).','DPABI_VIEW', 'modal');

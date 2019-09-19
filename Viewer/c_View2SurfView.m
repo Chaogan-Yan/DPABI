@@ -1,4 +1,4 @@
-function c_View2SurfView(OriginalName,Surf,Surf_Mask,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata,ColorMap)
+function c_View2SurfView(OriginalName,Surf,Surf_Mask,Thrd,P_Max,P_Min,N_Max,N_Min,eventdata,ColorMap)
 %This is a function which is used to display the result of DPABI_VIEW by DPABISurf_VIEW.
 %FORMAT ch_view2Surfview(Surf,Thrd,Max,Min,Raw_Max,Raw_Min,eventdata)
 %Input:
@@ -74,50 +74,58 @@ for i=1:2 %Generate the results on DPABISurf_VIEW
     handles=guidata(View{2/i,1});
     Fcn=handles.Fcn;
     Fcn.SetOverlayColorMap(1,ColorMap,[]);
+    set(PMax(i,1),'String',P_Max);
+    DPABISurf_VIEW('OverlayPMaxEty_Callback',PMax(i,1),eventdata,guidata(PMax(i,1)));
+    set(PMin(i,1),'String',P_Min);
+    DPABISurf_VIEW('OverlayPMinEty_Callback',PMin(i,1),eventdata,guidata(PMin(i,1)));
+    set(NMax(i,1),'String',N_Max);
+    DPABISurf_VIEW('OverlayNMaxEty_Callback',NMax(i,1),eventdata,guidata(NMax(i,1)));
+    set(NMin(i,1),'String',N_Min);
+    DPABISurf_VIEW('OverlayNMinEty_Callback',NMin(i,1),eventdata,guidata(NMin(i,1)));
     
-    if Max>0
-        P_Max=get(PMax(i,1),'String');
-        P_Max=str2double(P_Max);
-        if P_Max>Thrd
-            set(PMin(i,1),'String',Thrd);
-        else
-            set(PMin(i,1),'String',P_Max);
-        end
-        DPABISurf_VIEW('OverlayPMinEty_Callback',PMin(i,1),eventdata,guidata(PMin(i,1)));
-    else
-        if Raw_Max>0
-            P_Max=get(PMax(i,1),'String');
-            P_Max=str2double(P_Max);
-            if P_Max>Thrd
-                set(PMin(i,1),'String',Thrd);
-            else
-                set(PMin(i,1),'String',P_Max);
-            end
-            DPABISurf_VIEW('OverlayPMinEty_Callback',PMin(i,1),eventdata,guidata(PMin(i,1)));
-        end
-    end
-    if Min<0
-        N_Max=get(NMax(i,1),'String');
-        N_Max=str2double(N_Max);
-        if N_Max<-Thrd
-            set(NMin(i,1),'String',-Thrd);
-        else
-            set(NMin(i,1),'String',N_Max);
-        end
-        DPABISurf_VIEW('OverlayNMinEty_Callback',NMin(i,1),eventdata,guidata(NMin(i,1)));
-    else
-        
-        if Raw_Min<0
-            N_Max=get(NMax(i,1),'String');
-            N_Max=str2double(N_Max);
-            if N_Max<-Thrd
-                set(NMin(i,1),'String',-Thrd);
-            else
-                set(NMin(i,1),'String',N_Max);
-            end
-            DPABISurf_VIEW('OverlayNMinEty_Callback',NMin(i,1),eventdata,guidata(NMin(i,1)));
-        end
-    end
+%     if Max>0
+%         P_Max=get(PMax(i,1),'String');
+%         P_Max=str2double(P_Max);
+%         if P_Max>Thrd
+%             set(PMin(i,1),'String',Thrd);
+%         else
+%             set(PMin(i,1),'String',P_Max);
+%         end
+%         DPABISurf_VIEW('OverlayPMinEty_Callback',PMin(i,1),eventdata,guidata(PMin(i,1)));
+%     else
+%         if Raw_Max>0
+%             P_Max=get(PMax(i,1),'String');
+%             P_Max=str2double(P_Max);
+%             if P_Max>Thrd
+%                 set(PMin(i,1),'String',Thrd);
+%             else
+%                 set(PMin(i,1),'String',P_Max);
+%             end
+%             DPABISurf_VIEW('OverlayPMinEty_Callback',PMin(i,1),eventdata,guidata(PMin(i,1)));
+%         end
+%     end
+%     if Min<0
+%         N_Max=get(NMax(i,1),'String');
+%         N_Max=str2double(N_Max);
+%         if N_Max<-Thrd
+%             set(NMin(i,1),'String',-Thrd);
+%         else
+%             set(NMin(i,1),'String',N_Max);
+%         end
+%         DPABISurf_VIEW('OverlayNMinEty_Callback',NMin(i,1),eventdata,guidata(NMin(i,1)));
+%     else
+%         
+%         if Raw_Min<0
+%             N_Max=get(NMax(i,1),'String');
+%             N_Max=str2double(N_Max);
+%             if N_Max<-Thrd
+%                 set(NMin(i,1),'String',-Thrd);
+%             else
+%                 set(NMin(i,1),'String',N_Max);
+%             end
+%             DPABISurf_VIEW('OverlayNMinEty_Callback',NMin(i,1),eventdata,guidata(NMin(i,1)));
+%         end
+%     end
     f = getframe(Picture(i,1));
     Size=size(f.cdata);
     CData{i,1}=f.cdata(:,ceil(0.12*Size(2)):ceil(0.88*Size(2)),:);
