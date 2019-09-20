@@ -87,11 +87,13 @@ end
 name=split(OriginalName,'.');
 Really_Name=strcat(name{1,1},'.jpg');
 h=figure;
-montage({[Surf{i,1}(1:end-4),'_Montage.jpg'],[Surf{2,1}(1:end-4),'_Montage.jpg']});
+% montage({[Surf{2,1}(1:end-4),'_Montage.jpg'],[Surf{1,1}(1:end-4),'_Montage.jpg']});
+montage({[OriginalName(1:end-4),'_Surf_lh_Montage.jpg'],[OriginalName(1:end-4),'_Surf_rh_Montage.jpg']});
 set(0, 'CurrentFigure', h)
 h
 gcf
-eval(['print -r300 -dtiff -noui ''',Really_Name,''';']); %YAN Chao-Gan, 140806.
+saveas(gcf,Really_Name);
+% eval(['print -r300 -dtiff -noui ''',Really_Name,''';']); %YAN Chao-Gan, 140806.
 
 
 % cdata=cell2mat(CData);
