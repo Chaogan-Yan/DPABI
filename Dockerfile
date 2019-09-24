@@ -4,7 +4,7 @@ MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
 # Update system and istall pakages
 RUN apt-get -qq update && apt-get -qq install -y \
-    x11vnc xvfb libqt4-opengl libqt4-scripttools libjpeg62 connectome-workbench parallel wget unzip && \
+    x11vnc xvfb suckless-tools stterm connectome-workbench parallel wget unzip && \
     apt-get update
 
 
@@ -15,11 +15,6 @@ RUN mkdir -p ~/.vnc && \
     export USER=$(whoami) && \
     export DISPLAY=$HOSTNAME:25
     
-# Install spyder
-RUN conda update -y qt pyqt && \
-    conda install -y spyder && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
     
 # Install MATLAB MCR
 ENV MATLAB_VERSION R2018b

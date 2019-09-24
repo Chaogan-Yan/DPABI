@@ -89,6 +89,8 @@ for iFunSession=1:FunctionalSessionNumber
 end
 
 
+fprintf('\n\tOrganizing files, please wait...\n');
+
 %Organize Masks
 if exist([WorkingDir,filesep,'Masks'])
     copyfile([WorkingDir,filesep,'Masks'],[OutputDir,filesep,'Masks']);
