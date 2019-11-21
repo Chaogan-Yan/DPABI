@@ -28,6 +28,7 @@ function [Error]=DPARSFA_run(AutoDataProcessParameter,WorkingDir,SubjectListFile
 % Modified by YAN Chao-Gan, 130303. DPARSF V2.2, minor revision.
 % Modified by YAN Chao-Gan, 130615. DPARSF V2.3.
 % Modified by YAN Chao-Gan, 161006. For compiling.
+% Modified by YAN Chao-Gan, 191121. Calling dcm2niix for BIDS format. Change searching c* to *Crop*
 
 
 if ischar(AutoDataProcessParameter)  %If inputed a .mat file name. (Cfg inside)
@@ -369,6 +370,9 @@ if (AutoDataProcessParameter.IsApplyDownloadedReorientMats==1)
                 delete(DirCo(1).name);
             end
             DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
+            if isempty(DirCo)
+                DirCo=dir('*Crop*.nii');  %YAN Chao-Gan, 191121. Support BIDS format.
+            end
         end
         if isempty(DirCo)
             DirImg=dir('*.img');
@@ -423,6 +427,9 @@ if (AutoDataProcessParameter.IsApplyDownloadedReorientMats==1)
                         delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1Img(1).name]);
                     end
                     DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii']);
+                    if isempty(DirT1Img)
+                        DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. Calling dcm2niix for BIDS format. Change searching c* to *Crop*
+                    end
                 end
             else
                 DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
@@ -1014,6 +1021,9 @@ if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1) && (7==exist([
                 delete(DirCo(1).name);
             end
             DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
+            if isempty(DirCo)
+                DirCo=dir('*Crop*.nii');  %YAN Chao-Gan, 191121. Support BIDS format.
+            end
         end
         if isempty(DirCo)
             DirImg=dir('*.img');
@@ -1061,6 +1071,9 @@ if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1) && (7==exist([
                     delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1Img(1).name]);
                 end
                 DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii']);
+                if isempty(DirT1Img)
+                    DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. Calling dcm2niix for BIDS format. Change searching c* to *Crop*
+                end
             end
         else
             DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
@@ -1388,6 +1401,9 @@ if (AutoDataProcessParameter.IsBet==1)
                     delete(DirCo(1).name);
                 end
                 DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
+                if isempty(DirCo)
+                    DirCo=dir('*Crop*.nii');  %YAN Chao-Gan, 191121. Support BIDS format.
+                end
             end
             if isempty(DirCo)
                 DirImg=dir('*.img');
@@ -1429,6 +1445,9 @@ if (AutoDataProcessParameter.IsBet==1)
                 end
                 if isempty(DirImg)
                     DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii']);
+                end
+                if isempty(DirT1Img)
+                    DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. Calling dcm2niix for BIDS format. Change searching c* to *Crop*
                 end
             else
                 %Search the T1 file - then any possible file
@@ -1493,6 +1512,9 @@ if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
                 delete(DirCo(1).name);
             end
             DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
+            if isempty(DirCo)
+                DirCo=dir('*Crop*.nii');  %YAN Chao-Gan, 191121. Support BIDS format.
+            end
         end
         if isempty(DirCo)
             DirImg=dir('*.img');
@@ -1540,7 +1562,12 @@ if (AutoDataProcessParameter.IsNeedT1CoregisterToFun==1)
                     gunzip(DirImg(1).name);
                     delete(DirImg(1).name);
                 end
-                copyfile('c*.nii',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i}])
+                DirImg=dir('c*.nii');
+                if ~isempty(DirImg)
+                    copyfile('c*.nii',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i}])
+                else
+                    copyfile('*Crop*.nii',[AutoDataProcessParameter.DataProcessDir,filesep,'T1ImgCoreg',filesep,AutoDataProcessParameter.SubjectID{i}])
+                end
             end
         else
             DirImg=dir('*.img');
@@ -1892,6 +1919,10 @@ if (AutoDataProcessParameter.IsSegment>=1)
                     delete(DirCo(1).name);
                 end
                 DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
+                if isempty(DirCo)
+                    DirCo=dir('*Crop*.nii');  %YAN Chao-Gan, 191121. Support BIDS format.
+                end
+                
             end
             if isempty(DirCo)
                 DirImg=dir('*.img');
@@ -1939,7 +1970,13 @@ if (AutoDataProcessParameter.IsSegment>=1)
                         gunzip(DirImg(1).name);
                         delete(DirImg(1).name);
                     end
-                    copyfile('c*.nii',[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
+                    
+                    DirImg=dir('c*.nii');
+                    if ~isempty(DirImg)
+                        copyfile('c*.nii',[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
+                    else
+                        copyfile('*Crop*.nii',[AutoDataProcessParameter.DataProcessDir,filesep,T1ImgSegmentDirectoryName,filesep,AutoDataProcessParameter.SubjectID{i}])
+                    end
                 end
             else
                 DirImg=dir('*.img');

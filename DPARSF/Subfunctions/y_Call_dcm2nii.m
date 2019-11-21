@@ -16,27 +16,27 @@ function y_Call_dcm2nii(InputFilename, OutputDir, Option)
 % Child Mind Institute, 445 Park Avenue, New York, NY 10022, USA
 % The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016, USA
 % ycg.yan@gmail.com
+% YAN Chao-Gan, 191121. Revised for Calling dcm2niix. 
 
 [ProgramPath, fileN, extn] = fileparts(which('DPARSF.m'));
 
 OldDirTemp=pwd;
 cd([ProgramPath,filesep,'dcm2nii']);
+
+if strcmpi(Option,'DefaultINI')
+    Option='-b y -x y -z n'; %Option='-b dcm2nii.ini'; % YAN Chao-Gan, 191121. Revised for Calling dcm2niix.
+end
+
 if ispc
-    if strcmpi(Option,'DefaultINI')
-        Option='-b dcm2nii.ini';
-    end
-    eval(['!dcm2nii.exe ',Option,' -o ',OutputDir,' ',InputFilename]);
+    %eval(['!dcm2nii.exe ',Option,' -o ',OutputDir,' ',InputFilename]);
+    eval(['!dcm2niix.exe ',Option,' -o ',OutputDir,' ',InputFilename]); % YAN Chao-Gan, 191121. Revised for Calling dcm2niix. 
 elseif ismac
-    if strcmpi(Option,'DefaultINI')
-        Option='-b ./dcm2nii_linux.ini';
-    end
-    eval(['!./dcm2nii_mac ',Option,' -o ',OutputDir,' ',InputFilename]);
+    %eval(['!./dcm2nii_mac ',Option,' -o ',OutputDir,' ',InputFilename]);
+    eval(['!./dcm2niix_mac ',Option,' -o ',OutputDir,' ',InputFilename]); % YAN Chao-Gan, 191121. Revised for Calling dcm2niix. 
 else
-    if strcmpi(Option,'DefaultINI')
-        Option='-b ./dcm2nii_linux.ini';
-    end
-    eval(['!chmod +x dcm2nii_linux']);
-    eval(['!./dcm2nii_linux ',Option,' -o ',OutputDir,' ',InputFilename]);
+    eval(['!chmod +x dcm2niix_linux']);
+    %eval(['!./dcm2nii_linux ',Option,' -o ',OutputDir,' ',InputFilename]);
+    eval(['!./dcm2niix_linux ',Option,' -o ',OutputDir,' ',InputFilename]); % YAN Chao-Gan, 191121. Revised for Calling dcm2niix. 
 end
 cd(OldDirTemp);
 
