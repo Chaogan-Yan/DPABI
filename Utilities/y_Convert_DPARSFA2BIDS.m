@@ -421,6 +421,11 @@ for iFunSession=1:Cfg.FunctionalSessionNumber
         end
         if ~exist(JSONFile) % If the JSON files were not copied from dcm2niix's conversion, then write one.
             spm_jsonwrite(JSONFile,JSON);
+        else
+            JSON_Exist = spm_jsonread(JSONFile);
+            if ~isfield(JSON_Exist,'SliceTiming') % If the JSON from dcm2niix does not have slice timing information, then write one.
+                spm_jsonwrite(JSONFile,JSON);
+            end
         end
     end
 end
