@@ -820,7 +820,21 @@ if isfield(AutoDataProcessParameter,'FieldMap')
                 SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data.phasemag.longmag={File};
             end
             
-            SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.defaults.defaultsval.et=[AutoDataProcessParameter.FieldMap.TE1,AutoDataProcessParameter.FieldMap.TE2];
+            if AutoDataProcessParameter.FieldMap.TE1==0
+                DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
+                JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
+                TE1 = JSON.EchoTime*1000;
+            else
+                TE1 = AutoDataProcessParameter.FieldMap.TE1;
+            end
+            if AutoDataProcessParameter.FieldMap.TE2==0
+                DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
+                JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
+                TE2 = JSON.EchoTime*1000;
+            else
+                TE2 = AutoDataProcessParameter.FieldMap.TE2;
+            end
+            SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.defaults.defaultsval.et=[TE1,TE2];
             SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.defaults.defaultsval.maskbrain=0;
             DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
             JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);

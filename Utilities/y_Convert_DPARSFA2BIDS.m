@@ -16,7 +16,7 @@ function SubjectID_BIDS = y_Convert_DPARSFA2BIDS(InDir, OutDir, Cfg)
 fprintf('Converting DPARSFA to BIDS structure...\n');
 
 if ~isempty(InDir)
-    Cfg.DataProcessDir=InDir;
+    Cfg.WorkingDir=InDir;
 end
 
 Cfg.SubjectNum=length(Cfg.SubjectID);
@@ -42,7 +42,7 @@ for i=1:Cfg.SubjectNum
 end
 
 %Write the ID
-fid = fopen([Cfg.DataProcessDir,filesep,'SubjectID_DPARSFA2BIDS.tsv'],'w');
+fid = fopen([Cfg.WorkingDir,filesep,'SubjectID_DPARSFA2BIDS.tsv'],'w');
 fprintf(fid,'SubjectID_BIDS');
 fprintf(fid,['\t','SubjectID_Original']);
 fprintf(fid,'\n');
@@ -59,22 +59,22 @@ if Cfg.FunctionalSessionNumber==1
         %Dealing with anatomical data
         mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'anat']);
         %First check T1w image started with co (T1 image which is reoriented to the nearest orthogonal direction to ''canonical space'' and removed excess air surrounding the individual as well as parts of the neck below the cerebellum)
-        DirImg=dir([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.img']);
+        DirImg=dir([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.img']);
         if ~isempty(DirImg)
-            [Data Header]=y_Read([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
+            [Data Header]=y_Read([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
             y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii'])
         else
-            DirImg=dir([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii.gz']);
+            DirImg=dir([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii.gz']);
             if ~isempty(DirImg)
-                copyfile([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii.gz'])
+                copyfile([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii.gz'])
             else
-                DirImg=dir([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii']);
+                DirImg=dir([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii']);
                 if ~isempty(DirImg)
-                    copyfile([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii'])
+                    copyfile([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii'])
                 else
-                    DirImg=dir([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. For BIDS format. Change searching c* to *Crop*
+                    DirImg=dir([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. For BIDS format. Change searching c* to *Crop*
                     if ~isempty(DirImg)
-                        copyfile([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii'])
+                        copyfile([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii'])
                     end
                 end
             end
@@ -82,46 +82,90 @@ if Cfg.FunctionalSessionNumber==1
         
         %If there is no co* T1w images
         if isempty(DirImg)
-            DirImg=dir([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+            DirImg=dir([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.img']);
             if ~isempty(DirImg)
-                [Data Header]=y_Read([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
+                [Data Header]=y_Read([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
                 y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii'])
             else
-                DirImg=dir([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+                DirImg=dir([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
                 if ~isempty(DirImg)
-                    copyfile([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii.gz'])
+                    copyfile([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii.gz'])
                 else
-                    DirImg=dir([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+                    DirImg=dir([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
                     if ~isempty(DirImg)
-                        copyfile([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii'])
+                        copyfile([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.nii'])
                     end
                 end
             end
         end
         
-        DirJSON=dir([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+        DirJSON=dir([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
         if ~isempty(DirJSON)
-            copyfile([Cfg.DataProcessDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.json'])
+            copyfile([Cfg.WorkingDir,filesep,'T1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T1w.json'])
         end
         
         
         %Dealing with functional data
         mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'func'])
-        DirImg=dir([Cfg.DataProcessDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
-        DirNii=dir([Cfg.DataProcessDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
-        DirNiiGZ=dir([Cfg.DataProcessDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+        DirImg=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+        DirNii=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+        DirNiiGZ=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+        FunFile_IntendedFor=[];
         if ~isempty(DirImg) || length(DirNii)>=2  || length(DirNiiGZ)>=2
-            [Data,VoxelSize,theImgFileList, Header] =y_ReadAll([Cfg.DataProcessDir,filesep,'FunImg',filesep,Cfg.SubjectID{i}]);
+            [Data,VoxelSize,theImgFileList, Header] =y_ReadAll([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i}]);
             y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii'])
+            FunFile_IntendedFor=['func/',SubjectID_BIDS{i},'_task-rest_bold.nii'];
         elseif length(DirNii)==1
-            copyfile([Cfg.DataProcessDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii'])
+            copyfile([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii'])
+            FunFile_IntendedFor=['func/',SubjectID_BIDS{i},'_task-rest_bold.nii'];
         elseif length(DirNiiGZ)==1
-            copyfile([Cfg.DataProcessDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii.gz'])
+            copyfile([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii.gz'])
+            FunFile_IntendedFor=['func/',SubjectID_BIDS{i},'_task-rest_bold.nii.gz'];
         end
         
-        DirJSON=dir([Cfg.DataProcessDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+        DirJSON=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
         if ~isempty(DirJSON)
-            copyfile([Cfg.DataProcessDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.json'])
+            copyfile([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.json'])
+        end
+        
+        %Dealing with FieldMap data
+        FieldMapMeasures={'PhaseDiff','Magnitude1','Magnitude2','Phase1','Phase2'};
+        for iFieldMapMeasure=1:length(FieldMapMeasures)
+            DirNii=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            if ~isempty(DirNii)
+                mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap']);
+                copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.nii'])
+                DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'])
+                
+                %Filling IntendedFor information
+                if iFieldMapMeasure==1
+                    if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE1==0
+                        DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                        JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                        TE1 = JSON.EchoTime;
+                    else
+                        TE1 = Cfg.FieldMap.TE1/1000;
+                    end
+                    if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE2==0
+                        DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                        JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                        TE2 = JSON.EchoTime;
+                    else
+                        TE2 = Cfg.FieldMap.TE2/1000;
+                    end
+                    
+                    JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                    JSON.EchoTime1=TE1;
+                    JSON.EchoTime2=TE2;
+                    JSON.IntendedFor=FunFile_IntendedFor;
+                    spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                elseif (iFieldMapMeasure==4) || (iFieldMapMeasure==5)
+                    JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                    JSON.IntendedFor=FunFile_IntendedFor;
+                    spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                end
+            end
         end
         
     end
@@ -132,7 +176,7 @@ end
 if Cfg.FunctionalSessionNumber>=2
     %Dealing with anatomical data
     %Check if exist S2_T1Img, that means mutiple run of T1 image exist
-    if 7==exist([Cfg.DataProcessDir,filesep,'S2_T1Img'],'dir')
+    if 7==exist([Cfg.WorkingDir,filesep,'S2_T1Img'],'dir')
         T1SessionNumber = Cfg.FunctionalSessionNumber;
     else
         T1SessionNumber = 1;
@@ -142,22 +186,22 @@ if Cfg.FunctionalSessionNumber>=2
             
             mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat']);
             %First check T1w image started with co (T1 image which is reoriented to the nearest orthogonal direction to ''canonical space'' and removed excess air surrounding the individual as well as parts of the neck below the cerebellum)
-            DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.img']);
+            DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.img']);
             if ~isempty(DirImg)
-                [Data Header]=y_Read([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
+                [Data Header]=y_Read([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
                 y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii'])
             else
-                DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii.gz']);
+                DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii.gz']);
                 if ~isempty(DirImg)
-                    copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii.gz'])
+                    copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii.gz'])
                 else
-                    DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii']);
+                    DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'c*.nii']);
                     if ~isempty(DirImg)
-                        copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii'])
+                        copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii'])
                     else
-                        DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. For BIDS format. Change searching c* to *Crop*
+                        DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. For BIDS format. Change searching c* to *Crop*
                         if ~isempty(DirImg)
-                            copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii'])
+                            copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii'])
                         end
                     end
                 end
@@ -165,52 +209,100 @@ if Cfg.FunctionalSessionNumber>=2
             
             %If there is no co* T1w images
             if isempty(DirImg)
-                DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+                DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.img']);
                 if ~isempty(DirImg)
-                    [Data Header]=y_Read([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
+                    [Data Header]=y_Read([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
                     y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii'])
                 else
-                    DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+                    DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
                     if ~isempty(DirImg)
-                        copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii.gz'])
+                        copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii.gz'])
                     else
-                        DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+                        DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
                         if ~isempty(DirImg)
-                            copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii'])
+                            copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.nii'])
                         end
                     end
                 end
             end
             
-            DirJSON=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+            DirJSON=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
             if ~isempty(DirJSON)
-                copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.json'])
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT1Session},'T1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT1Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT1Session),'_T1w.json'])
             end
         end
     end
             
     %Dealing with functional data
+    FunFile_IntendedFor=[];
     for iFunSession=1:Cfg.FunctionalSessionNumber
         for i=1:length(SubjectID_BIDS)
             mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func'])
-            DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
-            DirNii=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
-            DirNiiGZ=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+            DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+            DirNii=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            DirNiiGZ=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
             if ~isempty(DirImg) || length(DirNii)>=2  || length(DirNiiGZ)>=2
-                [Data,VoxelSize,theImgFileList, Header] =y_ReadAll([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i}]);
+                [Data,VoxelSize,theImgFileList, Header] =y_ReadAll([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i}]);
                 y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.nii'])
+                FunFile_IntendedFor=[FunFile_IntendedFor,{['ses-',num2str(iFunSession),'/func/',SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.nii']}];
             elseif length(DirNii)==1
-                copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.nii'])
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.nii'])
+                FunFile_IntendedFor=[FunFile_IntendedFor,{['ses-',num2str(iFunSession),'/func/',SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.nii']}];
             elseif length(DirNiiGZ)==1
-                copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.nii.gz'])
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.nii.gz'])
+                FunFile_IntendedFor=[FunFile_IntendedFor,{['ses-',num2str(iFunSession),'/func/',SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.nii.gz']}];
             end
             
-            DirJSON=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+            DirJSON=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
             if ~isempty(DirJSON)
-                copyfile([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.json'])
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.json'])
             end
         end
     end
+    
+    
+    %Dealing with FieldMap data
+    iFieldMapSession=1;
+    FieldMapMeasures={'PhaseDiff','Magnitude1','Magnitude2','Phase1','Phase2'};
+    for iFieldMapMeasure=1:length(FieldMapMeasures)
+        DirNii=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+        if ~isempty(DirNii)
+            mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap']);
+            copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.nii'])
+            DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+            copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'])
+            
+            %Filling IntendedFor information
+            if iFieldMapMeasure==1
+                if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE1==0
+                    DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                    JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                    TE1 = JSON.EchoTime;
+                else
+                    TE1 = Cfg.FieldMap.TE1/1000;
+                end
+                if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE2==0
+                    DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                    JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                    TE2 = JSON.EchoTime;
+                else
+                    TE2 = Cfg.FieldMap.TE2/1000;
+                end
+                
+                JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                JSON.EchoTime1=TE1;
+                JSON.EchoTime2=TE2;
+                JSON.IntendedFor=FunFile_IntendedFor;
+                spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+            elseif (iFieldMapMeasure==4) || (iFieldMapMeasure==5)
+                JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                JSON.IntendedFor=FunFile_IntendedFor;
+                spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+            end
+        end
+    end
+    
+    
 end
 
 
@@ -224,9 +316,9 @@ spm_jsonwrite([OutDir,filesep,'dataset_description.json'],JSON);
 %Check TR and Subject ID, TR, Slice Number, Time Points, Voxel Size into TRInfo.tsv if needed.
 if isfield(Cfg,'TR')
     if Cfg.TR==0  % Need to retrieve the TR information from the NIfTI images
-        if (2==exist([Cfg.DataProcessDir,filesep,'TRInfo.tsv'],'file'))  %If the TR information is stored in TRInfo.tsv. %YAN Chao-Gan, 130612
+        if (2==exist([Cfg.WorkingDir,filesep,'TRInfo.tsv'],'file'))  %If the TR information is stored in TRInfo.tsv. %YAN Chao-Gan, 130612
             
-            fid = fopen([Cfg.DataProcessDir,filesep,'TRInfo.tsv']);
+            fid = fopen([Cfg.WorkingDir,filesep,'TRInfo.tsv']);
             StringFilter = '%s';
             for iFunSession=1:Cfg.FunctionalSessionNumber
                 StringFilter = [StringFilter,'\t%f']; %Get the TRs for the sessions.
@@ -247,8 +339,8 @@ if isfield(Cfg,'TR')
                 TRSet(:,iFunSession) = TRInfoTemp{1+iFunSession}; %The first column is Subject ID
             end
             
-        elseif (2==exist([Cfg.DataProcessDir,filesep,'TRSet.txt'],'file'))  %If the TR information is stored in TRSet.txt (DPARSF V2.2).
-            TRSet = load([Cfg.DataProcessDir,filesep,'TRSet.txt']);
+        elseif (2==exist([Cfg.WorkingDir,filesep,'TRSet.txt'],'file'))  %If the TR information is stored in TRSet.txt (DPARSF V2.2).
+            TRSet = load([Cfg.WorkingDir,filesep,'TRSet.txt']);
             TRSet = TRSet'; %YAN Chao-Gan 130612. This is for the compatibility with DPARSFA V2.2. Cause the TRSet saved there is in a transpose manner.
         else
             
@@ -258,7 +350,7 @@ if isfield(Cfg,'TR')
             VoxelSize = zeros(Cfg.SubjectNum,Cfg.FunctionalSessionNumber,3);
             for iFunSession=1:Cfg.FunctionalSessionNumber
                 for i=1:Cfg.SubjectNum
-                    cd([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i}]);
+                    cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i}]);
                     DirImg=dir('*.img');
                     if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii
                         DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
@@ -287,7 +379,7 @@ if isfield(Cfg,'TR')
             end
             
             %Write the information as TRInfo.tsv
-            fid = fopen([Cfg.DataProcessDir,filesep,'TRInfo.tsv'],'w');
+            fid = fopen([Cfg.WorkingDir,filesep,'TRInfo.tsv'],'w');
             
             fprintf(fid,'Subject ID');
             for iFunSession=1:Cfg.FunctionalSessionNumber
@@ -333,23 +425,23 @@ end
 %Get Slice Timing info
 for iFunSession=1:Cfg.FunctionalSessionNumber
     for i=1:Cfg.SubjectNum
-        cd([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i}]);
-        DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+        cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i}]);
+        DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
         if isempty(DirImg)
-            DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+            DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
             if length(DirImg)==1
-                gunzip([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
-                delete([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
+                gunzip([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
+                delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
             end
-            DirImg=dir([Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
         end
-        File=[Cfg.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name];
+        File=[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name];
         
         if Cfg.SliceTiming.SliceNumber==0 %If SliceNumber is set to 0, then retrieve the slice number from the NIfTI images. The slice order is then assumed as interleaved scanning: [1:2:SliceNumber,2:2:SliceNumber]. The reference slice is set to the slice acquired at the middle time point, i.e., SliceOrder(ceil(SliceNumber/2)). SHOULD BE EXTREMELY CAUTIOUS!!!
             Nii=nifti(File);
             SliceNumber = size(Nii.dat,3);
-            if exist([Cfg.DataProcessDir,filesep,'SliceOrderInfo.tsv'],'file')==2 % YAN Chao-Gan, 130524. Read the slice timing information from a tsv file (Tab-separated values)
-                fid = fopen([Cfg.DataProcessDir,filesep,'SliceOrderInfo.tsv']);
+            if exist([Cfg.WorkingDir,filesep,'SliceOrderInfo.tsv'],'file')==2 % YAN Chao-Gan, 130524. Read the slice timing information from a tsv file (Tab-separated values)
+                fid = fopen([Cfg.WorkingDir,filesep,'SliceOrderInfo.tsv']);
                 StringFilter = '%s';
                 for iFunSessionTemp=1:Cfg.FunctionalSessionNumber
                     StringFilter = [StringFilter,'\t%s']; %Get the Slice Order Type for the sessions.
@@ -378,7 +470,7 @@ for iFunSession=1:Cfg.FunctionalSessionNumber
                         
                     otherwise
                         try
-                            SliceOrder = load([Cfg.DataProcessDir,filesep,SliceOrderSet{1+iFunSession}{i}]); %The slice order is specified in a text file.
+                            SliceOrder = load([Cfg.WorkingDir,filesep,SliceOrderSet{1+iFunSession}{i}]); %The slice order is specified in a text file.
                         catch
                             error(['The specified slice order definition ',SliceOrderSet{1+iFunSession}{i},' for subject ',Cfg.SubjectID{i},' is not supported!'])
                         end
