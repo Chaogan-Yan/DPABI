@@ -75,8 +75,28 @@ for i=1:2 %Generate the results on DPABISurf_VIEW
     DPABISurf_VIEW('OverlayNMinEty_Callback',NMin(i,1),eventdata,guidata(NMin(i,1)));
     DPABISurf_VIEW('MontageBtn_Callback',1,eventdata,handles);
 end
-name=split(OriginalName,'.');
+try
+    name=split(OriginalName,'.');
+catch
+    name=c_split_before2016(OriginalName,'.');
+end
 Really_Name=strcat(name{1,1},'.tiff');
 h=figure;
 montage({[OriginalName(1:end-4),'_Surf_lh_Montage.jpg'],[OriginalName(1:end-4),'_Surf_rh_Montage.jpg']});
 print(h,'-r300','-dtiff','-noui',Really_Name);
+function [outstr] = c_split_before2016(strA,strB)
+
+m=strfind(strA,strB);
+f=1;
+C=cell(1,1);
+for i =1:length(m)+1
+    
+    if i==length(m)+1
+        C{i,1}=strA(f:length(strA));
+    else
+        C{i,1}=strA(f:m(i)-1);
+        f=m(i)+1;
+    end
+end
+outstr=C;
+
