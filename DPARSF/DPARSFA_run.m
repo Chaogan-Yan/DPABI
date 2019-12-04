@@ -1575,7 +1575,7 @@ if (AutoDataProcessParameter.IsBet==1)
                 if isempty(DirImg)
                     DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii']);
                 end
-                if isempty(DirT1Img)
+                if isempty(DirImg)
                     DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. Calling dcm2niix for BIDS format. Change searching c* to *Crop*
                 end
             else

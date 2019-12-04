@@ -22,7 +22,7 @@ function varargout = DPARSF_FieldMap(varargin)
 
 % Edit the above text to modify the response to help DPARSF_FieldMap
 
-% Last Modified by GUIDE v2.5 02-Dec-2019 15:08:16
+% Last Modified by GUIDE v2.5 04-Dec-2019 09:06:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,19 +52,41 @@ function DPARSF_FieldMap_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DPARSF_FieldMap (see VARARGIN)
 
-% Choose default command line output for DPARSF_FieldMap
-handles.output = hObject;
-set(handles.DICOM2NIFTI,'Value',1);
-set(handles.VDM,'Value',1);
-set(handles.If_ApplyCorrection,'Value',1);
-set(handles.ShortTimeInput,'String','4.92');
-set(handles.LongTimeInput,'String','7.38');
+if nargin<4
+    FieldMap.IsNeedConvertDCM2IMG=1;
+    FieldMap.IsCalculateVDM=1;
+    FieldMap.EPIBasedFieldMap=0;
+    FieldMap.IsFieldMapCorrectionUnwarpRealign=1;
+    FieldMap.TE1=0;
+    FieldMap.TE2=0;
+    FieldMap.DataFormat='PhaseDiffMagnitude';
+else
+    FieldMap=varargin{1};
+end
+
+set(handles.DICOM2NIFTI,'Value',FieldMap.IsNeedConvertDCM2IMG);
+set(handles.VDM,'Value',FieldMap.IsCalculateVDM);
+set(handles.If_EPIBased,'Value',FieldMap.EPIBasedFieldMap);
+set(handles.If_ApplyCorrection,'Value',FieldMap.IsFieldMapCorrectionUnwarpRealign);
+set(handles.ShortTimeInput,'String',num2str(FieldMap.TE1));
+set(handles.LongTimeInput,'String',num2str(FieldMap.TE2));
+if strcmpi(FieldMap.DataFormat,'PhaseDiffMagnitude')
+    set(handles.Data1,'Value',1);
+    set(handles.Data2,'Value',0);
+elseif strcmpi(FieldMap.DataFormat,'TwoPhaseMagnitude')
+    set(handles.Data1,'Value',0);
+    set(handles.Data2,'Value',1);
+else
+    set(handles.Data1,'Value',0);
+    set(handles.Data2,'Value',0);
+end
 
 % Update handles structure
+handles.FieldMap=FieldMap;
 guidata(hObject, handles);
 
 % UIWAIT makes DPARSF_FieldMap wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+uiwait(handles.DPARSF_FieldMap);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -75,7 +97,13 @@ function varargout = DPARSF_FieldMap_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
+%varargout{1} = handles.output;
+if isempty(handles)
+    varargout{1} = [];
+else
+    varargout{1} = handles.FieldMap;
+    delete(handles.DPARSF_FieldMap)
+end
 
 
 % --- Executes on button press in DICOM2NIFTI.
@@ -187,24 +215,24 @@ function AcceptButton_Callback(hObject, eventdata, handles)
 % hObject    handle to AcceptButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-FM.IsNeedConvertDCM2IMG=get(handles.DICOM2NIFTI,'Value');
-FM.IsCalculateVDM=get(handles.VDM,'Value');
-FM.EPIBasedFieldMap=get(handles.If_EPIBased,'Value');
-FM.IsFieldMapCorrectionUnwarpRealign=get(handles.If_ApplyCorrection,'Value');
+FieldMap.IsNeedConvertDCM2IMG=get(handles.DICOM2NIFTI,'Value');
+FieldMap.IsCalculateVDM=get(handles.VDM,'Value');
+FieldMap.EPIBasedFieldMap=get(handles.If_EPIBased,'Value');
+FieldMap.IsFieldMapCorrectionUnwarpRealign=get(handles.If_ApplyCorrection,'Value');
 shortT=get(handles.ShortTimeInput,'String');
 shortT=str2num(shortT);
 longT=get(handles.LongTimeInput,'String');
 longT=str2num(longT);
-FM.TE1=shortT;
-FM.TE2=longT;
+FieldMap.TE1=shortT;
+FieldMap.TE2=longT;
 if get(handles.Data1,'Value')==1
-    FM.DataFormat=1;
+    FieldMap.DataFormat='PhaseDiffMagnitude';
 elseif get(handles.Data2,'Value')==1
-    FM.DataFormat=2;
+    FieldMap.DataFormat='TwoPhaseMagnitude';
 else
-    FM.DataFormat=0;
+    FieldMap.DataFormat='Unknown';
 end
-DPARSFA=findall(0, 'Tag', 'figDPARSFAMain');
-DA=guidata(DPARSFA);
-DA.Cfg.FieldMap=FM;
-close(handles.figure1);
+
+handles.FieldMap=FieldMap;
+guidata(hObject, handles);
+uiresume(handles.DPARSF_FieldMap);
