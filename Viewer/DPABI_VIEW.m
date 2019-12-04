@@ -1362,12 +1362,21 @@ switch Value
         File=split(Overlay_All{Overlay_Ind},' ');
         File_name=File(1);
         File_path=File(2);
-        File_1=split(File_path,'(');
-        File_2=split(File_1(2),')');
-        InFile=strcat(File_2(1),'/',File_name);
-        MaskFile=strcat(File_2(1),'/','_CurrentOverlay_Mask.nii');
-        MaskFile=MaskFile{1,1};
-        OutFile=split(InFile,'.');
+        try
+            File_1=split(File_path,'(');
+            File_2=split(File_1(2),')');
+            InFile=strcat(File_2(1),'/',File_name);
+            MaskFile=strcat(File_2(1),'/','_CurrentOverlay_Mask.nii');
+            MaskFile=MaskFile{1,1};
+            OutFile=split(InFile,'.');
+        catch
+            File_1=c_split_before2016(File_path,'(');
+            File_2=c_split_before2016(File_1(2),')');
+            InFile=strcat(File_2(1),'/',File_name);
+            MaskFile=strcat(File_2(1),'/','_CurrentOverlay_Mask.nii');
+            MaskFile=MaskFile{1,1};
+            OutFile=c_split_before2016(InFile,'.');
+        end
         Surf=cell(2,1);
         Surf{1,1}=strcat(OutFile{1,1},'_Surf_lh.gii');
         Surf{2,1}=strcat(OutFile{1,1},'_Surf_rh.gii');
@@ -2027,4 +2036,22 @@ mode=Mode{state};
 set(handles.ModeButton, 'String', mode);
 st{curfig}.mode=str2double(mode);
 ShowUnderlay(handles);
+
+
+
+function [outstr] = c_split_before2016(strA,strB)
+
+m=strfind(strA,strB);
+f=1;
+C=cell(1,1);
+for i =1:length(m)+1
+    
+    if i==length(m)+1
+        C{i,1}=strA(f:length(strA));
+    else
+        C{i,1}=strA(f:m(i)-1);
+        f=m(i)+1;
+    end
+end
+outstr=C;
 
