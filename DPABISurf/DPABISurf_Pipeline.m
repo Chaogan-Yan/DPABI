@@ -2065,7 +2065,7 @@ function [handles, CheckingPass]=CheckCfgParametersBeforeRun(handles)
             end
             
             if (handles.Cfg.TimePoints)>0 && ~strcmpi(handles.Cfg.StartingDirName,'fmriprep') % If the number of time points is not set at 0, then check the number of time points.
-                if ~(strcmpi(handles.Cfg.StartingDirName,'T1Raw') || strcmpi(handles.Cfg.StartingDirName,'T1Img') || strcmpi(handles.Cfg.StartingDirName,'T1NiiGZ') ) %If not just use for VBM, check if the time points right. %YAN Chao-Gan, 111130. Also add T1 .nii.gz support.
+                if ~(strcmpi(handles.Cfg.StartingDirName,'T1Raw') || strcmpi(handles.Cfg.StartingDirName,'T1Img') || strcmpi(handles.Cfg.StartingDirName,'T1NiiGZ') || strcmpi(handles.Cfg.StartingDirName,'BIDS') ) %If not just use for VBM, check if the time points right. %YAN Chao-Gan, 111130. Also add T1 .nii.gz support.
                     
                     if ~(strcmpi(handles.Cfg.StartingDirName,'FunImg'))
                         DirImg=dir([handles.Cfg.WorkingDir,filesep,handles.Cfg.StartingDirName,filesep,handles.Cfg.SubjectID{1},filesep,'*.gii']);

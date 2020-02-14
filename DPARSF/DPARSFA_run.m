@@ -95,6 +95,17 @@ end
 if ~isfield(AutoDataProcessParameter,'IsNeedConvertFunDCM2IMG')
     AutoDataProcessParameter.IsNeedConvertFunDCM2IMG=0; 
 end
+if ~isfield(AutoDataProcessParameter,'IsNeedConvertT1DCM2IMG')
+    AutoDataProcessParameter.IsNeedConvertT1DCM2IMG=0; 
+end
+
+if ~isfield(AutoDataProcessParameter,'IsBIDStoDPARSF')
+    AutoDataProcessParameter.IsBIDStoDPARSF=0;
+elseif AutoDataProcessParameter.IsBIDStoDPARSF==1
+    UseNoCoT1Image=1; %Prevent the dialog asking confirm use no co t1 images.
+end
+
+
 if ~isfield(AutoDataProcessParameter,'IsApplyDownloadedReorientMats')
     AutoDataProcessParameter.IsApplyDownloadedReorientMats=0;
 end
@@ -116,9 +127,7 @@ end
 if ~isfield(AutoDataProcessParameter,'IsNeedReorientFunImgInteractively')
     AutoDataProcessParameter.IsNeedReorientFunImgInteractively=0; 
 end
-if ~isfield(AutoDataProcessParameter,'IsNeedConvertT1DCM2IMG')
-    AutoDataProcessParameter.IsNeedConvertT1DCM2IMG=0; 
-end
+
 % if ~isfield(AutoDataProcessParameter,'IsNeedUnzipT1IntoT1Img')
 %     AutoDataProcessParameter.IsNeedUnzipT1IntoT1Img=0; 
 % end
@@ -314,6 +323,11 @@ if isfield(AutoDataProcessParameter,'FieldMap')
 end
 
 
+%YAN Chao-Gan, 200214. BIDS compatible.
+if (AutoDataProcessParameter.IsBIDStoDPARSF==1)
+    y_Convert_BIDS2DPARSF([AutoDataProcessParameter.DataProcessDir,filesep,'BIDS'],AutoDataProcessParameter.DataProcessDir,AutoDataProcessParameter.SubjectID);
+    AutoDataProcessParameter.StartingDirName='FunImg';   %Now start with FunImg directory.
+end
 
 
 %Reorient and Crop T1Img by using Chris Rorden's dcm2nii
@@ -526,7 +540,7 @@ if isfield(AutoDataProcessParameter,'TR')
                 nTimePoints = zeros(AutoDataProcessParameter.SubjectNum,AutoDataProcessParameter.FunctionalSessionNumber);
                 VoxelSize = zeros(AutoDataProcessParameter.SubjectNum,AutoDataProcessParameter.FunctionalSessionNumber,3);
                 for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
-                    parfor i=1:AutoDataProcessParameter.SubjectNum
+                    for i=1:AutoDataProcessParameter.SubjectNum
                         cd([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
                         DirImg=dir('*.img');
                         if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii

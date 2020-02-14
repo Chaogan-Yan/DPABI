@@ -8,7 +8,7 @@ function varargout = DPARSFA(varargin)
 %	State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University
 %	Written by YAN Chao-Gan
 %	http://rfmri.org/DPARSF
-% $mail     =ycg.yan@gmail.com
+%   $mail     =ycg.yan@gmail.com
 %-----------------------------------------------------------
 % 	Mail to Author:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a> 
 
@@ -118,6 +118,9 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.Cfg.TimePoints=0;
     handles.Cfg.TR=0;
     handles.Cfg.IsNeedConvertFunDCM2IMG=1;
+    handles.Cfg.IsNeedConvertT1DCM2IMG=1;
+    handles.Cfg.IsBIDStoDPARSF=0;
+    
     handles.Cfg.IsApplyDownloadedReorientMats=0; %YAN Chao-Gan, 130612.
     %handles.Cfg.IsNeedConvert4DFunInto3DImg=0;
     handles.Cfg.IsRemoveFirstTimePoints=1;
@@ -132,7 +135,7 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.Cfg.IsCalVoxelSpecificHeadMotion=1;
     handles.Cfg.IsNeedReorientFunImgInteractively=1;
     
-    handles.Cfg.IsNeedConvertT1DCM2IMG=1;
+    
     %handles.Cfg.IsNeedUnzipT1IntoT1Img=0;
     handles.Cfg.IsNeedReorientCropT1Img=0;
     handles.Cfg.IsNeedReorientT1ImgInteractively=1;
@@ -358,6 +361,7 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
     set(handles.checkboxSmoothBeforeVMHC,'Callback','DPARSFA(''checkboxSmoothBeforeVMHC_Callback'',gcbo,[],guidata(gcbo))'); %YAN Chao-Gan, 151120
     set(handles.checkboxCovremoveIsAddMeanBack,'Callback','DPARSFA(''checkboxCovremoveIsAddMeanBack_Callback'',gcbo,[],guidata(gcbo))'); %YAN Chao-Gan, 160415
     set(handles.pushbuttonFieldMapCorrection,'Callback','DPARSFA(''pushbuttonFieldMapCorrection_Callback'',gcbo,[],guidata(gcbo))');
+    set(handles.checkboxBIDStoDPARSF,'Callback','DPARSFA(''checkboxBIDStoDPARSF_Callback'',gcbo,[],guidata(gcbo))');
     
     % Choose default command line output for DPARSFA
     handles.output = hObject;	    
@@ -583,7 +587,44 @@ function ckboxEPIDICOM2NIFTI_Callback(hObject, eventdata, handles)
     end	
     handles=CheckCfgParameters(handles);
 	guidata(hObject, handles);
-	UpdateDisplay(handles);    
+	UpdateDisplay(handles);  
+    
+function checkboxT1DICOM2NIFTI_Callback(hObject, eventdata, handles)
+	if get(hObject,'Value')
+
+        uiwait(msgbox({'';...
+            'If you want DPARSFA to convert the T1 DICOM images into NIFTI images, you need to arrange each subject''s T1 DICOM images in one directory, and then put them in "T1Raw" directory under the working directory. i.e.:';...
+            '{Working Directory}\T1Raw\Subject001\xxxxx001.dcm';...
+            '{Working Directory}\T1Raw\Subject001\xxxxx002.dcm';...
+            '...';...
+            '{Working Directory}\T1Raw\Subject002\xxxxx001.dcm';...
+            '{Working Directory}\T1Raw\Subject002\xxxxx002.dcm';...
+            '...';...
+            '...';...
+            },'Convert the T1 DICOM images into NIFTI'));
+
+		handles.Cfg.IsNeedConvertT1DCM2IMG=1;
+        %handles.Cfg.IsNeedUnzipT1IntoT1Img=0;
+        handles.Cfg.IsNeedReorientCropT1Img=0;
+	else	
+		handles.Cfg.IsNeedConvertT1DCM2IMG=0;
+    end	
+    handles=CheckCfgParameters(handles);
+	guidata(hObject, handles);
+	UpdateDisplay(handles);     
+    
+    
+function checkboxBIDStoDPARSF_Callback(hObject, eventdata, handles)
+	if get(hObject,'Value')
+		handles.Cfg.IsBIDStoDPARSF = 1;
+        %handles.Cfg.IsNeedConvert4DFunInto3DImg = 0;
+	else	
+		handles.Cfg.IsBIDStoDPARSF = 0;
+    end	
+    handles=CheckCfgParameters(handles);
+	guidata(hObject, handles);
+	UpdateDisplay(handles);  
+    
 
 function checkboxApplyDownloadedReorientMats_Callback(hObject, eventdata, handles)
     if get(hObject,'Value')
@@ -716,29 +757,7 @@ function checkbox_IsBet_Callback(hObject, eventdata, handles)
 	guidata(hObject, handles);
 	UpdateDisplay(handles);
     
-function checkboxT1DICOM2NIFTI_Callback(hObject, eventdata, handles)
-	if get(hObject,'Value')
 
-        uiwait(msgbox({'';...
-            'If you want DPARSFA to convert the T1 DICOM images into NIFTI images, you need to arrange each subject''s T1 DICOM images in one directory, and then put them in "T1Raw" directory under the working directory. i.e.:';...
-            '{Working Directory}\T1Raw\Subject001\xxxxx001.dcm';...
-            '{Working Directory}\T1Raw\Subject001\xxxxx002.dcm';...
-            '...';...
-            '{Working Directory}\T1Raw\Subject002\xxxxx001.dcm';...
-            '{Working Directory}\T1Raw\Subject002\xxxxx002.dcm';...
-            '...';...
-            '...';...
-            },'Convert the T1 DICOM images into NIFTI'));
-
-		handles.Cfg.IsNeedConvertT1DCM2IMG=1;
-        %handles.Cfg.IsNeedUnzipT1IntoT1Img=0;
-        handles.Cfg.IsNeedReorientCropT1Img=0;
-	else	
-		handles.Cfg.IsNeedConvertT1DCM2IMG=0;
-    end	
-    handles=CheckCfgParameters(handles);
-	guidata(hObject, handles);
-	UpdateDisplay(handles);     
     
 % function checkboxUnzipT1intoT1Img_Callback(hObject, eventdata, handles)
 % 	if get(hObject,'Value')
@@ -1854,8 +1873,11 @@ function [handles, CheckingPass]=CheckCfgParametersBeforeRun(handles)
                 else
                     StartIndex=3;
                 end
+                
                 for i=StartIndex:length(Dir)
-                    handles.Cfg.SubjectID=[handles.Cfg.SubjectID;{Dir(i).name}];
+                    if Dir(i).isdir
+                        handles.Cfg.SubjectID=[handles.Cfg.SubjectID;{Dir(i).name}];
+                    end
                 end
             end
         else
@@ -1872,12 +1894,14 @@ function [handles, CheckingPass]=CheckCfgParametersBeforeRun(handles)
                     StartIndex=3;
                 end
                 for i=StartIndex:length(Dir)
-                    handles.Cfg.SubjectID=[handles.Cfg.SubjectID;{Dir(i).name}];
+                    if Dir(i).isdir
+                        handles.Cfg.SubjectID=[handles.Cfg.SubjectID;{Dir(i).name}];
+                    end
                 end
             end
             
             if (handles.Cfg.TimePoints)>0 % If the number of time points is not set at 0, then check the number of time points.
-                if ~(strcmpi(handles.Cfg.StartingDirName,'T1Raw') || strcmpi(handles.Cfg.StartingDirName,'T1Img') || strcmpi(handles.Cfg.StartingDirName,'T1NiiGZ') ) %If not just use for VBM, check if the time points right. %YAN Chao-Gan, 111130. Also add T1 .nii.gz support.
+                if ~(strcmpi(handles.Cfg.StartingDirName,'T1Raw') || strcmpi(handles.Cfg.StartingDirName,'T1Img') || strcmpi(handles.Cfg.StartingDirName,'T1NiiGZ') || strcmpi(handles.Cfg.StartingDirName,'BIDS') ) %If not just use for VBM, check if the time points right. %YAN Chao-Gan, 111130. Also add T1 .nii.gz support.
                     DirImg=dir([handles.Cfg.WorkingDir,filesep,handles.Cfg.StartingDirName,filesep,handles.Cfg.SubjectID{1},filesep,'*.img']);
                     if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
                         DirImg=dir([handles.Cfg.WorkingDir,filesep,handles.Cfg.StartingDirName,filesep,handles.Cfg.SubjectID{1},filesep,'*.nii']);
@@ -1962,6 +1986,9 @@ function UpdateDisplay(handles)
     set(handles.editTimePoints ,'String', num2str(handles.Cfg.TimePoints));	
     set(handles.editTR ,'String', num2str(handles.Cfg.TR));	
     set(handles.ckboxEPIDICOM2NIFTI, 'Value', handles.Cfg.IsNeedConvertFunDCM2IMG);
+    set(handles.checkboxT1DICOM2NIFTI, 'Value', handles.Cfg.IsNeedConvertT1DCM2IMG);
+    set(handles.checkboxBIDStoDPARSF, 'Value', handles.Cfg.IsBIDStoDPARSF);
+    
     set(handles.checkboxApplyDownloadedReorientMats, 'Value', handles.Cfg.IsApplyDownloadedReorientMats);
 
     %set(handles.checkboxConvert4DFunInto3DImg, 'Value', handles.Cfg.IsNeedConvert4DFunInto3DImg);
@@ -1997,7 +2024,7 @@ function UpdateDisplay(handles)
     set(handles.checkboxCalVoxelSpecificHeadMotion, 'Value', handles.Cfg.IsCalVoxelSpecificHeadMotion);
     set(handles.checkboxReorientFunImgInteractively, 'Value', handles.Cfg.IsNeedReorientFunImgInteractively);
     set(handles.checkbox_IsAutoMask, 'Value', handles.Cfg.IsAutoMask);
-    set(handles.checkboxT1DICOM2NIFTI, 'Value', handles.Cfg.IsNeedConvertT1DCM2IMG);
+    
     %set(handles.checkboxUnzipT1intoT1Img, 'Value', handles.Cfg.IsNeedUnzipT1IntoT1Img);
     set(handles.checkboxReorientCropT1Img, 'Value', handles.Cfg.IsNeedReorientCropT1Img);
     set(handles.checkboxReorientT1ImgInteractively, 'Value', handles.Cfg.IsNeedReorientT1ImgInteractively);
