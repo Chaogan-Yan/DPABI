@@ -1,6 +1,6 @@
 function [Error, Cfg]=DPABISurf_run(Cfg,WorkingDir,SubjectListFile)
 % FORMAT [Error]=DPABISurf_run(Cfg,WorkingDir,SubjectListFile)
-%   Cfg - the parameters for auto data processing. Read http://rfmri.org/content/configurations-dparsfarun to learn how to define it.
+%   Cfg - the parameters for auto data processing. 
 %   WorkingDir - Define the working directory to replace the one defined in Cfg
 %   SubjectListFile - Define the subject list to replace the one defined in Cfg. Should be a text file
 % Output:
@@ -493,19 +493,20 @@ if (Cfg.Isfmriprep==1)
     fprintf('Preprocessing with fmriprep, this process is very time consuming, please be patient...\n');
     
     system(Command);
-    Cfg.StartingDirName = 'fmriprep';
     
-    %Check if there is any error during running fmriprep %YAN Chao-Gan, 191124.
-    Error_fmriprep = 0;
-    for i=1:Cfg.SubjectNum
-        if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs'))
-            fprintf('Error detected during running fmriprep, please check %s\n',fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs'));
-            Error_fmriprep = 1;
-        end
+    
+    %Check subjects failed fmriprep and re-run %YAN Chao-Gan, 200218
+    [FailedID WaitingID SuccessID]=y_ReRunfmriprepFailedSubjects(Cfg,Cfg.WorkingDir,Cfg.SubjectID);
+    while ~isempty(WaitingID)
+        [FailedID WaitingID SuccessID]=y_ReRunfmriprepFailedSubjects(Cfg,Cfg.WorkingDir,Cfg.SubjectID);
     end
-    if Error_fmriprep
-        error('Error detected during running fmriprep, please check the above log files!');
+    if ~isempty(FailedID)
+        fprintf(['\nError: These subjects have always failed run fmriprep, please check the raw data and the logs:\n']);
+        disp(FailedID)
+        error('Error detected during running fmriprep, please check the log files for the above subjects!');
     end
+    
+    Cfg.StartingDirName = 'fmriprep';
 end
 
 
