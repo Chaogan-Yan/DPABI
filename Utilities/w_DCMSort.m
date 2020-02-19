@@ -15,6 +15,13 @@ for i=1:numel(DICOMCells)
     fprintf('Read %s etc.\n', OneDICOM{1});
     for j=1:numel(OneDICOM)
         DCM_Info=dicominfo(OneDICOM{j});
+        
+        %YAN Chao-Gan, 200218. Remove illegal characters for file names;
+        BadChar = '<|>| |:|"|/|?|*|''|\||\\';
+        DCM_Info.PatientID = regexprep(DCM_Info.PatientID, BadChar, '')
+        DCM_Info.PatientName.FamilyName = regexprep(DCM_Info.PatientName.FamilyName, BadChar, '')
+        DCM_Info.ProtocolName = regexprep(DCM_Info.ProtocolName, BadChar, '')
+        
         Index=DCM_Info.SeriesNumber;
         if ~isnumeric(Index)
             Index=str2double(Index);
