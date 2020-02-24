@@ -137,45 +137,47 @@ end
 ROISignals = double(cell2mat(SeedSeries)); %Suggested by H. Baetschmann.    %ROISignals = cell2mat(SeedSeries);
 
 %Save the results
-[pathstr, name, ext] = fileparts(OutputName);
-
-save([fullfile(pathstr,['ROISignals_', name]), '.mat'], 'ROISignals')
-save([fullfile(pathstr,['ROISignals_', name]), '.txt'], 'ROISignals', '-ASCII', '-DOUBLE','-TABS')
-
-ROICorrelation = corrcoef(ROISignals);
-save([fullfile(pathstr,['ROICorrelation_', name]), '.mat'], 'ROICorrelation')
-save([fullfile(pathstr,['ROICorrelation_', name]), '.txt'], 'ROICorrelation', '-ASCII', '-DOUBLE','-TABS')
-
-ROICorrelation_FisherZ = 0.5 * log((1 + ROICorrelation)./(1- ROICorrelation));
-save([fullfile(pathstr,['ROICorrelation_FisherZ_', name]), '.mat'], 'ROICorrelation_FisherZ')
-save([fullfile(pathstr,['ROICorrelation_FisherZ_', name]), '.txt'], 'ROICorrelation_FisherZ', '-ASCII', '-DOUBLE','-TABS')
-
-%Write the order key file as .tsv
-fid = fopen([fullfile(pathstr,['ROI_OrderKey_', name]), '.tsv'],'w');
-if IsMultipleLabel == 1
-    if size(MaskROILabel,2) < length(ROIDef) %YAN Chao-Gan, 131124. To avoid if the labels of the last ROI has been defined.
-        MaskROILabel{1,length(ROIDef)} = []; % Force the undefined cells to empty
-    end
-    fprintf(fid,'Order\tLabel in Mask\tROI Definition\n');
-    iOrder = 1;
-    for iROI=1:length(ROIDef)
-        if isempty(MaskROILabel{1,iROI})
-            fprintf(fid,'%d\t\t%s\n',iOrder,MaskROIName{iROI});
-            iOrder = iOrder + 1;
-        else
-            for iElement=1:length(MaskROILabel{1,iROI})
-                fprintf(fid,'%d\t%s\t%s\n',iOrder,MaskROILabel{1,iROI}{iElement,1},MaskROIName{iROI});
+if ~isempty(OutputName)
+    [pathstr, name, ext] = fileparts(OutputName);
+    
+    save([fullfile(pathstr,['ROISignals_', name]), '.mat'], 'ROISignals')
+    save([fullfile(pathstr,['ROISignals_', name]), '.txt'], 'ROISignals', '-ASCII', '-DOUBLE','-TABS')
+    
+    ROICorrelation = corrcoef(ROISignals);
+    save([fullfile(pathstr,['ROICorrelation_', name]), '.mat'], 'ROICorrelation')
+    save([fullfile(pathstr,['ROICorrelation_', name]), '.txt'], 'ROICorrelation', '-ASCII', '-DOUBLE','-TABS')
+    
+    ROICorrelation_FisherZ = 0.5 * log((1 + ROICorrelation)./(1- ROICorrelation));
+    save([fullfile(pathstr,['ROICorrelation_FisherZ_', name]), '.mat'], 'ROICorrelation_FisherZ')
+    save([fullfile(pathstr,['ROICorrelation_FisherZ_', name]), '.txt'], 'ROICorrelation_FisherZ', '-ASCII', '-DOUBLE','-TABS')
+    
+    %Write the order key file as .tsv
+    fid = fopen([fullfile(pathstr,['ROI_OrderKey_', name]), '.tsv'],'w');
+    if IsMultipleLabel == 1
+        if size(MaskROILabel,2) < length(ROIDef) %YAN Chao-Gan, 131124. To avoid if the labels of the last ROI has been defined.
+            MaskROILabel{1,length(ROIDef)} = []; % Force the undefined cells to empty
+        end
+        fprintf(fid,'Order\tLabel in Mask\tROI Definition\n');
+        iOrder = 1;
+        for iROI=1:length(ROIDef)
+            if isempty(MaskROILabel{1,iROI})
+                fprintf(fid,'%d\t\t%s\n',iOrder,MaskROIName{iROI});
                 iOrder = iOrder + 1;
+            else
+                for iElement=1:length(MaskROILabel{1,iROI})
+                    fprintf(fid,'%d\t%s\t%s\n',iOrder,MaskROILabel{1,iROI}{iElement,1},MaskROIName{iROI});
+                    iOrder = iOrder + 1;
+                end
             end
         end
+    else
+        fprintf(fid,'Order\tROI Definition\n');
+        for iROI=1:length(ROIDef)
+            fprintf(fid,'%d\t%s\n',iROI,MaskROIName{iROI});
+        end
     end
-else
-    fprintf(fid,'Order\tROI Definition\n');
-    for iROI=1:length(ROIDef)
-        fprintf(fid,'%d\t%s\n',iROI,MaskROIName{iROI});
-    end
+    fclose(fid);
 end
-fclose(fid);
 
 
 theElapsedTime = cputime - theElapsedTime;

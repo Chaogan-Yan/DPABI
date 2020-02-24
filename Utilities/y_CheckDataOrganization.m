@@ -6,6 +6,7 @@ function [CheckingPass]=y_CheckDataOrganization(WorkingDir,StartingDirName)
 %   CheckingPass - if passed checking
 %___________________________________________________________________________
 % Written by YAN Chao-Gan 200219.
+% The R-fMRI Lab, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % International Big-Data Center for Depression Research, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 

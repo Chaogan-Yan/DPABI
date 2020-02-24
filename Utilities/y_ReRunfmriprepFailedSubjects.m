@@ -10,6 +10,7 @@ function [FailedID WaitingID SuccessID]=y_ReRunfmriprepFailedSubjects(Cfg,Workin
 %   The processed data that you want.
 %___________________________________________________________________________
 % Written by YAN Chao-Gan 200218.
+% The R-fMRI Lab, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % International Big-Data Center for Depression Research, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 
@@ -98,10 +99,10 @@ if ~isempty(FailedID)
     %Delete the intermediate files for failed subjects
     for i=1:length(FailedID)
         if exist(fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i}))
-            delete(fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i}))
+            status = rmdir(fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i}),'s');
         end
         if exist(fullfile(Cfg.WorkingDir,'fmriprepwork',FailedID{i}))
-            delete(fullfile(Cfg.WorkingDir,'fmriprepwork',FailedID{i}))
+            status = rmdir(fullfile(Cfg.WorkingDir,'fmriprepwork',FailedID{i}),'s');
         end
     end
 end
