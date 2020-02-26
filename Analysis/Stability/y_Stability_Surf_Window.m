@@ -11,14 +11,14 @@ function [StabilityBrain_LH, StabilityBrain_RH, GHeader_LH, GHeader_RH] = y_Stab
 %   ROIDef          -   The way to calculate stability (Vertex To Vertex or Vertex To Atlas)
 %                       -1. if calculate Vertex To Vertex, then input 'VertexToVertex'
 %                       -2. if calculate Vertex To Atlas, then should define the atlas as ROI struct.
-%                       ROIDef.ROIDefSurfLH; ROIDef.ROIDefSurfRH; ROIDef.ROIDefVolu. 
-%                       ROIDef.ROIDefSurfLH; ROIDef.ROIDefSurfRH should be cells. Each cell could be:
+%                       ROIDef.SurfLH; ROIDef.SurfRH; ROIDef.Volume. 
+%                       ROIDef.SurfLH; ROIDef.SurfRH should be cells. Each cell could be:
 %                       -(1). mask martrix (nDimVertex*1)
 %                       -(2). Series matrix (DimTimePoints*1)
 %                       -(3). .gii mask file
 %                       -(4). .txt Series. If multiple columns, when IsMultipleLabel==1: each column is a seperate seed series
 %                                                             when IsMultipleLabel==0: average all the columns and take the mean series (one column) as seed series
-%                       ROIDef.ROIDefVolu should be:
+%                       ROIDef.Volume should be:
 %                       -(1). 3D mask martrix (DimX*DimY*DimZ)
 %                       -(2). Series matrix (DimTimePoints*1)
 %                       -(3). REST Sphere Definition
@@ -129,6 +129,7 @@ if exist('IsNeedDetrend','var') && IsNeedDetrend==1
     end
 end
 
+
 AllVolume = cat(2,AllVolume_LH,AllVolume_RH);
 
 if ischar(ROIDef) && strcmpi(ROIDef,'VertexToVertex')
@@ -140,25 +141,25 @@ else
     ROISignalsSurfRH=[];
     ROISignalsVolu=[];
     % Left Hemi
-    if ~isempty(ROIDef.ROIDefSurfLH)
+    if ~isempty(ROIDef.SurfLH)
         [ROISignalsSurfLH] = y_ExtractROISignal_Surf(InFile_LH, ...
-            ROIDef.ROIDefSurfLH, ...
+            ROIDef.SurfLH, ...
             '', ... % Will not output files
             '', ... % Will not restrict into the brain mask in extracting ROI signals
             IsMultipleLabel);
     end
     % Right Hemi
-    if ~isempty(ROIDef.ROIDefSurfRH)
+    if ~isempty(ROIDef.SurfRH)
         [ROISignalsSurfRH] = y_ExtractROISignal_Surf(InFile_RH, ...
-            ROIDef.ROIDefSurfRH, ...
+            ROIDef.SurfRH, ...
             '', ... % Will not output files
             '', ... % Will not restrict into the brain mask in extracting ROI signals
             IsMultipleLabel);
     end
     % Volume
-    if ~isempty(ROIDef.ROIDefVolu)  % YAN Chao-Gan, 190708: if (Cfg.IsProcessVolumeSpace==1) && (~isempty(Cfg.CalFC.ROIDefVolu))
+    if ~isempty(ROIDef.Volume)  % YAN Chao-Gan, 190708: if (Cfg.IsProcessVolumeSpace==1) && (~isempty(Cfg.CalFC.ROIDefVolu))
         [ROISignalsVolu] = y_ExtractROISignal(InFile_Volume, ...
-            ROIDef.ROIDefVolu, ...
+            ROIDef.Volume, ...
             '', ... % Will not output files
             '', ... % Will not restrict into the brain mask in extracting ROI signals
             IsMultipleLabel);
@@ -218,8 +219,6 @@ StabilityBrain_LH = zeros(nDimVertex_LH,1);
 StabilityBrain_LH(MaskIndex_LH,1) = Stability(1:length(MaskIndex_LH));
 StabilityBrain_RH = zeros(nDimVertex_RH,1);
 StabilityBrain_RH(MaskIndex_RH,1) = Stability(length(MaskIndex_LH)+1:end);
-StabilityBrain_LH=StabilityBrain_LH';
-StabilityBrain_RH=StabilityBrain_RH';
 
 y_Write(StabilityBrain_LH,GHeader_LH,OutputName_LH);
 y_Write(StabilityBrain_RH,GHeader_RH,OutputName_RH);

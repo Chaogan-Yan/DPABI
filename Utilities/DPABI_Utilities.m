@@ -22,7 +22,7 @@ function varargout = DPABI_Utilities(varargin)
 
 % Edit the above text to modify the response to help DPABI_Utilities
 
-% Last Modified by GUIDE v2.5 16-Apr-2016 14:24:23
+% Last Modified by GUIDE v2.5 24-Feb-2020 14:18:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -140,3 +140,12 @@ function pushbuttonDualRegression_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 DPABI_DualRegression
+
+
+% --- Executes on button press in pushbuttonCheckDataOrganization.
+function pushbuttonCheckDataOrganization_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonCheckDataOrganization (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+y_CheckDataOrganization

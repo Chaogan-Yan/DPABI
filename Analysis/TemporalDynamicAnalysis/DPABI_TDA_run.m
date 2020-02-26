@@ -339,7 +339,7 @@ if (Cfg.IsSmoothConcordance==1)
     end
 end
 
-
+fprintf(['\nCongratulations, the running of Temporal Dynamics Analysis is done!!! :)\n\n']);
 
 
 function RaterImages = y_Call_Eval_ConcordanceMeasuresSelected(ConcordanceMeasuresSelected,ALFF,fALFF,ReHo,DC,GSCorr,VMHC)

@@ -51,8 +51,8 @@ function DPABI_ROIList_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DPABI_ROIList (see VARARGIN)
-if nargin > 3
-    handles.ROICell=varargin{1};   
+if nargin > 3 && (~isempty(varargin{1}))
+    handles.ROICell=varargin{1};
     % recover handles.ROIText for display
     handles.ROIText.Volume=handles.ROICell.Volume;
     for i=1:numel(handles.ROIText.Volume)

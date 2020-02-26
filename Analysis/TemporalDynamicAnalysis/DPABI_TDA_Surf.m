@@ -22,7 +22,7 @@ function varargout = DPABI_TDA(varargin)
 
 % Edit the above text to modify the response to help DPABI_TDA
 
-% Last Modified by GUIDE v2.5 11-Jul-2019 11:19:54
+% Last Modified by GUIDE v2.5 25-Feb-2020 16:50:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -653,6 +653,16 @@ function editGSUserMask_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of editGSUserMask as text
 %        str2double(get(hObject,'String')) returns contents of editGSUserMask as a double
+theMaskfile =get(hObject, 'String');
+theMaskfile =strtrim(theMaskfile);
+if exist(theMaskfile, 'file')
+    handles.Cfg.GlobalMaskVolu =theMaskfile;
+    guidata(hObject, handles);
+else
+    errordlg(sprintf('The mask file "%s" does not exist!\n Please re-check it.', theMaskfile));
+end
+guidata(hObject, handles);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -927,6 +937,16 @@ function editMaskLH_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of editMaskLH as text
 %        str2double(get(hObject,'String')) returns contents of editMaskLH as a double
+theMaskfile =get(hObject, 'String');
+theMaskfile =strtrim(theMaskfile);
+if exist(theMaskfile, 'file')
+    handles.Cfg.MaskFileSurfLH =theMaskfile;
+    guidata(hObject, handles);
+else
+    errordlg(sprintf('The mask file "%s" does not exist!\n Please re-check it.', theMaskfile));
+end
+guidata(hObject, handles);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -962,6 +982,15 @@ function editMaskRH_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of editMaskRH as text
 %        str2double(get(hObject,'String')) returns contents of editMaskRH as a double
+theMaskfile =get(hObject, 'String');
+theMaskfile =strtrim(theMaskfile);
+if exist(theMaskfile, 'file')
+    handles.Cfg.MaskFileSurfRH =theMaskfile;
+    guidata(hObject, handles);
+else
+    errordlg(sprintf('The mask file "%s" does not exist!\n Please re-check it.', theMaskfile));
+end
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1013,6 +1042,15 @@ function editMaskVolu_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of editMaskVolu as text
 %        str2double(get(hObject,'String')) returns contents of editMaskVolu as a double
+theMaskfile =get(hObject, 'String');
+theMaskfile =strtrim(theMaskfile);
+if exist(theMaskfile, 'file')
+    handles.Cfg.MaskFileVolu =theMaskfile;
+    guidata(hObject, handles);
+else
+    errordlg(sprintf('The mask file "%s" does not exist!\n Please re-check it.', theMaskfile));
+end
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1026,6 +1064,9 @@ function editMaskVolu_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+
 
 
 % --- Executes on button press in checkboxSmoothConcordance.
@@ -1093,6 +1134,15 @@ function editSurfLH_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of editSurfLH as text
 %        str2double(get(hObject,'String')) returns contents of editSurfLH as a double
+theMaskfile =get(hObject, 'String');
+theMaskfile =strtrim(theMaskfile);
+if exist(theMaskfile, 'file')
+    handles.Cfg.SurfFileLH =theMaskfile;
+    guidata(hObject, handles);
+else
+    errordlg(sprintf('The mask file "%s" does not exist!\n Please re-check it.', theMaskfile));
+end
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1128,6 +1178,15 @@ function editSurfRH_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of editSurfRH as text
 %        str2double(get(hObject,'String')) returns contents of editSurfRH as a double
+theMaskfile =get(hObject, 'String');
+theMaskfile =strtrim(theMaskfile);
+if exist(theMaskfile, 'file')
+    handles.Cfg.SurfFileRH =theMaskfile;
+    guidata(hObject, handles);
+else
+    errordlg(sprintf('The mask file "%s" does not exist!\n Please re-check it.', theMaskfile));
+end
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1439,6 +1498,3 @@ end
 set(handles.editParallelWorkers,'String',handles.Cfg.ParallelWorkersNumber);
 set(handles.editFunctionalSessions,'String',num2str(handles.Cfg.FunctionalSessionNumber));
 set(handles.checkboxDelete4D,'Value',handles.Cfg.IsDelete4D);
-
-
-

@@ -22,7 +22,7 @@ function varargout = DPABISurf(varargin)
 
 % Edit the above text to modify the response to help DPABISurf
 
-% Last Modified by GUIDE v2.5 18-Sep-2019 14:48:56
+% Last Modified by GUIDE v2.5 26-Feb-2020 10:51:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -216,13 +216,13 @@ end
 DPABI_ResultsOrganizer(0)
 
 
-% --- Executes on button press in pushbuttonTDASurf.
-function pushbuttonTDASurf_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonTDASurf (see GCBO)
+% --- Executes on button press in pushbuttonAnalysisSurf.
+function pushbuttonAnalysisSurf_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonAnalysisSurf (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-DPABI_TDA_Surf
+DPABI_Analysis
 
 
 % --- Executes on button press in pushbuttonQC.

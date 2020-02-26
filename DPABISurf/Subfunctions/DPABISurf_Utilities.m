@@ -22,7 +22,7 @@ function varargout = DPABISurf_Utilities(varargin)
 
 % Edit the above text to modify the response to help DPABISurf_Utilities
 
-% Last Modified by GUIDE v2.5 27-Jan-2019 07:36:59
+% Last Modified by GUIDE v2.5 24-Feb-2020 14:20:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -104,3 +104,11 @@ function pushbuttonICC_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 DPABI_ICC_TOOL
 
+
+% --- Executes on button press in pushbuttonReRunfmriprepFailedSubjects.
+function pushbuttonReRunfmriprepFailedSubjects_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonReRunfmriprepFailedSubjects (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+y_ReRunfmriprepFailedSubjects

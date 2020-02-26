@@ -22,7 +22,7 @@ function varargout = dpabi(varargin)
 
 % Edit the above text to modify the response to help dpabi
 
-% Last Modified by GUIDE v2.5 13-Dec-2018 07:43:11
+% Last Modified by GUIDE v2.5 26-Feb-2020 10:35:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -202,9 +202,9 @@ DPABI_ResultsOrganizer(1)
 
 
 
-% --- Executes on button press in pushbuttonTDA.
-function pushbuttonTDA_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonTDA (see GCBO)
+% --- Executes on button press in pushbuttonAnalysis.
+function pushbuttonAnalysis_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonAnalysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-DPABI_TDA
+DPABI_Analysis
