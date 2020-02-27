@@ -1241,11 +1241,12 @@ function MontageBtn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 Fcn=handles.Fcn;
 name=get(handles.OverlayMenu,'String');
-name=split(name{1,1},'.');
-name=strcat(name{1,1},'_Montage');
+[pathstr, name, ext] = fileparts(name{1,1});
+FileName = fullfile(pathstr,[name,'_Montage']);
 Flag=get(handles.HemiMenu, 'string');
+FlagValue=get(handles.HemiMenu, 'Value');
 MVP=Fcn.GetViewPoint();
-Fcn.SaveMontage( 'L', name);
+Fcn.SaveMontage( Flag{FlagValue}, FileName); %YAN Chao-Gan. 20200227. Different for L and R %Fcn.SaveMontage( 'L', name);
 
 
 % --- Executes on button press in OverlayColorCustomBtn.

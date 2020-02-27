@@ -109,12 +109,8 @@ else %For Volume space
         parfor iSub=1:length(Cfg.SubjectID)
             FileList=[];
             for iFunSession=1:Cfg.FunctionalSessionNumber
-                if exist([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'Stability_',Cfg.StartingDirName,filesep,'Stability_',Cfg.SubjectID{iSub},'.nii'])
-                    FileList=[FileList;{[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'Stability_',Cfg.StartingDirName,filesep,'Stability_',Cfg.SubjectID{iSub},'.nii']}];
-                end
-                if exist([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'Stability_',Cfg.StartingDirName,filesep,'zStability_',Cfg.SubjectID{iSub},'.nii'])
-                    FileList=[FileList;{[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'Stability_',Cfg.StartingDirName,filesep,'zStability_',Cfg.SubjectID{iSub},'.nii']}];
-                end
+                FileList=[FileList;{[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'Stability_',Cfg.StartingDirName,filesep,'Stability_',Cfg.SubjectID{iSub},'.nii']}];
+                FileList=[FileList;{[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'Stability_',Cfg.StartingDirName,filesep,'zStability_',Cfg.SubjectID{iSub},'.nii']}];
             end
             
             SPMJOB = load([DPABIPath, filesep, 'DPARSF',filesep,'Jobmats',filesep,'Smooth.mat']);

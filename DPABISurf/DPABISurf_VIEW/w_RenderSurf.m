@@ -1678,7 +1678,8 @@ for i=1:2
    DisplayTexture(AxesObj);
 end
     DataCursor=datacursormode;
-    saveas(gcf,OutFile,'jpg');
+    %saveas(gcf,OutFile,'jpg');
+    print(NewFig,'-r600','-djpeg','-noui',OutFile); %YAN Chao-Gan. Save high resolution
     set(DataCursor, 'UpdateFcn', @(empt, event_obj) GetPosInfo(empt, event_obj, AxesObj));
 %     AxesHandle.DataCursor=DataCursor;
 

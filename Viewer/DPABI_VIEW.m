@@ -1357,45 +1357,31 @@ switch Value
         end
         w_TimeCourse(handles.DPABI_fig, Headers);
     case 3 %Surface View with DPABISurf_VIEW
+        Space='fsaverage';
         Overlay_All=get(handles.OverlayEntry,'String');
         Overlay_Ind=get(handles.OverlayEntry,'Value');
-        File=split(Overlay_All{Overlay_Ind},' ');
-        File_name=File(1);
-        File_path=File(2);
-        try
-            File_1=split(File_path,'(');
-            File_2=split(File_1(2),')');
-            InFile=strcat(File_2(1),'/',File_name);
-            MaskFile=strcat(File_2(1),'/','_CurrentOverlay_Mask.nii');
-            MaskFile=MaskFile{1,1};
-            OutFile=split(InFile,'.');
-        catch
-            File_1=c_split_before2016(File_path,'(');
-            File_2=c_split_before2016(File_1(2),')');
-            InFile=strcat(File_2(1),'/',File_name);
-            MaskFile=strcat(File_2(1),'/','_CurrentOverlay_Mask.nii');
-            MaskFile=MaskFile{1,1};
-            OutFile=c_split_before2016(InFile,'.');
-        end
-        Surf=cell(2,1);
-        Surf{1,1}=strcat(OutFile{1,1},'_Surf_lh.gii');
-        Surf{2,1}=strcat(OutFile{1,1},'_Surf_rh.gii');
-        OverlayFile=strcat(OutFile(1),'_CurrentOverlay_Mask.gii');
-        Surf_Mask=cell(2,1);
-        Surf_Mask{1,1}=strcat(OutFile{1,1},'_CurrentOverlay_Mask_lh.gii');
-        Surf_Mask{2,1}=strcat(OutFile{1,1},'_CurrentOverlay_Mask_rh.gii');
-        OutFile=strcat(OutFile(1),'_Surf.gii');
+        File=c_split_before2016(Overlay_All{Overlay_Ind},' ');
+        File_name=File{1};
+        File_path=File{2};
+        File_1=c_split_before2016(File_path,'(');
+        File_2=c_split_before2016(File_1{2},')');
+        InFile=strcat(File_2{1},'/',File_name);
+        MaskFile=strcat(File_2{1},'/','_CurrentOverlay_Mask.nii');
         MaskData=handles.OverlayHeaders{1,1}.Data;
         MaskData=MaskData~=0;
         y_Write(MaskData,handles.OverlayHeaders{1,1},MaskFile);
-        y_Vol2Surf(InFile{1,1},OutFile{1,1},1,'fsaverage');
-        y_Vol2Surf(MaskFile,OverlayFile{1,1},0,'fsaverage');
+
         PMax=handles.OverlayHeaders{1,1}.PMax;
         PMin=handles.OverlayHeaders{1,1}.PMin;
         NMax=handles.OverlayHeaders{1,1}.NMax;
         NMin=handles.OverlayHeaders{1,1}.NMin;
         ColorMap=handles.OverlayHeaders{1,1}.ColorMap;
-        c_View2SurfView(File_name{1,1},Surf,Surf_Mask,PMax,PMin,NMax,NMin,ColorMap,eventdata);
+
+        %YAN Chao-Gan, 20200227 Use New logic
+        DPABISurfPath=fileparts(which('DPABISurf.m'));
+        SurfUnderlay={fullfile(DPABISurfPath,'SurfTemplates',[Space,'_lh_inflated.surf.gii']);fullfile(DPABISurfPath,'SurfTemplates',[Space,'_rh_inflated.surf.gii'])};
+        y_Call_DPABISurf_VIEW_FromVolume(InFile,File_name,NMin,PMin,MaskFile,[],[],[],Space,SurfUnderlay,ColorMap,NMax,PMax);
+
     case 4 %Call BrainNet Viewer
         if ~(exist('BrainNet.m'))
             msgbox('The surface view is based on Mingrui Xia''s BrainNet Viewer. Please install BrainNet Viewer 1.1 or later version at first (http://www.nitrc.org/projects/bnv/).','DPABI_VIEW', 'modal');
@@ -2038,9 +2024,7 @@ st{curfig}.mode=str2double(mode);
 ShowUnderlay(handles);
 
 
-
 function [outstr] = c_split_before2016(strA,strB)
-
 m=strfind(strA,strB);
 f=1;
 C=cell(1,1);

@@ -22,7 +22,7 @@ function varargout = DPABI_Stability(varargin)
 
 % Edit the above text to modify the response to help DPABI_Stability
 
-% Last Modified by GUIDE v2.5 25-Feb-2020 17:13:08
+% Last Modified by GUIDE v2.5 26-Feb-2020 14:08:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -496,7 +496,13 @@ function rbtnVoxelToVoxel_Callback(hObject, eventdata, handles)
     set(handles.rbtnVoxelToVoxel, 'Value', 1);
     set(handles.rbtnVoxelToAtlas, 'Value', 0);
     set(handles.btnDefineROI, 'Enable','off');
-    handles.Cfg.ROIDef='VoxelToVoxel';
+    
+    if handles.Cfg.IsForDPABISurf
+        handles.Cfg.ROIDef = 'VertexToVertex';
+    else
+        handles.Cfg.ROIDef = 'VoxelToVoxel';
+    end
+    
     guidata(hObject,handles);
 
 % Hint: get(hObject,'Value') returns toggle state of rbtnVoxelToVoxel
@@ -542,19 +548,8 @@ function btnDefineROI_Callback(hObject, eventdata, handles)
     ROIDef=handles.Cfg.ROIDef;
 
     if handles.Cfg.IsForDPABISurf
-        [ROIDef,handles.Cfg.CalFC.IsMultipleLabel]=DPABISurf_ROIList(ROIDef,handles.Cfg.IsMultipleLabel);
-        if ~isempty(ROIDef)
-            handles.Cfg.CalFC.ROIDefVolu=ROIDef.Volume;
-            handles.Cfg.CalFC.ROIDefSurfLH=ROIDef.SurfLH;
-            handles.Cfg.CalFC.ROIDefSurfRH=ROIDef.SurfRH;
-        end
+        [ROIDef,handles.Cfg.IsMultipleLabel]=DPABISurf_ROIList(ROIDef,handles.Cfg.IsMultipleLabel);
     else
-        if isempty(ROIDef)
-            [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
-            addpath([ProgramPath,filesep,'SubGUIs']);
-            [ROIDef,IsMultipleLabel]=DPARSF_ROI_Template(ROIDef,handles.Cfg.IsMultipleLabel);
-            handles.Cfg.IsMultipleLabel = IsMultipleLabel;
-        end
         ROIDef=DPABI_ROIList(ROIDef);
     end
     handles.Cfg.ROIDef=ROIDef;
@@ -863,6 +858,3 @@ Datetime=fix(clock);
 save([handles.Cfg.WorkingDir,filesep,'DPABI_Stability_AutoSave_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); 
 
 DPABI_Stability_run(handles.Cfg);
-
-
-

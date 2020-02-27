@@ -84,6 +84,8 @@ Really_Name=strcat(name{1,1},'.tiff');
 h=figure;
 montage({[OriginalName(1:end-4),'_Surf_lh_Montage.jpg'],[OriginalName(1:end-4),'_Surf_rh_Montage.jpg']});
 print(h,'-r300','-dtiff','-noui',Really_Name);
+
+
 function [outstr] = c_split_before2016(strA,strB)
 
 m=strfind(strA,strB);
