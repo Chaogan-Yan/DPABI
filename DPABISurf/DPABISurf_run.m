@@ -464,36 +464,38 @@ if (Cfg.Isfmriprep==1)
     end
     
 
-    if isdeployed % If running within docker with compiled version
-        Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/fsl/5.0 && parallel -j %g /usr/local/miniconda/bin/fmriprep %s/BIDS %s participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
-    else
-        Command=sprintf('%s cgyan/dpabi parallel -j %g /usr/local/miniconda/bin/fmriprep /data/BIDS /data participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
+    if ~exist([Cfg.WorkingDir,filesep,'fmriprep'],'dir') % If it's the first time to run fmriprep
+        
+        if isdeployed % If running within docker with compiled version
+            Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/fsl/5.0 && parallel -j %g /usr/local/miniconda/bin/fmriprep %s/BIDS %s participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cgyan/dpabi parallel -j %g /usr/local/miniconda/bin/fmriprep /data/BIDS /data participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
+        end
+        
+        if Cfg.ParallelWorkersNumber~=0
+            Command = sprintf('%s --nthreads 1 --omp-nthreads 1', Command);
+        end
+        if Cfg.IsSliceTiming==0
+            Command = sprintf('%s --ignore slicetiming', Command);
+        end
+        if isfield(Cfg,'FieldMap') && Cfg.FieldMap.IsApplyFieldMapCorrection==0 %YAN Chao-Gan, 191124.
+            Command = sprintf('%s --ignore fieldmaps', Command);
+        end
+        if Cfg.IsICA_AROMA==1
+            %Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -250 --ignore-aroma-denoising-errors', Command); %The HCP pipeline default is 250 maximum
+            Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200 --ignore-aroma-denoising-errors', Command); %The fMRIPrep pipeline default is 200 maximum
+        end
+        Command = sprintf('%s --template-resampling-grid %s', Command, Cfg.Normalize.VoxelSize);
+        if Cfg.IsLowMem==1
+            Command = sprintf('%s --low-mem', Command);
+        end
+        Command = sprintf('%s -w /data/fmriprepwork/{1}', Command); %Specify the working dir for fmriprep
+        Command = sprintf('%s  --participant_label {1} ::: %s', Command, SubjectIDString);
+        
+        fprintf('Preprocessing with fmriprep, this process is very time consuming, please be patient...\n');
+        
+        system(Command);
     end
-    
-    if Cfg.ParallelWorkersNumber~=0
-        Command = sprintf('%s --nthreads 1 --omp-nthreads 1', Command);
-    end
-    if Cfg.IsSliceTiming==0
-        Command = sprintf('%s --ignore slicetiming', Command);
-    end
-    if isfield(Cfg,'FieldMap') && Cfg.FieldMap.IsApplyFieldMapCorrection==0 %YAN Chao-Gan, 191124.
-        Command = sprintf('%s --ignore fieldmaps', Command);
-    end
-    if Cfg.IsICA_AROMA==1
-        %Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -250 --ignore-aroma-denoising-errors', Command); %The HCP pipeline default is 250 maximum
-        Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200 --ignore-aroma-denoising-errors', Command); %The fMRIPrep pipeline default is 200 maximum
-    end
-    Command = sprintf('%s --template-resampling-grid %s', Command, Cfg.Normalize.VoxelSize);
-    if Cfg.IsLowMem==1
-        Command = sprintf('%s --low-mem', Command);
-    end
-    Command = sprintf('%s -w /data/fmriprepwork/{1}', Command); %Specify the working dir for fmriprep
-    Command = sprintf('%s  --participant_label {1} ::: %s', Command, SubjectIDString);
-    
-    fprintf('Preprocessing with fmriprep, this process is very time consuming, please be patient...\n');
-    
-    system(Command);
-    
     
     %Check subjects failed fmriprep and re-run %YAN Chao-Gan, 200218
     [FailedID WaitingID SuccessID]=y_ReRunfmriprepFailedSubjects(Cfg,Cfg.WorkingDir,Cfg.SubjectID);

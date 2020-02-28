@@ -56,7 +56,7 @@ end
 
 % --- Executes just before DPARSF is made visible.
 function DPARSF_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V4.5_190725';
+    Release='V5.0_200301';
     
     [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
     addpath([ProgramPath,filesep,'SubGUIs']);
