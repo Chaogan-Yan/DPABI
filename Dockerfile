@@ -1,4 +1,4 @@
-FROM poldracklab/fmriprep:1.5.0
+FROM poldracklab/fmriprep:20.0.1
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
