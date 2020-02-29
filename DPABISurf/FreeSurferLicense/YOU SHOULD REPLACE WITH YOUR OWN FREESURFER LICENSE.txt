@@ -1,0 +1,1 @@
+You should replace license.txt with your own freesurfer license! You can get your own for free from: https://surfer.nmr.mgh.harvard.edu/registration.html

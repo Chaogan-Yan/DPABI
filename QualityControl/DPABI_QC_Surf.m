@@ -193,8 +193,14 @@ end
 
 WorkDir=get(handles.WorkDirEntry, 'String');
 SubjCell=get(handles.SubjListbox, 'String');
-MaskCell=cellfun(@(subj) fullfile(WorkDir, 'Masks', 'AutoMasks', [subj,'_task-rest_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz']), SubjCell,...
-    'UniformOutput', false);
+% MaskCell=cellfun(@(subj) fullfile(WorkDir, 'Masks', 'AutoMasks', [subj,'_task-rest_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz']), SubjCell,...
+%     'UniformOutput', false);
+MaskCell=[];
+for iSub=1:length(SubjCell)
+    DirFile=dir(fullfile(WorkDir, 'Masks', 'AutoMasks', [SubjCell{iSub},'*MNI152NLin2009cAsym*brain_mask.nii*']));
+    MaskCell{iSub,1}=fullfile(WorkDir, 'Masks', 'AutoMasks', DirFile(1).name);
+end
+
 [MaskAll, Vox, FileCell, Header] =y_ReadAll(MaskCell);
 GroupMaskDir=fullfile(WorkDir, 'Masks', 'GroupMask');
 if exist(GroupMaskDir, 'dir')~=7

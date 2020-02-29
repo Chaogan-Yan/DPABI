@@ -75,8 +75,13 @@ if exist(fullfile(WorkDir, 'Masks', 'AutoMasks', ['wAutoMask_', SubjList{1},'.ni
     MaskList=cellfun(@(subj) fullfile(WorkDir, 'Masks', 'AutoMasks', ['wAutoMask_', subj]), SubjList,...
         'UniformOutput', false);
 else
-    MaskList=cellfun(@(subj) fullfile(WorkDir, 'Masks', 'AutoMasks', [subj,'_task-rest_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz']), SubjList,...
-        'UniformOutput', false);
+    MaskList=[];
+    for iSub=1:length(SubjList)
+        DirFile=dir(fullfile(WorkDir, 'Masks', 'AutoMasks', [SubjList{iSub},'*MNI152NLin2009cAsym*brain_mask.nii*']));
+        MaskList{iSub,1}=fullfile(WorkDir, 'Masks', 'AutoMasks', DirFile(1).name);
+    end
+%     MaskList=cellfun(@(subj) fullfile(WorkDir, 'Masks', 'AutoMasks', [subj,'_task-rest_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz']), SubjList,...
+%         'UniformOutput', false);
 end
 
 CoverageVector=zeros(size(MaskList));
