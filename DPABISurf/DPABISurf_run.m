@@ -485,7 +485,14 @@ if (Cfg.Isfmriprep==1)
             %Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -250 --ignore-aroma-denoising-errors', Command); %The HCP pipeline default is 250 maximum
             Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200 --ignore-aroma-denoising-errors', Command); %The fMRIPrep pipeline default is 200 maximum
         end
-        Command = sprintf('%s --template-resampling-grid %s', Command, Cfg.Normalize.VoxelSize);
+        
+        %Change to fmriprep's new output space command convention. YAN Chao-Gan. 20200229.
+        %Command = sprintf('%s --template-resampling-grid %s', Command, Cfg.Normalize.VoxelSize);
+        if strcmpi(Cfg.Normalize.VoxelSize(end-1:end),'mm')
+            Cfg.Normalize.VoxelSize=Cfg.Normalize.VoxelSize(1); %Change 1mm to 1; 2mm to 2.
+        end
+        Command = sprintf('%s --output-spaces fsaverage5 MNI152NLin2009cAsym:res-%s', Command, Cfg.Normalize.VoxelSize);
+
         if Cfg.IsLowMem==1
             Command = sprintf('%s --low-mem', Command);
         end
@@ -499,13 +506,16 @@ if (Cfg.Isfmriprep==1)
     
     %Check subjects failed fmriprep and re-run %YAN Chao-Gan, 200218
     [FailedID WaitingID SuccessID]=y_ReRunfmriprepFailedSubjects(Cfg,Cfg.WorkingDir,Cfg.SubjectID);
-    while ~isempty(WaitingID)
-        [FailedID WaitingID SuccessID]=y_ReRunfmriprepFailedSubjects(Cfg,Cfg.WorkingDir,Cfg.SubjectID);
-    end
+%     while ~isempty(WaitingID)
+%         [FailedID WaitingID SuccessID]=y_ReRunfmriprepFailedSubjects(Cfg,Cfg.WorkingDir,Cfg.SubjectID);
+%     end
     if ~isempty(FailedID)
         fprintf(['\nError: These subjects have always failed run fmriprep, please check the raw data and the logs:\n']);
         disp(FailedID)
         error('Error detected during running fmriprep, please check the log files for the above subjects!');
+    end
+    if ~isempty(WaitingID)
+        error('Error detected during running fmriprep, please check!');
     end
     
     Cfg.StartingDirName = 'fmriprep';

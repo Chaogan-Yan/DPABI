@@ -1808,6 +1808,11 @@ function SetLoadedData(hObject,handles, Cfg);
     if ~isfield(handles.Cfg.Covremove,'IsAddMeanBack')
         handles.Cfg.Covremove.IsAddMeanBack = 0; %YAN Chao-Gan, 160415: Add the option of "Add Mean Back".
     end
+    
+    if ~isfield(handles.Cfg,'IsBIDStoDPARSF')
+        handles.Cfg.IsBIDStoDPARSF=0;
+    end
+
 
     guidata(hObject, handles);
     UpdateDisplay(handles);
