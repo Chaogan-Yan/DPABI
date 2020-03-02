@@ -183,9 +183,10 @@ CommandInit=sprintf('docker run -d --rm -v %s:/DPABI:ro -v %s:/opt/freesurfer/li
 
 Command=sprintf('%s x11vnc -forever -shared -usepw -create -rfbport 5925 &',CommandInit);
 
+system(Command);
+
 uiwait(msgbox('Please open a VNC viewer and connect to localhost:5925. The password is "dpabi". You can enjoy the GUI there. Tips: first input "bash" to get life easier.','VNC Viewer with DPABI Docker'));
 
-system(Command);
 
 
 

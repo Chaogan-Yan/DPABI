@@ -72,7 +72,7 @@ FailedID=[];
 WaitingID=[];
 for i=1:Cfg.SubjectNum
     if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i}))
-        if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs'))
+        if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs')) || exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'log'))
             FailedID=[FailedID;Cfg.SubjectID(i)];
         else
             SuccessID=[SuccessID;Cfg.SubjectID(i)];
@@ -176,7 +176,7 @@ if ~isempty(NeedReRunID) %(Cfg.Isfmriprep==1)
     WaitingID=[];
     for i=1:Cfg.SubjectNum
         if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i}))
-            if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs'))
+            if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs')) || exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'log'))
                 FailedID=[FailedID;Cfg.SubjectID(i)];
             else
                 SuccessID=[SuccessID;Cfg.SubjectID(i)];
@@ -204,7 +204,7 @@ if ~isempty(NeedReRunID) %(Cfg.Isfmriprep==1)
         for i=1:length(FailedID)
             for j=1:length(FailedID_Beginning)
                 if strcmpi(FailedID{i},FailedID_Beginning{j})
-                    fprintf('%s failed twice during running fmriprep, please check the raw data and the logs %s\n',FailedID{i},fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i},'logs'));
+                    fprintf('%s failed twice during running fmriprep, please check the raw data and the logs %s\n',FailedID{i},fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i},'log(s)'));
                 end
             end
         end
