@@ -483,7 +483,8 @@ if (Cfg.Isfmriprep==1)
         end
         if Cfg.IsICA_AROMA==1
             %Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -250 --ignore-aroma-denoising-errors', Command); %The HCP pipeline default is 250 maximum
-            Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200 --ignore-aroma-denoising-errors', Command); %The fMRIPrep pipeline default is 200 maximum
+            %Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200 --ignore-aroma-denoising-errors', Command); %The fMRIPrep pipeline default is 200 maximum
+            Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200', Command); %The fMRIPrep pipeline default is 200 maximum
         end
         
         %Change to fmriprep's new output space command convention. YAN Chao-Gan. 20200229.

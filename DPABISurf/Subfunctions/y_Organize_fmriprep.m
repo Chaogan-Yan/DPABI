@@ -162,7 +162,6 @@ mkdir(fullfile(Cfg.WorkingDir,'Results','AnatVolu'));
 parfor i=1:Cfg.SubjectNum
     mkdir(fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
     copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'anat','*_space-MNI152NLin2009cAsym_*'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
-    copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'func','*_space-MNI152NLin2009cAsym_*desc-aparcaseg_dseg.nii.gz'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
 end
 
 
@@ -184,12 +183,14 @@ if Cfg.FunctionalSessionNumber==1
     parfor i=1:Cfg.SubjectNum
         mkdir(fullfile(Cfg.WorkingDir,'FunSurfW',Cfg.SubjectID{i}));
         copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'func','*fsaverage5_hemi-*.func.gii'),fullfile(Cfg.WorkingDir,'FunSurfW',Cfg.SubjectID{i}));
+        copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'func','*_space-MNI152NLin2009cAsym_*desc-aparcaseg_dseg.nii.gz'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
     end
 else
     for iFunSession=1:Cfg.FunctionalSessionNumber
         mkdir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},'FunSurfW']));
         parfor i=1:Cfg.SubjectNum
             copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},['ses-',num2str(iFunSession)],'func','*fsaverage5_hemi-*.func.gii'),fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},'FunSurfW'],Cfg.SubjectID{i}));
+            copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},['ses-',num2str(iFunSession)],'func','*_space-MNI152NLin2009cAsym_*desc-aparcaseg_dseg.nii.gz'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
         end
     end
 end
