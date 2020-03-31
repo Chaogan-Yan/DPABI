@@ -46,6 +46,9 @@ else
     
     [InPath, InFile, InExt] = fileparts(InputFilename);
     [OutPath, OutFile, OutExt] = fileparts(OutputFilename);
+    if strcmpi(OutExt,'.gz')
+        OutputFilename=OutputFilename(1:end-3); %YAN Chao-Gan, 200329. In case .gz cause y_Write error later
+    end
     
     [Data Head] = y_Read(InputFilename); %The header "Head" is reserved.
     
