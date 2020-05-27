@@ -183,6 +183,12 @@ else %YAN Chao-Gan 181204. Take care GIfTI data
 end
 
 
+[Path, Name, Ext]=fileparts(OutputName); %YAN Chao-Gan, 200516. Deal with the Ext
+if isempty(Ext)
+    Ext='.nii';
+end
+Name=fullfile(Path, Name);
+
 if exist('Contrast','var') && ~isempty(Contrast)
     if strcmpi(TF_Flag,'F') %If TF_Flag is 'T', then still use the previously defined T Header.
         Df_Group = length(find(Contrast));
@@ -197,24 +203,22 @@ if exist('Contrast','var') && ~isempty(Contrast)
         end
     end
     
-    y_Write(TF_ForContrast_brain,HeaderTWithDOF,[OutputName]);  %y_Write(TF_ForContrast_brain,HeaderTWithDOF,[OutputName,'_',TF_Flag,'_ForContrast','.nii']);
-    y_Write(Cohen_f2_brain,HeaderTWithDOF,[OutputName,'_Cohen_f2']); %YAN Chao-Gan 170714, Added Cohen's f squared (Effect Size)
+    y_Write(TF_ForContrast_brain,HeaderTWithDOF,[Name,Ext]);  %y_Write(TF_ForContrast_brain,HeaderTWithDOF,[OutputName,'_',TF_Flag,'_ForContrast','.nii']);
+    y_Write(Cohen_f2_brain,HeaderTWithDOF,[Name,'_Cohen_f2',Ext]); %YAN Chao-Gan 170714, Added Cohen's f squared (Effect Size)
 
 else % Output all the T files.
     for ii=1:size(b_OLS_brain,4)
-        y_Write(squeeze(b_OLS_brain(:,:,:,ii)),Header,[OutputName,'_b',num2str(ii)]);
-        y_Write(squeeze(t_OLS_brain(:,:,:,ii)),HeaderTWithDOF,[OutputName,'_T',num2str(ii)]);
+        y_Write(squeeze(b_OLS_brain(:,:,:,ii)),Header,[Name,'_b',num2str(ii),Ext]);
+        y_Write(squeeze(t_OLS_brain(:,:,:,ii)),HeaderTWithDOF,[Name,'_T',num2str(ii),Ext]);
     end
 end
 
 %YAN Chao-Gan, 130227
 if exist('IsOutputResidual','var') && (IsOutputResidual==1)
-	[Path, Name, Ext]=fileparts(OutputName);
-	Name=fullfile(Path, Name);
-    y_Write(r_OLS_brain,Header,[Name,'_Residual']);
+    y_Write(r_OLS_brain,Header,[Name,'_Residual',Ext]);
 	%SSE_r_OLS_brain=sum(r_OLS_brain.^2, 4); %Add error sum of square by Sandy
 	%y_Write(SSE_r_OLS_brain,Header,[Name,'_Residual_SSE','.nii']);
-    y_Write(SSE_OLS_brain,Header,[Name,'_Residual_SSE']); %YAN Chao-Gan, 151125. Just save the already stored one.
+    y_Write(SSE_OLS_brain,Header,[Name,'_Residual_SSE',Ext]); %YAN Chao-Gan, 151125. Just save the already stored one.
 end
 
 Header = HeaderTWithDOF;

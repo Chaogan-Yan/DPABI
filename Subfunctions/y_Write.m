@@ -55,6 +55,8 @@ if ~isfield(Header,'cdata')
     [Path,Name,Ext] = fileparts(OutName);
     if isempty(Ext)
         OutName=[OutName,'.nii'];
+    elseif strcmpi(Ext,'.gz')
+        OutName=OutName(1:end-3); %YAN Chao-Gan, 200403. In case .gz cause y_Write error later
     end
     
     dat = file_array;

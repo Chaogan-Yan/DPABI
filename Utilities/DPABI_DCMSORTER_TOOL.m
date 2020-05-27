@@ -226,6 +226,8 @@ AnonyFlag=get(handles.AnonyButton, 'Value');
 
 w_DCMSort(DICOMCells, HierarchyValue, AnonyFlag, OutputDir);
 
+fprintf('\n\tDICOM files sorting finished!\n');
+
 % --- Executes on selection change in HierarchyPopup.
 function HierarchyPopup_Callback(hObject, eventdata, handles)
 % hObject    handle to HierarchyPopup (see GCBO)

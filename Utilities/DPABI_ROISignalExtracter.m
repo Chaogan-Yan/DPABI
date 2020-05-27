@@ -53,6 +53,7 @@ function DPABI_ROISignalExtracter_OpeningFcn(hObject, eventdata, handles, vararg
 % varargin   command line arguments to DPABI_ROISignalExtracter (see VARARGIN)
 
 handles.ImgCells={};
+handles.ImgCellsSingleFiles={}; %YAN Chao-Gan, 200527. Should also work for adding single files
 handles.CurDir=pwd;
 handles.ROIDef=[];
 handles.IsMultipleLabel=0;
@@ -130,6 +131,9 @@ if Value==0
     return
 end
 handles.ImgCells(Value)=[];
+if ~isempty(handles.ImgCellsSingleFiles) %YAN Chao-Gan, 200527. Should also work for adding single files
+    handles.ImgCellsSingleFiles(Value)=[];
+end
 RemoveString(handles.ImgListbox, Value);
 guidata(hObject, handles);
 
@@ -195,6 +199,12 @@ function ComputeButton_Callback(hObject, eventdata, handles)
 % hObject    handle to ComputeButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+if ~isempty(handles.ImgCellsSingleFiles) %YAN Chao-Gan, 200527. Should also work for adding single files
+    handles.ImgCells={};
+    handles.ImgCells{1}=handles.ImgCellsSingleFiles;
+end
+
 if isempty(handles.ImgCells)
     return
 end
@@ -500,11 +510,13 @@ if iscell(File)
         ImgCell{1, i}=ImgFile;
         StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
     end
-    handles.ImgCells=[handles.ImgCells, ImgCell];
+    handles.ImgCellsSingleFiles=[handles.ImgCellsSingleFiles, ImgCell]; %YAN Chao-Gan, 200527. Should also work for adding single files
+    %handles.ImgCells=[handles.ImgCells, ImgCell];
     AddString(handles.ImgListbox, StringCell);
 else
     ImgFile=fullfile(Path, File);
-    handles.ImgCells{numel(handles.ImgCells)+1}=ImgFile;
+    handles.ImgCellsSingleFiles{numel(handles.ImgCellsSingleFiles)+1}=ImgFile;  %YAN Chao-Gan, 200527. Should also work for adding single files
+    %handles.ImgCells{numel(handles.ImgCells)+1}=ImgFile;
     StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
     AddString(handles.ImgListbox, StringOne);
 end
