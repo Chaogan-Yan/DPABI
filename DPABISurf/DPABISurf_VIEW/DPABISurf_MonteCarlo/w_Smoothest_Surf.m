@@ -136,10 +136,8 @@ for n=1:NumEstimate
         n_ind=n_ind(Msk(n_ind));
         
         if IsStatMap
-            SSminus=SSminus+mean(ResVal(i, 1).*ResVal(n_ind, 1));
-            S2=S2+0.5*mean(ResVal(i, 1)^2+ResVal(n_ind, 1).^2);
-            %r=2*mean(ResVal(i, 1).*ResVal(n_ind, 1))./mean(ResVal(i, 1)^2+ResVal(n_ind, 1).^2);
-            %VAR1(i, 1)=mean(r);
+            r=2*(ResVal(i, 1).*ResVal(n_ind, 1))./(ResVal(i, 1)^2+ResVal(n_ind, 1).^2);
+            VAR1(i, 1)=mean(r);
         else
             % Estimate AR1 Vertex-by-Vertex
             ResSeriesVertex=ResVal(i, :)';
@@ -152,14 +150,8 @@ for n=1:NumEstimate
         
     end
     
-    if IsStatMap
-        Scale=sqrt(GroupSurface/TotalArea);
-        sigmasq=-1/(4*log(abs(SSminus/S2)));
-        FWHM(n, 1)=Scale*sqrt(8*log(2)*sigmasq);
-    else
-        Scale=sqrt(GroupSurface/TotalArea);
-        VAR1(isnan(VAR1))=0;
-        FWHM(n ,1) =Scale.*mean(VD)*sqrt(-log(256)/(4*log(mean(VAR1(Msk)))));
-    end
+    Scale=sqrt(GroupSurface/TotalArea);
+    VAR1(isnan(VAR1))=0;
+    FWHM(n ,1) =Scale.*mean(VD)*sqrt(-log(256)/(4*log(mean(VAR1(Msk)))));
 end
 
