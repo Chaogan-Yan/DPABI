@@ -1,5 +1,5 @@
 function ClustSizeInfo=w_MonteCarlo_Surf(SurfFiles, FWHM, VoxelP, AlphaLevels, M, OutTxtFile, MskFiles, AreaFiles)
-% Surface-based AlphaSim
+% Surface-based Monte Carlo Simulation
 % Usage: ClustSizeInfo=w_MonteCarlo_Surf(SurfFiles, FWHM, VoxelP, AlphaLevels, M, OutTxtFile, MskFiles, AreaFiles)
 %
 % Input:
