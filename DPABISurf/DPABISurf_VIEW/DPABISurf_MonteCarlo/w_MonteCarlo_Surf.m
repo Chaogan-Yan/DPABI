@@ -29,7 +29,7 @@ end
 
 if exist('AreaFiles', 'var') && ~isempty(AreaFiles)
     if numel(SurfFiles)~=numel(MskFiles)
-        error('Applied Mask files, but unmatched number of Surface and Mask files');
+        error('Applied Area files, but unmatched number of Surface and Area files');
     end
 end
 
