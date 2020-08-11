@@ -178,8 +178,12 @@ else %YAN Chao-Gan 181204. Take care GIfTI data
     
     DOF = nDimTimePoints - size([Predictor,CovVariable],2);
     
+    
+    [FWHM] = w_Smoothest_Surf([],{r_OLS_brain}, {MaskFile});
+    %FWHM=w_Smoothest_Surf(SurfFiles, ResidualFiles, MskFiles)
+    
     HeaderTWithDOF=Header;
-    HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{T_[%.1f]}',DOF))];
+    HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{T_[%.1f]}{FWHM_%fmm}',DOF,FWHM))];
 end
 
 
@@ -199,7 +203,8 @@ if exist('Contrast','var') && ~isempty(Contrast)
         else
             Df_E = nDimTimePoints - size([Predictor,CovVariable],2);
             HeaderTWithDOF=Header;
-            HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{F_[%.1f,%.1f]}',Df_Group,Df_E))];
+            %HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{F_[%.1f,%.1f]}',Df_Group,Df_E))];
+            HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{F_[%.1f,%.1f]}{FWHM_%fmm}',Df_Group,Df_E,FWHM))];
         end
     end
     

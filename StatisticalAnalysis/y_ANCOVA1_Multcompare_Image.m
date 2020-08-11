@@ -198,9 +198,9 @@ if ~strcmp(ctype,'None')
         alpha = 0.05;
         for i=1:nDimVertex
             if MaskData(i,1)
-                gmeans = squeeze(GroupMeans(i,:));
+                gmeans = squeeze(GroupMeans(i,:))';
                 df = Df_E;
-                s = s_brain(i,j,k);
+                s = s_brain(i,1);
                 ng = sum(n>0);
                 gcov = diag((s^2)./n);
                 
@@ -216,21 +216,20 @@ if ~strcmp(ctype,'None')
                 ZTemp = norminv(1 - pval/2).*sign(mn); % Doing two tailed!!!
                 Pairwise_Z_Brain(i,:) = ZTemp;
             end
-            
-            
-            [Path, Name, Ext]=fileparts(OutputName);
-            Name=fullfile(Path, Name);
-            for i=1:size(M,1)
-                Header.descrip=sprintf('PairwiseDiff: mean');
-                y_Write(PairwiseDiff_Brain(:,i),Header,sprintf('%s_PairwiseDiff_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
-                Header.descrip=sprintf('PairwiseDiff: p');
-                y_Write(Pairwise_p_Brain(:,i),Header,sprintf('%s_PairwiseDiff_p_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
-                Header.descrip=sprintf('DPABI{Z_[%.1f]}',1);
-                y_Write(Pairwise_Z_Brain(:,i),Header,sprintf('%s_PairwiseDiff_Z_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
-            end
-            
-            
         end
+        
+        
+        [Path, Name, Ext]=fileparts(OutputName);
+        Name=fullfile(Path, Name);
+        for i=1:size(M,1)
+            Header.private.metadata = [Header.private.metadata, struct('name','FileType','value',sprintf('PairwiseDiff: mean'))];
+            y_Write(PairwiseDiff_Brain(:,i),Header,sprintf('%s_PairwiseDiff_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
+            Header.private.metadata = [Header.private.metadata, struct('name','FileType','value',sprintf('PairwiseDiff: p'))];
+            y_Write(Pairwise_p_Brain(:,i),Header,sprintf('%s_PairwiseDiff_p_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
+            Header.private.metadata = [Header.private.metadata, struct('name','DOF','value',sprintf('DPABI{Z_[%.1f]}',1))];
+            y_Write(Pairwise_Z_Brain(:,i),Header,sprintf('%s_PairwiseDiff_Z_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
+        end
+        
         
         fprintf('\n\tMultiple comparison test finished.\n');
     end

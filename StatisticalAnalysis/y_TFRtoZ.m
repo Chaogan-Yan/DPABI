@@ -14,14 +14,20 @@ function [Z P] = y_TFRtoZ(ImgFile,OutputName,Flag,Df1,Df2)
 % State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China, 100875
 % ycg.yan@gmail.com
 % Modified by Sandy 20140324 for DPABI_VIEW
+% Modified by YAN Chao-Gan 20200811 for .gii.
 
 if ischar(ImgFile)
-    [Data VoxelSize Header]=y_ReadRPI(ImgFile);
+    [Data VoxelSize FileList Header]=y_ReadAll(ImgFile);
 else %Added by Sandy for DPABI_VIEW
     Header=ImgFile;
     Data=Header.Raw;
 end
-[nDim1,nDim2,nDim3]=size(Data);
+
+if ~isfield(Header,'cdata') %YAN Chao-Gan 20200811. If NIfTI data
+    [nDim1,nDim2,nDim3]=size(Data);
+else
+    [nDimVertex nDimTimePoints]=size(Data);
+end
 
 if (~exist('Flag','var')) || (exist('Flag','var') && isempty(Flag))
    Header_DF = w_ReadDF(Header);
@@ -76,7 +82,12 @@ else % T image or R image: YAN Chao-Gan 100814. Changed to call spm_t2z to use a
     
     Tol = 1E-16; %minimum tail probability for direct computation
     Z = spm_t2z(Data,Df1,Tol);
-    Z = reshape(Z,[nDim1,nDim2,nDim3]);
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 20200811. If NIfTI data
+        Z = reshape(Z,[nDim1,nDim2,nDim3]);
+    else
+        Z = reshape(Z,[nDimVertex,1]);
+    end
+    
 end
 
 
@@ -84,7 +95,12 @@ Z(isnan(Z))=0;
 P(isnan(P))=1;
 
 if ~isempty(OutputName)
-    Header.descrip=sprintf('{Z_[%.1f]}',1);
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 20200811. If NIfTI data
+        Header.descrip=sprintf('DPABI{Z_[%.1f]}',1);
+    else
+        Header.private.metadata = [Header.private.metadata, struct('name','DOF','value',sprintf('DPABI{Z_[%.1f]}',1))];
+    end
+    
     y_Write(Z, Header, OutputName);
 end
 fprintf('\n\tT/F/R to Z Calculation finished.\n');

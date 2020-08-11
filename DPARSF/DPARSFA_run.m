@@ -761,7 +761,8 @@ if (AutoDataProcessParameter.IsSliceTiming==1)
                     fprintf(['Using slice timing information from SliceOrderInfo.tsv: ',AutoDataProcessParameter.SubjectID{i},'.\n']);
                 elseif ~isempty(DirJSON) %Use the slice timing information from DICOM BIDS information. %YAN Chao-Gan, 191122.
                     JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
-                    SPMJOB.matlabbatch{1,1}.spm.temporal.st.so = JSON.SliceTiming;
+                    %SPMJOB.matlabbatch{1,1}.spm.temporal.st.so = JSON.SliceTiming;
+                    SPMJOB.matlabbatch{1,1}.spm.temporal.st.so = JSON.SliceTiming * 1000; %YAN Chao-Gan, 200810. Fixed a bug as SPM is using ms unit.
                     fprintf(['Using slice timing information from DICOM BIDS information: ',AutoDataProcessParameter.SubjectID{i},'.\n']);
                 else
                     SPMJOB.matlabbatch{1,1}.spm.temporal.st.so = [1:2:SliceNumber,2:2:SliceNumber];

@@ -1,0 +1,19 @@
+----------------------------------------
+Surface File: fsaverage5_lh_white.surf.gii
+Area File: 
+Mask File: 
+FWHM=10.000000, NumOfSmoothIteration=4
+NumOfSimulation=100
+
+One-Tailed Table
+  pthr  | alpha = Prob(Cluster (mm^2) >= given size)
+ ------ | 0.05000 0.02500 0.01000
+0.050000   335.78  345.13  385.65
+0.010000    96.32   99.36  179.97
+
+Two-Tailed Table
+  pthr  | alpha = Prob(Cluster (mm^2) >= given size)
+ ------ | 0.05000 0.02500 0.01000
+0.050000   204.85  231.68  254.03
+0.010000    77.74   84.46  114.20
+
