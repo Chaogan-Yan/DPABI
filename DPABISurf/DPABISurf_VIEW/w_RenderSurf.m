@@ -1064,6 +1064,7 @@ DfS=w_ReadDF(V);%
 TestFlag=DfS.TestFlag;
 Df=DfS.Df;
 Df2=DfS.Df2;
+FWHMS=w_ReadFWHM(V);% FWHM
 
 StatOpt.TestFlag=TestFlag;
 StatOpt.TailedFlag=2; % One-Tailed: 1; Two-Tailed: 2.
@@ -1072,6 +1073,7 @@ if strcmpi(StatOpt.TestFlag, 'F')
 end
 StatOpt.Df=Df;
 StatOpt.Df2=Df2;
+StatOpt.FWHM=FWHMS.FWHM;
 
 % Generate Colormap and Alpha
 [AdjustCM, Ticks, TickLabel]=AdjustColorMap(OverlayOpt.ColorMap, AxesHandle.UnderSurf.FaceColor, ...

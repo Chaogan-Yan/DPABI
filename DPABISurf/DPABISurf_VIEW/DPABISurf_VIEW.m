@@ -1129,7 +1129,9 @@ else
             else
                 Fcn.SetOverlayClusterSizeOption(OverlayInd, Opt);
             end
-        case 3 % Apply A Vertex-Wise Mask
+        case 3 % Apply FDR Correction    
+        case 4 % Apply FWE (Monte Carlo Simulation) Correction     
+        case 5 % Apply A Vertex-Wise Mask
             GuiData=Fcn.GetOverlayGuiData(OverlayInd);
             VMskFile=GuiData.VMskFile;
             VMskThres=GuiData.VMskThres;
