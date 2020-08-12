@@ -89,8 +89,9 @@ for n=1:NumEstimate
     end
     AreaStruct=gifti(AreaFile);
     Area=AreaStruct.cdata;
-    S.VArea=Area;
-    S.VAreaFile=AreaFile;
+    S.Area=Area;
+    S.AreaFile=AreaFile;
+    AreaFiles{n}=AreaFile;
     
     % Load Mask files if exist
     Msk=true(NumVertex, 1);
@@ -131,7 +132,7 @@ for n=1:NumEstimate
             XThrd2=FimStd*ZThrd2+FimMean;
         
             FimThresholded1=Fim.*(Fim>XThrd1);
-            FimThresholded2=Fim.*(Fim>XThrd2);
+            FimThresholded2=Fim.*( (Fim>XThrd2) & (Fim<-XThrd2) );
         
             % Apply Mask
             FimMsk1=(FimThresholded1.*Msk)~=0;
