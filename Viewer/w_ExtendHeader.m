@@ -1,7 +1,7 @@
 function OverlayHeader=w_ExtendHeader(OverlayHeader)
 
 OverlayHeader=w_ReadDF(OverlayHeader);
-OverlayHeader=w_ReadDLH(OverlayHeader);
+OverlayHeader=w_ReadFWHM(OverlayHeader);
 OverlayHeader.CSize=0;
 OverlayHeader.RMM=18;
 OverlayHeader.IsSelected=0;

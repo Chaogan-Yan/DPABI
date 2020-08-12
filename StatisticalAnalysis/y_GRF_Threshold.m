@@ -73,7 +73,7 @@ end
 
 %Added by YAN Chao-Gan 130508. If dLh is not provided, or is empty, then the smoothness will be estimated automatically from the statistical image (first convert to Z image).
 if (~exist('dLh','var')) || (exist('dLh','var') && isempty(dLh))
-    Header_DLH = w_ReadDLH(Header);
+    Header_DLH = w_ReadFWHM(Header);
     dLh = Header_DLH.dLh;
     FWHM = [Header_DLH.FWHMx, Header_DLH.FWHMy, Header_DLH.FWHMz];
     

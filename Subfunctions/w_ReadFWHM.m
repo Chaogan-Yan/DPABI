@@ -1,5 +1,5 @@
-function [Header] = w_ReadDLH(Header)
-%function [Header] = w_ReadDLH(Header)
+function [Header] = w_ReadFWHM(Header)
+%function [Header] = w_ReadFWHM(Header)
 % Read image header to get dLh and FWHM(x,y,z)
 % ------------------------------------------------------------------------
 % Input:
@@ -46,8 +46,10 @@ function [Header] = w_ReadDLH(Header)
 %__________________________________________________________________________
 % Written by Wang Xin-di, 20131028.
 % sandywang.rest@gmail.com
+%
+% Modified by Sandy Wang for GIFTI support 20200812
 
-if isstruct(Header)   %For single header
+if isstruct(Header)   %For NIFTI single header
     Header.dLh = 0;
     Header.FWHMx = 0;
     Header.FWHMy = 0;
@@ -62,6 +64,28 @@ if isstruct(Header)   %For single header
     Header.FWHMx = FWHMx;
     Header.FWHMy = FWHMy;
     Header.FWHMz = FWHMz;
+elseif isobject(Header) %For GIFTI single header
+    MetaData=Header.private.metadata;
+    Header=struct(Header);
+    Header.MetaData=MetaData;
+    Header.FWHM=[];
+    
+    Info=[];
+    for m=1:numel(MetaData)
+        one_meta=MetaData(m);
+        if isfield(one_meta, 'name') && isfield(one_meta, 'value')
+            if strcmpi(one_meta.name, 'DOF')
+                Info=one_meta.value;
+            end
+        else
+            warning('Invalid GIFTI Header, not change.');
+        end
+    end    
+    if isempty(Info)
+        return
+    end
+    FWHM=FindFWHM_Surf(Info);
+    Header.FWHM=FWHM;
 elseif iscell %For multi-header
     for i=1:numel(Header)
         Header{i}=w_ReadDF(Header{i});
@@ -69,6 +93,15 @@ elseif iscell %For multi-header
 else
     error('struct or cell');
 end
+
+function FWHM = FindFWHM_Surf(Info)
+FWHM=0;
+tok=regexp(Info, '\{FWHM_(.*?)mm\}',...
+    'tokens');
+if isempty(tok) || numel(tok)~=1
+    return;
+end 
+FWHM=str2double(tok{1}{1});
 
 function [dLh, FWHMx, FWHMy, FWHMz] = FindDLH(Info)
 dLh=0;

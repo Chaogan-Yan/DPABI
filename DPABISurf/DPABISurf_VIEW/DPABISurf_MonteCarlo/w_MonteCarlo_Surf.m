@@ -66,8 +66,8 @@ for n=1:NumEstimate
     NumVertex=size(Vertices, 1);
 
     % Load area files
-    if exist('AreaFiles', 'var') && ~isempty(AreaFiles)
-        AreaStruct=gifti(AreaFiles{n});
+    if exist('AreaFiles', 'var') && ~isempty(AreaFiles{n})
+        AreaFile=AreaFiles{n};
     else
         DPABISurfPath=fileparts(which('DPABISurf.m'));
         
@@ -85,13 +85,17 @@ for n=1:NumEstimate
                 error('Invalid Surface File: %s, please select fsaverage or fsaverage5 from SurfTemplates folder',...
                     SurfFiles{n})
         end
-        AreaStruct=gifti(fullfile(DPABISurfPath, 'SurfTemplates', AreaFileName));
+        AreaFile=fullfile(DPABISurfPath, 'SurfTemplates', AreaFileName);
     end
+    AreaStruct=gifti(AreaFile);
     Area=AreaStruct.cdata;
+    S.Area=Area;
+    S.AreaFile=AreaFile;
+    AreaFiles{n}=AreaFile;
     
     % Load Mask files if exist
     Msk=true(NumVertex, 1);
-    if exist('MskFiles', 'var') && ~isempty(MskFiles)
+    if exist('MskFiles', 'var') && ~isempty(MskFiles{n})
         MskStruct=gifti(MskFiles{n});
         if size(MskStruct.cdata, 1)~=size(SurfStruct.vertices, 1)
             error('Unmatched number of vertices for %s and %s',...
@@ -128,7 +132,7 @@ for n=1:NumEstimate
             XThrd2=FimStd*ZThrd2+FimMean;
         
             FimThresholded1=Fim.*(Fim>XThrd1);
-            FimThresholded2=Fim.*(Fim>XThrd2);
+            FimThresholded2=Fim.*( (Fim>XThrd2) & (Fim<-XThrd2) );
         
             % Apply Mask
             FimMsk1=(FimThresholded1.*Msk)~=0;
@@ -160,6 +164,7 @@ for n=1:NumEstimate
             S.ClustSizeThrd2(j, a)=x2(x2_ind);
         end
     end
+    
     ClustSizeInfo{n}=S;
 end
 
