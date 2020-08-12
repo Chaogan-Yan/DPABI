@@ -158,10 +158,12 @@ if ~isempty(OverlayHeader.VMskFile)
     MskV=gifti(OverlayHeader.VMskFile);
     if length(MskV.cdata)~=length(OverlayHeader.VMsk)
         errordlg('Invalid Size of Vertex Mask!');
+        uiresume(handles.figure1);
         return
     end
     if isempty(VMskThres)
         errordlg('Invalid Threshold!');
+        uiresume(handles.figure1);
         return
     end
     
