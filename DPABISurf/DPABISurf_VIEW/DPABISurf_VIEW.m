@@ -1130,7 +1130,37 @@ else
                 Fcn.SetOverlayClusterSizeOption(OverlayInd, Opt);
             end
         case 3 % Apply FDR Correction    
-        case 4 % Apply FWE (Monte Carlo Simulation) Correction     
+        case 4 % Apply FWE (Monte Carlo Simulation) Correction
+            StatOpt=Fcn.GetOverlayStatOption(OverlayInd);
+            McOpt.FWHM=StatOpt.FWHM;
+            McOpt=w_ApplyMonteCarlo(McOpt);
+            if isempty(McOpt)
+                return
+            end
+            SimReport=w_MonteCarlo_Surf(...
+                {McOpt.SurfPath},...
+                McOpt.FWHM,...
+                McOpt.VertexP,...
+                McOpt.Alpha,...
+                McOpt.M,...
+                McOpt.OutTxtPath,...
+                {McOpt.MskFile},...
+                {McOpt.AreaFile});
+            
+            if McOpt.Tailed==1 % One-Tailed
+                ClustSizeThrd=SimReport{1}.ClustSizeThrd1;
+            elseif McOpt.Tailed==2 % Two-Tailed
+                ClustSizeThrd=SimReport{1}.ClustSizeThrd1;
+            else
+                error('Invalid Tailed');
+            end
+            CSizeOpt=Fcn.GetOverlayClusterSizeOption(OverlayInd);
+            CSizeOpt.Thres=ClustSizeThrd;
+            CSizeOpt.VAreaFile=SimReport{1}.AreaFile;
+            CSizeOpt.VArea=SimReport{1}.Area;
+            
+            Fcn.SetOverlayPThres(OverlayInd, McOpt.VertexP);
+            Fcn.SetOverlayClusterSizeOption(OverlayInd, CSizeOpt);
         case 5 % Apply A Vertex-Wise Mask
             GuiData=Fcn.GetOverlayGuiData(OverlayInd);
             VMskFile=GuiData.VMskFile;
@@ -1153,7 +1183,7 @@ else
             
             Fcn.SetOverlayGuiData(OverlayInd, GuiData);
             Fcn.SetOverlayVertexMask(OverlayInd, Opt.VMsk);
-        case 4 % Cluster Report
+        case 6 % Cluster Report
             Opt=Fcn.ReportOverlayCluster(OverlayInd, LabelInd);
     end
 end
