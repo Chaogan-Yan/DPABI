@@ -1129,7 +1129,24 @@ else
             else
                 Fcn.SetOverlayClusterSizeOption(OverlayInd, Opt);
             end
-        case 3 % Apply FDR Correction    
+        case 3 % Apply FDR Correction
+            StatOpt=Fcn.GetOverlayStatOption(OverlayInd);
+            FDROpt=w_ApplyFDR;
+            OverlayFiles=Fcn.GetOverlayFiles();
+            [CorrectedData, Header, PThres]=y_FDR_Image(...
+                OverlayFiles{OverlayInd},...
+                FDROpt.Q,...
+                '',...
+                FDROpt.VMskFile,...
+                StatOpt.TestFlag,...
+                StatOpt.Df,...
+                StatOpt.Df2);
+            if isempty(PThres)
+                warndlg('There is no vertex left after FDR correction!');
+                fprintf('There is no vertex left after FDR correction!\n');
+            else
+                Fcn.SetOverlayPThres(OverlayInd, PThres);
+            end
         case 4 % Apply FWE (Monte Carlo Simulation) Correction
             StatOpt=Fcn.GetOverlayStatOption(OverlayInd);
             McOpt.FWHM=StatOpt.FWHM;

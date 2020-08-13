@@ -1,4 +1,4 @@
-function [Data_Corrected, Header]=y_FDR_Image(StatsImgFile,qThreshold,OutputName,MaskFile,Flag,Df1,Df2,VoxelSize,Header)
+function [Data_Corrected, Header, P]=y_FDR_Image(StatsImgFile,qThreshold,OutputName,MaskFile,Flag,Df1,Df2,VoxelSize,Header)
 % function [Data_Corrected, Header]=y_FDR_Image(StatsImgFile,qThreshold,OutputName,MaskFile,Flag,Df1,Df2,VoxelSize,Header)
 % Function to perform false discovery rate (FDR) correction.
 % References:
@@ -17,6 +17,7 @@ function [Data_Corrected, Header]=y_FDR_Image(StatsImgFile,qThreshold,OutputName
 %     The image file  after correction.
 %     Data_Corrected    - The Data matrix after correction
 %     Header            - The output Header of the nifti image.
+%     P                 - P threshold after correction
 %___________________________________________________________________________
 % Written by YAN Chao-Gan 170208.
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
@@ -95,6 +96,8 @@ end
 
 Data_Corrected=BrainVolume.*AllBrain;
 
-y_Write(Data_Corrected,Header,OutputName);
-
+% If OutputName is empty, DO NOT WRITE, ADD by Sandy Wang
+if ~isempty(OutputName)
+    y_Write(Data_Corrected,Header,OutputName);
+end
 fprintf('\n\tFDR correction finished.\n');
