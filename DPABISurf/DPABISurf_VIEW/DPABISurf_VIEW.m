@@ -1129,7 +1129,24 @@ else
             else
                 Fcn.SetOverlayClusterSizeOption(OverlayInd, Opt);
             end
-        case 3 % Apply FDR Correction    
+        case 3 % Apply FDR Correction
+            StatOpt=Fcn.GetOverlayStatOption(OverlayInd);
+            FDROpt=w_ApplyFDR;
+            OverlayFiles=Fcn.GetOverlayFiles();
+            [CorrectedData, Header, PThres]=y_FDR_Image(...
+                OverlayFiles{OverlayInd},...
+                FDROpt.Q,...
+                '',...
+                FDROpt.VMskFile,...
+                StatOpt.TestFlag,...
+                StatOpt.Df,...
+                StatOpt.Df2);
+            if isempty(PThres)
+                warndlg('There is no vertex left after FDR correction!');
+                fprintf('There is no vertex left after FDR correction!\n');
+            else
+                Fcn.SetOverlayPThres(OverlayInd, PThres);
+            end
         case 4 % Apply FWE (Monte Carlo Simulation) Correction
             StatOpt=Fcn.GetOverlayStatOption(OverlayInd);
             McOpt.FWHM=StatOpt.FWHM;
@@ -1159,6 +1176,10 @@ else
             CSizeOpt.VAreaFile=SimReport{1}.AreaFile;
             CSizeOpt.VArea=SimReport{1}.Area;
             
+            fprintf('Surface File: %s, Area File: %s, Mask File: %s\n',...
+                McOpt.SurfPath, CSizeOpt.VAreaFile, McOpt.MskFile);
+            fprintf('FWHM (mm): %f, Cluster Threshold (mm): %f (Vertex P: %f, Cluster P: %f)\n',...
+                McOpt.FWHM, CSizeOpt.Thres, McOpt.VertexP, McOpt.Alpha);
             Fcn.SetOverlayPThres(OverlayInd, McOpt.VertexP);
             Fcn.SetOverlayClusterSizeOption(OverlayInd, CSizeOpt);
         case 5 % Apply A Vertex-Wise Mask
@@ -1186,6 +1207,7 @@ else
         case 6 % Cluster Report
             Opt=Fcn.ReportOverlayCluster(OverlayInd, LabelInd);
     end
+    UpdateOverlayConfig(hObject);
 end
 
 % --- Executes on button press in OverlayTcBtn.

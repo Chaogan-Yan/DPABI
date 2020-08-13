@@ -131,13 +131,16 @@ function ComputeButton_Callback(hObject, eventdata, handles)
 SurfValue=get(handles.SurfPopup, 'Value');
 DPABISurfPath=fileparts(which('DPABISurf.m'));
 switch SurfValue
-    case 1
-        SurfName='fsaverage_lh_white.surf.gii';
+    case 1 % Please select...
+        errordlg('Please select the surface for simulation!');
+        return
     case 2
-        SurfName='fsaverage_rh_white.surf.gii';    
+        SurfName='fsaverage_lh_white.surf.gii';
     case 3
-        SurfName='fsaverage5_lh_white.surf.gii';
+        SurfName='fsaverage_rh_white.surf.gii';    
     case 4
+        SurfName='fsaverage5_lh_white.surf.gii';
+    case 5
         SurfName='fsaverage5_rh_white.surf.gii';         
     otherwise
         error('Invalid Surface Name');
