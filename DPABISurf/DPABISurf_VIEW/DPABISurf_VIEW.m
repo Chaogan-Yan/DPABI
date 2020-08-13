@@ -1159,6 +1159,10 @@ else
             CSizeOpt.VAreaFile=SimReport{1}.AreaFile;
             CSizeOpt.VArea=SimReport{1}.Area;
             
+            fprintf('Surface File: %s, Area File: %s, Mask File: %s\n',...
+                McOpt.SurfPath, CSizeOpt.VAreaFile, McOpt.MskFile);
+            fprintf('FWHM (mm): %f, Cluster Threshold (mm): %f (Vertex P: %f, Cluster P: %f)\n',...
+                McOpt.FWHM, CSizeOpt.Thres, McOpt.VertexP, McOpt.Alpha);
             Fcn.SetOverlayPThres(OverlayInd, McOpt.VertexP);
             Fcn.SetOverlayClusterSizeOption(OverlayInd, CSizeOpt);
         case 5 % Apply A Vertex-Wise Mask
@@ -1186,6 +1190,7 @@ else
         case 6 % Cluster Report
             Opt=Fcn.ReportOverlayCluster(OverlayInd, LabelInd);
     end
+    UpdateOverlayConfig(hObject);
 end
 
 % --- Executes on button press in OverlayTcBtn.
