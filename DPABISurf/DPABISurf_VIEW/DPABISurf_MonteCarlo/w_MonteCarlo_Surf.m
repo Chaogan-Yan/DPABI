@@ -64,23 +64,29 @@ for n=1:NumEstimate
     %Faces=SurfStruct.faces;
     
     NumVertex=size(Vertices, 1);
-
+    DPABISurfPath=fileparts(which('DPABISurf.m'));
     % Load area files
     if exist('AreaFiles', 'var') && ~isempty(AreaFiles{n})
         AreaFile=AreaFiles{n};
-    else
-        DPABISurfPath=fileparts(which('DPABISurf.m'));
-        
+    else    
         [Path, fileN, extn] = fileparts(SurfFiles{n});
         switch fileN
             case 'fsaverage_lh_white.surf'
                 AreaFileName='fsaverage_lh_white_avg.area.gii';
+                SurfLab='fsaverage';
+                HemiLab='lh';
             case 'fsaverage_rh_white.surf'
                 AreaFileName='fsaverage_rh_white_avg.area.gii';
+                SurfLab='fsaverage';
+                HemiLab='rh';                
             case 'fsaverage5_lh_white.surf'                
                 AreaFileName='fsaverage5_lh_white_avg.area.gii';
+                SurfLab='fsaverage5';
+                HemiLab='lh';                
             case 'fsaverage5_rh_white.surf'
                 AreaFileName='fsaverage5_rh_white_avg.area.gii';
+                SurfLab='fsaverage';
+                HemiLab='rh';                
             otherwise
                 error('Invalid Surface File: %s, please select fsaverage or fsaverage5 from SurfTemplates folder',...
                     SurfFiles{n})
@@ -110,9 +116,23 @@ for n=1:NumEstimate
     fprintf('Running ClustSim for %s\n', SurfFiles{n});
     for i=1:M
         Fim=randn(NumVertex, 1);
-        if n_smooth_iter>0
-            Fim=spm_mesh_smooth(SurfStruct, Fim, n_smooth_iter);
-        end
+        TmpRandPath=fullfile(pwd, 'Tmp.func.gii');
+        TmpRandSmoothPath=fullfile(pwd, 'TmpS.func.gii');
+        y_Write(Fim, AreaStruct, TmpRandPath);
+        
+        CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi',....
+            fullfile(DPABISurfPath, 'FreeSurferLicense', 'license.txt'), pwd);
+        Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval %s  --fwhm %f --cortex --tval %s',...
+            CommandInit, SurfLab, HemiLab, TmpRandPath, FWHM, TmpRandSmoothPath);
+        system(Command);
+
+        FimV=gifti(TmpRandSmoothPath);
+        Fim=FimV.cdata;
+        delete(TmpRandPath);
+        delete(TmpRandSmoothPath);
+        %if n_smooth_iter>0
+        %    Fim=spm_mesh_smooth(SurfStruct, Fim, n_smooth_iter);
+        %end
         
         FimMean=mean(Fim, 1);
         FimStd=std(Fim, 1);
@@ -132,20 +152,40 @@ for n=1:NumEstimate
             XThrd2=FimStd*ZThrd2+FimMean;
         
             FimThresholded1=Fim.*(Fim>XThrd1);
-            FimThresholded2=Fim.*( (Fim>XThrd2) & (Fim<-XThrd2) );
+            FimThresholded2=Fim.*( (Fim>XThrd2) | (Fim<-XThrd2) );
         
             % Apply Mask
             FimMsk1=(FimThresholded1.*Msk)~=0;
             FimMsk2=(FimThresholded2.*Msk)~=0;
         
-            CompInd1=spm_mesh_clusters(SurfStruct, FimMsk1);
-            CompInd2=spm_mesh_clusters(SurfStruct, FimMsk2);
-        
-            MaxClustArea1=sum(Area(CompInd1==1));
-            MaxClustArea2=sum(Area(CompInd2==1));        
-        
-            ClustSizeNullModel1(i, j)=MaxClustArea1;
-            ClustSizeNullModel2(i, j)=MaxClustArea2;
+            [CompInd1, Size1]=spm_mesh_clusters(SurfStruct, FimMsk1);
+            [CompInd2, Size2]=spm_mesh_clusters(SurfStruct, FimMsk2);
+            
+            % Compute Area Size
+            AreaSize1=zeros(size(Size1));
+            AreaSize2=zeros(size(Size2));
+            for s=1:numel(Size1)
+                AreaSize1(s, 1)=sum(Area(CompInd1==s));
+            end
+            for s=1:numel(Size2)
+                AreaSize2(s, 1)=sum(Area(CompInd2==s));
+            end            
+            MaxClustArea1=max(AreaSize1);
+            MaxClustArea2=max(AreaSize2);
+            
+            %MaxClustArea1=sum(Area(CompInd1==1));
+            %MaxClustArea2=sum(Area(CompInd2==1));        
+            if isempty(MaxClustArea1)
+                ClustSizeNullModel1(i, j)=0;
+            else
+                ClustSizeNullModel1(i, j)=MaxClustArea1;
+            end
+            
+            if isempty(MaxClustArea2)
+                ClustSizeNullModel2(i, j)=0;
+            else
+                ClustSizeNullModel2(i, j)=MaxClustArea2;
+            end
         end
     end
     
