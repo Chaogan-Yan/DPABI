@@ -22,7 +22,7 @@ function varargout = dpabi(varargin)
 
 % Edit the above text to modify the response to help dpabi
 
-% Last Modified by GUIDE v2.5 26-Feb-2020 10:35:26
+% Last Modified by GUIDE v2.5 15-Aug-2020 15:50:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -208,3 +208,11 @@ function pushbuttonAnalysis_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 DPABI_Analysis
+
+
+% --- Executes on button press in pushbuttonBrainImageNet.
+function pushbuttonBrainImageNet_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonBrainImageNet (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABI_BrainImageNet
