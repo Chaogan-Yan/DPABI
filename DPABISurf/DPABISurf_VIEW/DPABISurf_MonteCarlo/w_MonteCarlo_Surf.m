@@ -46,6 +46,10 @@ NumAlphaLevel=numel(AlphaLevels);
 
 ClustSizeInfo=cell(NumEstimate, 1);
 
+DPABISurfPath=fileparts(which('DPABISurf.m'));
+CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi',....
+            fullfile(DPABISurfPath, 'FreeSurferLicense', 'license.txt'), pwd);
+
 for n=1:NumEstimate
     % One Tailed & Two Tailed
     S.ClustSizeThrd1=zeros(NumVoxelP, NumAlphaLevel);
@@ -64,7 +68,6 @@ for n=1:NumEstimate
     %Faces=SurfStruct.faces;
     
     NumVertex=size(Vertices, 1);
-    DPABISurfPath=fileparts(which('DPABISurf.m'));
     % Load area files
     if exist('AreaFiles', 'var') && ~isempty(AreaFiles{n})
         AreaFile=AreaFiles{n};
@@ -108,22 +111,37 @@ for n=1:NumEstimate
                 SurfFiles{n}, MskFiles{n});
         end
         Msk=logical(MskStruct.cdata);
+        %copyfile(MskFiles{n},pwd);
+        %[MskPath MskName MskExt]=fileparts(MskFiles{n});
     end
+    %NumVertexMask=length(find(Msk));
     
     ClustSizeNullModel1=zeros(M, NumVoxelP);
     ClustSizeNullModel2=zeros(M, NumVoxelP);
     
     fprintf('Running ClustSim for %s\n', SurfFiles{n});
     for i=1:M
+        
         Fim=randn(NumVertex, 1);
+        
+%         Fim=zeros(NumVertex, 1);
+%         Fim(Msk)=randn(NumVertexMask, 1);
+        
         TmpRandPath=fullfile(pwd, 'Tmp.func.gii');
         TmpRandSmoothPath=fullfile(pwd, 'sTmp.func.gii');
         y_Write(Fim, gifti(Fim), TmpRandPath);
         
-        CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi',....
-            fullfile(DPABISurfPath, 'FreeSurferLicense', 'license.txt'), pwd);
-        Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s  --fwhm %f --cortex --tval /data/%s',...
+        Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s  --fwhm %f --tval /data/%s',...
             CommandInit, SurfLab, HemiLab, 'Tmp.func.gii', FWHM, 'sTmp.func.gii');
+        
+%         if all(Msk) % if no mask. YAN Chao-Gan, 200815.
+%             Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s  --fwhm %f --tval /data/%s',...
+%                 CommandInit, SurfLab, HemiLab, 'Tmp.func.gii', FWHM, 'sTmp.func.gii');
+%         else
+%             Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s  --fwhm %f --label-trg /data/%s  --tval /data/%s',...
+%                 CommandInit, SurfLab, HemiLab, 'Tmp.func.gii', FWHM,[MskName MskExt],'sTmp.func.gii');
+%         end
+        
         system(Command);
 
         FimV=gifti(TmpRandSmoothPath);
@@ -134,8 +152,8 @@ for n=1:NumEstimate
         %    Fim=spm_mesh_smooth(SurfStruct, Fim, n_smooth_iter);
         %end
         
-        FimMean=mean(Fim, 1);
-        FimStd=std(Fim, 1);
+        FimMean=mean(Fim(Msk), 1);
+        FimStd=std(Fim(Msk), 1);
         %FimSumsq=sum(Fim.^2);
         %FimSuma=sum(Fim);
         %FimStd=sqrt( (FimSumsq-(FimSuma.^2)./NumVertex)./(NumVertex-1) );
