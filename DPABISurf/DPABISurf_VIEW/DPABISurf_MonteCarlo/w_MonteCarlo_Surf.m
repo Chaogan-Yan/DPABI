@@ -117,13 +117,13 @@ for n=1:NumEstimate
     for i=1:M
         Fim=randn(NumVertex, 1);
         TmpRandPath=fullfile(pwd, 'Tmp.func.gii');
-        TmpRandSmoothPath=fullfile(pwd, 'TmpS.func.gii');
-        y_Write(Fim, AreaStruct, TmpRandPath);
+        TmpRandSmoothPath=fullfile(pwd, 'sTmp.func.gii');
+        y_Write(Fim, gifti(Fim), TmpRandPath);
         
         CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi',....
             fullfile(DPABISurfPath, 'FreeSurferLicense', 'license.txt'), pwd);
-        Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval %s  --fwhm %f --cortex --tval %s',...
-            CommandInit, SurfLab, HemiLab, TmpRandPath, FWHM, TmpRandSmoothPath);
+        Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s  --fwhm %f --cortex --tval /data/%s',...
+            CommandInit, SurfLab, HemiLab, 'Tmp.func.gii', FWHM, 'sTmp.func.gii');
         system(Command);
 
         FimV=gifti(TmpRandSmoothPath);
