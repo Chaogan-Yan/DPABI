@@ -102,10 +102,10 @@ function pushbutton_PredictingOnLocal_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-button = questdlg('BrainImageNet predicting on local requires huge amount of memory, are you sure you want to predict on local?','Online or on local?','Predicting online','Predictin on local','Predictin on local');
-if strcmpi(button,'Predicting online')
-    web('http://brainimagenet.org:8088/','-browser');
-else
+button = questdlg('BrainImageNet predicting on local requires huge amount of memory or it may fail, do you want to have a look on DPABI Core?','Memory!');
+if strcmpi(button,'Yes')
+    web('http://deepbrain.com/DPABICore','-browser');
+elseif strcmpi(button,'No')
     DPABI_BrainImageNet_Local
 end
 

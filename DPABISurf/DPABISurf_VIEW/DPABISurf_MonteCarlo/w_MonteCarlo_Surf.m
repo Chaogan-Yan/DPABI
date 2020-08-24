@@ -88,7 +88,7 @@ for n=1:NumEstimate
                 HemiLab='lh';                
             case 'fsaverage5_rh_white.surf'
                 AreaFileName='fsaverage5_rh_white_avg.area.gii';
-                SurfLab='fsaverage';
+                SurfLab='fsaverage5';
                 HemiLab='rh';                
             otherwise
                 error('Invalid Surface File: %s, please select fsaverage or fsaverage5 from SurfTemplates folder',...
