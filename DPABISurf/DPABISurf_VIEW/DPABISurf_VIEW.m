@@ -1178,9 +1178,21 @@ else
             
             fprintf('Surface File: %s, Area File: %s, Mask File: %s\n',...
                 McOpt.SurfPath, CSizeOpt.VAreaFile, McOpt.MskFile);
-            fprintf('FWHM (mm): %f, Cluster Threshold (mm): %f (Vertex P: %f, Cluster P: %f)\n',...
+            if McOpt.Tailed==1
+            fprintf('FWHM (mm): %f, Cluster Threshold (mm): %f (Vertex P [One-Tailed]: %f, Cluster P [One-Tailed]: %f)\n',...
                 McOpt.FWHM, CSizeOpt.Thres, McOpt.VertexP, McOpt.Alpha);
-            Fcn.SetOverlayPThres(OverlayInd, McOpt.VertexP);
+            elseif McOpt.Tailed==2
+            fprintf('FWHM (mm): %f, Cluster Threshold (mm): %f (Vertex P [Two-Tailed]: %f, Cluster P [One-Tailed]: %f)\n',...
+                McOpt.FWHM, CSizeOpt.Thres, McOpt.VertexP, McOpt.Alpha);                
+            end
+            
+            if McOpt.Tailed==1
+                TwoTailedP=McOpt.VertexP*2;
+            else
+                TwoTailedP=McOpt.VertexP;
+            end
+
+            Fcn.SetOverlayPThres(OverlayInd, TwoTailedP);
             Fcn.SetOverlayClusterSizeOption(OverlayInd, CSizeOpt);
         case 5 % Apply A Vertex-Wise Mask
             GuiData=Fcn.GetOverlayGuiData(OverlayInd);
