@@ -39,6 +39,10 @@ RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABI_StandAlone
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABISurf_run_StandAlone
 
+# Extract ctf for singularity support
+RUN /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
+RUN /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
+
 
 ENTRYPOINT []
 
