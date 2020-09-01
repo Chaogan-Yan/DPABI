@@ -41,15 +41,20 @@ NumSmoothIters=w_FWHMToNITERS_Surf(FWHM, SurfFiles);
 NumVoxelP=numel(VoxelP);
 
 % Alpha Level
-%AlphaLevels=[0.05, 0.025, 0.02, 0.01];
 NumAlphaLevel=numel(AlphaLevels);
 
 ClustSizeInfo=cell(NumEstimate, 1);
 
 DPABISurfPath=fileparts(which('DPABISurf.m'));
-CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi',....
-            fullfile(DPABISurfPath, 'FreeSurferLicense', 'license.txt'), pwd);
 
+if ispc
+    CommandInit=sprintf('docker run -i --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi',....
+        fullfile(DPABISurfPath, 'FreeSurferLicense', 'license.txt'), pwd);
+else
+    CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/opt/freesurfer/subjects cgyan/dpabi',....
+        fullfile(DPABISurfPath, 'FreeSurferLicense', 'license.txt'), pwd);
+end
+            
 for n=1:NumEstimate
     % One Tailed & Two Tailed
     S.ClustSizeThrd1=zeros(NumVoxelP, NumAlphaLevel);
@@ -63,39 +68,40 @@ for n=1:NumEstimate
     SurfStruct=gifti(SurfFiles{n});
     
     % Calculate Total Area
-    %TotalArea=spm_mesh_area(SurfStruct);
     Vertices=SurfStruct.vertices;
-    %Faces=SurfStruct.faces;
     
     NumVertex=size(Vertices, 1);
+    
     % Load area files
+    [Path, fileN, extn] = fileparts(SurfFiles{n});
+    switch fileN
+        case 'fsaverage_lh_white.surf'
+            AreaFileName='fsaverage_lh_white_avg.area.gii';
+            SurfLab='fsaverage';
+            HemiLab='lh';
+        case 'fsaverage_rh_white.surf'
+            AreaFileName='fsaverage_rh_white_avg.area.gii';
+            SurfLab='fsaverage';
+            HemiLab='rh';
+        case 'fsaverage5_lh_white.surf'
+            AreaFileName='fsaverage5_lh_white_avg.area.gii';
+            SurfLab='fsaverage5';
+            HemiLab='lh';
+        case 'fsaverage5_rh_white.surf'
+            AreaFileName='fsaverage5_rh_white_avg.area.gii';
+            SurfLab='fsaverage5';
+            HemiLab='rh';
+        otherwise
+            error('Invalid Surface File: %s, please select fsaverage or fsaverage5 from SurfTemplates folder',...
+                SurfFiles{n})
+    end
+    
     if exist('AreaFiles', 'var') && ~isempty(AreaFiles{n})
         AreaFile=AreaFiles{n};
-    else    
-        [Path, fileN, extn] = fileparts(SurfFiles{n});
-        switch fileN
-            case 'fsaverage_lh_white.surf'
-                AreaFileName='fsaverage_lh_white_avg.area.gii';
-                SurfLab='fsaverage';
-                HemiLab='lh';
-            case 'fsaverage_rh_white.surf'
-                AreaFileName='fsaverage_rh_white_avg.area.gii';
-                SurfLab='fsaverage';
-                HemiLab='rh';                
-            case 'fsaverage5_lh_white.surf'                
-                AreaFileName='fsaverage5_lh_white_avg.area.gii';
-                SurfLab='fsaverage5';
-                HemiLab='lh';                
-            case 'fsaverage5_rh_white.surf'
-                AreaFileName='fsaverage5_rh_white_avg.area.gii';
-                SurfLab='fsaverage5';
-                HemiLab='rh';                
-            otherwise
-                error('Invalid Surface File: %s, please select fsaverage or fsaverage5 from SurfTemplates folder',...
-                    SurfFiles{n})
-        end
+    else
         AreaFile=fullfile(DPABISurfPath, 'SurfTemplates', AreaFileName);
     end
+
     AreaStruct=gifti(AreaFile);
     Area=AreaStruct.cdata;
     S.Area=Area;
@@ -111,10 +117,7 @@ for n=1:NumEstimate
                 SurfFiles{n}, MskFiles{n});
         end
         Msk=logical(MskStruct.cdata);
-        %copyfile(MskFiles{n},pwd);
-        %[MskPath MskName MskExt]=fileparts(MskFiles{n});
     end
-    %NumVertexMask=length(find(Msk));
     
     ClustSizeNullModel1=zeros(M, NumVoxelP);
     ClustSizeNullModel2=zeros(M, NumVoxelP);
@@ -124,28 +127,63 @@ for n=1:NumEstimate
         
         Fim=randn(NumVertex, 1);
         
-%         Fim=zeros(NumVertex, 1);
-%         Fim(Msk)=randn(NumVertexMask, 1);
-        
         TmpRandPath=fullfile(pwd, 'Tmp.func.gii');
-        TmpRandSmoothPath=fullfile(pwd, 'sTmp.func.gii');
         y_Write(Fim, gifti(Fim), TmpRandPath);
-        
-        Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s  --fwhm %f --tval /data/%s',...
-            CommandInit, SurfLab, HemiLab, 'Tmp.func.gii', FWHM, 'sTmp.func.gii');
-        
-%         if all(Msk) % if no mask. YAN Chao-Gan, 200815.
-%             Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s  --fwhm %f --tval /data/%s',...
-%                 CommandInit, SurfLab, HemiLab, 'Tmp.func.gii', FWHM, 'sTmp.func.gii');
-%         else
-%             Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s  --fwhm %f --label-trg /data/%s  --tval /data/%s',...
-%                 CommandInit, SurfLab, HemiLab, 'Tmp.func.gii', FWHM,[MskName MskExt],'sTmp.func.gii');
-%         end
-        
-        system(Command);
 
-        FimV=gifti(TmpRandSmoothPath);
-        Fim=FimV.cdata;
+        TmpRandSmoothPath=fullfile(pwd, 'sTmp.func.gii');
+
+        Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s --fwhm %f --tval /data/%s',...
+            CommandInit, SurfLab, HemiLab, 'Tmp.func.gii', FWHM, 'sTmp.func.gii');
+        if isdeployed % If running within docker with compiled version
+            Command = sprintf('mri_surf2surf --s %s --hemi %s --sval %s --fwhm %f --tval %s',...
+                SurfLab, HemiLab, TmpRandPath, FWHM, TmpRandSmoothPath);
+        end
+
+        %YAN Chao-Gan, 200901. I don't know why there is some random error, seems caused by I/O error.
+        %Thus I decide if there is an I/O error, I will try more times.
+        try
+            system(Command);
+            Fim=y_ReadAll(TmpRandSmoothPath);
+        catch
+            if exist(TmpRandSmoothPath,'File')
+                delete(TmpRandSmoothPath);
+            end
+            try
+                system(Command);
+                Fim=y_ReadAll(TmpRandSmoothPath);
+            catch
+                if exist(TmpRandSmoothPath,'File')
+                    delete(TmpRandSmoothPath);
+                end
+                try
+                    system(Command);
+                    Fim=y_ReadAll(TmpRandSmoothPath);
+                catch
+                    if exist(TmpRandSmoothPath,'File')
+                        delete(TmpRandSmoothPath);
+                    end
+                    try
+                        system(Command);
+                        Fim=y_ReadAll(TmpRandSmoothPath);
+                    catch
+                        if exist(TmpRandSmoothPath,'File')
+                            delete(TmpRandSmoothPath);
+                        end
+                        try
+                            system(Command);
+                            Fim=y_ReadAll(TmpRandSmoothPath);
+                        catch
+                            if exist(TmpRandSmoothPath,'File')
+                                delete(TmpRandSmoothPath);
+                            end
+                            system(Command);
+                            Fim=y_ReadAll(TmpRandSmoothPath);
+                        end
+                    end
+                end
+            end
+        end
+        
         delete(TmpRandPath);
         delete(TmpRandSmoothPath);
         %if n_smooth_iter>0
