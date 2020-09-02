@@ -2629,7 +2629,9 @@ if opts.demean || opts.vgdemean
         siz = size(plm.Mset{m});
         intercp = all(bsxfun(@eq,reshape(plm.Mset{m}(1,:),[1 siz(2:end)]),plm.Mset{m}),1);
         intercp = any(intercp,numel(siz));
-        intercp(opts.evpos(:,1)) = false;
+        if isfield(opts,'evpos') %YAN Chao-Gan, 200902. Fix the no field bug
+            intercp(opts.evpos(:,1)) = false;
+        end %YAN Chao-Gan, 200902. Fix the no field bug
         if any(intercp)
             for c = 1:plm.nC(m)
                 if any(intercp.*plm.Cset{m}{c}~=0,2)

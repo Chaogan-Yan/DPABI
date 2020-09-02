@@ -792,7 +792,11 @@ if (AutoDataProcessParameter.IsSliceTiming==1)
         %Copy the Slice Timing Corrected files to DataProcessDir\{AutoDataProcessParameter.StartingDirName}+A
         parfor i=1:AutoDataProcessParameter.SubjectNum
             mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'A',filesep,AutoDataProcessParameter.SubjectID{i}])
-            movefile([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'a*'],[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'A',filesep,AutoDataProcessParameter.SubjectID{i}])
+            try %YAN Chao-Gan, 200902. In case somebody has files initiated with a*, I need to double check if there is aa*
+                movefile([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'aa*'],[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'A',filesep,AutoDataProcessParameter.SubjectID{i}])
+            catch
+                movefile([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i},filesep,'a*'],[AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,'A',filesep,AutoDataProcessParameter.SubjectID{i}])
+            end
             fprintf(['Moving Slice Timing Corrected Files:',AutoDataProcessParameter.SubjectID{i},' OK']);
         end
         fprintf('\n');
