@@ -161,7 +161,7 @@ if ~isempty(NeedReRunID) %(Cfg.Isfmriprep==1)
         
         %Change to fmriprep's new output space command convention. YAN Chao-Gan. 20200229.
         %Command = sprintf('%s --template-resampling-grid %s', Command, Cfg.Normalize.VoxelSize);
-        if strcmpi(Cfg.Normalize.VoxelSize(end-1:end),'mm')
+        if length(Cfg.Normalize.VoxelSize)>=3 && strcmpi(Cfg.Normalize.VoxelSize(end-1:end),'mm')
             Cfg.Normalize.VoxelSize=Cfg.Normalize.VoxelSize(1); %Change 1mm to 1; 2mm to 2.
         end
         Command = sprintf('%s --output-spaces fsaverage5 MNI152NLin2009cAsym:res-%s', Command, Cfg.Normalize.VoxelSize);
