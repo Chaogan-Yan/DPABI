@@ -950,14 +950,14 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnFunctionalData')
             mkdir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S'],Cfg.SubjectID{i}));
         end
         %Smooth left hemi
-        DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{1},'*fsaverage5_hemi-L.func.gii'));
+        DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{1},'*fsaverage5_hemi-L*.func.gii'));
         for iFile=1:length(DirName)
             Suffix=DirName(iFile).name(length(Cfg.SubjectID{1})+1:end);
             Command = sprintf('%s parallel -j %g mri_surf2surf --s fsaverage5 --hemi lh --sval /data/%s%s/{1}/{1}%s  --fwhm %g --cortex --tval /data/%s%sS/{1}/s{1}%s ::: %s', CommandInit, Cfg.ParallelWorkersNumber, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, Cfg.Smooth.FWHMSurf, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, SubjectIDString);
             system(Command);
         end
         %Smooth right hemi
-        DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{1},'*fsaverage5_hemi-R.func.gii'));
+        DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{1},'*fsaverage5_hemi-R*.func.gii'));
         for iFile=1:length(DirName)
             Suffix=DirName(iFile).name(length(Cfg.SubjectID{1})+1:end);
             Command = sprintf('%s parallel -j %g mri_surf2surf --s fsaverage5 --hemi rh --sval /data/%s%s/{1}/{1}%s  --fwhm %g --cortex --tval /data/%s%sS/{1}/s{1}%s ::: %s', CommandInit, Cfg.ParallelWorkersNumber, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, Cfg.Smooth.FWHMSurf, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, SubjectIDString);
@@ -1063,7 +1063,7 @@ if (Cfg.IsCalALFF==1)
 
             % ALFF and fALFF calculation
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 [ALFFBrain, fALFFBrain, Header] = y_alff_falff_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName),TR, Cfg.CalALFF.ALowPass_HighCutoff, Cfg.CalALFF.AHighPass_LowCutoff, Cfg.MaskFileSurfLH, ...
@@ -1083,7 +1083,7 @@ if (Cfg.IsCalALFF==1)
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 [ALFFBrain, fALFFBrain, Header] = y_alff_falff_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName),TR, Cfg.CalALFF.ALowPass_HighCutoff, Cfg.CalALFF.AHighPass_LowCutoff, Cfg.MaskFileSurfRH, ...
@@ -1241,7 +1241,7 @@ if (Cfg.IsCalReHo==1)
         parfor i=1:Cfg.SubjectNum
             % ReHo calculation
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 [ReHoBrain, Header] = y_reho_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
@@ -1259,7 +1259,7 @@ if (Cfg.IsCalReHo==1)
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 [ReHoBrain, Header] = y_reho_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
@@ -1313,7 +1313,7 @@ if (Cfg.IsCalDegreeCentrality==1)
         parfor i=1:Cfg.SubjectNum
             % Degree Centrality Calculation
 %             % Left Hemi
-%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L.func.gii'));
+%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
 %             for iFile=1:length(DirName)
 %                 FileName=DirName(iFile).name;
 %                 [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
@@ -1336,7 +1336,7 @@ if (Cfg.IsCalDegreeCentrality==1)
 %              end
 %             
 %             % Right Hemi
-%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R.func.gii'));
+%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
 %             for iFile=1:length(DirName)
 %                 FileName=DirName(iFile).name;
 %                 [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
@@ -1360,9 +1360,9 @@ if (Cfg.IsCalDegreeCentrality==1)
 %             
             
             %Degree Centrality Calculation while consider bilateral hemishperes % YAN Chao-Gan, 190521
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
             FileName_LH=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(1).name);
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
             FileName_RH=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(1).name);
             
             y_DegreeCentrality_Bilateral_Surf(FileName_LH, FileName_RH, ...
@@ -1462,7 +1462,7 @@ if (Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1)
             ROISignalsVolu=[];
             % Left Hemi
             if ~isempty(Cfg.CalFC.ROIDefSurfLH)
-                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L.func.gii'));
+                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
                 for iFile=1:length(DirName)
                     FileName=DirName(iFile).name;
                     [ROISignalsSurfLH] = y_ExtractROISignal_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
@@ -1475,7 +1475,7 @@ if (Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1)
             
             % Right Hemi
             if ~isempty(Cfg.CalFC.ROIDefSurfRH)
-                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R.func.gii'));
+                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
                 for iFile=1:length(DirName)
                     FileName=DirName(iFile).name;
                     [ROISignalsSurfRH] = y_ExtractROISignal_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
@@ -1521,7 +1521,7 @@ if (Cfg.IsCalFC==1)
         parfor i=1:Cfg.SubjectNum
             % Calculate Functional Connectivity by Seed based Correlation Anlyasis
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 y_SCA_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
@@ -1532,7 +1532,7 @@ if (Cfg.IsCalFC==1)
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 y_SCA_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
