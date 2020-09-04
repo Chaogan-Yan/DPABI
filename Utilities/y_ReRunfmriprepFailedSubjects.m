@@ -72,7 +72,8 @@ FailedID=[];
 WaitingID=[];
 for i=1:Cfg.SubjectNum
     if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i}))
-        if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs')) || exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'log'))
+        %if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs')) || exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'log'))
+        if CheckFailedLogs(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i})) %YAN Chao-Gan, 200904. Use new logic according to fmriprep's change
             FailedID=[FailedID;Cfg.SubjectID(i)];
         else
             SuccessID=[SuccessID;Cfg.SubjectID(i)];
@@ -184,7 +185,8 @@ if ~isempty(NeedReRunID) %(Cfg.Isfmriprep==1)
     WaitingID=[];
     for i=1:Cfg.SubjectNum
         if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i}))
-            if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs')) || exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'log'))
+            %if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs')) || exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'log'))
+            if CheckFailedLogs(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i})) %YAN Chao-Gan, 200904. Use new logic according to fmriprep's change
                 FailedID=[FailedID;Cfg.SubjectID(i)];
             else
                 SuccessID=[SuccessID;Cfg.SubjectID(i)];
@@ -212,11 +214,32 @@ if ~isempty(NeedReRunID) %(Cfg.Isfmriprep==1)
         for i=1:length(FailedID)
             for j=1:length(FailedID_Beginning)
                 if strcmpi(FailedID{i},FailedID_Beginning{j})
-                    fprintf('%s failed twice during running fmriprep, please check the raw data and the logs %s\n',FailedID{i},fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i},'log(s)'));
+                    fprintf('%s failed twice during running fmriprep, please check the raw data and the logs %s\n',FailedID{i},fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i},'log'));
                 end
             end
         end
     end
 
 end
+
+
+
+function HasFailedLogs = CheckFailedLogs(SubDir)
+%YAN Chao-Gan. Check failed logs according to fmriprep's new logic
+HasFailedLogs = 0;
+if exist(fullfile(SubDir,'log'))
+    Dirs=dir(fullfile(SubDir,'log','*'));
+    if ~isempty(Dirs)
+        for iDir=length(Dirs)
+            if Dirs(iDir).isdir
+                DirLogs=dir(fullfile(SubDir,'log',Dirs(iDir).name,'crash*'));
+                if ~isempty(DirLogs)
+                    HasFailedLogs=1;
+                end
+            end
+        end
+    end
+end
+
+
 
