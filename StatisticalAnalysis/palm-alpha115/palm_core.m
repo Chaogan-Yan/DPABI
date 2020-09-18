@@ -2045,11 +2045,11 @@ for po = P_outer,
                         y = 1;
                         if opts.evperdat,
                             for t = find(yselq)',
-                                M(:,:,t)   = plm.Pset{p}*plm.Rz{y}{m}{c}{1}(:,:,t)*plm.X{y}{m}{c}{1}(:,:,t);
+                                M(:,:,t)   = plm.Pset{p}*plm.Rz{y}{m}{c}{o}(:,:,t)*plm.X{y}{m}{c}{o}(:,:,t);
                                 Q{m}{c}(t) = plm.qfun(plm.Yq{m}{c}(:,:,t),M(:,:,t),opts.ccaorplsparm);
                             end; clear t
                         else
-                            M = plm.Pset{p}*plm.Rz{y}{m}{c}{1}*plm.X{y}{m}{c}{1};
+                            M = plm.Pset{p}*plm.Rz{y}{m}{c}{o}*plm.X{y}{m}{c}{o};
                             for t = find(yselq)',
                                 Q{m}{c}(t) = plm.qfun(plm.Yq{m}{c}(:,:,t),M,opts.ccaorplsparm);
                             end; clear t

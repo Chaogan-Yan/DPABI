@@ -232,7 +232,7 @@ fprintf('-imiss <file> : Missing data indicators for the input(s).\n\n');
 
 fprintf('-dmiss <file> : Missing data indicators for the design(s).\n\n');
 
-fprintf('-con <file1> [file2] : Contrast file(s) in .mset format. For hypotheses\n');
+fprintf('-con <file1> <file2> : Contrast file(s) in .mset format. For hypotheses\n');
 fprintf('	of the form H0: C''*Psi*D, file1 contains a set of C contrasts, and\n');
 fprintf('	file2 (optional) contains a set of D contrasts.\n\n')
 
@@ -303,12 +303,12 @@ fprintf('-nouncorrected : Don''t save uncorrected p-values.\n\n');
 fprintf('-saveuncorrected : Save uncorrected p-values if an earlier option disabled it.\n\n');
 
 fprintf('-pmethodp : Partition method used when defining the set of permutations.\n');
-fprintf('	Can be "Guttman", "Beckmann", "Ridgway" or "None".\n');
-fprintf('	Default is "Guttman"\n\n');
+fprintf('	Cab be "Guttman", "Beckmann", "Ridgway" or "None".\n');
+fprintf('	Default is "Beckmann"\n\n');
 
 fprintf('-pmethodr : Partition method used during the regression. Valid values\n');
 fprintf('	are "Guttman", "Beckmann", "Ridgway" or "None".\n');
-fprintf('	Default is "Ridgway"\n\n');
+fprintf('	Default is "Beckmann"\n\n');
 
 fprintf('-removevgbysize <integer> : Remove from the data and design those\n');
 fprintf('	observations that are in VGs of size smaller or equal than specified.\n');

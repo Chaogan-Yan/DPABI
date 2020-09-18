@@ -127,6 +127,7 @@ switch lower(fext{end})
                 
             else
                 % Read as NIFTI proper (not CIFTI)
+                extern = palm_checkprogs;
                 if useniiclass
                     error([
                         'Reading of gzipped NIFTI files (.nii.gz) is currently disabled\n' ...
@@ -136,10 +137,29 @@ switch lower(fext{end})
                         'as input the .nii files instead.\n' ...
                         'File: %s'],X.filename);
                 else
-                    X.readwith = 'fs_load_nifti';
-                    X.extra.hdr = load_nifti(X.filename);
-                    X.data = X.extra.hdr.vol;
-                    X.extra.hdr.vol = [];
+                    if extern.fs       % Read with FreeSurfer
+                        X.readwith = 'fs_load_nifti';
+                        X.extra.hdr = load_nifti(X.filename);
+                        X.data = X.extra.hdr.vol;
+                        X.extra.hdr.vol = [];
+                    elseif extern.fsl  % Read with FSL
+                        X.readwith = 'fsl_read_avw';
+                        [X.data,X.extra.dims,X.extra.voxsize, ...
+                            X.extra.bpp,X.extra.endian] = read_avw(X.filename);
+                    else
+                        error([
+                            'Neither FreeSurfer or FSL were found.\n' ...
+                            'To use this data you must do one of:\n' ...
+                            '- Make sure FreeSurfer is correctly installed and configured,\n' ...
+                            '  and that your ''FREESURFER_HOME'' environmental variable is\n' ...
+                            '  properly set;\n' ...
+                            '- Make sure FSL is correctly installed and configured,\n' ...
+                            '  and that your ''FSLDIR'' environmental variable is\n' ...
+                            '  properly set;\n' ...
+                            '- If you do not have FSL or FS, uncompress the .gz file\n' ...
+                            '  and try again.\n' ...
+                            'File: %s'],X.filename);
+                    end
                 end
             end
         else
@@ -173,10 +193,31 @@ switch lower(fext{end})
                 X.extra = nifti(X.filename);
                 X.data = X.extra.dat;
             else
-                X.readwith = 'fs_load_nifti';
-                X.extra.hdr = load_nifti(X.filename);
-                X.data = X.extra.hdr.vol;
-                X.extra.hdr.vol = [];
+                if extern.fs       % Read with FreeSurfer
+                    X.readwith = 'fs_load_nifti';
+                    X.extra.hdr = load_nifti(X.filename);
+                    X.data = X.extra.hdr.vol;
+                    X.extra.hdr.vol = [];
+                elseif extern.spm  % Read with SPM
+                    X.readwith = 'spm_spm_vol';
+                    X.extra = spm_vol(X.filename);
+                    X.data = spm_read_vols(X.extra);
+                elseif extern.fsl  % Read with FSL
+                    X.readwith = 'fsl_read_avw';
+                    [X.data,X.extra.dims,X.extra.voxsize, ...
+                        X.extra.bpp,X.extra.endian] = read_avw(X.filename);
+                elseif extern.nii  % Read with the NIFTI toolbox
+                    X.readwith = 'nii_load_nii';
+                    X.extra = load_nii(X.filename);
+                    X.data = X.extra.img;
+                    X.extra.img = [];
+                else
+                    error([
+                        'No FSL, FreeSurfer or SPM were found.\n' ...
+                        'To use this data you must have one of these\n' ...
+                        'installed and correctly configured.\n' ...
+                        'File: %s\n'],X.filename);
+                end
             end
         end
         
@@ -270,12 +311,10 @@ else
 end
 
 % Enforce a certain precision defined by the user:
-if ~ isstruct(X.data)
-    if strcmpi(precision,'double')
-        X.data = double(X.data);
-    elseif strcmpi(precision,'single')
-        X.data = single(X.data);
-    end
+if strcmpi(precision,'double')
+    X.data = double(X.data);
+elseif strcmpi(precision,'single')
+    X.data = single(X.data);
 end
 
 % ==============================================================

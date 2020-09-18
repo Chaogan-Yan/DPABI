@@ -70,7 +70,6 @@ end
 if exist('F','var') && ~isstruct(F) && ~isempty(F) && ~isnan(F)
     error('F must be a struct.')
 end
-colorlist='brgymck';
 
 % Model fitting
 b = [I X Z]\Y;
@@ -101,20 +100,9 @@ switch J
             % If A has 2 categories and B is continuous
             rB = Rz*B;
             figure
-            xlim = [+inf -inf];
             for u = 1:numel(uA)
                 idx = A == uA(u);
-                scatter(rB(idx),rY(idx),colorlist(u),'.');
-                xlimc = get(gca,'Xlim');
-                xlim(1) = min(xlim(1),xlimc(1));
-                xlim(2) = max(xlim(2),xlimc(2));
-                hold('on')
-            end
-            for u = 1:numel(uA)
-                idx = A == uA(u);
-                b = rB(idx)\rY(idx);
-                yfit = xlim*b;
-                plot(xlim,yfit,colorlist(u));
+                scatter(rB(idx),rY(idx),'.');
                 hold('on')
             end
             hold('off');
@@ -128,25 +116,12 @@ switch J
             % If A is continuous and B has 2 categories
             rA = Rz*A;
             figure
-            xlim = [+inf -inf];
             for u = 1:numel(uB)
                 idx = B == uB(u);
-                scatter(rA(idx),rY(idx),colorlist(u),'.');
-                xlimc = get(gca,'Xlim');
-                xlim(1) = min(xlim(1),xlimc(1));
-                xlim(2) = max(xlim(2),xlimc(2));
-                hold('on')                
-            end
-            for u = 1:numel(uB)
-                idx = B == uB(u);
-                b = rA(idx)\rY(idx);
-                yfit = xlim*b;
-                plot(xlim,yfit,colorlist(u));
+                scatter(rA(idx),rY(idx),'.');
                 hold('on')
             end
             hold('off');
-            ylim = get(gca,'YLim');
-            axis([xlim ylim]);
             if exist('F','var') && isstruct(F)
                 title(F.title);
                 xlabel(F.xlabel);

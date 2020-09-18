@@ -44,14 +44,14 @@ function gcdf = palm_gcdf(G,df1,df2)
 % Note that for speed, there's no argument checking,
 % and some lines are repeated inside the conditions.
 
-if df1 > 1
+if df1 > 1,
     
     % G or F
     df2 = bsxfun(@times,ones(size(G)),df2);
     B = (df1.*G./df2)./(1+df1.*G./df2);
     gcdf = betainc(B,df1/2,df2/2);
 
-elseif df1 == 1
+elseif df1 == 1,
     
     % Student's t, Aspin's v
     df2 = bsxfun(@times,ones(size(G)),df2);
@@ -59,26 +59,27 @@ elseif df1 == 1
     in = df2 > 1e7;
     ig = ~(ic|in);
     gcdf = zeros(size(G));
-    if any(ig(:))
-        gcdf(ig) = betainc(real(1./(1+G(ig).^2./df2(ig))),df2(ig)/2,.5)/2;
+    if any(ig(:)),
+        gcdf(ig) = betainc(1./(1+G(ig).^2./df2(ig)),df2(ig)/2,.5)/2;
     end
     ig = G > 0 & ig;
     gcdf(ig) = 1 - gcdf(ig);
-    if any(ic(:))
+    if any(ic(:)),
         gcdf(ic) = .5 + atan(G(ic))/pi;
     end
-    if any(in(:))
+    if any(in(:)),
         gcdf(ic) = erfc(-G(in)/sqrt(2))/2;
     end
 
-elseif df1 == 0
+elseif df1 == 0,
     
     % Normal distribution
     gcdf = erfc(-G/sqrt(2))/2;
     
-elseif df1 < 0
+elseif df1 < 0,
     
     % Chi^2, via lower Gamma incomplete for precision and speed
+    %df2 = bsxfun(@times,ones(size(G)),df2);
     gcdf = palm_gammainc(G/2,df2/2,'lower');
     
 end

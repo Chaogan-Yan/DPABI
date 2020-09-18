@@ -586,20 +586,26 @@ if ((Cfg.IsCovremove==1) && (strcmpi(Cfg.Covremove.Timing,'AfterNormalize')))
             RefFile=[Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,RefFile(1).name];
             [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
 
-            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_label-WM_probseg.nii.gz']);
-            if ~exist(File,'file')
-                File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_label-WM_probseg.nii']);
-            end
+%             File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_label-WM_probseg.nii.gz']);
+%             if ~exist(File,'file')
+%                 File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_label-WM_probseg.nii']);
+%             end
+            %Use new logic according to fmriprep changes
+            DirFile=dir(fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_*label-WM_probseg.nii*']));
+            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},DirFile(1).name);
             [OutVolume OutHead] = y_Reslice(File,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',Cfg.SubjectID{i},'_WM.nii'],RefVox,1, RefFile);
             OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
             y_Write(OutVolume,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',Cfg.SubjectID{i},'_WM.nii']);
             OutHead.pinfo = [1;0;0]; OutHead.dt    =[2,0];
             y_Write(OutVolume>Cfg.Covremove.WM.MaskThreshold,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_WM.nii']);
             
-            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_label-CSF_probseg.nii.gz']);
-            if ~exist(File,'file')
-                File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_label-CSF_probseg.nii']);
-            end
+%             File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_label-CSF_probseg.nii.gz']);
+%             if ~exist(File,'file')
+%                 File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_label-CSF_probseg.nii']);
+%             end
+            %Use new logic according to fmriprep changes
+            DirFile=dir(fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'_space-MNI152NLin2009cAsym_*label-CSF_probseg.nii*']));
+            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},DirFile(1).name);
             [OutVolume OutHead] = y_Reslice(File,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',Cfg.SubjectID{i},'_CSF.nii'],RefVox,1, RefFile);
             OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
             y_Write(OutVolume,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',Cfg.SubjectID{i},'_CSF.nii']);

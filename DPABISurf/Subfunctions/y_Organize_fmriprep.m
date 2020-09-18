@@ -267,7 +267,7 @@ for iFunSession=1:Cfg.FunctionalSessionNumber
         mkdir(fullfile(Cfg.WorkingDir,'RealignParameter',Cfg.SubjectID{i}));
         cd(fullfile(Cfg.WorkingDir,'RealignParameter',Cfg.SubjectID{i}));
         
-        DirFile=dir(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},fmriprepfuncSessionPrefixSet{iFunSession},'*confounds_regressors.tsv'));
+        DirFile=dir(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},fmriprepfuncSessionPrefixSet{iFunSession},'*confounds_*.tsv'));
         Table=tdfread(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},fmriprepfuncSessionPrefixSet{iFunSession},DirFile(1).name));
         RP=[Table.trans_x,Table.trans_y,Table.trans_z,Table.rot_x,Table.rot_y,Table.rot_z];
         

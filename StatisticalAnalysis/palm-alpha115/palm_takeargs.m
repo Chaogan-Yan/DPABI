@@ -1737,13 +1737,8 @@ plm.nmasks = numel(plm.masks);
 plm.nY     = numel(plm.Yset); % this is redefined below if opts.inputmv is set.
 
 % Some extra packages for Octave
-if palm_isoctave
-    if opts.spatial.do && any(plm.Yisvol)
-        pkg load image
-    end
-    if opts.accel.lowrank || opts.zstat || opts.corrcon
-        pkg load statistics
-    end
+if opts.spatial.do && palm_isoctave && any(plm.Yisvol)
+    pkg load image
 end
 
 % Read the EV per datum:
@@ -2628,13 +2623,9 @@ if opts.demean || opts.vgdemean
     for m = 1:plm.nM
         siz = size(plm.Mset{m});
         intercp = all(bsxfun(@eq,reshape(plm.Mset{m}(1,:),[1 siz(2:end)]),plm.Mset{m}),1);
-        intercp = any(intercp,numel(siz));
-        if isfield(opts,'evpos') %YAN Chao-Gan, 200902. Fix the no field bug
-            intercp(opts.evpos(:,1)) = false;
-        end %YAN Chao-Gan, 200902. Fix the no field bug
         if any(intercp)
             for c = 1:plm.nC(m)
-                if any(intercp.*plm.Cset{m}{c}~=0,2)
+                if any(intercp*plm.Cset{m}{c}~=0,2)
                     error([ ...
                         'Contrast %d (and perhaps others) tests the intercept. This means\n' ...
                         'that the options "-demean" and "-vgdemean" cannot be used.\n' ...
@@ -2644,7 +2635,7 @@ if opts.demean || opts.vgdemean
                     plm.Cset{m}{c}(intercp,:) = [];
                 end
             end
-            plm.Mset{m}(:,intercp,:) = [];
+            plm.Mset{m}(:,intercp) = [];
         end
     end
 end
