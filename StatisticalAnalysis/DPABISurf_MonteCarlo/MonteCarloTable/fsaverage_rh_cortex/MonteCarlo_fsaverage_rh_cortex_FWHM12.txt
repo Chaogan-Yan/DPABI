@@ -1,0 +1,27 @@
+----------------------------------------
+Surface File: /mnt/Data3/RfMRILab/Yan/YAN_Work/DPABIUpdating/MonteCarloTable/DPABI/Program/DPABI-master/DPABISurf/SurfTemplates/fsaverage_rh_white.surf.gii
+Area File: /mnt/Data3/RfMRILab/Yan/YAN_Work/DPABIUpdating/MonteCarloTable/DPABI/Program/DPABI-master/DPABISurf/SurfTemplates/fsaverage_rh_white_avg.area.gii
+Mask File: /mnt/Data3/RfMRILab/Yan/YAN_Work/DPABIUpdating/MonteCarloTable/DPABI/Program/DPABI-master/DPABISurf/SurfTemplates/fsaverage_rh_cortex.label.gii
+FWHM=12.000000, NumOfSmoothIteration=106
+NumOfSimulation=10000
+
+One-Tailed Table
+  pthr  | alpha = Prob(Cluster (mm^2) >= given size)
+ ------ | 0.05000 0.02500 0.01667 0.01000 0.00500 0.00333
+0.050000   828.79  943.05 1011.53 1116.00 1249.83 1301.71
+0.010000   335.42  387.52  415.19  447.14  508.35  544.59
+0.005000   241.07  280.52  302.86  332.49  374.88  401.90
+0.001000   124.15  148.43  160.31  179.85  205.19  227.97
+0.000500    92.72  114.97  126.86  140.85  166.23  179.90
+0.000100    40.19   56.63   67.35   78.43   95.68  105.55
+
+Two-Tailed Table
+  pthr  | alpha = Prob(Cluster (mm^2) >= given size)
+ ------ | 0.05000 0.02500 0.01667 0.01000 0.00500 0.00333
+0.050000   645.08  721.43  767.36  849.40  946.14  984.92
+0.010000   290.64  334.89  361.88  394.28  444.50  476.75
+0.005000   216.93  252.37  273.58  298.35  331.71  351.78
+0.001000   116.00  137.58  150.96  172.39  197.06  206.71
+0.000500    88.01  108.00  118.82  135.46  157.95  168.65
+0.000100    41.13   56.03   63.41   73.79   91.87  104.79
+
