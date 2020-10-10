@@ -1,10 +1,10 @@
-FROM poldracklab/fmriprep:20.0.5
+FROM poldracklab/fmriprep:20.2.0
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
 # Update system and istall pakages
 RUN apt-get -qq update && apt-get -qq install -y \
-    x11vnc xvfb suckless-tools stterm connectome-workbench parallel wget unzip && \
+    x11vnc xvfb suckless-tools stterm connectome-workbench parallel wget unzip qt4-default libjpeg62 && \
     apt-get update
 
 
@@ -36,13 +36,15 @@ RUN mkdir /opt/DPABI
 COPY . /opt/DPABI
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABI_StandAlone
+RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh
+RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPARSFA_run_StandAlone
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABISurf_run_StandAlone
 
 # Extract ctf for singularity support
 RUN /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
+RUN /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 RUN /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
-
 
 ENTRYPOINT []
 

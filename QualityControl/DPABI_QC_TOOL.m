@@ -371,9 +371,10 @@ end
 
 
 if ~isempty(handles.CoverageValue)
-    if isempty(handles.CoverageSubj)
-        handles.CoverageSubj=SubjString;
-    end
+    % YAN Chao-Gan, 201009. If no subjects after thresholding coverage, then no subjects.
+%     if isempty(handles.CoverageSubj)
+%         handles.CoverageSubj=SubjString;
+%     end
     set(handles.ThrdQCScoreButton, 'Enable', 'Off');
     Index=false(size(SubjString));
     for i=1:numel(SubjString)
