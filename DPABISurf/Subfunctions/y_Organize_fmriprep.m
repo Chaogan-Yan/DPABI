@@ -112,14 +112,6 @@ system(Command);
 
 
 
-
-parfor i=1:Cfg.SubjectNum
-    mkdir(fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
-    copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'anat','*_space-MNI152NLin2009cAsym_*'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
-end
-
-
-
 % Multiple Sessions Processing
 FunSessionPrefixSet={''}; %The first session doesn't need a prefix. From the second session, need a prefix such as 'S2_';
 for iFunSession=2:Cfg.FunctionalSessionNumber
@@ -161,7 +153,11 @@ fprintf('Organize AnatVolu...\n');
 mkdir(fullfile(Cfg.WorkingDir,'Results','AnatVolu'));
 parfor i=1:Cfg.SubjectNum
     mkdir(fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
-    copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'anat','*_space-MNI152NLin2009cAsym_*'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
+    if Cfg.FunctionalSessionNumber==1
+        copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'anat','*_space-MNI152NLin2009cAsym_*'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
+    else
+        copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'ses-1','anat','*_space-MNI152NLin2009cAsym_*'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
+    end
 end
 
 
