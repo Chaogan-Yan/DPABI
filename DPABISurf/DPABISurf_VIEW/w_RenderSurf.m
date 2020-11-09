@@ -669,6 +669,7 @@ catch
 end
 Opt.ColorMapString=OverlaySurf.ColorMapString;
 Opt.ColorMap=OverlaySurf.ColorMap;
+Opt.ColorMapAdjust=OverlaySurf.ColorMapAdjust;
 Opt.PN_Flag=OverlaySurf.PN_Flag;
 
 function SetOverlayColorMap(AxesObj, OverlayInd, CM, PN_Flag)
@@ -1133,6 +1134,7 @@ OverlayOpt.VMsk=VMsk;
 OverlayOpt.GuiData=GuiData;
 OverlayOpt.CSizeOpt=CSizeOpt;
 OverlayOpt.StatOpt=StatOpt;
+OverlayOpt.ColorMapAdjust=AdjustCM;
 
 if isfield(AxesHandle, 'OverlaySurf')
     Num=numel(AxesHandle.OverlaySurf);
