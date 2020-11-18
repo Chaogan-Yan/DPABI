@@ -871,7 +871,7 @@ PMax=SendHeader.PMax;
 PMin=SendHeader.PMin;
 NMin=SendHeader.NMin;
 NMax=SendHeader.NMax;
-cbarstring=SendHeader.cbarstring;
+
 cbarstring = SendHeader.cbarstring;
 if cbarstring(end)=='+' || cbarstring(end)=='-'
     PN_Flag=cbarstring(end);
@@ -1222,6 +1222,9 @@ function ClusterPopup_Callback(hObject, eventdata, handles)
 % hObject    handle to ClusterPopup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+curfig=handles.DPABI_fig;
+curfig=w_Compatible2014bFig(curfig);
+
 index=HeaderIndex(handles);
 if ~index
     return
@@ -1301,7 +1304,10 @@ switch Value
         OverlayHeader=SetCSize(OverlayHeader);
         OverlayHeader=SetPosNeg(OverlayHeader, handles); %Add by Sandy to set cluster size at first when someone use Cluster Report
         y_ClusterReport(OverlayHeader.Data, OverlayHeader, OverlayHeader.RMM);
-    case 11 %Apply a Mask for Additionally Thresholding
+    case 11 %New Cluster Report
+        [OverlayHeader, SendHeader]=RedrawOverlay(OverlayHeader);
+        NewClusterReport(SendHeader, curfig);
+    case 12 %Apply a Mask for Additionally Thresholding
         OverlayHeader=w_ApplyAdditionalMask(OverlayHeader);
         if isempty(OverlayHeader)
             return
@@ -1778,6 +1784,131 @@ CC=bwconncomp(logical(OverlayVolume), RMM);
 L=labelmatrix(CC);
 V=L(OI, OJ, OK);
 OverlayVolume(L~=V)=0;
+
+function NewClusterReport(ThresHeader, curfig)
+global st
+if nargin<2
+    curfig=gcf;
+end
+curfig=w_Compatible2014bFig(curfig);
+AtlasInfo=st{curfig}.AtlasInfo;
+AtlasAlias=cellfun(@(a) a.Template.Alias, AtlasInfo,...
+    'UniformOutput', false);
+NumAtlas=numel(AtlasInfo);
+
+% Get Overlay Data Clusters
+RMM=ThresHeader.RMM;
+OverlayThresData=ThresHeader.Data;
+OverlayVox=ThresHeader.Vox;
+OverlayVoxMM=prod(OverlayVox);
+OverlayCC=bwconncomp(OverlayThresData, RMM);
+
+ResliceAtlasCell=cell(size(AtlasInfo));
+for a=1:numel(AtlasInfo)
+    ResliceAtlasCell{a}=y_Reslice(AtlasInfo{a}.Template, '', OverlayVox, 0,...
+        ThresHeader);
+end
+
+ReportCell=cell(OverlayCC.NumObjects, 1);
+for i=1:OverlayCC.NumObjects    
+    ClusterInd=OverlayCC.PixelIdxList{i};
+    ClusterSizeNum=length(ClusterInd);
+    ClusterSizeMM=ClusterSizeNum*OverlayVoxMM;
+    [PeakIntensity, ClusterPeakInd]=max(OverlayThresData(ClusterInd));
+    PeakInd=ClusterInd(ClusterPeakInd);
+    [PeakI, PeakJ, PeakK]=ind2sub(ThresHeader.dim, PeakInd);
+    PeakIJK=[PeakI, PeakJ, PeakK];
+    PeakXYZ=ThresHeader.mat*[PeakI;PeakJ;PeakK;1];
+    PeakXYZ=PeakXYZ(1:3)';
+    
+    OneStruct.ClusterSizeNum=ClusterSizeNum;
+    OneStruct.ClusterSizeMM=ClusterSizeMM;
+    OneStruct.PeakIntensity=PeakIntensity;
+    OneStruct.PeakIJK=PeakIJK;    
+    OneStruct.PeakXYZ=PeakXYZ;
+
+    OneStruct.AtlasAlias=AtlasAlias;
+    OneStruct.AtlasLabPercent=cell(NumAtlas, 1);
+    OneStruct.AtlasLabName=cell(NumAtlas, 1);
+    OneStruct.AtlasLabNum=cell(NumAtlas, 1);
+    OneStruct.AtlasPeakName=cell(NumAtlas, 1);
+    OneStruct.AtlasPeakNum=cell(NumAtlas, 1);
+
+    for a=1:NumAtlas                
+        % Generate Labs' Info
+        ResliceAtlas=ResliceAtlasCell{a};
+        LabVoxInOneCluster=ResliceAtlas(ClusterInd);
+        LabIndInOneCluster=unique(LabVoxInOneCluster);
+        NumLab=numel(LabIndInOneCluster);
+        
+        AtlasReference=AtlasInfo{a}.Reference;
+
+        % Peak Lab & Name
+        PeakNum=ResliceAtlas(PeakIJK(1), PeakIJK(2), PeakIJK(3));
+        PeakLabInd=cellfun(@(x) x==PeakNum, AtlasReference(:, 2));
+        PeakName=AtlasReference{PeakLabInd, 1};
+        
+        OneALabPercent=zeros(1, NumLab);
+        OneALabName=cell(1, NumLab);
+        for b=1:NumLab
+            OneALabInd=LabIndInOneCluster(b);
+            OneALabPercent(1, b)=length(find(LabVoxInOneCluster==OneALabInd));
+            
+            FindLabInd=cellfun(@(x) x==OneALabInd, AtlasReference(:, 2));
+            OneALabName(1, b)=AtlasReference(FindLabInd, 1);
+        end
+        OneALabPercent=OneALabPercent./ClusterSizeNum;
+        
+        [OneALabPercentS, SIX]=sort(OneALabPercent, 2, 'descend');
+        
+        OneALabNum=LabIndInOneCluster';
+        OneALabNumS=OneALabNum(1, SIX);
+        OneALabNameS=OneALabName(1, SIX);
+        
+        % Put All Info in Struct
+        OneStruct.AtlasPeakName{a, 1}=PeakName;
+        OneStruct.AtlasPeakNum{a, 1}=PeakNum;
+        
+        OneStruct.AtlasLabNum{a, 1}=OneALabNumS;
+        OneStruct.AtlasLabName{a, 1}=OneALabNameS;
+        OneStruct.AtlasLabPercent{a, 1}=OneALabPercentS;
+        
+    end
+    ReportCell{i, 1}=OneStruct;
+end
+AllClusterSizeNum=cellfun(@(i) i.ClusterSizeNum, ReportCell);
+[AllClusterSizeNumS, SIX]=sort(AllClusterSizeNum, 'descend');
+
+% Sort Report Cell
+ReportCell=ReportCell(SIX, 1);
+ReportStr='';
+for i=1:numel(ReportCell)
+
+    OneC=ReportCell{i};
+    ReportStr=[ReportStr, sprintf('Cluster %d -> Cluster Size (mm): %f \n', i, OneC.ClusterSizeMM)];
+    ReportStr=[ReportStr, sprintf('\tPeak Index: %d %d %d\n', ...
+        OneC.PeakIJK(1), OneC.PeakIJK(2), OneC.PeakIJK(3))];
+    ReportStr=[ReportStr, sprintf('\tPeak Coordinate: %.1f %.1f %.1f\n', ...
+        OneC.PeakXYZ(1), OneC.PeakXYZ(2), OneC.PeakXYZ(3))];
+    ReportStr=[ReportStr, sprintf('\tPeak Intensity: %.3f\n', OneC.PeakIntensity)];
+    ReportStr=[ReportStr, sprintf('\tLabel Include:\n')];
+    for a=1:numel(OneC.AtlasAlias)
+        ReportStr=[ReportStr, sprintf('\t    %s -> Peak Label at [%d] %s\n',...
+            OneC.AtlasAlias{a, 1}, OneC.AtlasPeakNum{a, 1}, OneC.AtlasPeakName{a, 1})];
+
+        % All Lab Info
+        OneLabPercent=OneC.AtlasLabPercent{a, 1};
+        OneLabName=OneC.AtlasLabName{a, 1};
+        OneLabNum=OneC.AtlasLabNum{a, 1};
+        for b=1:numel(OneLabName)
+            ReportStr=[ReportStr, sprintf('\t\t[%d] %s, %f%%\n',...
+                OneLabNum(b), OneLabName{b}, 100*OneLabPercent(b))];
+        end
+    end
+    ReportStr=[ReportStr, sprintf('\n')];
+end
+fprintf('%s', ReportStr);
+
 
 function FindPeak(OverlayHeader)
 OverlayVolume=OverlayHeader.Data;
