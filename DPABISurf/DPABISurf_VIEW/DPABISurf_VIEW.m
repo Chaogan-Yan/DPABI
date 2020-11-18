@@ -1266,14 +1266,34 @@ switch Val
         end
         OutFilePath=fullfile(Path, File);
         Fcn.SaveCurrentOverlayCluster(OverlayInd, OutFilePath);
-        case 4 % Save as picture
-            f = getframe(handles.SurfaceAxes);
-            name=get(handles.OverlayMenu,'String');
-            name=split(name{1,1},'.');
-            name=strcat(name{1,1},'.jpg');
-            Size=size(f.cdata);
-            f.cdata=f.cdata(:,ceil(0.12*Size(2)):ceil(0.88*Size(2)),:);
-            imwrite(f.cdata, name);
+    case 4 % Save as picture
+        f = getframe(handles.SurfaceAxes);
+        name=get(handles.OverlayMenu,'String');
+        name=split(name{1,1},'.');
+        name=strcat(name{1,1},'.jpg');
+        Size=size(f.cdata);
+        f.cdata=f.cdata(:,ceil(0.12*Size(2)):ceil(0.88*Size(2)),:);
+        imwrite(f.cdata, name);
+    case 5 % Save ColorBar
+        Opt=Fcn.GetOverlayColorMap(OverlayInd);
+        [File , Path]=uiputfile({'*.jpg', 'JPEG File (*.jpg)';...
+            '*.*', 'All Files (*.*)';}, ...
+            'Pick Prefix' , pwd);
+        if isnumeric(File) && File==0
+            return
+        end
+        [~, Name, Ext]=fileparts(File);
+        if isempty(Ext)
+            Ext='.jpg';
+        end
+        RawCmPath=fullfile(Path, sprintf('%s_Raw%s', Name, Ext));
+        AdjustCmPath=fullfile(Path, sprintf('%s_Adjust%s', Name, Ext));
+        L=size(Opt.ColorMap, 1);
+        imwrite((1:L), Opt.ColorMap, RawCmPath);
+        AdjustCM=imresize(Opt.ColorMapAdjust, [200, 3]);
+        AdjustCM(AdjustCM<0)=0;
+        AdjustCM(AdjustCM>1)=1;
+        imwrite(1:200, AdjustCM, AdjustCmPath);
 end
 
 % --- Executes on button press in OverlayRmBtn.

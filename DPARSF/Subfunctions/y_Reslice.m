@@ -28,11 +28,19 @@ end
 
 
 if ~strcmpi(TargetSpace,'ImageItself')
-    [RefData, RefHead]   = y_Read(TargetSpace,1);
+    if isstruct(TargetSpace) % Header from DPABI_VIEW
+        RefHead = TargetSpace;
+    else
+        [RefData, RefHead]   = y_Read(TargetSpace,1);
+    end
     mat=RefHead.mat;
     dim=RefHead.dim;
 else
-    [RefData, RefHead]   = y_Read(InputFile);
+    if isstruct(InputFile) % Header from DPABI_VIEW
+        RefHead = InputFile;
+    else
+        [RefData, RefHead]   = y_Read(InputFile);
+    end
     origin=RefHead.mat(1:3,4);
     origin=origin+[RefHead.mat(1,1);RefHead.mat(2,2);RefHead.mat(3,3)]-[NewVoxSize(1)*sign(RefHead.mat(1,1));NewVoxSize(2)*sign(RefHead.mat(2,2));NewVoxSize(3)*sign(RefHead.mat(3,3))];
     origin=round(origin./NewVoxSize').*NewVoxSize';
@@ -45,16 +53,21 @@ else
     dim=floor(abs(dim./NewVoxSize))+1;
 end
 
-
-[SourceData SourceHead]=y_Read(InputFile);
-
-%Handle .nii.gz. Referenced from y_Read.m. YAN Chao-Gan, 151117
-[pathstr, name, ext] = fileparts(InputFile);
-if strcmpi(ext,'.gz')
-    gunzip(InputFile);
-    FileNameWithoutGZ = fullfile(pathstr,name);
-    SourceHead.fname = FileNameWithoutGZ;
+if isstruct(InputFile)
+    SourceHead = InputFile;
+    [pathstr, name, ext] = fileparts(SourceHead.fname);
+else
+    [SourceData SourceHead]=y_Read(InputFile);
+    [pathstr, name, ext] = fileparts(InputFile);
+    
+    %Handle .nii.gz. Referenced from y_Read.m. YAN Chao-Gan, 151117
+    if strcmpi(ext,'.gz')
+        gunzip(InputFile);
+        FileNameWithoutGZ = fullfile(pathstr,name);
+        SourceHead.fname = FileNameWithoutGZ;
+    end
 end
+
 
 [x1,x2,x3] = ndgrid(1:dim(1),1:dim(2),1:dim(3));
 d     = [hld*[1 1 1]' [1 1 0]'];
@@ -78,13 +91,16 @@ Mask = Mask & (y3 >= (1-tiny) & y3 <= (SourceHead.dim(3)+tiny));
 
 OutVolume(~Mask) = 0;
 
+if ~isempty(OutputFile)
+    OutHead=SourceHead;
+    OutHead.mat      = mat;
+    OutHead.dim(1:3) = dim;
+    
+    y_Write(OutVolume,OutHead,OutputFile);
+end
 
-OutHead=SourceHead;
-OutHead.mat      = mat;
-OutHead.dim(1:3) = dim;
-
-y_Write(OutVolume,OutHead,OutputFile);
-
-if strcmpi(ext,'.gz')
-    delete(FileNameWithoutGZ);
+if ~isstruct(InputFile)
+    if strcmpi(ext,'.gz')
+        delete(FileNameWithoutGZ);
+    end
 end

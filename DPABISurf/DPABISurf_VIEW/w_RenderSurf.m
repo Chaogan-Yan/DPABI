@@ -669,6 +669,7 @@ catch
 end
 Opt.ColorMapString=OverlaySurf.ColorMapString;
 Opt.ColorMap=OverlaySurf.ColorMap;
+Opt.ColorMapAdjust=OverlaySurf.ColorMapAdjust;
 Opt.PN_Flag=OverlaySurf.PN_Flag;
 
 function SetOverlayColorMap(AxesObj, OverlayInd, CM, PN_Flag)
@@ -776,7 +777,14 @@ if ~strcmpi(Opt.TestFlag, 'T') && ~strcmpi(Opt.TestFlag, 'Z') && ...
         ~strcmpi(Opt.TestFlag, 'R') && ~strcmpi(Opt.TestFlag, 'F')
     Opt.PThres=[];
 else
-    Thres=min([abs(NMin), abs(PMin)]);
+    % Modified by Sandy when there are just postive or negative values in the statistical maps  
+    if NMin==0
+        Thres=abs(PMin);
+    elseif PMin==0
+        Thres=abs(NMin);
+    else
+        Thres=min([abs(NMin), abs(PMin)]);
+    end
     Opt.PThres=w_StatToP(Thres, StatOpt);    
 end
 
@@ -817,6 +825,10 @@ else
     NMin=-Thres;
     PMin=Thres;
 end
+% Modified by Sandy for overlay which just have postive or negative values
+%NMin=-Thres;
+%PMin=Thres;
+
 SetOverlayThres(AxesObj, OverlayInd, NMax, NMin, PMin, PMax)
 
 function Opt=GetOverlayAlpha(AxesObj, OverlayInd)
@@ -1122,6 +1134,7 @@ OverlayOpt.VMsk=VMsk;
 OverlayOpt.GuiData=GuiData;
 OverlayOpt.CSizeOpt=CSizeOpt;
 OverlayOpt.StatOpt=StatOpt;
+OverlayOpt.ColorMapAdjust=AdjustCM;
 
 if isfield(AxesHandle, 'OverlaySurf')
     Num=numel(AxesHandle.OverlaySurf);

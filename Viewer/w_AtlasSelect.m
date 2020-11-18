@@ -22,7 +22,7 @@ function varargout = w_AtlasSelect(varargin)
 
 % Edit the above text to modify the response to help w_AtlasSelect
 
-% Last Modified by GUIDE v2.5 01-Nov-2013 18:46:40
+% Last Modified by GUIDE v2.5 11-Nov-2020 12:52:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -139,11 +139,15 @@ switch Value
         NiiFile=fullfile(TemplatePath, 'aal.nii');
         MatFile=fullfile(TemplatePath, 'aal_Labels.mat');
         AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'AAL');
-    case 5 %Brodmann
+    case 5 %AAL3
+        NiiFile=fullfile(TemplatePath, 'AAL3v1_1mm.nii');
+        MatFile=fullfile(TemplatePath, 'AAL3v1_1mm_Labels.mat');
+        AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'AAL3');        
+    case 6 %Brodmann
         NiiFile=fullfile(TemplatePath, 'Brodmann_YCG.nii');
         MatFile=fullfile(TemplatePath, 'Brodmann_YCG_Labels.mat');
         AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'Brodmann');        
-    case 6 %Cutsom
+    case 7 %Cutsom
         [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
             'Pick Custom Template' , TemplatePath);
         if ~ischar(File)
@@ -216,4 +220,4 @@ function Cancel_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 uiresume(handles.figure1);
 delete(handles.figure1);
-
+
