@@ -939,18 +939,36 @@ fprintf('---------------------------Cluster Report---------------------------\n'
 for i=1:numel(ClusterInfo)
     fprintf('\n');    
     fprintf('Cluster %d', i);
-    fprintf('\tCluster Size (mm): %g', ClusterInfo{i}.ClusterSize);
+    fprintf('\tCluster Size (Vertices): %g; Cluster Size (mm^2): %g\n', ClusterInfo{i}.ClusterVNum, ClusterInfo{i}.ClusterSize);
     fprintf('\tPeak Index: %g\n', ClusterInfo{i}.PeakInd);
-    fprintf('\tPeak Coord: X-%g, Y-%g, Z-%g]\n', ...
+    fprintf('\tPeak Coord (X Y Z): %g, %g, %g]\n', ...
         ClusterInfo{i}.PeakCoord(1), ClusterInfo{i}.PeakCoord(2), ClusterInfo{i}.PeakCoord(3));
-    fprintf('\tPeak Value: %g\n', ClusterInfo{i}.Peak);
+    fprintf('\tPeak Intensity: %g\n', ClusterInfo{i}.Peak);
     
-    for j=1:size(ClusterInfo{i}.LabelProb, 1)
-        if j==1
-            fprintf('\tLabel Included:\n');
+    AllLabelInfo=ClusterInfo{i}.AllLabelInfo;
+    AllLabelFile=ClusterInfo{i}.AllLabelFile;
+    AllLabelPeak=ClusterInfo{i}.AllLabelPeak;
+    fprintf('\tLabel Included:\n');
+    for k=1:numel(AllLabelInfo)
+        IsCur=false;
+        if k==ClusterInfo{i}.CurrentLabelInd;
+            IsCur=true;
         end
-        label_info=ClusterInfo{i}.LabelProb(j, :);
-        fprintf('\t\t[%d] %s, %g%%\n', label_info{1}, label_info{2}, label_info{3}*100);
+        LabelFile=AllLabelFile{k};
+        LabelInfo=AllLabelInfo{k};
+        LabelPeak=AllLabelPeak{k};
+        if IsCur
+            fprintf('\t    %s -> Peak Label at [%d] %s (Currently Displayed)\n',...
+                LabelFile, LabelPeak{1}, LabelPeak{2});
+        else
+            fprintf('\t    %s -> Peak Label at [%d] %s\n',...
+                LabelFile, LabelPeak{1}, LabelPeak{2});
+        end
+        for j=1:size(LabelInfo, 1)
+            label_info=LabelInfo(j, :);
+            fprintf('\t\t[%d] %s, %g%% (%d)\n',...
+                label_info{1}, label_info{2}, label_info{4}*100, label_info{3});
+        end
     end
 end
 
@@ -964,9 +982,9 @@ catch
 end
 
 try
-    LabelSurf=AxesHandle.LabelSurf(LabelInd, 1);
+    AllLabelSurf=AxesHandle.LabelSurf;
 catch
-    LabelSurf=[];
+    AllLabelSurf=[];
 end
 
 AdjustMsk=AdjustVertexAlpha(OverlaySurf.Vertex, OverlaySurf.Alpha,...
@@ -996,20 +1014,36 @@ for i=1:max(CC.Index)
     PeakCoord=OverlaySurf.CSizeOpt.StructData.vertices(PeakInd, :);
     Opt.ClusterInfo{i}.PeakCoord=PeakCoord;
     Opt.ClusterInfo{i}.ClusterSize=CC.Size(i, 1);
-
-    if isempty(LabelSurf)
-        Opt.ClusterInfo{i}.LabelProb=[];
+    Opt.ClusterInfo{i}.ClusterVNum=CC.Num(i, 1);
+    Opt.ClusterInfo{i}.CurrentLabelInd=LabelInd;
+    
+    if isempty(AllLabelSurf)
+        Opt.ClusterInfo{i}.AllLabelInfo=[];
     else
-        LabelInOneInd=LabelSurf.LabelV(OneInd);
-        UInOneInd=unique(LabelInOneInd);
-        LabelProb=cell(numel(UInOneInd), 3);
-        LabelProb(:, 1)=num2cell(UInOneInd);
-        LabelProb(:, 2)=arrayfun(@(u) LabelSurf.LabelName{LabelSurf.LabelU==u}, UInOneInd,...
-            'UniformOutput', false);
-        for j=1:numel(UInOneInd)
-            LabelProb{j, 3}=sum(LabelInOneInd==UInOneInd(j))./length(LabelInOneInd);
+        Opt.ClusterInfo{i}.AllLabelInfo=cell(size(AllLabelSurf));
+        Opt.ClusterInfo{i}.AllLabelFile=cell(size(AllLabelSurf));
+        Opt.ClusterInfo{i}.AllLabelPeak=cell(size(AllLabelSurf));
+        for k=1:numel(AllLabelSurf)
+            LabelSurf=AllLabelSurf(k, 1);
+            LabelInOneInd=LabelSurf.LabelV(OneInd);
+            UInOneInd=unique(LabelInOneInd);
+            LabelInfo=cell(numel(UInOneInd), 3);
+            LabelInfo(:, 1)=num2cell(UInOneInd);
+            LabelInfo(:, 2)=arrayfun(@(u) LabelSurf.LabelName{LabelSurf.LabelU==u}, UInOneInd,...
+                'UniformOutput', false);
+            for j=1:numel(UInOneInd)
+                LabelInfo{j, 3}=sum(LabelInOneInd==UInOneInd(j));
+                LabelInfo{j, 4}=sum(LabelInOneInd==UInOneInd(j))./length(LabelInOneInd);
+            end
+            Opt.ClusterInfo{i}.AllLabelInfo{k, 1}=LabelInfo;
+            [LabelPath, LabelFileName, LabelExt]=fileparts(LabelSurf.LabelFile);
+            Opt.ClusterInfo{i}.AllLabelFile{k, 1}=LabelFileName;
+            
+            % Peak Info
+            PeakLabelInd=LabelSurf.LabelV(PeakInd);
+            PeakLabelName=LabelSurf.LabelName{PeakLabelInd};
+            Opt.ClusterInfo{i}.AllLabelPeak{k ,1}={PeakLabelInd, PeakLabelName};
         end
-        Opt.ClusterInfo{i}.LabelProb=LabelProb;
     end
 end
 PrintClusterReport(Opt.ClusterInfo);
@@ -1197,6 +1231,7 @@ CompInd=spm_mesh_clusters(CSizeOpt.StructData, Msk);
 CompInd(isnan(CompInd))=0;
 CC.Index=CompInd;
 CC.Size=zeros(max(CompInd), 1);
+CC.Num=zeros(max(CompInd), 1);
 if ~isempty(CSizeOpt.VArea)
     if length(CSizeOpt.VArea)~=length(Msk)
         error('Invalid Vertex Area Size')
@@ -1205,6 +1240,7 @@ if ~isempty(CSizeOpt.VArea)
     for i=1:max(CompInd)
         OneInd=CompInd==i;
         CC.Size(i, 1)=sum(CSizeOpt.VArea(OneInd));
+        CC.Num(i, 1)=length(find(CompInd==i));
     end
 else
     if size(CSizeOpt.StructData.vertices, 1)~=length(Msk)
@@ -1213,6 +1249,7 @@ else
     SubM=spm_mesh_split(CSizeOpt.StructData, CompInd);
     for i=1:max(CompInd)
         CC.Size(i, 1)=spm_mesh_area(SubM(i));
+        CC.Num(i, 1)=length(find(CompInd==i));
     end
 end
 
