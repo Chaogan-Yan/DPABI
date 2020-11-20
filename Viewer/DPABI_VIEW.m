@@ -1884,17 +1884,18 @@ AllClusterSizeNum=cellfun(@(i) i.ClusterSizeNum, ReportCell);
 
 % Sort Report Cell
 ReportCell=ReportCell(SIX, 1);
-ReportStr='';
+ReportStr='---------------------------Cluster Report---------------------------\n';
+
 for i=1:numel(ReportCell)
 
     OneC=ReportCell{i};
-    ReportStr=[ReportStr, sprintf('Cluster %d -> Cluster Size (Voxels): %d; Cluster Size (mm^2): %.2f \n',...
+    ReportStr=[ReportStr, sprintf('Cluster %d -> Cluster Size (Voxels): %d; Cluster Size (mm^3): %.2f \n',...
         i, OneC.ClusterSizeNum, OneC.ClusterSizeMM)];
     ReportStr=[ReportStr, sprintf('\tPeak Index: %d %d %d\n', ...
         OneC.PeakIJK(1), OneC.PeakIJK(2), OneC.PeakIJK(3))];
-    ReportStr=[ReportStr, sprintf('\tPeak Coordinate: %.1f %.1f %.1f\n', ...
+    ReportStr=[ReportStr, sprintf('\tPeak Coordinate (X Y Z): %g %g %\n', ...
         OneC.PeakXYZ(1), OneC.PeakXYZ(2), OneC.PeakXYZ(3))];
-    ReportStr=[ReportStr, sprintf('\tPeak Intensity: %.3f\n', OneC.PeakIntensity)];
+    ReportStr=[ReportStr, sprintf('\tPeak Intensity: %g\n', OneC.PeakIntensity)];
     ReportStr=[ReportStr, sprintf('\tLabel Include:\n')];
     for a=1:numel(OneC.AtlasAlias)
         ReportStr=[ReportStr, sprintf('\t    %s -> Peak Label at [%d] %s\n',...
@@ -1906,7 +1907,7 @@ for i=1:numel(ReportCell)
         OneLabNum=OneC.AtlasLabNum{a, 1};
         OneLabVox=OneC.AtlasLabVox{a, 1};
         for b=1:numel(OneLabName)
-            ReportStr=[ReportStr, sprintf('\t\t[%d] %s, %f%% (%d)\n',...
+            ReportStr=[ReportStr, sprintf('\t\t[%d] %s, %g%% (%d)\n',...
                 OneLabNum(b), OneLabName{b}, 100*OneLabPercent(b), OneLabVox(b))];
         end
     end
