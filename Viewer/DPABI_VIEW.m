@@ -1805,8 +1805,8 @@ OverlayCC=bwconncomp(OverlayThresData, RMM);
 
 ResliceAtlasCell=cell(size(AtlasInfo));
 for a=1:numel(AtlasInfo)
-    ResliceAtlasCell{a}=y_Reslice(AtlasInfo{a}.Template, '', OverlayVox, 0,...
-        ThresHeader);
+    ResliceAtlasCell{a}=y_Reslice(AtlasInfo{a}.Template.fname, '', OverlayVox, 0,...
+        ThresHeader.fname);  
 end
 
 ReportCell=cell(OverlayCC.NumObjects, 1);
@@ -1850,7 +1850,6 @@ for i=1:OverlayCC.NumObjects
         PeakName=AtlasReference{PeakLabInd, 1};
         
         OneALabVox=zeros(1, NumLab);
-        OneALabPercent=zeros(1, NumLab);
         OneALabName=cell(1, NumLab);
         for b=1:NumLab
             OneALabInd=LabIndInOneCluster(b);
