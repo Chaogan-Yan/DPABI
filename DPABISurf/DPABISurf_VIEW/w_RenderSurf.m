@@ -941,7 +941,7 @@ for i=1:numel(ClusterInfo)
     fprintf('Cluster %d', i);
     fprintf('\tCluster Size (Vertices): %g; Cluster Size (mm^2): %g\n', ClusterInfo{i}.ClusterVNum, ClusterInfo{i}.ClusterSize);
     fprintf('\tPeak Index: %g\n', ClusterInfo{i}.PeakInd);
-    fprintf('\tPeak Coord (X Y Z): %g, %g, %g]\n', ...
+    fprintf('\tPeak Coord (X Y Z): %g, %g, %g\n', ...
         ClusterInfo{i}.PeakCoord(1), ClusterInfo{i}.PeakCoord(2), ClusterInfo{i}.PeakCoord(3));
     fprintf('\tPeak Intensity: %g\n', ClusterInfo{i}.Peak);
     
@@ -1035,17 +1035,21 @@ for i=1:max(CC.Index)
                 LabelInfo{j, 3}=sum(LabelInOneInd==UInOneInd(j));
                 LabelInfo{j, 4}=sum(LabelInOneInd==UInOneInd(j))./length(LabelInOneInd);
             end
-            Opt.ClusterInfo{i}.AllLabelInfo{k, 1}=LabelInfo;
+            [LabNumS, IX]=sort(cell2mat(LabelInfo(:, 3)), 'descend');
+            LabelInfoS=LabelInfo(IX, :);
+            Opt.ClusterInfo{i}.AllLabelInfo{k, 1}=LabelInfoS;
             [LabelPath, LabelFileName, LabelExt]=fileparts(LabelSurf.LabelFile);
             Opt.ClusterInfo{i}.AllLabelFile{k, 1}=LabelFileName;
             
             % Peak Info
             PeakLabelInd=LabelSurf.LabelV(PeakInd);
-            PeakLabelName=LabelSurf.LabelName{PeakLabelInd};
+            PeakLabelName=LabelSurf.LabelName{LabelSurf.LabelU==PeakLabelInd};
             Opt.ClusterInfo{i}.AllLabelPeak{k ,1}={PeakLabelInd, PeakLabelName};
         end
     end
 end
+[ClusterVNumS, IX]=sort(cellfun(@(i) i.ClusterVNum, Opt.ClusterInfo), 'descend');
+Opt.ClusterInfo=Opt.ClusterInfo(IX, 1);
 PrintClusterReport(Opt.ClusterInfo);
 
 function ExitCode=AddOverlay(AxesObj, VarArgIn)

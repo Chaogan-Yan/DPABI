@@ -1884,16 +1884,16 @@ AllClusterSizeNum=cellfun(@(i) i.ClusterSizeNum, ReportCell);
 
 % Sort Report Cell
 ReportCell=ReportCell(SIX, 1);
-ReportStr='---------------------------Cluster Report---------------------------\n';
+ReportStr=sprintf('---------------------------Cluster Report---------------------------\n');
 
 for i=1:numel(ReportCell)
 
     OneC=ReportCell{i};
-    ReportStr=[ReportStr, sprintf('Cluster %d -> Cluster Size (Voxels): %d; Cluster Size (mm^3): %.2f \n',...
+    ReportStr=[ReportStr, sprintf('Cluster %d -> Cluster Size (Voxels): %d; Cluster Size (mm^3): %g \n',...
         i, OneC.ClusterSizeNum, OneC.ClusterSizeMM)];
     ReportStr=[ReportStr, sprintf('\tPeak Index: %d %d %d\n', ...
         OneC.PeakIJK(1), OneC.PeakIJK(2), OneC.PeakIJK(3))];
-    ReportStr=[ReportStr, sprintf('\tPeak Coordinate (X Y Z): %g %g %\n', ...
+    ReportStr=[ReportStr, sprintf('\tPeak Coordinate (X Y Z): %g %g %g\n', ...
         OneC.PeakXYZ(1), OneC.PeakXYZ(2), OneC.PeakXYZ(3))];
     ReportStr=[ReportStr, sprintf('\tPeak Intensity: %g\n', OneC.PeakIntensity)];
     ReportStr=[ReportStr, sprintf('\tLabel Include:\n')];
