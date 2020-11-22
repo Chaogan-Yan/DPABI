@@ -1686,12 +1686,34 @@ Pos=Fcn.GetPos_byIndex(Index);
 Fcn.MoveDataCursor_byIndex(Index);
 Pos_Current=Fcn.GetDataCursorPos();
 if Pos~=Pos_Current.Pos
-    VP=Fcn.GetViewPoint();
-    VP=-VP.ViewPoint;
-    Fcn.SetViewPoint(VP);
-    Fcn.MoveDataCursor_byIndex(Index);
+    AllVP={...
+        [ -90,   0];... % Left
+        [  90,   0];... % Right
+        [ -90, -90];... % Ventral
+        [  90,  90];... % Dorsal
+        [-180,   0];... % Anterior
+        [   0,   0]...  % Posterior
+        };
+    for i=1:numel(AllVP)
+        VP=AllVP{i};
+        Fcn.SetViewPoint(VP);
+        Fcn.MoveDataCursor_byIndex(Index);
+        Pos_Current=Fcn.GetDataCursorPos();
+        if Pos==Pos_Current.Pos
+            break
+        end
+    end
+    if Pos~=Pos_Current.Pos
+        fprintf('error\n');
+    end
 end
 
+% ViewPoint=[ -90,   0]; % Left
+% ViewPoint=[  90,   0]; % Right
+% ViewPoint=[ -90, -90]; % Ventral
+% ViewPoint=[  90,  90]; % Dorsal
+% ViewPoint=[-180,   0]; % Anterior
+% ViewPoint=[   0,   0]; % Posterior
 
 % --- Executes during object creation, after setting all properties.
 function DcIndexEty_CreateFcn(hObject, eventdata, handles)
