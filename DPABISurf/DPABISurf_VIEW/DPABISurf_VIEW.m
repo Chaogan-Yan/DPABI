@@ -1685,7 +1685,7 @@ Index=str2num(Index);
 Pos=Fcn.GetPos_byIndex(Index);
 Fcn.MoveDataCursor_byIndex(Index);
 Pos_Current=Fcn.GetDataCursorPos();
-if Pos~=Pos_Current.Pos
+if any(Pos~=Pos_Current.Pos)
     AllVP={...
         [ -90,   0];... % Left
         [  90,   0];... % Right
@@ -1699,12 +1699,12 @@ if Pos~=Pos_Current.Pos
         Fcn.SetViewPoint(VP);
         Fcn.MoveDataCursor_byIndex(Index);
         Pos_Current=Fcn.GetDataCursorPos();
-        if Pos==Pos_Current.Pos
+        if all(Pos==Pos_Current.Pos)
             break
         end
     end
-    if Pos~=Pos_Current.Pos
-        fprintf('error\n');
+    if any(Pos~=Pos_Current.Pos)
+        errordlg('We can not find this index on a visible point for the current surface, you can try to visualiza it with the surface of fsaverage(5)_inflated');
     end
 end
 
