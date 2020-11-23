@@ -1704,7 +1704,7 @@ if any(Pos~=Pos_Current.Pos)
         end
     end
     if any(Pos~=Pos_Current.Pos)
-        errordlg('We can not find this index on a visible point for the current surface, you can try to visualiza it with the surface of fsaverage(5)_inflated\n');
+        errordlg('We can not find this index on a visible point for the current surface, you can try to visualiza it with the surface of fsaverage(5)_inflated');
     end
 end
 
