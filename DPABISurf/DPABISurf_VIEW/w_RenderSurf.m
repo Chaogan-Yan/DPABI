@@ -935,6 +935,7 @@ AxesHandle.OverlaySurf(OverlayInd)=[];
 setappdata(AxesObj, 'AxesHandle', AxesHandle);
 
 function PrintClusterReport(ClusterInfo)
+fprintf('NOTE: We recommand using fsaverage(5)_white to obtain reasonable coordinate\n');
 fprintf('---------------------------Cluster Report---------------------------\n');
 for i=1:numel(ClusterInfo)
     fprintf('\n');    
