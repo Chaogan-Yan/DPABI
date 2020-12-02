@@ -654,6 +654,8 @@ if (AutoDataProcessParameter.RemoveFirstTimePoints>0)
                     if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
                         Error=[Error;{['Error in Removing First ',num2str(AutoDataProcessParameter.RemoveFirstTimePoints),'Time Points: ',AutoDataProcessParameter.SubjectID{i}]}];
                     end
+                    [Data Header]=y_Read(DirImg(1).name);
+                    
                     y_Write(Nii.dat(:,:,:,AutoDataProcessParameter.RemoveFirstTimePoints+1:end),Nii,DirImg(1).name);
                 end
                 
