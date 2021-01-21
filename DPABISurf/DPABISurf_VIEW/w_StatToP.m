@@ -24,7 +24,7 @@ switch upper(TestFlag)
         P=Scale*(1-tcdf(abs(StatVal), Df1));
     case 'R'
         T=sqrt(Df1*(StatVal^2/(1-StatVal^2)));
-        P=Scale*(1-tcdf(abs(StatVal)*T, Df1));        
+        P=Scale*(1-tcdf(abs(T), Df1));        
     case 'F'
         P=Scale*(1-fcdf(StatVal, Df1, Df2));
     case 'Z'

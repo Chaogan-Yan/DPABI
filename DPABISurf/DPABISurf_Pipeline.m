@@ -68,7 +68,7 @@ fprintf('Copyright(c) 2019; GNU GENERAL PUBLIC LICENSE\n');
 fprintf('Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; ');
 fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgrammers: YAN Chao-Gan; WANG Xin-Di; LU Bin\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
 fprintf('-----------------------------------------------------------\n');
-fprintf('Citing Information:\nDPABISurf is a surface-based resting-state fMRI data analysis toolbox evolved from DPABI/DPARSF, as easy-to-use as DPABI/DPARSF. DPABISurf is based on fMRIPrep 20.2.1 (Esteban et al., 2018) (RRID:SCR_016216), and based on FreeSurfer 6.0.1 (Dale et al., 1999) (RRID:SCR_001847), ANTs 2.3.4 (Avants et al., 2008) (RRID:SCR_004757), FSL 5.0.9 (Jenkinson et al., 2002) (RRID:SCR_002823), AFNI 20160207 (Cox, 1996) (RRID:SCR_005927), SPM12 (Ashburner, 2012) (RRID:SCR_007037), PALM alpha115 (Winkler et al., 2016), GNU Parallel (Tange, 2011), MATLAB (The MathWorks Inc., Natick, MA, US) (RRID:SCR_001622), Docker (https://docker.com) (RRID:SCR_016445), and DPABI V5.1 (Yan et al., 2016) (RRID:SCR_010501).\n');
+fprintf('Citing Information:\nDPABISurf is a surface-based resting-state fMRI data analysis toolbox evolved from DPABI/DPARSF, as easy-to-use as DPABI/DPARSF. DPABISurf is based on fMRIPrep 20.2.1 (Esteban et al., 2018) (RRID:SCR_016216), and based on FreeSurfer 6.0.1 (Dale et al., 1999) (RRID:SCR_001847), ANTs 2.3.3 (Avants et al., 2008) (RRID:SCR_004757), FSL 5.0.9 (Jenkinson et al., 2002) (RRID:SCR_002823), AFNI 20160207 (Cox, 1996) (RRID:SCR_005927), SPM12 (Ashburner, 2012) (RRID:SCR_007037), dcm2niix (Li et al., 2016) (RRID:SCR_014099), PALM alpha115 (Winkler et al., 2016), GNU Parallel (Tange, 2011), MATLAB (The MathWorks Inc., Natick, MA, US) (RRID:SCR_001622), Docker (https://docker.com) (RRID:SCR_016445), and DPABI V5.1 (Yan et al., 2016) (RRID:SCR_010501).\n');
 
 
 
@@ -163,8 +163,8 @@ handles.Cfg.Scrubbing.ScrubbingMethod='cut';
 
 
 handles.Cfg.IsCalReHo=1;
-handles.Cfg.SurfFileLH=fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_pial.surf.gii');
-handles.Cfg.SurfFileRH=fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_pial.surf.gii');
+handles.Cfg.SurfFileLH=fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_white.surf.gii');
+handles.Cfg.SurfFileRH=fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_white.surf.gii');
 handles.Cfg.CalReHo.ClusterNVoxel=27;
 handles.Cfg.CalReHo.SurfNNeighbor=2;
 
@@ -198,8 +198,8 @@ load(fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'Jobmats','Template_Default.ma
 Cfg.MaskFileSurfLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_cortex.label.gii');
 Cfg.MaskFileSurfRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_cortex.label.gii');
 Cfg.MaskFileVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_91x109x91.img');
-Cfg.SurfFileLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_pial.surf.gii');
-Cfg.SurfFileRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_pial.surf.gii');
+Cfg.SurfFileLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_white.surf.gii');
+Cfg.SurfFileRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_white.surf.gii');
 Cfg.CalFC.ROIDefSurfLH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_HCP-MMP1.label.gii');...
     fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
 Cfg.CalFC.ROIDefSurfRH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_HCP-MMP1.label.gii');...
@@ -475,8 +475,8 @@ end
 Cfg.MaskFileSurfLH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_cortex.label.gii');
 Cfg.MaskFileSurfRH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_cortex.label.gii');
 Cfg.MaskFileVolu = fullfile(DPABIPath, 'Templates','BrainMask_05_91x109x91.img');
-Cfg.SurfFileLH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_pial.surf.gii');
-Cfg.SurfFileRH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_pial.surf.gii');
+Cfg.SurfFileLH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_white.surf.gii');
+Cfg.SurfFileRH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_white.surf.gii');
 Cfg.CalFC.ROIDefSurfLH = {fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_HCP-MMP1.label.gii');...
     fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
 Cfg.CalFC.ROIDefSurfRH = {fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_HCP-MMP1.label.gii');...

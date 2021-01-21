@@ -232,11 +232,12 @@ if Cfg.FunctionalSessionNumber>=2
             end
         end
     end
-            
+    
     %Dealing with functional data
-    FunFile_IntendedFor=[];
-    for iFunSession=1:Cfg.FunctionalSessionNumber
-        for i=1:length(SubjectID_BIDS)
+    
+    for i=1:length(SubjectID_BIDS)
+        FunFile_IntendedFor=[];
+        for iFunSession=1:Cfg.FunctionalSessionNumber
             mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func'])
             DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
             DirNii=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
@@ -258,46 +259,47 @@ if Cfg.FunctionalSessionNumber>=2
                 copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFunSession),filesep,'func',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFunSession),'_task-rest_bold.json'])
             end
         end
-    end
-    
-    
-    %Dealing with FieldMap data
-    iFieldMapSession=1;
-    FieldMapMeasures={'PhaseDiff','Magnitude1','Magnitude2','Phase1','Phase2'};
-    for iFieldMapMeasure=1:length(FieldMapMeasures)
-        DirNii=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
-        if ~isempty(DirNii)
-            mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap']);
-            copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.nii'])
-            DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-            copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'])
+        
+        
+        %Dealing with FieldMap data
+        iFieldMapSession=1;
+        FieldMapMeasures={'PhaseDiff','Magnitude1','Magnitude2','Phase1','Phase2'};
+        for iFieldMapMeasure=1:length(FieldMapMeasures)
             
-            %Filling IntendedFor information
-            if iFieldMapMeasure==1
-                if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE1==0
-                    DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-                    JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
-                    TE1 = JSON.EchoTime;
-                else
-                    TE1 = Cfg.FieldMap.TE1/1000;
-                end
-                if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE2==0
-                    DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-                    JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
-                    TE2 = JSON.EchoTime;
-                else
-                    TE2 = Cfg.FieldMap.TE2/1000;
-                end
+            DirNii=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            if ~isempty(DirNii)
+                mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap']);
+                copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.nii'])
+                DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'])
                 
-                JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
-                JSON.EchoTime1=TE1;
-                JSON.EchoTime2=TE2;
-                JSON.IntendedFor=FunFile_IntendedFor;
-                spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
-            elseif (iFieldMapMeasure==4) || (iFieldMapMeasure==5)
-                JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
-                JSON.IntendedFor=FunFile_IntendedFor;
-                spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                %Filling IntendedFor information
+                if iFieldMapMeasure==1
+                    if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE1==0
+                        DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                        JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                        TE1 = JSON.EchoTime;
+                    else
+                        TE1 = Cfg.FieldMap.TE1/1000;
+                    end
+                    if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE2==0
+                        DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                        JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                        TE2 = JSON.EchoTime;
+                    else
+                        TE2 = Cfg.FieldMap.TE2/1000;
+                    end
+                    
+                    JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                    JSON.EchoTime1=TE1;
+                    JSON.EchoTime2=TE2;
+                    JSON.IntendedFor=FunFile_IntendedFor;
+                    spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                elseif (iFieldMapMeasure==4) || (iFieldMapMeasure==5)
+                    JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                    JSON.IntendedFor=FunFile_IntendedFor;
+                    spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                end
             end
         end
     end

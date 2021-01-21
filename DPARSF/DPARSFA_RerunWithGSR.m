@@ -22,6 +22,11 @@ if strcmpi(StartingDirName,'FunRaw')
 end
 
 Cfg.IsNeedConvertFunDCM2IMG=0;
+
+if isfield(Cfg,'FieldMap')
+    Cfg.FieldMap.IsNeedConvertDCM2IMG=0;
+end
+
 Cfg.IsApplyDownloadedReorientMats=0;
 %Cfg.RemoveFirstTimePoints=0;
 if (Cfg.TimePoints~=0)&&(Cfg.RemoveFirstTimePoints~=0) %YAN Chao-Gan, 161219. Cfg.TimePoints~=0 %Adjust the number of time points. 151214. Thanks for the report of Hua-Sheng Liu

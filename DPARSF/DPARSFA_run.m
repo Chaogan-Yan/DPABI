@@ -4344,6 +4344,14 @@ if (AutoDataProcessParameter.IsExtractROISignals==1)
                 '', ... % Will not restrict into the brain mask in extracting ROI signals
                 AutoDataProcessParameter.CalFC.IsMultipleLabel);
             
+            
+            %YAN Chao-Gan, 210119. Also Extract Center of Mass.
+            y_ExtractROICenterOfMass(AutoDataProcessParameter.CalFC.ROIDefForEachSubject{i}, ...
+                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,FunSessionPrefixSet{iFunSession},'ROISignals_',AutoDataProcessParameter.StartingDirName,filesep,'ROI_CenterOfMass_',AutoDataProcessParameter.SubjectID{i}], ...
+                AutoDataProcessParameter.CalFC.IsMultipleLabel, ...
+                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
+            
+            %y_ExtractROICenterOfMass(ROIDef, OutputName, IsMultipleLabel, RefFile, Header)    
         end
     end
 end

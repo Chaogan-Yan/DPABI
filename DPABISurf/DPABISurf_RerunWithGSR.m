@@ -29,6 +29,10 @@ Cfg.RemoveFirstTimePoints=0; %YAN Chao-Gan, 161219. Reset to 0 after adjusting t
 Cfg.IsNeedConvertFunDCM2IMG=0;
 Cfg.IsNeedConvertT1DCM2IMG=0; 
 
+if isfield(Cfg,'FieldMap')
+    Cfg.FieldMap.IsNeedConvertDCM2IMG=0;
+end
+
 if Cfg.IsConvert2BIDS
     StartingDirName = 'BIDS';
     Cfg.IsConvert2BIDS=0;

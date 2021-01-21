@@ -842,7 +842,7 @@ switch upper(OverlayHeader.TestFlag)
     case 'R'
         Df=OverlayHeader.Df;
         T=sqrt(Df*(Thrd^2/(1-Thrd^2)));
-        P=2*(1-tcdf(abs(Thrd)*T, Df));
+        P=2*(1-tcdf(abs(T), Df));
     case 'F'
         Df1=OverlayHeader.Df;
         Df2=OverlayHeader.Df2;

@@ -94,9 +94,14 @@ else
     rCorr = TTest1_T./(sqrt(Df_E+TTest1_T.*TTest1_T));
     %r = t./(sqrt(Df_E+t.*t))
     
-    Index = findstr(Header.descrip,'}');
-    Header.descrip = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.descrip(Index(1)+1:end));
-    
+    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        Index = findstr(Header.descrip,'}');
+        Header.descrip = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.descrip(Index(1)+1:end));
+    else
+        Index = findstr(Header.private.metadata(4).value,'}');
+        Header.private.metadata(4).value = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.private.metadata(4).value(Index(1)+1:end));
+    end
+
     y_Write(rCorr,Header,OutputName);
     
 end

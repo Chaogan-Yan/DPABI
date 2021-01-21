@@ -89,10 +89,10 @@ if ~isfield(Cfg,'MaskFileVolu')
     Cfg.MaskFileVolu = fullfile(DPABIPath, 'Templates','BrainMask_05_91x109x91.img');
 end
 if ~isfield(Cfg,'SurfFileLH')
-    Cfg.SurfFileLH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_pial.surf.gii');
+    Cfg.SurfFileLH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_white.surf.gii');
 end
 if ~isfield(Cfg,'SurfFileRH')
-    Cfg.SurfFileRH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_pial.surf.gii');
+    Cfg.SurfFileRH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_white.surf.gii');
 end
 if ~isfield(Cfg,'NonAgressiveRegressICAAROMANoise')
     Cfg.NonAgressiveRegressICAAROMANoise=0;
@@ -1511,6 +1511,42 @@ if (Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1)
             y_CallSave([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROICorrelation_FisherZ_',Cfg.SubjectID{i},'.mat'], ROICorrelation_FisherZ, '');
             y_CallSave([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROICorrelation_FisherZ_',Cfg.SubjectID{i},'.txt'], ROICorrelation_FisherZ, ' ''-ASCII'', ''-DOUBLE'',''-TABS''');
         end
+        
+        
+        %Extract the ROI Center of Mass for Surf
+        
+        [ROICenterLH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(Cfg.CalFC.ROIDefSurfLH, [], Cfg.CalFC.IsMultipleLabel, Cfg.SurfFileLH);
+        %[ROICenter,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(ROIDef, OutputName, IsMultipleLabel, SurfFile)  
+        
+        [ROICenterRH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(Cfg.CalFC.ROIDefSurfRH, [], Cfg.CalFC.IsMultipleLabel, Cfg.SurfFileRH);
+        
+        [ROICenterVolu,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(Cfg.CalFC.ROIDefVolu, [], Cfg.CalFC.IsMultipleLabel, [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1}]);
+        %[ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, OutputName, IsMultipleLabel, RefFile, Header)   
+        
+        ROICenter=[[ROICenterLH,zeros(size(ROICenterLH,1),2)];[ROICenterRH,zeros(size(ROICenterRH,1),2)];ROICenterVolu];
+        
+        save([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROI_CenterOfMass.mat'],'ROICenter');
+
+        %Merge ROI_OrderKey
+        fidw = fopen([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROI_OrderKey.tsv'],'a+');
+        fid = fopen([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ROISignals_',Cfg.StartingDirName,filesep,'ROI_OrderKey_',Cfg.SubjectID{1},'.tsv']);
+        Table=fread(fid);
+        fclose(fid);
+        fwrite(fidw,Table);
+        
+        fid = fopen([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ROISignals_',Cfg.StartingDirName,filesep,'ROI_OrderKey_',Cfg.SubjectID{1},'.tsv']);
+        tline = fgetl(fid); %Skip the title line
+        Table=fread(fid);
+        fclose(fid);
+        fwrite(fidw,Table);
+        
+        fid = fopen([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ROISignals_',Cfg.StartingDirName_Volume,filesep,'ROI_OrderKey_',Cfg.SubjectID{1},'.tsv']);
+        tline = fgetl(fid); %Skip the title line
+        Table=fread(fid);
+        fclose(fid);
+        fwrite(fidw,Table);
+        
+        fclose(fidw);
     end
 end
 

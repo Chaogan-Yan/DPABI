@@ -39,12 +39,6 @@ for iFunSession=2:FunctionalSessionNumber
     FunSessionPrefixSet=[FunSessionPrefixSet;{['S',num2str(iFunSession),'_']}];
 end
 
-if ismac
-    MinimumFile=3;
-else
-    MinimumFile=2;
-end
-
 %Get subject list
 SubjectID=[];
 Dir=dir([WorkingDir,filesep,StartingDirName]);
@@ -64,6 +58,11 @@ for iFunSession=1:FunctionalSessionNumber
             error('There is no such dir: %s!',[WorkingDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,filesep,SubjectID{i}]);
         else
             DirFile=dir([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,filesep,SubjectID{i},filesep,'*']);
+            if (length(DirFile) >=3) && strcmpi(DirFile(3).name,'.DS_Store')
+                MinimumFile=3;
+            else
+                MinimumFile=2;
+            end
             if length(DirFile)<=MinimumFile
                 error('There are no image files under dir: %s!',[WorkingDir,filesep,FunSessionPrefixSet{iFunSession},StartingDirName,filesep,SubjectID{i}]);
             end
@@ -89,6 +88,11 @@ else
             error('There is no such dir: %s!',[WorkingDir,filesep,StartingDirName_T1,filesep,SubjectID{i}]);
         else
             DirFile=dir([WorkingDir,filesep,StartingDirName_T1,filesep,SubjectID{i},filesep,'*']);
+            if (length(DirFile) >=3) && strcmpi(DirFile(3).name,'.DS_Store')
+                MinimumFile=3;
+            else
+                MinimumFile=2;
+            end
             if length(DirFile)<=MinimumFile
                 error('There are no image files under dir: %s!',[WorkingDir,filesep,StartingDirName_T1,filesep,SubjectID{i}]);
             end
@@ -114,6 +118,11 @@ if exist([WorkingDir,filesep,'FieldMap'])
                          error('There is no such dir: %s!',[WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},Suffix,filesep,SubjectID{i}]);
                      else
                          DirFile=dir([WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},Suffix,filesep,SubjectID{i},filesep,'*']);
+                         if (length(DirFile) >=3) && strcmpi(DirFile(3).name,'.DS_Store')
+                             MinimumFile=3;
+                         else
+                             MinimumFile=2;
+                         end
                          if length(DirFile)<=MinimumFile
                              error('There are no image files under dir: %s!',[WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},Suffix,filesep,SubjectID{i}]);
                          end

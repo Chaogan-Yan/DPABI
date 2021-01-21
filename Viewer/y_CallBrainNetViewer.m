@@ -62,6 +62,18 @@ surf.ntri=fscanf(fid,'%f',1);
 surf.tri=fscanf(fid,'%d',[3,surf.ntri])';
 fclose(fid);
 
+if isempty(surf.tri) %YAN Chao-Gan, 210117. For new version of BrainNet Viewer files
+    fid=fopen(SurfFileName);
+    data = textscan(fid,'%f','CommentStyle','#');
+    surf.vertex_number = data{1}(1);
+    surf.coord  = reshape(data{1}(2:1+3*surf.vertex_number),[3,surf.vertex_number]);
+    surf.ntri = data{1}(3*surf.vertex_number+2);
+    surf.tri = reshape(data{1}(3*surf.vertex_number+3:end),[3,surf.ntri])';
+    fclose(fid);
+    surf.test='No';
+end
+
+
 % Set up View type
 if ~exist('viewtype','var')
     viewtype='MediumView';

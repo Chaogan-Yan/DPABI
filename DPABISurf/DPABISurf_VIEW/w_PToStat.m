@@ -22,7 +22,7 @@ switch upper(TestFlag)
         StatVal=tinv(1-P/Scale, Df1);
     case 'R'
         T=tinv(1-P/Scale, Df1);
-        StatVal=sqrt(T^2/(Df+T^2));       
+        StatVal=sqrt(T^2/(Df1+T^2));       
     case 'F'
         StatVal=finv(1-P/Scale, Df1, Df2);        
     case 'Z'
