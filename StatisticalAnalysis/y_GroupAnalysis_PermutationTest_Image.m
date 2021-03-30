@@ -28,7 +28,7 @@ if ~isnumeric(DependentVolume)
     end
 end
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
     Suffix='.nii';
 else
     Suffix='.gii';
@@ -45,6 +45,15 @@ end
 [Path, fileN, extn] = fileparts(OutputName);
 TempDir=fullfile(Path,'Temp');
 mkdir(TempDir);
+
+%First do a normal stats with DPABI. Need to get some info there. %YAN Chao-Gan, 210123
+y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header);
+
+if isfield(Header,'MatrixNames') %For DPABINet Matrix
+    Header_DPABINetMatrix = Header;
+    Header=gifti(double(DependentVolume));
+end
+
 y_Write(DependentVolume,Header,[TempDir,filesep,'DependentVolume',Suffix]);
 if exist('CovVolume','var') && (~isempty(CovVolume))
     y_Write(CovVolume,Header,[TempDir,filesep,'CovVolume',Suffix]);
@@ -56,16 +65,18 @@ csvwrite([TempDir,filesep,'Contrast.csv'],Contrast);
 fid = fopen([TempDir,filesep,'PALMConfig.txt'],'w');
 fprintf(fid,'-i %s\n',[TempDir,filesep,'DependentVolume',Suffix]);
 
-%The data type has an effect on the results, thus convert to double
-[MaskData,Temp,theImgFileList, MaskHeader] = y_ReadAll(MaskFile);
-if isfield(Header,'cdata')
-    y_Write(MaskData,gifti(double(MaskData)),[TempDir,filesep,'MaskFile',Suffix]);
-else
-    y_Write(MaskData,MaskHeader,[TempDir,filesep,'MaskFile',Suffix]);
+if exist('MaskFile','var') && ~isempty(MaskFile)
+    %The data type has an effect on the results, thus convert to double
+    [MaskData,Temp,theImgFileList, MaskHeader] = y_ReadAll(MaskFile);
+    if isfield(Header,'cdata')
+        y_Write(MaskData,gifti(double(MaskData)),[TempDir,filesep,'MaskFile',Suffix]);
+    else
+        y_Write(MaskData,MaskHeader,[TempDir,filesep,'MaskFile',Suffix]);
+    end
+    fprintf(fid,'-m %s\n',[TempDir,filesep,'MaskFile',Suffix]); %fprintf(fid,'-m %s\n',MaskFile);
 end
-fprintf(fid,'-m %s\n',[TempDir,filesep,'MaskFile',Suffix]); %fprintf(fid,'-m %s\n',MaskFile);
 
-if isfield(Header,'cdata') %YAN Chao-Gan 181204. If GIfTI data, need surface
+if isfield(PALMSettings,'SurfFile') && ~isempty(PALMSettings.SurfFile) %YAN Chao-Gan 181204. If GIfTI data, need surface
     fprintf(fid,'-s %s',PALMSettings.SurfFile);
     if isfield(PALMSettings,'SurfAreaFile') && ~isempty(PALMSettings.SurfAreaFile)
         fprintf(fid,' %s',PALMSettings.SurfAreaFile);
@@ -107,6 +118,9 @@ end
 if PALMSettings.TwoTailed
     fprintf(fid,'-twotail\n');
 end
+if PALMSettings.SavePermutations
+    fprintf(fid,'-saveperms\n');
+end
 if PALMSettings.ClusterInference
     fprintf(fid,'-C %g\n',PALMSettings.ClusterFormingThreshold);
 end
@@ -121,3 +135,17 @@ end
 fprintf(fid,'-o %s\n',fullfile(Path, fileN));
 fclose(fid);
 palm([TempDir,filesep,'PALMConfig.txt']);
+
+
+%If this is DPABINet Matrix, then read the gifti fwep and save into matrices
+if exist('Header_DPABINetMatrix','var') && (~isempty(Header_DPABINetMatrix))
+    [Path, Name, Ext]=fileparts(OutputName); %YAN Chao-Gan, 200516. Deal with the Ext
+    FileName=fullfile(Path, [Name,'_dpv_tstat_fwep.gii']);
+    Data=y_ReadAll(FileName);
+    y_Write(Data,Header_DPABINetMatrix,fullfile(Path, [Name,'_PALM_fwep.mat']));
+    
+    FileName=fullfile(Path, [Name,'_dpv_tstat_uncp.gii']);
+    Data=y_ReadAll(FileName);
+    y_Write(Data,Header_DPABINetMatrix,fullfile(Path, [Name,'_PALM_uncp.mat']));
+end
+

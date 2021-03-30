@@ -311,6 +311,10 @@ if isempty(D)
     D=dir(fullfile(Path, '*.gii'));
 end
 
+if isempty(D)
+    D=dir(fullfile(Path, '*.mat'));
+end
+
 NameCell={D.name}';
 Num=numel(NameCell);
 CovImageCell=cellfun(@(Name) fullfile(Path, Name), NameCell,...
@@ -359,6 +363,10 @@ end
 
 if isempty(D)
     D=dir(fullfile(Path, '*.gii'));
+end
+
+if isempty(D)
+    D=dir(fullfile(Path, '*.mat'));
 end
 
 NameCell={D.name}';
@@ -769,6 +777,7 @@ if get(handles.checkboxPALM,'Value')
         PALMSettings.TFCE=1;
         PALMSettings.FDR=0;
         PALMSettings.TwoTailed=1; %YAN Chao-Gan, 171022. Set to 1. PALMSettings.TwoTailed=0;
+        PALMSettings.SavePermutations=0; %YAN Chao-Gan, 210123. 
         PALMSettings.AccelerationMethod='NoAcceleration'; % or 'tail', 'gamma', 'negbin', 'lowrank', 'noperm'
         
         PALMSettings.SurfFile=''; %YAN Chao-Gan, 181209. Add surface support.

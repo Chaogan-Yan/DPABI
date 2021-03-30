@@ -30,7 +30,7 @@ CovariateVolume=[];
 OtherCovariatesMatrix=[];
 for i=1:1
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDirs{i});
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         FinalDim=4;
     else
         FinalDim=2;
@@ -62,7 +62,7 @@ for i=1:1
 end
 
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
     [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
 else
     [nDimVertex nDimTimePoints]=size(DependentVolume);
@@ -94,12 +94,15 @@ else
     rCorr = TTest1_T./(sqrt(Df_E+TTest1_T.*TTest1_T));
     %r = t./(sqrt(Df_E+t.*t))
     
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         Index = findstr(Header.descrip,'}');
         Header.descrip = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.descrip(Index(1)+1:end));
-    else
+    elseif isfield(Header,'cdata')
         Index = findstr(Header.private.metadata(4).value,'}');
         Header.private.metadata(4).value = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.private.metadata(4).value(Index(1)+1:end));
+    elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
+        Header.OtherInfo.StatOpt.TestFlag='R';
+        Header.OtherInfo.StatOpt.Df=Df_E;
     end
 
     y_Write(rCorr,Header,OutputName);

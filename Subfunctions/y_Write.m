@@ -1,5 +1,5 @@
 function y_Write(Data,Header,OutName)
-% Write NIfTI file (3D or 4D) Based on SPM's nifti or Write GIfTI file (1D or 2D) Based on SPM's gifti
+% Write NIfTI file (3D or 4D) Based on SPM's nifti or Write GIfTI file (1D or 2D) Based on SPM's gifti or Write DPABINet Matrix files
 % %------------------------------------------------------------------------
 % 1. For NIfTI
 % Write data (Data) with a specified header (Header) into a image file with format
@@ -41,6 +41,14 @@ function y_Write(Data,Header,OutName)
 % 2) Header - a structure containing image GIfTI information, the structure
 %             is the same with a structure have read.
 %             It must have a subfield .cdata!!!
+%
+% 3. For DPABINet Matrix
+% Write data (Data) with a specified header (Header) into a .mat file with format defined in Header.
+% 1) Data -  Data of 1D or 2D matrix to write
+% 2) Header - a structure containing DPABINet Matrix information: Header.MatrixNames and Header.MatrixSize, the structure is the same with a structure have read.
+%       Header.MatrixNames  - the matrix names. Must have!
+%       Header.MatrixSize   - the size of the matrices.
+
 % 3) OutName - the path and filename of image file to output [path\*.gii]
 
 % ------------------------------------------------------------------------
@@ -51,7 +59,35 @@ function y_Write(Data,Header,OutName)
 % ycg.yan@gmail.com
 % Revised by YAN Chao-Gan 181204. Add GIfTI support.
 
-if ~isfield(Header,'cdata')
+if isfield(Header,'cdata')  %YAN Chao-Gan 181204. Add GIfTI support.
+    [Path,Name,Ext] = fileparts(OutName);
+    if isempty(Ext)
+        OutName=[OutName,'.gii'];
+    end
+    
+    if isequal(size(Header.cdata), size(Data))
+        Header.cdata(:,:) = Data;
+    else
+        Header = gifti(Data);
+    end
+    save(Header,OutName,'Base64Binary');
+
+elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
+    [Path,Name,Ext] = fileparts(OutName);
+    if isempty(Ext)
+        Ext='.mat';
+    end
+    if size(Data,2)==1
+        OutName=[fullfile(Path,Name), Ext];
+        y_WriteMat(Data,Header,OutName);
+    else
+        for j=1:size(Data,2)
+            OutName=sprintf('%s_%.6d%s', fullfile(Path,Name), j, Ext);
+            y_WriteMat(Data(:,j),Header,OutName);
+        end
+    end
+    
+else %NIfTI Files
     [Path,Name,Ext] = fileparts(OutName);
     if isempty(Ext)
         OutName=[OutName,'.nii'];
@@ -89,21 +125,7 @@ if ~isfield(Header,'cdata')
         NIfTIObject.timing = Header.timing;
     catch
     end
-    
-    
+
     create(NIfTIObject);
     dat(:,:,:,:)=Data;
-    
-else %YAN Chao-Gan 181204. Add GIfTI support.
-    [Path,Name,Ext] = fileparts(OutName);
-    if isempty(Ext)
-        OutName=[OutName,'.gii'];
-    end
-    
-    if isequal(size(Header.cdata), size(Data))
-        Header.cdata(:,:) = Data;
-    else
-        Header = gifti(Data);
-    end
-    save(Header,OutName,'Base64Binary');
 end

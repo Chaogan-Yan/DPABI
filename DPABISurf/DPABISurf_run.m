@@ -401,7 +401,12 @@ if (Cfg.RemoveFirstTimePoints>0)
                     if Cfg.TimePoints>0 && size(Nii.dat,4)~=Cfg.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
                         Error=[Error;{['Error in Removing First ',num2str(Cfg.RemoveFirstTimePoints),'Time Points: ',Cfg.SubjectID{i}]}];
                     end
-                    y_Write(Nii.dat(:,:,:,Cfg.RemoveFirstTimePoints+1:end),Nii,DirImg(1).name);
+                    %y_Write(Nii.dat(:,:,:,Cfg.RemoveFirstTimePoints+1:end),Nii,DirImg(1).name);
+                    %YAN Chao-Gan, 210309. Save in single incase of Philips data.
+                    [Data Header]=y_Read(DirImg(1).name);
+                    Header.pinfo=[1;0;0]; Header.dt=[16,0];
+                    y_Write(Data(:,:,:,Cfg.RemoveFirstTimePoints+1:end),Header,DirImg(1).name);
+                    
                 end
                 
             end

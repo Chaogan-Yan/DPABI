@@ -48,7 +48,7 @@ if exist('CovVolume','var') && (~isnumeric(CovVolume))
     end
 end
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
     [nDim1,nDim2,nDim3,nDim4]=size(DependentVolume);
     if ~isempty(MaskFile)
         [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskFile);
@@ -177,34 +177,51 @@ else %YAN Chao-Gan 181204. Take care GIfTI data
     Cohen_f2_brain(isnan(Cohen_f2_brain))=0;
     
     DOF = nDimTimePoints - size([Predictor,CovVariable],2);
-    
-    
-    [FWHM] = w_Smoothest_Surf([],{r_OLS_brain}, {MaskFile});
-    %FWHM=w_Smoothest_Surf(SurfFiles, ResidualFiles, MskFiles)
-    
+
     HeaderTWithDOF=Header;
-    HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{T_[%.1f]}{FWHM_%fmm}',DOF,FWHM))];
+    
+    if isfield(Header,'cdata')
+        [FWHM] = w_Smoothest_Surf([],{r_OLS_brain}, {MaskFile});
+        %FWHM=w_Smoothest_Surf(SurfFiles, ResidualFiles, MskFiles)
+        HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{T_[%.1f]}{FWHM_%fmm}',DOF,FWHM))];
+    elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
+        HeaderTWithDOF.OtherInfo.StatOpt.TestFlag='T';
+        HeaderTWithDOF.OtherInfo.StatOpt.Df=DOF;
+    end
 end
 
 
 [Path, Name, Ext]=fileparts(OutputName); %YAN Chao-Gan, 200516. Deal with the Ext
 if isempty(Ext)
-    Ext='.nii';
+    if isfield(Header,'cdata')
+        Ext='.gii';
+    elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
+        Ext='.mat';
+    else
+        Ext='.nii';
+    end
 end
 Name=fullfile(Path, Name);
 
 if exist('Contrast','var') && ~isempty(Contrast)
     if strcmpi(TF_Flag,'F') %If TF_Flag is 'T', then still use the previously defined T Header.
         Df_Group = length(find(Contrast));
-        if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+        if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
             Df_E = nDim4 - size([Predictor,CovVariable],2);
             HeaderTWithDOF=Header;
             HeaderTWithDOF.descrip=sprintf('DPABI{F_[%.1f,%.1f]}{dLh_%f}{FWHMx_%fFWHMy_%fFWHMz_%fmm}',Df_Group,Df_E,dLh,FWHM(1),FWHM(2),FWHM(3));
         else
             Df_E = nDimTimePoints - size([Predictor,CovVariable],2);
             HeaderTWithDOF=Header;
-            %HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{F_[%.1f,%.1f]}',Df_Group,Df_E))];
-            HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{F_[%.1f,%.1f]}{FWHM_%fmm}',Df_Group,Df_E,FWHM))];
+
+            if isfield(Header,'cdata')
+                HeaderTWithDOF.private.metadata = [HeaderTWithDOF.private.metadata, struct('name','DOF','value',sprintf('DPABI{F_[%.1f,%.1f]}{FWHM_%fmm}',Df_Group,Df_E,FWHM))];
+            elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
+                HeaderTWithDOF.OtherInfo.StatOpt.TestFlag='F';
+                HeaderTWithDOF.OtherInfo.StatOpt.Df=Df_Group;
+                HeaderTWithDOF.OtherInfo.StatOpt.Df2=Df_E;
+            end
+
         end
     end
     
@@ -212,9 +229,17 @@ if exist('Contrast','var') && ~isempty(Contrast)
     y_Write(Cohen_f2_brain,HeaderTWithDOF,[Name,'_Cohen_f2',Ext]); %YAN Chao-Gan 170714, Added Cohen's f squared (Effect Size)
 
 else % Output all the T files.
-    for ii=1:size(b_OLS_brain,4)
-        y_Write(squeeze(b_OLS_brain(:,:,:,ii)),Header,[Name,'_b',num2str(ii),Ext]);
-        y_Write(squeeze(t_OLS_brain(:,:,:,ii)),HeaderTWithDOF,[Name,'_T',num2str(ii),Ext]);
+    
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 210330. If NIfTI data
+        for ii=1:size(b_OLS_brain,4)
+            y_Write(squeeze(b_OLS_brain(:,:,:,ii)),Header,[Name,'_b',num2str(ii),Ext]);
+            y_Write(squeeze(t_OLS_brain(:,:,:,ii)),HeaderTWithDOF,[Name,'_T',num2str(ii),Ext]);
+        end
+    else
+        for ii=1:size(b_OLS_brain,2)
+            y_Write(squeeze(b_OLS_brain(:,ii)),Header,[Name,'_b',num2str(ii),Ext]);
+            y_Write(squeeze(t_OLS_brain(:,ii)),HeaderTWithDOF,[Name,'_T',num2str(ii),Ext]);
+        end
     end
 end
 

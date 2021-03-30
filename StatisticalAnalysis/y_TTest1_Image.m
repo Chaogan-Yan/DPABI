@@ -35,7 +35,7 @@ CovariateVolume=[];
 OtherCovariatesMatrix=[];
 for i=1:1
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDirs{i});
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         FinalDim=4;
     else
         FinalDim=2;
@@ -66,7 +66,7 @@ for i=1:1
     clear AllVolume
 end
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
     [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
 else
     [nDimVertex nDimTimePoints]=size(DependentVolume);
@@ -75,7 +75,7 @@ end
 
 %Mean centering the covariates -- since this is testing the effect the constant column
 if exist('CovariateDirs','var') && ~isempty(CovariateDirs)
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         CovariateVolume = CovariateVolume - repmat(mean(CovariateVolume,FinalDim),[1,1,1,nDimTimePoints]);
     else
         CovariateVolume = CovariateVolume - repmat(mean(CovariateVolume,FinalDim),[1,nDimTimePoints]);

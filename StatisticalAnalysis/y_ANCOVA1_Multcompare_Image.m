@@ -45,7 +45,7 @@ GroupLabel=[];
 OtherCovariatesMatrix=[];
 for i=1:GroupNumber
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDirs{i});
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         FinalDim=4;
     else
         FinalDim=2;
@@ -77,7 +77,7 @@ for i=1:GroupNumber
     clear AllVolume
 end
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
     [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
 else
     [nDimVertex nDimTimePoints]=size(DependentVolume);
@@ -112,7 +112,7 @@ if ~strcmp(ctype,'None')
     Df_E = size(Regressors,1) - size(Contrast,2);
     s_brain = sqrt(SSE_OLS_brain/Df_E);
     
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         for iGroup = 1:length(GroupLabelUnique)
             GroupMeans(:,:,:,iGroup) = mean(DependentVolume(:,:,:,find(GroupLabel==GroupLabelUnique(iGroup))),4);
             n(iGroup,1) = length(find(GroupLabel==GroupLabelUnique(iGroup)));
@@ -217,20 +217,27 @@ if ~strcmp(ctype,'None')
                 Pairwise_Z_Brain(i,:) = ZTemp;
             end
         end
-        
-        
+
         [Path, Name, Ext]=fileparts(OutputName);
         Name=fullfile(Path, Name);
         for i=1:size(M,1)
-            Header.private.metadata = [Header.private.metadata, struct('name','FileType','value',sprintf('PairwiseDiff: mean'))];
-            y_Write(PairwiseDiff_Brain(:,i),Header,sprintf('%s_PairwiseDiff_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
-            Header.private.metadata = [Header.private.metadata, struct('name','FileType','value',sprintf('PairwiseDiff: p'))];
-            y_Write(Pairwise_p_Brain(:,i),Header,sprintf('%s_PairwiseDiff_p_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
-            Header.private.metadata = [Header.private.metadata, struct('name','DOF','value',sprintf('DPABI{Z_[%.1f]}',1))];
-            y_Write(Pairwise_Z_Brain(:,i),Header,sprintf('%s_PairwiseDiff_Z_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
+            if isfield(Header,'cdata')
+                Header.private.metadata = [Header.private.metadata, struct('name','FileType','value',sprintf('PairwiseDiff: mean'))];
+                y_Write(PairwiseDiff_Brain(:,i),Header,sprintf('%s_PairwiseDiff_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
+                Header.private.metadata = [Header.private.metadata, struct('name','FileType','value',sprintf('PairwiseDiff: p'))];
+                y_Write(Pairwise_p_Brain(:,i),Header,sprintf('%s_PairwiseDiff_p_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
+                Header.private.metadata = [Header.private.metadata, struct('name','DOF','value',sprintf('DPABI{Z_[%.1f]}',1))];
+                y_Write(Pairwise_Z_Brain(:,i),Header,sprintf('%s_PairwiseDiff_Z_G%gvsG%g.gii',Name,M(i,1),M(i,2)));
+            elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
+                y_Write(PairwiseDiff_Brain(:,i),Header,sprintf('%s_PairwiseDiff_G%gvsG%g.mat',Name,M(i,1),M(i,2)));
+                y_Write(Pairwise_p_Brain(:,i),Header,sprintf('%s_PairwiseDiff_p_G%gvsG%g.mat',Name,M(i,1),M(i,2)));
+                HeaderTWithDOF=Header;
+                HeaderTWithDOF.OtherInfo.StatOpt.TestFlag='Z';
+                HeaderTWithDOF.OtherInfo.StatOpt.Df=1;
+                y_Write(Pairwise_Z_Brain(:,i),HeaderTWithDOF,sprintf('%s_PairwiseDiff_Z_G%gvsG%g.mat',Name,M(i,1),M(i,2)));
+            end
         end
-        
-        
+
         fprintf('\n\tMultiple comparison test finished.\n');
     end
 end

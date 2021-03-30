@@ -22,7 +22,7 @@ function varargout = y_PALMSetting(varargin)
 
 % Edit the above text to modify the response to help y_PALMSetting
 
-% Last Modified by GUIDE v2.5 09-Dec-2018 08:20:25
+% Last Modified by GUIDE v2.5 23-Jan-2021 06:42:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,6 +58,7 @@ if nargin<4
     PALMSettings.TFCE=1;
     PALMSettings.FDR=0;
     PALMSettings.TwoTailed=1; %YAN Chao-Gan, 171022. Set to 1. PALMSettings.TwoTailed=0;
+    PALMSettings.SavePermutations=0; %YAN Chao-Gan, 210123. 
     PALMSettings.AccelerationMethod='NoAcceleration'; % or 'tail', 'gamma', 'negbin', 'lowrank', 'noperm'
     
     PALMSettings.SurfFile=''; %YAN Chao-Gan, 181209. Add surface support.
@@ -104,6 +105,7 @@ PALMSettings.ClusterFormingThreshold=str2num(get(handles.editClusterFormingThres
 PALMSettings.TFCE=get(handles.checkboxTFCE, 'Value');
 PALMSettings.FDR=get(handles.checkboxFDR, 'Value');
 PALMSettings.TwoTailed=get(handles.checkboxTwoTailed, 'Value');
+PALMSettings.SavePermutations=get(handles.checkboxSavePermutations, 'Value');; %YAN Chao-Gan, 210123. 
 switch get(handles.MethodPopup,'Value')
     case 1
         PALMSettings.AccelerationMethod='NoAcceleration';
@@ -268,6 +270,7 @@ set(handles.editClusterFormingThreshold, 'Enable', Flag, 'String', num2str(Struc
 set(handles.checkboxTFCE, 'Value', Struct.TFCE);
 set(handles.checkboxFDR, 'Value', Struct.FDR);
 set(handles.checkboxTwoTailed, 'Value', Struct.TwoTailed);
+set(handles.checkboxSavePermutations, 'Value', Struct.SavePermutations);
 switch Struct.AccelerationMethod
     case 'NoAcceleration'
         MethodValue=1;
@@ -358,3 +361,11 @@ if ~([FileName,PathName]==0)
 end
 guidata(hObject, handles);
 
+
+% --- Executes on button press in checkboxSavePermutations.
+function checkboxSavePermutations_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxSavePermutations (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkboxSavePermutations

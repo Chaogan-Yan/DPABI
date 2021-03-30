@@ -654,9 +654,12 @@ if (AutoDataProcessParameter.RemoveFirstTimePoints>0)
                     if AutoDataProcessParameter.TimePoints>0 && size(Nii.dat,4)~=AutoDataProcessParameter.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
                         Error=[Error;{['Error in Removing First ',num2str(AutoDataProcessParameter.RemoveFirstTimePoints),'Time Points: ',AutoDataProcessParameter.SubjectID{i}]}];
                     end
+                    %y_Write(Nii.dat(:,:,:,AutoDataProcessParameter.RemoveFirstTimePoints+1:end),Nii,DirImg(1).name);
+
+                    %YAN Chao-Gan, 210309. Save in single incase of Philips data.
                     [Data Header]=y_Read(DirImg(1).name);
-                    
-                    y_Write(Nii.dat(:,:,:,AutoDataProcessParameter.RemoveFirstTimePoints+1:end),Nii,DirImg(1).name);
+                    Header.pinfo=[1;0;0]; Header.dt=[16,0];
+                    y_Write(Data(:,:,:,AutoDataProcessParameter.RemoveFirstTimePoints+1:end),Header,DirImg(1).name);
                 end
                 
             end
@@ -4333,21 +4336,21 @@ end
 if (AutoDataProcessParameter.IsExtractROISignals==1)
     for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
         
-        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,FunSessionPrefixSet{iFunSession},'ROISignals_',AutoDataProcessParameter.StartingDirName]);
+        mkdir([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_',AutoDataProcessParameter.StartingDirName]);
         
         %Extract the ROI time courses
         parfor i=1:AutoDataProcessParameter.SubjectNum
             
             y_ExtractROISignal([AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
                 AutoDataProcessParameter.CalFC.ROIDefForEachSubject{i}, ...
-                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,FunSessionPrefixSet{iFunSession},'ROISignals_',AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
+                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_',AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
                 '', ... % Will not restrict into the brain mask in extracting ROI signals
                 AutoDataProcessParameter.CalFC.IsMultipleLabel);
             
             
             %YAN Chao-Gan, 210119. Also Extract Center of Mass.
             y_ExtractROICenterOfMass(AutoDataProcessParameter.CalFC.ROIDefForEachSubject{i}, ...
-                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,FunSessionPrefixSet{iFunSession},'ROISignals_',AutoDataProcessParameter.StartingDirName,filesep,'ROI_CenterOfMass_',AutoDataProcessParameter.SubjectID{i}], ...
+                [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_',AutoDataProcessParameter.StartingDirName,filesep,'ROI_CenterOfMass_',AutoDataProcessParameter.SubjectID{i}], ...
                 AutoDataProcessParameter.CalFC.IsMultipleLabel, ...
                 [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
             

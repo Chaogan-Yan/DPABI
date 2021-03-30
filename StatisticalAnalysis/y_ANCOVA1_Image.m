@@ -39,7 +39,7 @@ GroupLabel=[];
 OtherCovariatesMatrix=[];
 for i=1:GroupNumber
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDirs{i});
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         FinalDim=4;
     else
         FinalDim=2;
@@ -71,7 +71,7 @@ for i=1:GroupNumber
     clear AllVolume
 end
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
     [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
 else
     [nDimVertex nDimTimePoints]=size(DependentVolume);

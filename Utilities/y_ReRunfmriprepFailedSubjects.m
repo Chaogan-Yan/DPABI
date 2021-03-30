@@ -73,7 +73,7 @@ WaitingID=[];
 for i=1:Cfg.SubjectNum
     if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i}))
         %if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs')) || exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'log'))
-        if CheckFailedLogs(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i})) %YAN Chao-Gan, 200904. Use new logic according to fmriprep's change
+        if CheckFailedLogs(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i})) || CheckMissingFiles(Cfg.WorkingDir,Cfg.SubjectID{i}) %YAN Chao-Gan, 200904. Use new logic according to fmriprep's change
             FailedID=[FailedID;Cfg.SubjectID(i)];
         else
             SuccessID=[SuccessID;Cfg.SubjectID(i)];
@@ -239,6 +239,19 @@ if exist(fullfile(SubDir,'log'))
             end
         end
     end
+end
+
+
+function HasMissingFiles = CheckMissingFiles(WorkingDir,SubjectID)
+%YAN Chao-Gan 210205. Check Missing Files according for fmriprep
+HasMissingFiles = 0;
+DirFiles_surf=dir(fullfile(WorkingDir,'freesurfer',SubjectID,'surf','*'));
+DirFiles_func=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'func','*'));
+if length(DirFiles_func)~=17
+    DirFiles_func=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'ses-1','func','*'));
+end
+if length(DirFiles_surf)~=84 || length(DirFiles_func)~=17
+    HasMissingFiles = 1;
 end
 
 

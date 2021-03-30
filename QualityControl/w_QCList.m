@@ -198,6 +198,9 @@ else
         end
         if numel(D) > 1
             D=dir(fullfile(Path, 'c*.nii'));
+            if isempty(D)
+                D=dir(fullfile(Path, '*_Crop_*.nii'));
+            end
         end
         D=D(1);
         Image=fullfile(Path, D.name);

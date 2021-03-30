@@ -38,7 +38,7 @@ WithinSubjectFactor=[];
 SubjectRegressorsAll=[];
 for i=1:length(DependentDir)
     [AllVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentDir{i});
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         FinalDim=4;
     else
         FinalDim=2;
@@ -80,7 +80,7 @@ for i=1:length(DependentDir)
     clear AllVolume
 end
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
     [nDim1,nDim2,nDim3,nDimTimePoints]=size(DependentVolume);
 else
     [nDimVertex nDimTimePoints]=size(DependentVolume);
@@ -145,14 +145,14 @@ end
 
 
 % For two-sample t-test
-if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
     DependentVolumeSubjectMean=zeros(nDim1,nDim2,nDim3,nSub);
 else
     DependentVolumeSubjectMean=zeros(nDimVertex,nSub);
 end
 GroupLabel=zeros(nSub,1);
 for i=1:nSub
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         DependentVolumeSubjectMean(:,:,:,i) = mean(DependentVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4);
     else
         DependentVolumeSubjectMean(:,i) = mean(DependentVolume(:,find(SubjectRegressorsAll==SubIndex(i))),2);
@@ -160,7 +160,7 @@ for i=1:nSub
     GroupLabel(i,1)=mean(BetweenSubjectFactor(find(SubjectRegressorsAll==SubIndex(i))));
 end
 if exist('CovariateDirs','var') && (~isempty(CovariateDirs))
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
         CovVolumeSubjectMean=zeros(nDim1,nDim2,nDim3,nSub);
         for i=1:nSub
             CovVolumeSubjectMean(:,:,:,i) = mean(CovariateVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4); %YAN Chao-Gan, 171126. CovVolume is not defined. %CovVolumeSubjectMean(:,:,:,i) = mean(CovVolume(:,:,:,find(SubjectRegressorsAll==SubIndex(i))),4);

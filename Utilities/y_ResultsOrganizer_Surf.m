@@ -27,17 +27,20 @@ end
 
 for iFunSession=1:FunctionalSessionNumber
     mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results'])
-    copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfLH'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfLH']);
-    copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfRH'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfRH']);
+    
+    if iFunSession==1 %YAN Chao-Gan, 210219. In case there are multiple sessions. Anat is in the first session
+        copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfLH'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfLH']);
+        copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfRH'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatSurfRH']);
+        
+        mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu'])
+        copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'*.tsv'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu']);
 
-    mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu'])
-    copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'*.tsv'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu']);
-
-    parfor iSub=1:length(SubjectID)
-        mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub}])
-        DirFiles=dir([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub},filesep,'*.nii']);
-        for iFile=1:length(DirFiles)
-            gzip([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub},filesep,DirFiles(iFile).name],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub}]);
+        parfor iSub=1:length(SubjectID)
+            mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub}])
+            DirFiles=dir([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub},filesep,'*.nii']);
+            for iFile=1:length(DirFiles)
+                gzip([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub},filesep,DirFiles(iFile).name],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,SubjectID{iSub}]);
+            end
         end
     end
     
