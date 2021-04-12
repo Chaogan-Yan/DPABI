@@ -45,7 +45,7 @@ Rate2Series = Rate2Series ./ (length(Rate2Dir));
 
 
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 190116. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 210402. If NIfTI data
     [nDim1,nDim2,nDim3,nDim4]=size(Rate2Series);
     if ~isempty(MaskFile)
         [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskFile);

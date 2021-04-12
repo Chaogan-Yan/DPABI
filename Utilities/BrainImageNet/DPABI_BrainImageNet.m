@@ -90,7 +90,7 @@ function pushbutton_PredictOnline_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-web('http://brainimagenet.org:8088/','-browser');
+web('http://brainimagenet.org','-browser');
 
 
 

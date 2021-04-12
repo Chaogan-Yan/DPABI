@@ -107,7 +107,7 @@ function ImageAdd_Callback(hObject, eventdata, handles)
 % hObject    handle to ImageAdd (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[Names, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+[Names, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii;*.mat','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
     'Pick the Images', 'MultiSelect','on');
 
 if isnumeric(Names)
@@ -191,6 +191,10 @@ end
 
 if isempty(D)
     D=dir(fullfile(Path, '*.gii'));
+end
+
+if isempty(D)
+    D=dir(fullfile(Path, '*.mat'));
 end
 
 NameCell={D.name}';

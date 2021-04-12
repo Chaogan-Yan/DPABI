@@ -358,6 +358,10 @@ if isempty(D)
     D=dir(fullfile(Path, '*.gii'));
 end
 
+if isempty(D)
+    D=dir(fullfile(Path, '*.mat'));
+end
+
 NameCell={D.name}';
 Num=num2str(numel(NameCell));
 ImgCell=cellfun(@(Name) fullfile(Path, Name), NameCell,...
@@ -428,7 +432,7 @@ function MaskButton_Callback(hObject, eventdata, handles)
 % hObject    handle to MaskButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii;*.mat','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii;*.mat)';'*.*', 'All Files (*.*)';},...
     'Pick Image File' , handles.CurDir);
 
 if isnumeric(File)
@@ -442,7 +446,7 @@ function AddImgTable1_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgTable1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii;*.mat','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii;*.mat)';'*.*', 'All Files (*.*)';},...
     'Pick Image File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
@@ -471,7 +475,7 @@ function AddImgButton1_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii;*.mat','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii;*.mat)';'*.*', 'All Files (*.*)';},...
     'Pick Image File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
@@ -502,7 +506,7 @@ function AddImgButton2_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgButton2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii;*.mat','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii;*.mat)';'*.*', 'All Files (*.*)';},...
     'Pick Image File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
@@ -604,7 +608,7 @@ function AddImgTable2_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgTable2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii;*.mat','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii;*.mat)';'*.*', 'All Files (*.*)';},...
     'Pick Image File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;

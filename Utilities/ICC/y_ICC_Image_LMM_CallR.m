@@ -23,7 +23,7 @@ CovW=[];
 CovB=[];
 for i=1:length(RateDir)
     [AllVolumeTemp,VoxelSize,theImgFileList, Header] = y_ReadAll(RateDir{i});
-    if ~isfield(Header,'cdata') %YAN Chao-Gan 181204. If NIfTI data
+    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 210402. If NIfTI data
         FinalDim=4;
     else
         FinalDim=2;
@@ -47,7 +47,7 @@ for i=1:length(RateDir)
     clear AllVolumeTemp
 end
 
-if ~isfield(Header,'cdata') %YAN Chao-Gan 190116. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 210402. If NIfTI data
     [nDim1,nDim2,nDim3,nDimTimePoints]=size(AllVolume);
     if ~isempty(MaskFile)
         [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskFile);
@@ -99,7 +99,7 @@ eval(Expression);
 load(MatNameRResults);
 
 % Get the brain back
-if ~isfield(Header,'cdata') %YAN Chao-Gan 190116. If NIfTI data
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 210402. If NIfTI data
     ICCBrain=zeros(size(MaskDataOneDim));
     ICCBrain(1,MaskIndex)=icc;
     ICCBrain=reshape(ICCBrain,nDim1, nDim2, nDim3);

@@ -1,0 +1,39 @@
+MATLAB raw data structure name: 
+RawDataCircos
+
+Elements (must have):
+
+(1)(double) HigherOrderNetworkIndex
+Identify networks of corresponding regions
+COLUMN		FORMAT		CONTENT
+1		numeric		network of specific region
+
+(2)(double) ProcMatrix
+Processed matrix of magnitude of regions correlation, specifically, if 0, don't need to plot links
+
+(3)(double) CmapLimit
+Consist of colormap limit 
+[minimum of left range, maximum of left range;
+minimum of right range, maximum of right range]
+
+
+
+Elements below isn't obliged:
+
+(4)(cell) ElementLabel 
+Identify regions' order and label
+COLUMN		FORMAT		CONTENT
+1		numeric		region order
+2		char		region name
+
+
+(5)(cell) HigherOrderNetworkLabel
+Identify networks' order and label
+COLUMN		FORMAT		CONTENT
+1		numeric		network order
+2		char		network name
+
+(6)(double) ColorMap
+n*3 matrix, consist of customized color map in RGB
+(Recommend even quantity)
+
