@@ -243,16 +243,17 @@ if isfield(Cfg,'TR')
                 tline = fgetl(fid); %Skip the title line
                 TRInfoTemp = textscan(fid,StringFilter);
                 fclose(fid);
-                
-                for i=1:Cfg.SubjectNum
-                    if ~strcmp(Cfg.SubjectID{i},TRInfoTemp{1}{i})
-                        error(['The subject ID ',TRInfoTemp{1}{i},' in TRInfo.tsv doesn''t match the target sbuject ID: ',Cfg.SubjectID{i},'!'])
-                    end
-                end
-                
+
                 TRSet = zeros(Cfg.SubjectNum,Cfg.FunctionalSessionNumber);
-                for iFunSession=1:Cfg.FunctionalSessionNumber
-                    TRSet(:,iFunSession) = TRInfoTemp{1+iFunSession}; %The first column is Subject ID
+                for i=1:Cfg.SubjectNum
+                    [HasSubject SubjectIndex] = ismember(Cfg.SubjectID{i},TRInfoTemp{1});
+                    if HasSubject
+                        for iFunSession=1:Cfg.FunctionalSessionNumber
+                            TRSet(i,iFunSession) = TRInfoTemp{1+iFunSession}(SubjectIndex); %The first column is Subject ID
+                        end
+                    else
+                        error(['The subject ID ',Cfg.SubjectID{i},' was not found in TRInfo.tsv!'])
+                    end
                 end
                 
             elseif (2==exist([Cfg.WorkingDir,filesep,'TRSet.txt'],'file'))  %If the TR information is stored in TRSet.txt (DPARSF V2.2).
@@ -1417,7 +1418,7 @@ end
 
 
 % Generate the appropriate ROI masks
-if (~isempty(Cfg.CalFC.ROIDefVolu))
+if (~isempty(Cfg.CalFC.ROIDefVolu)) && ((Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1))
     if ~(7==exist([Cfg.WorkingDir,filesep,'Masks'],'dir'))
         mkdir([Cfg.WorkingDir,filesep,'Masks']);
     end

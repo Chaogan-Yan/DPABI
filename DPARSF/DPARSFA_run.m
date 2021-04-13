@@ -518,18 +518,19 @@ if isfield(AutoDataProcessParameter,'TR')
                 tline = fgetl(fid); %Skip the title line
                 TRInfoTemp = textscan(fid,StringFilter);
                 fclose(fid);
-                
+
+                TRSet = zeros(AutoDataProcessParameter.SubjectNum,AutoDataProcessParameter.FunctionalSessionNumber);
                 for i=1:AutoDataProcessParameter.SubjectNum
-                    if ~strcmp(AutoDataProcessParameter.SubjectID{i},TRInfoTemp{1}{i})
-                        error(['The subject ID ',TRInfoTemp{1}{i},' in TRInfo.tsv doesn''t match the target sbuject ID: ',AutoDataProcessParameter.SubjectID{i},'!'])
+                    [HasSubject SubjectIndex] = ismember(AutoDataProcessParameter.SubjectID{i},TRInfoTemp{1});
+                    if HasSubject
+                        for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
+                            TRSet(i,iFunSession) = TRInfoTemp{1+iFunSession}(SubjectIndex); %The first column is Subject ID
+                        end
+                    else
+                        error(['The subject ID ',AutoDataProcessParameter.SubjectID{i},' was not found in TRInfo.tsv!'])
                     end
                 end
-                
-                TRSet = zeros(AutoDataProcessParameter.SubjectNum,AutoDataProcessParameter.FunctionalSessionNumber);
-                for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
-                    TRSet(:,iFunSession) = TRInfoTemp{1+iFunSession}; %The first column is Subject ID
-                end
-                
+
             elseif (2==exist([AutoDataProcessParameter.DataProcessDir,filesep,'TRSet.txt'],'file'))  %If the TR information is stored in TRSet.txt (DPARSF V2.2).
                 TRSet = load([AutoDataProcessParameter.DataProcessDir,filesep,'TRSet.txt']);
                 TRSet = TRSet'; %YAN Chao-Gan 130612. This is for the compatibility with DPARSFA V2.2. Cause the TRSet saved there is in a transpose manner.
