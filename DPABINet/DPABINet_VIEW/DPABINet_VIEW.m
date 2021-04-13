@@ -1424,65 +1424,8 @@ function CircoPlotButton_Callback(hObject, eventdata, handles)
 % hObject    handle to CircoPlotButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Edge=GetThresholdedEdge(hObject);
-if isempty(Edge)
-    errordlg('Please set edge matrix first!');
-    return
-end
-
-if isempty(handles.Edge.ColorMap)
-    errordlg('Please set colormap first!');
-    return
-end
-
-NodeLab=[];
-if ~isempty(handles.Node.LabStruct)
-    NodeLab=handles.Node.LabStruct.Var;
-    NodeLab=[num2cell(1:numel(NodeLab))', NodeLab];
-end
-
-NodeNet=[];
-if ~isempty(handles.Node.NetStruct)
-    NodeNet=handles.Node.NetStruct.Var;
-end
-
-NodeNetLab=[];
-if ~isempty(handles.Node.NetLabStruct)
-    NodeNetLab=handles.Node.NetLabStruct.Var;
-end
-
-% Estimate NMax NMin PMin PMax
-Vec=Edge(:);
-PMax=max(Vec);
-NMax=min(Vec);
-if handles.Edge.MCCType==1
-    Thres=handles.Edge.Thres;
-    PMin=Thres;
-    NMin=-Thres;
-else
-    Ind=Vec>0;
-    if isempty(find(Ind, 1))
-        PMin=0;
-    else
-        PMin=min(Vec(Ind));
-    end
-    
-    Ind=Vec<0;
-    if isempty(Ind)
-        NMin=0;
-    else
-        NMin=max(Vec(Ind));
-    end
-end
-Limit=[NMax, NMin; PMin, PMax];
-
-CircosStruct=[];
-CircosStruct.ElementLabel=NodeLab;
-CircosStruct.HigherOrderNetworkIndex=NodeNet;
-CircosStruct.HigherOrderNetworkLabel=NodeNetLab;
-CircosStruct.ProcMatrix=Edge;
-CircosStruct.ColorMap=handles.Edge.ColorMap;
-CircosStruct.CmapLimit=Limit;
+% Circos Struct
+CircosStruct=GetCircosStruct(hObject);
 
 % Work Dir
 WorkDir=pwd;
@@ -2346,3 +2289,75 @@ S.CountSetPos=CountSet_Pos;
 S.CountSetNeg=CountSet_Neg;
 S.CountSetPosPercent=CountSetPosPercent;
 S.CountSetNegPercent=CountSetNegPercent;
+
+function CircosStruct=GetCircosStruct(hObject)
+CircosStruct=[];
+Edge=GetThresholdedEdge(hObject);
+
+handles=guidata(hObject);
+if isempty(Edge)
+    errordlg('Please set edge matrix first!');
+    return
+end
+NumNode=size(Edge);
+
+if isempty(handles.Edge.ColorMap)
+    errordlg('Please set colormap first!');
+    return
+end
+
+NodeNet=[];
+NodeInd=(1:NumNode)';
+if ~isempty(handles.Node.NetStruct)
+    NodeNet=handles.Node.NetStruct.Var;
+    [NodeNet, NodeInd]=sort(NodeNet);
+end
+
+NodeLab=[];
+if ~isempty(handles.Node.LabStruct)
+    NodeLab=handles.Node.LabStruct.Var;
+    NodeLab=[num2cell(1:numel(NodeLab))', NodeLab];
+    NodeLab=NodeLab(NodeInd, :);
+end
+
+NodeNetLab=[];
+if ~isempty(handles.Node.NetLabStruct)
+    NodeNetLab=handles.Node.NetLabStruct.Var;
+end
+
+% Sort Edge
+Edge=Edge(NodeInd, :);
+Edge=Edge(:, NodeInd);
+
+% Estimate NMax NMin PMin PMax
+Vec=Edge(:);
+PMax=max(Vec);
+NMax=min(Vec);
+if handles.Edge.MCCType==1
+    Thres=handles.Edge.Thres;
+    PMin=Thres;
+    NMin=-Thres;
+else
+    Ind=Vec>0;
+    if isempty(find(Ind, 1))
+        PMin=0;
+    else
+        PMin=min(Vec(Ind));
+    end
+    
+    Ind=Vec<0;
+    if isempty(Ind)
+        NMin=0;
+    else
+        NMin=max(Vec(Ind));
+    end
+end
+Limit=[NMax, NMin; PMin, PMax];
+
+% Circos Struct
+CircosStruct.ElementLabel=NodeLab;
+CircosStruct.HigherOrderNetworkIndex=NodeNet;
+CircosStruct.HigherOrderNetworkLabel=NodeNetLab;
+CircosStruct.ProcMatrix=Edge;
+CircosStruct.ColorMap=handles.Edge.ColorMap;
+CircosStruct.CmapLimit=Limit;
