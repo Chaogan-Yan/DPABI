@@ -42,13 +42,17 @@ DEFAULT_SPACING = 100;
 
 % define the amount of networks and regions
 nRegion = length(RawDataCircos.ProcMatrix(:,1)); % number of regions
+if (~isfield(RawDataCircos,'HigherOrderNetworkIndex') || isempty(RawDataCircos.HigherOrderNetworkIndex))
+    RawDataCircos.HigherOrderNetworkIndex = ones(nRegion,1);
+end
 nNetwork = max(RawDataCircos.HigherOrderNetworkIndex); % number of networks
+
 % networks and regions
 tabTemp = tabulate(RawDataCircos.HigherOrderNetworkIndex);
 nNetworkRegion = tabTemp(:,2);
 
 % if no label information, set them default
-if (isfield(RawDataCircos,'HigherOrderNetworkLabel') || isempty(RawDataCircos.HigherOrderNetworkLabel))
+if (~isfield(RawDataCircos,'HigherOrderNetworkLabel') || isempty(RawDataCircos.HigherOrderNetworkLabel))
     nameNetwork = cell(nNetwork,1);
     for k = 1:nNetwork
         nameNetwork(k) = cellstr(strcat('n',num2str(k)));
@@ -57,7 +61,7 @@ else
     nameNetwork = RawDataCircos.HigherOrderNetworkLabel(:,2);
 end
 
-if (isfield(RawDataCircos,'ElementLabel') || isempty(RawDataCircos.ElementLabel))
+if (~isfield(RawDataCircos,'ElementLabel') || isempty(RawDataCircos.ElementLabel))
     nameRegion = cell(nRegion,1);
     for k = 1:nRegion
         nameRegion(k) = cellstr(strcat('r',num2str(k)));
@@ -66,7 +70,7 @@ else
     nameRegion = RawDataCircos.ElementLabel(:,2);
 end
 
-
+% sort HigherOrderNetworkLabel & CircosStruct.HigherOrderNetworkLabel & CircosStruct.ElementLabel
 
 
 
