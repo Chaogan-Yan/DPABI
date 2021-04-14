@@ -60,6 +60,7 @@ if (~isfield(RawDataCircos,'HigherOrderNetworkLabel') || isempty(RawDataCircos.H
 else
     nameNetwork = RawDataCircos.HigherOrderNetworkLabel(:,2);
 end
+nameNetwork = strrep(nameNetwork,' ','_'); % replace space with underline
 
 if (~isfield(RawDataCircos,'ElementLabel') || isempty(RawDataCircos.ElementLabel))
     nameRegion = cell(nRegion,1);
@@ -69,9 +70,7 @@ if (~isfield(RawDataCircos,'ElementLabel') || isempty(RawDataCircos.ElementLabel
 else
     nameRegion = RawDataCircos.ElementLabel(:,2);
 end
-
-% sort HigherOrderNetworkLabel & CircosStruct.HigherOrderNetworkLabel & CircosStruct.ElementLabel
-
+nameRegion = strrep(nameRegion,' ','_'); % replace space with underline
 
 
 % generate correlation matrix for links, filter threshold
@@ -133,6 +132,9 @@ for k = 1:nCorr
     matColor(k,:) = fix(cmap(cmapArrCorr(k),:)*255);
 end
 
+% generate band colormap
+bandColormap = fix(hsv(nRegion)*255);
+
 % define width of a region band
 if LINK_MODE == 1 % even region and link width
     spacing = nRegion;
@@ -153,7 +155,8 @@ if LINK_MODE==1 || LINK_MODE==2
     % isometry band
     for k = 1:nNetwork
         fprintf(fid,'chr - %s %s ',['net',num2str(k)],cell2mat(nameNetwork(k)));
-        fprintf(fid,'%u %u %s',0,nNetworkRegion(k)*spacing,['chr',num2str(k)]); %color may not needed
+%         fprintf(fid,'%u %u %s',0,nNetworkRegion(k)*spacing,['chr',num2str(k)]); %color may not needed
+        fprintf(fid,'%u %u black',0,nNetworkRegion(k)*spacing); % no color on chr
         fprintf(fid,'\n');
     end
 elseif LINK_MODE==3
@@ -167,7 +170,8 @@ elseif LINK_MODE==3
     end
     for k = 1:nNetwork
         fprintf(fid,'chr - %s %s ',['net',num2str(k)],cell2mat(nameNetwork(k)));
-        fprintf(fid,'%u %u %s',0,network_width(k),['chr',num2str(k)]);
+%         fprintf(fid,'%u %u %s',0,network_width(k),['chr',num2str(k)]);
+        fprintf(fid,'%u %u black',0,network_width(k)); % no color on chr
         fprintf(fid,'\n');
     end
 elseif LINK_MODE==4
@@ -176,7 +180,8 @@ elseif LINK_MODE==4
     isoBandWidth = max(sum(matLinkWidthRatio100,2)); % initialize isometry band width
     for k = 1:nNetwork
         fprintf(fid,'chr - %s %s ',['net',num2str(k)],cell2mat(nameNetwork(k)));
-        fprintf(fid,'%u %u %s',0,nNetworkRegion(k)*isoBandWidth,['chr',num2str(k)]);
+%         fprintf(fid,'%u %u %s',0,nNetworkRegion(k)*isoBandWidth,['chr',num2str(k)]);
+        fprintf(fid,'%u %u black',0,nNetworkRegion(k)*isoBandWidth); % no color on chr
         fprintf(fid,'\n');
     end
 end
@@ -190,7 +195,9 @@ if LINK_MODE==1 || LINK_MODE==2 || LINK_MODE==4
     for k = 1:nNetwork
         for l = 1:nNetworkRegion(k)
             fprintf(fid,'band %s %s %s ',['net',num2str(k)],cell2mat(nameRegion(index)),cell2mat(nameRegion(index)));
-            fprintf(fid,'%u %u %s',(l-1)*spacing,l*spacing,['chr',num2str(index)]);
+            fprintf(fid,'%u %u ',(l-1)*spacing,l*spacing);
+%             fprintf(fid,'%s',['cort',num2str(index)]);
+            fprintf(fid,'rgb(%u,%u,%u)',bandColormap(index,1),bandColormap(index,2),bandColormap(index,3));
             fprintf(fid,'\n');
             index = index + 1;
         end
@@ -201,7 +208,9 @@ elseif LINK_MODE==3
         tempFormerSum = 0; % temporary record the sum of former band width
         for l = 1:nNetworkRegion(k)
             fprintf(fid,'band %s %s %s ',['net',num2str(k)],cell2mat(nameRegion(index)),cell2mat(nameRegion(index)));
-            fprintf(fid,'%u %u %s',tempFormerSum,tempFormerSum+bandWidth(index),['chr',num2str(index)]);
+            fprintf(fid,'%u %u ',tempFormerSum,tempFormerSum+bandWidth(index));
+%             fprintf(fid,'%s',['cort',num2str(index)]);
+            fprintf(fid,'rgb(%u,%u,%u)',bandColormap(index,1),bandColormap(index,2),bandColormap(index,3));
             fprintf(fid,'\n');
             tempFormerSum = tempFormerSum + bandWidth(index);
             index = index + 1;
@@ -322,7 +331,8 @@ elseif LINK_MODE == 2 % ratio link width mode
         % print on txt according to format
         fprintf(fid,'net%u %u %u ',rowCorrNet,rowCorrStart,rowCorrEnd);
         fprintf(fid,'net%u %u %u ',colCorrNet,colCorrStart,colCorrEnd);
-        fprintf(fid,'color=%u,%u,%u,%.1f',matColor(k,1),matColor(k,2),matColor(k,3),LINK_TRANSPARENCY);
+        fprintf(fid,'color=%u,%u,%u',matColor(k,1),matColor(k,2),matColor(k,3));
+%         fprintf(fid,'color=%u,%u,%u,%.1f',matColor(k,1),matColor(k,2),matColor(k,3),LINK_TRANSPARENCY);
         fprintf(fid,'\n');
     end
 elseif LINK_MODE==3
@@ -374,7 +384,8 @@ elseif LINK_MODE==3
         % print on txt according to format
         fprintf(fid,'net%u %u %u ',rowCorrNet,rowCorrStart,rowCorrEnd);
         fprintf(fid,'net%u %u %u ',colCorrNet,colCorrStart,colCorrEnd);
-        fprintf(fid,'color=%u,%u,%u,%.1f',matColor(k,1),matColor(k,2),matColor(k,3),LINK_TRANSPARENCY);
+        fprintf(fid,'color=%u,%u,%u',matColor(k,1),matColor(k,2),matColor(k,3));
+%         fprintf(fid,'color=%u,%u,%u,%.1f',matColor(k,1),matColor(k,2),matColor(k,3),LINK_TRANSPARENCY);
         fprintf(fid,'\n');
     end
 elseif LINK_MODE==4
@@ -415,7 +426,8 @@ elseif LINK_MODE==4
         % print on txt according to format
         fprintf(fid,'net%u %u %u ',rowCorrNet,rowCorrStart,rowCorrEnd);
         fprintf(fid,'net%u %u %u ',colCorrNet,colCorrStart,colCorrEnd);
-        fprintf(fid,'color=%u,%u,%u,%.1f',matColor(k,1),matColor(k,2),matColor(k,3),LINK_TRANSPARENCY);
+        fprintf(fid,'color=%u,%u,%u',matColor(k,1),matColor(k,2),matColor(k,3));
+%         fprintf(fid,'color=%u,%u,%u,%.1f',matColor(k,1),matColor(k,2),matColor(k,3),LINK_TRANSPARENCY);
         fprintf(fid,'\n');
     end
 end
