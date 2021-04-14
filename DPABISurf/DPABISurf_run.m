@@ -503,6 +503,11 @@ if (Cfg.Isfmriprep==1)
         if Cfg.IsLowMem==1
             Command = sprintf('%s --low-mem', Command);
         end
+        
+        if Cfg.FunctionalSessionNumber==0 %YAN Chao-Gan, 210414. If no anatomical images
+            Command = sprintf('%s --anat-only', Command);
+        end
+        
         Command = sprintf('%s -w /data/fmriprepwork/{1}', Command); %Specify the working dir for fmriprep
         Command = sprintf('%s  --participant_label {1} ::: %s', Command, SubjectIDString);
         

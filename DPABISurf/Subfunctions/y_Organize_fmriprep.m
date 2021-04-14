@@ -172,6 +172,10 @@ system(Command);
 
 
 
+if Cfg.FunctionalSessionNumber==0 %YAN Chao-Gan, 210414. If no anatomical images
+    return
+end
+
 
 fprintf('Organize functional surface files...\n');
 if Cfg.FunctionalSessionNumber==1

@@ -2218,8 +2218,13 @@ if (AutoDataProcessParameter.IsSegment>=1)
                 SPMJOB.matlabbatch{1,1}.spm.tools.oldseg = oldseg;
             end
             
-            spm_jobman('run',SPMJOB.matlabbatch);
-            
+            try %YAN Chao-Gan, 210414. Let's report who failed segmentation.
+                spm_jobman('run',SPMJOB.matlabbatch);
+            catch e
+                fprintf(1,'There was an error! The message was:\n%s',e.message);
+                fprintf(1,'\nThis subject failed segmentation: %s!!! Please check!!!\n\n',AutoDataProcessParameter.SubjectID{i});
+                error('Error detected during segmentation, please read the above information carefully!');
+            end
         end
 
     elseif AutoDataProcessParameter.IsSegment==2  %New Segment in SPM8 %YAN Chao-Gan, 111111.
@@ -2269,14 +2274,17 @@ if (AutoDataProcessParameter.IsSegment>=1)
                 SPMJOB.matlabbatch{1,1}.spm.spatial.preproc = preproc;
             end
             
-            
-            spm_jobman('run',SPMJOB.matlabbatch);
+            try %YAN Chao-Gan, 210414. Let's report who failed segmentation.
+                spm_jobman('run',SPMJOB.matlabbatch);
+            catch e
+                fprintf(1,'There was an error! The message was:\n%s',e.message);
+                fprintf(1,'\nThis subject failed segmentation: %s!!! Please check!!!\n\n',AutoDataProcessParameter.SubjectID{i});
+                error('Error detected during segmentation, please read the above information carefully!');
+            end
         end
         
     end
 end
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

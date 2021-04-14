@@ -54,7 +54,7 @@ end
 fclose(fid);
 
 %Single session data
-if Cfg.FunctionalSessionNumber==1
+if Cfg.FunctionalSessionNumber<=1
     for i=1:length(SubjectID_BIDS)
         %Dealing with anatomical data
         mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'anat']);
@@ -106,66 +106,69 @@ if Cfg.FunctionalSessionNumber==1
         
         
         %Dealing with functional data
-        mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'func'])
-        DirImg=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
-        DirNii=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
-        DirNiiGZ=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
-        FunFile_IntendedFor=[];
-        if ~isempty(DirImg) || length(DirNii)>=2  || length(DirNiiGZ)>=2
-            [Data,VoxelSize,theImgFileList, Header] =y_ReadAll([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i}]);
-            y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii'])
-            FunFile_IntendedFor=['func/',SubjectID_BIDS{i},'_task-rest_bold.nii'];
-        elseif length(DirNii)==1
-            copyfile([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii'])
-            FunFile_IntendedFor=['func/',SubjectID_BIDS{i},'_task-rest_bold.nii'];
-        elseif length(DirNiiGZ)==1
-            copyfile([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii.gz'])
-            FunFile_IntendedFor=['func/',SubjectID_BIDS{i},'_task-rest_bold.nii.gz'];
-        end
-        
-        DirJSON=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
-        if ~isempty(DirJSON)
-            copyfile([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.json'])
-        end
-        
-        %Dealing with FieldMap data
-        FieldMapMeasures={'PhaseDiff','Magnitude1','Magnitude2','Phase1','Phase2'};
-        for iFieldMapMeasure=1:length(FieldMapMeasures)
-            DirNii=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
-            if ~isempty(DirNii)
-                mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap']);
-                copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.nii'])
-                DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-                copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'])
-                
-                %Filling IntendedFor information
-                if iFieldMapMeasure==1
-                    if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE1==0
-                        DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-                        JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
-                        TE1 = JSON.EchoTime;
-                    else
-                        TE1 = Cfg.FieldMap.TE1/1000;
-                    end
-                    if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE2==0
-                        DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-                        JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
-                        TE2 = JSON.EchoTime;
-                    else
-                        TE2 = Cfg.FieldMap.TE2/1000;
-                    end
+        if Cfg.FunctionalSessionNumber==1
+            mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'func'])
+            DirImg=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+            DirNii=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            DirNiiGZ=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+            FunFile_IntendedFor=[];
+            if ~isempty(DirImg) || length(DirNii)>=2  || length(DirNiiGZ)>=2
+                [Data,VoxelSize,theImgFileList, Header] =y_ReadAll([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i}]);
+                y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii'])
+                FunFile_IntendedFor=['func/',SubjectID_BIDS{i},'_task-rest_bold.nii'];
+            elseif length(DirNii)==1
+                copyfile([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii'])
+                FunFile_IntendedFor=['func/',SubjectID_BIDS{i},'_task-rest_bold.nii'];
+            elseif length(DirNiiGZ)==1
+                copyfile([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.nii.gz'])
+                FunFile_IntendedFor=['func/',SubjectID_BIDS{i},'_task-rest_bold.nii.gz'];
+            end
+            
+            DirJSON=dir([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+            if ~isempty(DirJSON)
+                copyfile([Cfg.WorkingDir,filesep,'FunImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'func',filesep,SubjectID_BIDS{i},'_task-rest_bold.json'])
+            end
+            
+            %Dealing with FieldMap data
+            FieldMapMeasures={'PhaseDiff','Magnitude1','Magnitude2','Phase1','Phase2'};
+            for iFieldMapMeasure=1:length(FieldMapMeasures)
+                DirNii=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+                if ~isempty(DirNii)
+                    mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap']);
+                    copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.nii'])
+                    DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                    copyfile([Cfg.WorkingDir,filesep,'FieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},'Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'])
                     
-                    JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
-                    JSON.EchoTime1=TE1;
-                    JSON.EchoTime2=TE2;
-                    JSON.IntendedFor=FunFile_IntendedFor;
-                    spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
-                elseif (iFieldMapMeasure==4) || (iFieldMapMeasure==5)
-                    JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
-                    JSON.IntendedFor=FunFile_IntendedFor;
-                    spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                    %Filling IntendedFor information
+                    if iFieldMapMeasure==1
+                        if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE1==0
+                            DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                            JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                            TE1 = JSON.EchoTime;
+                        else
+                            TE1 = Cfg.FieldMap.TE1/1000;
+                        end
+                        if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE2==0
+                            DirJSON=dir([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                            JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                            TE2 = JSON.EchoTime;
+                        else
+                            TE2 = Cfg.FieldMap.TE2/1000;
+                        end
+                        
+                        JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                        JSON.EchoTime1=TE1;
+                        JSON.EchoTime2=TE2;
+                        JSON.IntendedFor=FunFile_IntendedFor;
+                        spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                    elseif (iFieldMapMeasure==4) || (iFieldMapMeasure==5)
+                        JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                        JSON.IntendedFor=FunFile_IntendedFor;
+                        spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                    end
                 end
             end
+            
         end
         
     end
@@ -313,6 +316,12 @@ clear JSON
 JSON.BIDSVersion='1.0.0';
 JSON.Name='DPARSFA2BIDS';
 spm_jsonwrite([OutDir,filesep,'dataset_description.json'],JSON);
+
+
+if Cfg.FunctionalSessionNumber==0 % YAN Chao-Gan, 210414. If anat only, then no need go further.
+    return
+end
+
 
 
 %Check TR and Subject ID, TR, Slice Number, Time Points, Voxel Size into TRInfo.tsv if needed.
