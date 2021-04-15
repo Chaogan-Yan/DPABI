@@ -153,7 +153,7 @@ fprintf('Organize AnatVolu...\n');
 mkdir(fullfile(Cfg.WorkingDir,'Results','AnatVolu'));
 parfor i=1:Cfg.SubjectNum
     mkdir(fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
-    if Cfg.FunctionalSessionNumber==1
+    if Cfg.FunctionalSessionNumber<=1
         copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'anat','*_space-MNI152NLin2009cAsym_*'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));
     else
         copyfile(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'ses-1','anat','*_space-MNI152NLin2009cAsym_*'),fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i}));

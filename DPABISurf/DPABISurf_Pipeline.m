@@ -189,6 +189,7 @@ TemplateParameters={'Template Parameters'...
     'Default: Recommended preprocessing and calculating configuration'...
     'Default+ICA_AROMA: Default configuration with ICA-AROMA denoising'...
     'Calculate function connectivity only'...
+    'Anatomical processing only'...
     'Blank'};
 set(handles.popupmenuTemplate,'String',TemplateParameters);
 
@@ -467,7 +468,9 @@ switch get(hObject, 'Value'),
         load([ProgramPath,filesep,'Jobmats',filesep,'Template_Default_ICA_AROMA.mat']);
     case 4, %Calculate function connectivity only
         load([ProgramPath,filesep,'Jobmats',filesep,'Template_FC_Only.mat']);
-    case 5, %Blank
+    case 5, %Anat only
+        load([ProgramPath,filesep,'Jobmats',filesep,'Template_Anat_Only.mat']);
+    case 6, %Blank
         load([ProgramPath,filesep,'Jobmats',filesep,'Template_Blank.mat']);
 end
 
