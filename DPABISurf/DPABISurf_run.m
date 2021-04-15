@@ -1529,12 +1529,15 @@ if (Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1)
         
         %Extract the ROI Center of Mass for Surf
         
-        [ROICenterLH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(Cfg.CalFC.ROIDefSurfLH, [], Cfg.CalFC.IsMultipleLabel, Cfg.SurfFileLH);
+        IndividualROI = y_CheckIndividualROI(Cfg.CalFC.ROIDefSurfLH, 1, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI. Use the first subject
+        [ROICenterLH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(IndividualROI, [], Cfg.CalFC.IsMultipleLabel, Cfg.SurfFileLH);
         %[ROICenter,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(ROIDef, OutputName, IsMultipleLabel, SurfFile)  
         
-        [ROICenterRH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(Cfg.CalFC.ROIDefSurfRH, [], Cfg.CalFC.IsMultipleLabel, Cfg.SurfFileRH);
+        IndividualROI = y_CheckIndividualROI(Cfg.CalFC.ROIDefSurfRH, 1, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI. Use the first subject
+        [ROICenterRH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(IndividualROI, [], Cfg.CalFC.IsMultipleLabel, Cfg.SurfFileRH);
         
-        [ROICenterVolu,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(Cfg.CalFC.ROIDefVolu, [], Cfg.CalFC.IsMultipleLabel, [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1}]);
+        IndividualROI = y_CheckIndividualROI(Cfg.CalFC.ROIDefVolu, 1, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI. Use the first subject
+        [ROICenterVolu,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(IndividualROI, [], Cfg.CalFC.IsMultipleLabel, [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1}]);
         %[ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, OutputName, IsMultipleLabel, RefFile, Header)   
         
         ROICenter=[[ROICenterLH,zeros(size(ROICenterLH,1),2)];[ROICenterRH,zeros(size(ROICenterRH,1),2)];ROICenterVolu];
@@ -1544,21 +1547,27 @@ if (Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1)
         %Merge ROI_OrderKey
         fidw = fopen([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROI_OrderKey.tsv'],'a+');
         fid = fopen([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ROISignals_',Cfg.StartingDirName,filesep,'ROI_OrderKey_',Cfg.SubjectID{1},'.tsv']);
-        Table=fread(fid);
-        fclose(fid);
-        fwrite(fidw,Table);
+        if fid>0
+            Table=fread(fid);
+            fclose(fid);
+            fwrite(fidw,Table);
+        end
         
         fid = fopen([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ROISignals_',Cfg.StartingDirName,filesep,'ROI_OrderKey_',Cfg.SubjectID{1},'.tsv']);
-        tline = fgetl(fid); %Skip the title line
-        Table=fread(fid);
-        fclose(fid);
-        fwrite(fidw,Table);
+        if fid>0
+            tline = fgetl(fid); %Skip the title line
+            Table=fread(fid);
+            fclose(fid);
+            fwrite(fidw,Table);
+        end
         
         fid = fopen([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ROISignals_',Cfg.StartingDirName_Volume,filesep,'ROI_OrderKey_',Cfg.SubjectID{1},'.tsv']);
-        tline = fgetl(fid); %Skip the title line
-        Table=fread(fid);
-        fclose(fid);
-        fwrite(fidw,Table);
+        if fid>0
+            tline = fgetl(fid); %Skip the title line
+            Table=fread(fid);
+            fclose(fid);
+            fwrite(fidw,Table);
+        end
         
         fclose(fidw);
     end
