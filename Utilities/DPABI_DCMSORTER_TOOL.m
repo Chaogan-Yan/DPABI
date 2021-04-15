@@ -22,7 +22,7 @@ function varargout = DPABI_DCMSORTER_TOOL(varargin)
 
 % Edit the above text to modify the response to help DPABI_DCMSORTER_TOOL
 
-% Last Modified by GUIDE v2.5 31-Oct-2014 15:51:09
+% Last Modified by GUIDE v2.5 14-Apr-2021 20:49:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,8 +54,24 @@ function DPABI_DCMSORTER_TOOL_OpeningFcn(hObject, eventdata, handles, varargin)
 
 handles.DICOMCells={};
 handles.CurDir=pwd;
+handles.cfg.OutputLayer1 = 1;
+handles.cfg.OutputLayer2 = 3;
+handles.cfg.IsAddDate = 1;
+handles.cfg.IsAddTime = 0;
+handles.cfg.Demo.nChange = 0;
+handles.cfg.Demo.PatientID = 'PatientID';
+handles.cfg.Demo.FamilyName = 'FamilyName';
+handles.cfg.Demo.ProtocolName = 'ProtocolName';
+handles.cfg.Demo.SeriesDescription = 'SeriesDescription';
+handles.cfg.Demo.StudyDate = 'StudyDate';
+handles.cfg.Demo.StudyTime ='StudyTime';
 
 set(handles.OutputDirEntry, 'String', pwd);
+set(handles.HierarchyPopup1,'Value',handles.cfg.OutputLayer1);
+set(handles.HierarchyPopup2,'Value',handles.cfg.OutputLayer2);
+set(handles.checkboxAddDate,'Value',handles.cfg.IsAddDate);
+set(handles.checkboxAddTime,'Value',handles.cfg.IsAddTime);
+
 % Choose default command line output for DPABI_DCMSORTER_TOOL
 handles.output = hObject;
 
@@ -221,26 +237,37 @@ if isempty(OutputDir)
     OutputDir=handles.CurDir;
 end
 
-HierarchyValue=get(handles.HierarchyPopup, 'Value');
+HierarchyValue1=get(handles.HierarchyPopup1, 'Value');
+HierarchyValue2=get(handles.HierarchyPopup2, 'Value');
+
+if HierarchyValue1 == HierarchyValue2 || HierarchyValue1+HierarchyValue2 < 4 ||...
+        HierarchyValue1+HierarchyValue2 >6
+    uiwait(msgbox({'The first-layer folder type is same as the second-layer folder type. Please recheck!'},...
+        'Layout Check'));
+    return
+end
+
 AnonyFlag=get(handles.AnonyButton, 'Value');
-
-w_DCMSort(DICOMCells, HierarchyValue, AnonyFlag, OutputDir);
-
+IsAddDate = handles.cfg.IsAddDate;
+IsAddTime = handles.cfg.IsAddTime;
+set(handles.ComputeButton, 'BackgroundColor', 'Red');
+% w_DCMSort(DICOMCells, HierarchyValue1, HierarchyValue2, IsAddDate, IsAddTime, AnonyFlag, OutputDir);
+set(handles.ComputeButton, 'BackgroundColor', 'White');
 fprintf('\n\tDICOM files sorting finished!\n');
 
-% --- Executes on selection change in HierarchyPopup.
-function HierarchyPopup_Callback(hObject, eventdata, handles)
-% hObject    handle to HierarchyPopup (see GCBO)
+% --- Executes on selection change in HierarchyPopup1.
+function HierarchyPopup1_Callback(hObject, eventdata, handles)
+% hObject    handle to HierarchyPopup1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns HierarchyPopup contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from HierarchyPopup
+ShowOutputLayout(hObject, handles)
+% Hints: contents = cellstr(get(hObject,'String')) returns HierarchyPopup1 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from HierarchyPopup1
 
 
 % --- Executes during object creation, after setting all properties.
-function HierarchyPopup_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to HierarchyPopup (see GCBO)
+function HierarchyPopup1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to HierarchyPopup1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -365,7 +392,11 @@ for i=1:numel(SubjPath);
     end
 end
 set(handles.DICOMListbox, 'BackgroundColor', 'White');
+LoadDemoImage(hObject, handles)
+handles = guidata(hObject);
+ShowOutputLayout(hObject, handles)
 guidata(hObject, handles);
+
 
 % --------------------------------------------------------------------
 function RemoveAll_Callback(hObject, eventdata, handles)
@@ -399,3 +430,132 @@ if Value > numel(StringCell)
     Value=Value-1;
 end
 set(ListboxHandle, 'String', StringCell, 'Value', Value);
+
+
+% --- Executes on selection change in HierarchyPopup2.
+function HierarchyPopup2_Callback(hObject, eventdata, handles)
+% hObject    handle to HierarchyPopup2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ShowOutputLayout(hObject, handles)
+% Hints: contents = cellstr(get(hObject,'String')) returns HierarchyPopup2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from HierarchyPopup2
+
+
+% --- Executes during object creation, after setting all properties.
+function HierarchyPopup2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to HierarchyPopup2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in checkboxAddDate.
+function checkboxAddDate_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxAddDate (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.cfg.IsAddDate = get(handles.checkboxAddDate,'Value');
+ShowOutputLayout(hObject, handles)
+guidata(hObject,handles);
+% Hint: get(hObject,'Value') returns toggle state of checkboxAddDate
+
+
+% --- Executes on button press in checkboxAddTime.
+function checkboxAddTime_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxAddTime (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.cfg.IsAddTime = get(handles.checkboxAddTime,'Value');
+ShowOutputLayout(hObject, handles)
+guidata(hObject,handles);
+% Hint: get(hObject,'Value') returns toggle state of checkboxAddTime
+
+
+% --- Executes on button press in pushbuttonChangeImage.
+function pushbuttonChangeImage_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonChangeImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+LoadDemoImage(hObject, handles)
+handles = guidata(hObject);
+ShowOutputLayout(hObject, handles)
+guidata(hObject, handles);
+
+
+
+function LoadDemoImage(hObject, handles)
+DicomCells = handles.DICOMCells;
+if isempty(DicomCells)
+    return
+else
+    FileNum = cellfun(@(Files) length(Files),DicomCells);
+    [FileNumSort,I] = sort(FileNum,'descend');
+    DicomCells = DicomCells(I);
+    nChange = handles.cfg.Demo.nChange;
+    if nChange == 0
+        Index = 1;
+        DcmInfo = dicominfo(DicomCells{Index}{1});
+    else
+        while 1
+            try
+                Index = randi(length(FileNumSort));
+                DcmInfo = dicominfo(DicomCells{Index}{1});
+                break
+            catch
+            end
+        end
+    end
+    handles.cfg.Demo.PatientID = DcmInfo.PatientID;
+    handles.cfg.Demo.FamilyName = DcmInfo.PatientName.FamilyName;
+    handles.cfg.Demo.ProtocolName = DcmInfo.ProtocolName;
+    handles.cfg.Demo.SeriesDescription = DcmInfo.SeriesDescription;
+    handles.cfg.Demo.StudyDate = DcmInfo.StudyDate;
+    handles.cfg.Demo.StudyTime = DcmInfo.StudyTime;
+    handles.cfg.Demo.nChange = handles.cfg.Demo.nChange+1;
+end
+guidata(hObject, handles);
+
+function ShowOutputLayout(hObject, handles)
+LayoutString = '~OutputDir';
+Layer1 = get(handles.HierarchyPopup1,'Value');
+Layer2 = get(handles.HierarchyPopup2,'Value');
+
+if handles.cfg.IsAddDate==1 && handles.cfg.IsAddTime == 1 
+    Suffix = ['_',handles.cfg.Demo.StudyDate,'_',handles.cfg.Demo.StudyTime];
+elseif handles.cfg.IsAddDate==1 && handles.cfg.IsAddTime ==0
+    Suffix = ['_',handles.cfg.Demo.StudyDate];
+elseif handles.cfg.IsAddDate==0 && handles.cfg.IsAddTime ==1
+    Suffix = ['_',handles.cfg.Demo.StudyTime];
+else
+    Suffix = '';
+end
+
+switch Layer1
+    case 1
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.PatientID,Suffix];
+    case 2
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.FamilyName,Suffix];
+    case 3
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.ProtocolName];
+    case 4
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.SeriesDescription];
+end
+
+switch Layer2
+    case 1
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.PatientID,Suffix];
+    case 2
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.FamilyName,Suffix];
+    case 3
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.ProtocolName];
+    case 4
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.SeriesDescription];
+end
+
+set(handles.textOutputLayout,'String',LayoutString);
