@@ -37,8 +37,7 @@ fprintf(fid,'thickness = 20p \n');
 fprintf(fid,'fill      = yes \n');
 
 % show external labels
-if ~find(flag=='L')
-else
+if ~contains(flag,'L')
     fprintf(fid,'show_label       = yes \n');
     fprintf(fid,'label_font       = bold \n');
     fprintf(fid,'label_with_tag	= yes \n');
@@ -57,8 +56,7 @@ end
 fprintf(fid,'</ideogram> \n');
 
 % show internal labels
-if find(flag=='L')
-else
+if ~contains(flag,'L')
     fprintf(fid,'<plots> \n');
     fprintf(fid,'<plot> \n');
     fprintf(fid,'type  = text \n');
@@ -69,7 +67,7 @@ else
     fprintf(fid,'r1 = 0.9r+380p-%up \n',offsetPixel); % band label radius(R) outter 380p
     fprintf(fid,'label_size = 40 \n');
     fprintf(fid,'label_font = light \n');
-    if find(flag=='P')
+    if ~contains(flag,'P')
         fprintf(fid,'label_parallel   = yes \n');
     end
     fprintf(fid,'label_snuggle        = yes \n');

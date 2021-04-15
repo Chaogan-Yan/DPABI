@@ -20,11 +20,11 @@ WorkDir = pwd;
 % fprintf('Link Information Created: %\n', CircosLinkPath);
 
 flag = ''; 
-% flag = [flag,'P'];
+flag = [flag,'P'];
 if ~isempty(CircosStruct.HigherOrderNetworkLabel) &&...
         ~isempty(CircosStruct. ElementLabel)
 else
-    flag = [flag,'T'];
+    flag = [flag,'LT'];
 end
 
 offsetPixel = 260;
