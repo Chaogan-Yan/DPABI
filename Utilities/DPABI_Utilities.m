@@ -22,7 +22,7 @@ function varargout = DPABI_Utilities(varargin)
 
 % Edit the above text to modify the response to help DPABI_Utilities
 
-% Last Modified by GUIDE v2.5 24-Feb-2020 14:18:07
+% Last Modified by GUIDE v2.5 15-Apr-2021 13:03:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -149,3 +149,11 @@ function pushbuttonCheckDataOrganization_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 y_CheckDataOrganization
+
+
+% --- Executes on button press in pushbuttonBIDSConverter.
+function pushbuttonBIDSConverter_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonBIDSConverter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABI_BIDS_Converter

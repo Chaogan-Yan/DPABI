@@ -61,19 +61,10 @@ else
     UserName =getenv('USER');
 end
 Datetime=fix(clock);
-fprintf('Welcome: %s, %.4d-%.2d-%.2d %.2d:%.2d \n', UserName,Datetime(1),Datetime(2),Datetime(3),Datetime(4),Datetime(5));
-fprintf('DPABISurf: A Surface-Based Resting-State fMRI Data Analysis Toolbox. \nRelease = %s\n',Release);
-fprintf('Copyright(c) 2019; GNU GENERAL PUBLIC LICENSE\n');
-fprintf('Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; ');
-fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgrammers: YAN Chao-Gan; WANG Xin-Di; LU Bin\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
-fprintf('-----------------------------------------------------------\n');
-fprintf('Citing Information:\nDPABISurf is a surface-based resting-state fMRI data analysis toolbox evolved from DPABI/DPARSF, as easy-to-use as DPABI/DPARSF. DPABISurf is based on fMRIPrep 20.2.1 (Esteban et al., 2018) (RRID:SCR_016216), and based on FreeSurfer 6.0.1 (Dale et al., 1999) (RRID:SCR_001847), ANTs 2.3.3 (Avants et al., 2008) (RRID:SCR_004757), FSL 5.0.9 (Jenkinson et al., 2002) (RRID:SCR_002823), AFNI 20160207 (Cox, 1996) (RRID:SCR_005927), SPM12 (Ashburner, 2012) (RRID:SCR_007037), dcm2niix (Li et al., 2016) (RRID:SCR_014099), PALM alpha115 (Winkler et al., 2016), GNU Parallel (Tange, 2011), MATLAB (The MathWorks Inc., Natick, MA, US) (RRID:SCR_001622), Docker (https://docker.com) (RRID:SCR_016445), and DPABI V5.1 (Yan et al., 2016) (RRID:SCR_010501).\n');
-
 
 Path = which('dpabi');
 [filepath,name,ext] = fileparts(Path);
 handles.Cfg.DPABIPath = filepath;
-handles.Cfg.DPABINetVersion=Release;
 handles.Cfg.WorkingDir = pwd; 
 handles.Cfg.SubjectID = '';
 handles.Cfg.IsNeedConvertFunDCM2IMG = 1;
@@ -293,29 +284,11 @@ function pushbuttonRun_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Cfg=handles.Cfg; 
-% Datetime=fix(clock); 
-% save([pwd,filesep,'DPABINet_Construction_AutoSave_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
-clc;
-disp(handles.Cfg.DPABIPath)
-disp(handles.Cfg.DPABINetVersion)
-disp(handles.Cfg.WorkingDir)
-disp(handles.Cfg.SubjectID)
-disp(num2str(handles.Cfg.IsNeedConvertFunDCM2IMG))
-disp(num2str(handles.Cfg.IsNeedConvertT1DCM2IMG))
-disp(num2str(handles.Cfg.IsDeface))
-disp(num2str(handles.Cfg.IsRemoveFirstTimePoints))
-disp(num2str(handles.Cfg.RemoveFirstTimePoints))
-disp(num2str(handles.Cfg.FunctionalSessionNumber))
-disp(handles.Cfg.StartingDirName)
-try
-    disp(num2str(handles.Cfg.FieldMap.IsNeedConvertDCM2IMG))
-    disp(num2str(handles.Cfg.FieldMap.IsApplyFieldMapCorrection))
-    disp(num2str(handles.Cfg.FieldMap.TE1))
-    disp(num2str(handles.Cfg.FieldMap.TE2))
-catch
-end
 
-% SubjectID_BIDS = y_Convert_DPARSFA2BIDS(Cfg.WorkingDir,Cfg.WorkingDir,Cfg);
+Cfg.SliceTiming.SliceNumber=0;
+Cfg.IsConvert2BIDS=1;
+DPABI_BIDS_Converter_run(Cfg);
+
 
 
 function UpdateDisplay_RemoveTimePoint(handles)

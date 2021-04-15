@@ -40,11 +40,11 @@ if ~isfield(AutoDataProcessParameter,'DataProcessDir')
 end
 
 if ~isfield(AutoDataProcessParameter,'IsNeedReorientT1ImgInteractively')
-    AutoDataProcessParameter.IsNeedReorientT1ImgInteractively=0; 
+    AutoDataProcessParameter.IsNeedReorientT1ImgInteractively=0;
 end
 
 if ~isfield(AutoDataProcessParameter,'IsT1Deface')
-    AutoDataProcessParameter.IsT1Deface=0; 
+    AutoDataProcessParameter.IsT1Deface=0;
 end
 
 
@@ -83,11 +83,17 @@ if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1)
         DirCo=dir('c*.img');
         if isempty(DirCo)
             DirCo=dir('c*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+            if isempty(DirCo)
+                DirCo=dir('*Crop*.nii.gz'); 
+            end
             if length(DirCo)==1
                 gunzip(DirCo(1).name);
                 delete(DirCo(1).name);
             end
             DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
+            if isempty(DirCo)
+                DirCo=dir('*Crop*.nii');  %YAN Chao-Gan, 191121. Support BIDS format.
+            end
         end
         if isempty(DirCo)
             DirImg=dir('*.img');
@@ -120,7 +126,7 @@ if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1)
         end
         cd('..');
     end
-
+    
     if ~(7==exist([AutoDataProcessParameter.DataProcessDir,filesep,'ReorientMats'],'dir'))
         mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'ReorientMats']);
     end
@@ -130,11 +136,17 @@ if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1)
             DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.img']);
             if isempty(DirT1Img)
                 DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii.gz']);% Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                if isempty(DirT1Img)
+                    DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*Crop*.nii.gz']); %YAN Chao-Gan, 191121. Calling dcm2niix for BIDS format. Change searching c* to *Crop*
+                end
                 if length(DirT1Img)==1
                     gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1Img(1).name]);
                     delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1Img(1).name]);
                 end
                 DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii']);
+                if isempty(DirT1Img)
+                    DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. Calling dcm2niix for BIDS format. Change searching c* to *Crop*
+                end
             end
         else
             DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
@@ -163,7 +175,7 @@ if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1)
         fprintf('Reorienting T1 Image Interactively for %s: OK\n',AutoDataProcessParameter.SubjectID{i});
     end
     
-
+    
     %Write the QC information as {WorkDir}/QC/RawT1ImgQC.tsv
     mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'QC'])
     fid = fopen([AutoDataProcessParameter.DataProcessDir,filesep,'QC',filesep,'RawT1ImgQC.tsv'],'w');
@@ -179,7 +191,7 @@ if (AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1)
         fprintf(fid,'\n');
     end
     fclose(fid);
-
+    
 end
 if ~isempty(Error)
     disp(Error);
@@ -194,17 +206,23 @@ end
 %Deface
 if (AutoDataProcessParameter.IsT1Deface==1)
     
-    % Check if co* image exist. Added by YAN Chao-Gan 100510.
+    % First check which kind of T1 image need to be applied
     if ~exist('UseNoCoT1Image','var')
         cd([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{1}]);
         DirCo=dir('c*.img');
         if isempty(DirCo)
             DirCo=dir('c*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+            if isempty(DirCo)
+                DirCo=dir('*Crop*.nii.gz');
+            end
             if length(DirCo)==1
                 gunzip(DirCo(1).name);
                 delete(DirCo(1).name);
             end
             DirCo=dir('c*.nii');  %YAN Chao-Gan, 111114. Also support .nii files.
+            if isempty(DirCo)
+                DirCo=dir('*Crop*.nii');  %YAN Chao-Gan, 191121. Support BIDS format.
+            end
         end
         if isempty(DirCo)
             DirImg=dir('*.img');
@@ -235,21 +253,28 @@ if (AutoDataProcessParameter.IsT1Deface==1)
         else
             UseNoCoT1Image=0;
         end
+        cd('..');
     end
     
-
+    
     
     parfor i=1:AutoDataProcessParameter.SubjectNum
-
+        
         if UseNoCoT1Image==0
             DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.img']);
             if isempty(DirT1Img)
                 DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii.gz']);% Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                if isempty(DirT1Img)
+                    DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*Crop*.nii.gz']); %YAN Chao-Gan, 191121. Calling dcm2niix for BIDS format. Change searching c* to *Crop*
+                end
                 if length(DirT1Img)==1
                     gunzip([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1Img(1).name]);
                     delete([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirT1Img(1).name]);
                 end
                 DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'c*.nii']);
+                if isempty(DirT1Img)
+                    DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*Crop*.nii']); %YAN Chao-Gan, 191121. Calling dcm2niix for BIDS format. Change searching c* to *Crop*
+                end
             end
         else
             DirT1Img=dir([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.img']);
@@ -267,9 +292,9 @@ if (AutoDataProcessParameter.IsT1Deface==1)
         
         copyfile([TemplatePath,filesep,'mni_icbm152_t1_tal_nlin_asym_09c.nii'],[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}]);
         copyfile([TemplatePath,filesep,'mni_icbm152_t1_tal_nlin_asym_09c_face_mask.nii'],[AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i}]);
-
+        
         SourceFile = [AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'mni_icbm152_t1_tal_nlin_asym_09c.nii'];
-
+        
         
         SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Coregister_Estimate_Reslice.mat']);
         
@@ -283,7 +308,7 @@ if (AutoDataProcessParameter.IsT1Deface==1)
         
         fprintf('\n');
         spm_jobman('run',SPMJOB.matlabbatch);
-
+        
         %Calculate the mean
         fprintf('\nApplying the warped face mask for "%s".\n',AutoDataProcessParameter.SubjectID{i});
         
@@ -291,7 +316,7 @@ if (AutoDataProcessParameter.IsT1Deface==1)
         DataFaceMask = y_Read([AutoDataProcessParameter.DataProcessDir,filesep,'T1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'rmni_icbm152_t1_tal_nlin_asym_09c_face_mask.nii']);
         
         Data(find(DataFaceMask>0.5)) = 0;
-
+        
         Header.pinfo = [1;0;0];
         Header.dt = [16,0];
         
