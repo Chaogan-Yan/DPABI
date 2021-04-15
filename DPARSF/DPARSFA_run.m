@@ -4287,7 +4287,7 @@ if (~isempty(AutoDataProcessParameter.CalFC.ROIDef)) || (AutoDataProcessParamete
                     fid = fopen(SubjectROI{iROI});
                     SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n'); 
                     fclose(fid);
-                    if strcmpi(SeedTimeCourseList{1}{1},'Seed_Time_Course_List:')
+                    if strcmpi(SeedTimeCourseList{1}{1},'Seed_Time_Course_List:') || strcmpi(SeedTimeCourseList{1}{1},'Seed_ROI_List:')
                         SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
                     end
                 end
