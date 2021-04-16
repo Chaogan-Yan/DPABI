@@ -33,7 +33,12 @@ COLUMN		FORMAT		CONTENT
 1		numeric		network order
 2		char		network name
 
-(6)(double) ColorMap
-n*3 matrix, consist of customized color map in RGB
+(6)(double) linkCmap
+n*3 matrix, consist of customized color map in RGB for link
 (Recommend even quantity)
 
+(7)(double) netCmap
+n*3 matrix, consist of customized color map in RGB for network
+
+(8)(double) regCmap
+n*3 matrix, consist of customized color map in RGB for region

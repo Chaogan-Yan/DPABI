@@ -1,57 +1,55 @@
 # CorticalNetworkCircos
  Circos plot describes cortical networks and regions
 
-![DemoCircos](./CircosDemoOutput/circos_4mode.png)
+![DemoCircos](./circos.png)
 
-![colormap_jet](https://ww2.mathworks.cn/help/releases/R2020a/matlab/ref/colormap_jet_zh_CN.png)
-
-There are **4 modes** as shown above, you can choose by setting parameter.
-
-Using colormap shown above.
-
-PS: recommand using SVG image.
+![colormap_jet](https://ww2.mathworks.cn/help/releases/R2020a/matlab/ref/colormap_jet.png)
 
 ## Source code introduction:
 
-0. **CircosPlot.conf**
+**CircosPlot.conf**
 
 Configuration file conducts Circos to plot.
 
-1. **CircosDataOrganize.m**
+**CircosDataOrganize.m**
 
 MATLAB function for organize data to satisfy Circos source txt file format, and define details of cortical map.
 
-2. **EditConf.m**
+**EditConf.m**
 
-Configure Circos' .conf file.
+Configure Circos .conf file.
 
-3. **TEST_function.m**
+**TEST_function.m**
 
 Script demostrates how to set parameter of function.
 
-4. **CircosInput1_band.txt**
+**CircosInput1_network.txt**
 
-File stores data of external network and internal region band.
+File stores data of external network.
 
-5. **CircosInput2_label.txt**
+**CircosInput2_region.txt**
+
+File stores data of internal region.
+
+**CircosInput3_label.txt**
 
 File stores data of internal band label.
 
-6. **CircosInpput3_link.txt**
+**CircosInput4_link.txt**
 
 File stores data of links between correlated regions
 
-7. **MANUAL_DataFormat.txt**
+**MANUAL_DataFormat.txt**
 
 Manual demostrate data format of source mat file.
 
-8. **RawDataCircos.mat**
+**CircosStruct.mat**
 
 Demo source data, can immitate format.
 
-9. **cmap.mat**
+**linkCmap.mat**
 
-Store colormap.
+Store colormap for link.
 
 ---
 

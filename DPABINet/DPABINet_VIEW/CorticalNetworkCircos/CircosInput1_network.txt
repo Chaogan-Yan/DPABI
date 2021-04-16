@@ -1,0 +1,7 @@
+chr - net1 VN 0 6776 rgb(0,0,0)
+chr - net2 SMN 0 8932 rgb(0,0,0)
+chr - net3 DAN 0 4312 rgb(0,0,0)
+chr - net4 VAN 0 4928 rgb(0,0,0)
+chr - net5 SC 0 2156 rgb(0,0,0)
+chr - net6 FPN 0 6468 rgb(0,0,0)
+chr - net7 DMN 0 10164 rgb(0,0,0)
