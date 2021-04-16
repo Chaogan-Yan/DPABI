@@ -1,14 +1,18 @@
-function w_DCMSort(DICOMCells, HierarchyValue, AnonyFlag, OutputDir)
+function w_DCMSort(DICOMCells, HierarchyValue1, HierarchyValue2, IsAddDate, IsAddTime, AnonyFlag, OutputDir)
 % Format w_DCMSort(DICOMCells, HierarchyValue, AnonyFlag, OutputDir)
 % Input:
 %       DICOMCells     - The DICOM File from N subjects N by 1 Cells
-%       HierarchyValue - SubjectID/SeriesName(1) or %SeriesName/SubjectID(2)
+%       HierarchyValue1 - First layer of output directory: 1-PatientID, 2-PatientName.FamilyName, 3-ProtocolName, 4-SeriesDescription
+%       HierarchyValue2 - Second layer of output directory: 1-PatientID, 2-PatientName.FamilyName, 3-ProtocolName, 4-SeriesDescription
+%       IsAddDate      - Whether adding date suffix to partientID/Name
+%       IsAddTime      - Whether adding time suffix to partientID/Name
 %       AnonyFlag      - Anonymous DICOM Output or not
 %       OutputDir      - The directory of Output File
 %___________________________________________________________________
 % Written by Xindi Wang
 % State Key Laboratory of Cognitive Neuroscience and Learning & IDG/McGovern Institute for Brain Research, Beijing Normal University
 % Reference: rest_DicomSorter written by Yan Chao-Gan and Dong Zhang-Ye
+% Edited by Bin Lu for adapting more diverse situations of input
 
 for i=1:numel(DICOMCells)
     OneDICOM=DICOMCells{i};
@@ -23,6 +27,19 @@ for i=1:numel(DICOMCells)
             DCM_Info.PatientID = regexprep(DCM_Info.PatientID, BadChar, '');
             DCM_Info.PatientName.FamilyName = regexprep(DCM_Info.PatientName.FamilyName, BadChar, '');
             DCM_Info.ProtocolName = regexprep(DCM_Info.ProtocolName, BadChar, '');
+            DCM_Info.SeriesDescription = regexprep(DCM_Info.SeriesDescription, BadChar, '');
+            DCM_Info.StudyDate = regexprep(DCM_Info.StudyDate, BadChar, '');
+            DCM_Info.StudyTime = regexprep(DCM_Info.StudyTime, BadChar, '');
+            
+            if IsAddDate==1 && IsAddTime == 1
+                Suffix = ['_',DCM_Info.StudyDate,'_',DCM_Info.StudyTime];
+            elseif IsAddDate==1 && IsAddTime ==0
+                Suffix = ['_',DCM_Info.StudyDate];
+            elseif IsAddDate==0 && IsAddTime ==1
+                Suffix = ['_',DCM_Info.StudyTime];
+            else
+                Suffix = '';
+            end
             
             Index=DCM_Info.SeriesNumber;
             if ~isnumeric(Index)
@@ -45,40 +62,55 @@ for i=1:numel(DICOMCells)
                 DCM_Info.PatientName.FamilyName=SubID;
                 DCM_Info.PatientID=SubID;
                 DCM_Info.PatientBirthDate='';
-                
-                switch HierarchyValue
-                    case 1 %SubjectID/SeriesName
-                        DirName=fullfile(OutputDir, DCM_Info.PatientID,...
-                            sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
-                    case 2 %SeriesName/SubjectID
-                        DirName=fullfile(OutputDir, sprintf('%.4d_%s', Index, DCM_Info.ProtocolName),...
-                            DCM_Info.PatientID);
-                    case 3 %SubjectFamilyName/SeriesName %YAN Chao-Gan, 181216. In case PatientID is not defined, use PatientName.FamilyName instead.
-                        DirName=fullfile(OutputDir, DCM_Info.PatientName.FamilyName,...
-                            sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
-                    case 4 %SeriesName/SubjectFamilyName %YAN Chao-Gan, 181216. In case PatientID is not defined, use PatientName.FamilyName instead.
-                        DirName=fullfile(OutputDir, sprintf('%.4d_%s', Index, DCM_Info.ProtocolName),...
-                            DCM_Info.PatientName.FamilyName);
+                             
+                switch HierarchyValue1
+                    case 1 % PatientID
+                        DirName=fullfile(OutputDir,[DCM_Info.PatientID,Suffix]);
+                    case 2 % PatientName.FamilyName
+                        DirName=fullfile(OutputDir,[DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % ProtocolName 
+                        DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
+                    case 4 % SeriesDescription
+                        DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
+                
+                switch HierarchyValue2
+                    case 1 % PatientID
+                        DirName=fullfile(DirName,[DCM_Info.PatientID,Suffix]);
+                    case 2 % PatientName.FamilyName
+                        DirName=fullfile(DirName,[DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % ProtocolName 
+                        DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
+                    case 4 % SeriesDescription
+                        DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
+                end
+                
                 if exist(DirName, 'dir')~=7
                     mkdir(DirName);
                 end
                 
                 dicomwrite(DCM_Out, fullfile(DirName, FileName), DCM_Info, 'createmode', 'copy');
             else
-                switch HierarchyValue
-                    case 1 %SubjectID/SeriesName
-                        DirName=fullfile(OutputDir, DCM_Info.PatientID,...
-                            sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
-                    case 2 %SeriesName/SubjectID
-                        DirName=fullfile(OutputDir, sprintf('%.4d_%s', Index, DCM_Info.ProtocolName),...
-                            DCM_Info.PatientID);
-                    case 3 %SubjectFamilyName/SeriesName %YAN Chao-Gan, 181216. In case PatientID is not defined, use PatientName.FamilyName instead.
-                        DirName=fullfile(OutputDir, DCM_Info.PatientName.FamilyName,...
-                            sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
-                    case 4 %SeriesName/SubjectFamilyName %YAN Chao-Gan, 181216. In case PatientID is not defined, use PatientName.FamilyName instead.
-                        DirName=fullfile(OutputDir, sprintf('%.4d_%s', Index, DCM_Info.ProtocolName),...
-                            DCM_Info.PatientName.FamilyName);
+                switch HierarchyValue1
+                    case 1 % PatientID
+                        DirName=fullfile(OutputDir,[DCM_Info.PatientID,Suffix]);
+                    case 2 % PatientName.FamilyName
+                        DirName=fullfile(OutputDir,[DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % ProtocolName 
+                        DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
+                    case 4 % SeriesDescription
+                        DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
+                end
+                
+                switch HierarchyValue2
+                    case 1 % PatientID
+                        DirName=fullfile(DirName,[DCM_Info.PatientID,Suffix]);
+                    case 2 % PatientName.FamilyName
+                        DirName=fullfile(DirName,[DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % ProtocolName 
+                        DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
+                    case 4 % SeriesDescription
+                        DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
                 
                 if exist(DirName, 'dir')~=7
