@@ -1431,23 +1431,30 @@ CircosStruct=GetCircosStruct(hObject);
 WorkDir=pwd;
 
 [CircosBandPath, CircosLabelPath, CircosLinkPath]=CircosDataOrganize(WorkDir,...
-    CircosStruct,...
-    4);
+    CircosStruct);
 fprintf('Band Information Created: %\n', CircosBandPath);
 fprintf('Label Information Created: %\n', CircosLabelPath);
 fprintf('Link Information Created: %\n', CircosLinkPath);
 
-if ~isempty(CircosStruct.HigherOrderNetworkLabel) &&...
-        ~isempty(CircosStruct.ElementLabel)
-    flag = '';
-else
-    flag = 'LT';
+
+flag = '';
+if ~isempty(CircosStruct.ElementLabel)
+    flag = [flag,'L'];
 end
-CircosConfPath=EditConf(WorkDir, flag);
+flag = '';
+if ~isempty(CircosStruct.HigherOrderNetworkLabel)
+    flag = [flag,'N'];
+end
+
+
+offsetPixel=0;
+CircosConfPath=EditConf(WorkDir, flag, offsetPixel);
 fprintf('Circos Config Created: %\n', CircosConfPath);
 
 % run Circos command, if need run Matlab in Terminal
-system(sprintf('circos -conf %s', CircosConfPath));
+Command=['docker run -ti --rm -v ',pwd,':/data yancircos /bin/sh -c ''cd /data && /opt/circos/bin/circos -conf /data/CircosPlot.conf'''];
+system(Command);
+figure;imshow('circos.png')
 
 
 % --- Executes on selection change in UtilitiesPopup.
