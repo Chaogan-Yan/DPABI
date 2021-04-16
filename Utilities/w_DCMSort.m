@@ -65,24 +65,24 @@ for i=1:numel(DICOMCells)
                              
                 switch HierarchyValue1
                     case 1 % PatientID
-                        DirName=[OutputDir,filesep,DCM_Info.PatientID,Suffix];
+                        DirName=fullfile(OutputDir,[DCM_Info.PatientID,Suffix]);
                     case 2 % PatientName.FamilyName
-                        DirName=[OutputDir,filesep,DCM_Info.PatientName.FamilyName,Suffix];
+                        DirName=fullfile(OutputDir,[DCM_Info.PatientName.FamilyName,Suffix]);
                     case 3 % ProtocolName 
-                        DirName=[OutputDir,filesep, num2str(Index),'_',DCM_Info.ProtocolName];
+                        DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
                     case 4 % SeriesDescription
-                        DirName=[OutputDir,filesep, num2str(Index),'_',DCM_Info.SeriesDescription];
+                        DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
                 
                 switch HierarchyValue2
                     case 1 % PatientID
-                        DirName=[DirName,filesep,DCM_Info.PatientID,Suffix];
+                        DirName=fullfile(DirName,[DCM_Info.PatientID,Suffix]);
                     case 2 % PatientName.FamilyName
-                        DirName=[DirName,filesep,DCM_Info.PatientName.FamilyName,Suffix];
+                        DirName=fullfile(DirName,[DCM_Info.PatientName.FamilyName,Suffix]);
                     case 3 % ProtocolName 
-                        DirName=[DirName,filesep,num2str(Index),'_',DCM_Info.ProtocolName];
+                        DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
                     case 4 % SeriesDescription
-                        DirName=[DirName,filesep,num2str(Index),'_',DCM_Info.SeriesDescription];
+                        DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
                 
                 if exist(DirName, 'dir')~=7
@@ -93,24 +93,24 @@ for i=1:numel(DICOMCells)
             else
                 switch HierarchyValue1
                     case 1 % PatientID
-                        DirName=[OutputDir,filesep,DCM_Info.PatientID,Suffix];
+                        DirName=fullfile(OutputDir,[DCM_Info.PatientID,Suffix]);
                     case 2 % PatientName.FamilyName
-                        DirName=[OutputDir,filesep,DCM_Info.PatientName.FamilyName,Suffix];
-                    case 3 % ProtocolName
-                        DirName=[OutputDir,filesep,num2str(Index),'_',DCM_Info.ProtocolName];
+                        DirName=fullfile(OutputDir,[DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % ProtocolName 
+                        DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
                     case 4 % SeriesDescription
-                        DirName=[OutputDir,filesep,num2str(Index),'_',DCM_Info.SeriesDescription];
+                        DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
                 
                 switch HierarchyValue2
                     case 1 % PatientID
-                        DirName=[DirName,filesep,DCM_Info.PatientID,Suffix];
+                        DirName=fullfile(DirName,[DCM_Info.PatientID,Suffix]);
                     case 2 % PatientName.FamilyName
-                        DirName=[DirName,filesep,DCM_Info.PatientName.FamilyName,Suffix];
-                    case 3 % ProtocolName
-                        DirName=[DirName,filesep,num2str(Index),'_',DCM_Info.ProtocolName];
+                        DirName=fullfile(DirName,[DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % ProtocolName 
+                        DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
                     case 4 % SeriesDescription
-                        DirName=[DirName,filesep,num2str(Index),'_',DCM_Info.SeriesDescription];
+                        DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
                 
                 if exist(DirName, 'dir')~=7

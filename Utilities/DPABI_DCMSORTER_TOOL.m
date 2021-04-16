@@ -251,7 +251,7 @@ AnonyFlag=get(handles.AnonyButton, 'Value');
 IsAddDate = handles.cfg.IsAddDate;
 IsAddTime = handles.cfg.IsAddTime;
 set(handles.ComputeButton, 'BackgroundColor', 'Red');
-% w_DCMSort(DICOMCells, HierarchyValue1, HierarchyValue2, IsAddDate, IsAddTime, AnonyFlag, OutputDir);
+w_DCMSort(DICOMCells, HierarchyValue1, HierarchyValue2, IsAddDate, IsAddTime, AnonyFlag, OutputDir);
 set(handles.ComputeButton, 'BackgroundColor', 'White');
 fprintf('\n\tDICOM files sorting finished!\n');
 
