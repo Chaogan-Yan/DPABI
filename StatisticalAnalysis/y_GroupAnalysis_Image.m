@@ -33,6 +33,15 @@ if ~exist('MaskFile','var')
 end
 
 if ~isnumeric(DependentVolume)
+    if (ischar(DependentVolume)) && (exist(DependentVolume,'file')==2) %YAN Chao-Gan, 210416. Read txt file
+        [pathstr, name, ext] = fileparts(DependentVolume);
+        if (strcmpi(ext, '.txt'))
+            fid = fopen(DependentVolume);
+            FileCell = textscan(fid,'%s\n');
+            fclose(fid);
+            DependentVolume=FileCell{1};
+        end
+    end
     [DependentVolume,VoxelSize,theImgFileList, Header] = y_ReadAll(DependentVolume);
     fprintf('\n\tImage Files in the Group:\n');
     for itheImgFileList=1:length(theImgFileList)
@@ -40,7 +49,20 @@ if ~isnumeric(DependentVolume)
     end
 end
 
+if (ischar(Predictor)) && (exist(Predictor,'file')==2) %YAN Chao-Gan, 210416. Read txt file
+    Predictor=load(Predictor);
+end
+
 if exist('CovVolume','var') && (~isnumeric(CovVolume))
+    if (ischar(CovVolume)) && (exist(CovVolume,'file')==2) %YAN Chao-Gan, 210416. Read txt file
+        [pathstr, name, ext] = fileparts(CovVolume);
+        if (strcmpi(ext, '.txt'))
+            fid = fopen(CovVolume);
+            FileCell = textscan(fid,'%s\n');
+            fclose(fid);
+            CovVolume=FileCell{1};
+        end
+    end
     [CovVolume,VoxelSize,theImgFileList] = y_ReadAll(CovVolume);%YAN Chao-Gan, 160119. Fixed a bug.  %[CovVolume] = y_ReadAll(DependentVolume);
     fprintf('\n\tImage Files as covariates:\n');
     for itheImgFileList=1:length(theImgFileList)
