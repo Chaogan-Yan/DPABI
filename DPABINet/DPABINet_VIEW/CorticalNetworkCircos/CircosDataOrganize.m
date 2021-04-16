@@ -1,7 +1,6 @@
 function [filePathNetwork,filePathRegion,filePathLabel,filePathLink] = CircosDataOrganize(workingDir,CircosStruct)
 % FORMAT [filePathNetwork,filePathRegion,filePathLabel,filePathLink] = CircosDataOrganize(workingDir,CircosStruct)
 % Data organization for Circos plot via the format of txt
-% ATTENTION: this program temporary support up to 24 regions
 %
 % Input:
 %   workingDir - working directory that generate scripts and Circos figure
@@ -141,7 +140,7 @@ for k = 1:nCorr
     matColor(k,:) = fix(linkCmap(cmapArrCorr(k),:)*255);
 end
 
-% write data of networks and regions
+% write data of networks
 filePathNetwork = strcat(workingDir,filesep,'CircosInput1_network.txt');
 fid = fopen(filePathNetwork,'w');
 % describe external networks, FORMAT: chr - ID label start end attribute
@@ -157,6 +156,7 @@ for k = 1:nNetwork
 end
 fclose(fid);
 
+% write data of regions
 filePathRegion = strcat(workingDir,filesep,'CircosInput2_region.txt');
 fid = fopen(filePathRegion,'w');
 % describe internal hightlight, FORMAT: chrID start end fill_color

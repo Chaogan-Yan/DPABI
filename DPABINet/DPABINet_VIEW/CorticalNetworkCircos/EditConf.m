@@ -64,8 +64,8 @@ if ~contains(flag,'L')
     fprintf(fid,'file  = CircosInput3_label.txt \n');
     
     fprintf(fid,'r0 = 0.9r+30p-%up \n',offsetPixel); % band label radius(R) inner +20p
-    fprintf(fid,'r1 = 0.9r+380p-%up \n',offsetPixel); % band label radius(R) outter 380p
-    fprintf(fid,'label_size = 40 \n');
+    fprintf(fid,'r1 = 0.9r+500p-%up \n',offsetPixel); % band label radius(R) outter 380p
+    fprintf(fid,'label_size = 36 \n');
     fprintf(fid,'label_font = light \n');
     if ~contains(flag,'P')
         fprintf(fid,'label_parallel   = yes \n');
@@ -103,7 +103,7 @@ fprintf(fid,'<highlight> \n');
 fprintf(fid,'file       = CircosInput2_region.txt \n');
 fprintf(fid,'r0         = 0.85r-%up \n',offsetPixel);
 fprintf(fid,'r1         = 0.9r-%up \n',offsetPixel);
-fprintf(fid,'stroke_thickness = 5 \n');
+fprintf(fid,'stroke_thickness = 6 \n');
 fprintf(fid,'stroke_color     = white \n');
 fprintf(fid,'</highlight> \n');
 fprintf(fid,'</highlights> \n');
