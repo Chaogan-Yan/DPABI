@@ -4,8 +4,8 @@ function filePathConf = EditConf(workingDir,flag,offsetPixel)
 % Input:
 %   working_dir - working directory that generate scripts and Circos figure
 %   flag - string contains specific command character
-%       'L' - show labels
-%       'T' - show ticks
+%       'L' - show node labels
+%       'N' - show network label
 %       'P' - set labels perpendicular
 %   offsetPixel - incase of adapting perpendicular label, scale inner content
 %__________________________________________________________________________
@@ -37,7 +37,7 @@ fprintf(fid,'thickness = 20p \n');
 fprintf(fid,'fill      = yes \n');
 
 % show external labels
-if ~contains(flag,'L')
+if contains(flag,'N')
     fprintf(fid,'show_label       = yes \n');
     fprintf(fid,'label_font       = bold \n');
     fprintf(fid,'label_with_tag	= yes \n');
@@ -56,7 +56,7 @@ end
 fprintf(fid,'</ideogram> \n');
 
 % show internal labels
-if ~contains(flag,'L')
+if contains(flag,'L')
     fprintf(fid,'<plots> \n');
     fprintf(fid,'<plot> \n');
     fprintf(fid,'type  = text \n');
@@ -67,7 +67,7 @@ if ~contains(flag,'L')
     fprintf(fid,'r1 = 0.9r+500p-%up \n',offsetPixel); % band label radius(R) outter 380p
     fprintf(fid,'label_size = 36 \n');
     fprintf(fid,'label_font = light \n');
-    if ~contains(flag,'P')
+    if contains(flag,'P')
         fprintf(fid,'label_parallel   = yes \n');
     end
     fprintf(fid,'label_snuggle        = yes \n');
