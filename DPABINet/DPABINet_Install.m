@@ -107,10 +107,10 @@ function pushbutton_PullDPABISurfDocker_Callback(hObject, eventdata, handles)
 
 button = questdlg('Do you want to pull from online docker hub or load from a local file?','Pull Docker','Pull from online docker hub','Load from a local file','Pull from online docker hub');
 if strcmpi(button,'Pull from online docker hub')
-    system('docker pull cgyan/dpabi')
+    system('docker pull cgyan/circos')
 else
     [Name, Path]=uigetfile({'*.*','Docker File';},...
-        'Please pick the dpabi docker file');
+        'Please pick the circos docker file');
     system(['docker load -i ',fullfile(Path, Name)]);
 end
 

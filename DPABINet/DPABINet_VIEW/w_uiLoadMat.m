@@ -1,4 +1,4 @@
-function [VarStruct, StatOpt]=w_uiLoadMat(varargin)
+function [VarStruct, StatOpt, IsMAT]=w_uiLoadMat(varargin)
 
 if nargin==0
     PDir=pwd;
@@ -18,7 +18,7 @@ end
 
 VarStruct=[];
 StatOpt=[];
-[File, Path]=uigetfile({'*.mat', 'Matlab MAT-File (*.mat)'; '*.txt', 'Text File (*.txt)';'*.*', 'All File (*.*)'},...
+[File, Path]=uigetfile({'*.mat;*.txt', 'Matlab MAT-File (*.mat) or Text File (*.txt)';'*.*', 'All File (*.*)'},...
     'Pick File', PDir);
 
 if isnumeric(File) && File==0
@@ -28,24 +28,25 @@ end
 FullName=fullfile(Path, File);
 [Path, Name, Ext]=fileparts(FullName);
 if strcmpi(Ext, '.txt')
-    TXT=load(FullName);
-    if isnumeric(TXT) && size(TXT, 3)==1
-        if size(TXT, 1)==1
-            TXT=TXT';
-        end
-        
-        VarSizeStr=sprintf('%d x %d', size(TXT, 1), size(TXT, 2));
-
-        StrCell={sprintf('[%s] TXT', VarSizeStr)};
-        Var.TXT=TXT;
-        
-        VarStruct.Path=FullName;
-        VarStruct.Var=Var;
-        VarStruct.FieldNames={'TXT'};
-        VarStruct.StrCell=StrCell;
-        VarStruct.Type='TXT';
+    IsMAT = 0;
+    TXT=readcell(FullName,'Delimiter',{' ','\t'});
+    try
+        TXT=cell2mat(TXT);
     end
+
+    VarSizeStr=sprintf('%d x %d', size(TXT, 1), size(TXT, 2));
+    
+    StrCell={sprintf('[%s] TXT', VarSizeStr)};
+    Var.TXT=TXT;
+    
+    VarStruct.Path=FullName;
+    VarStruct.Var=Var;
+    VarStruct.FieldNames={'TXT'};
+    VarStruct.StrCell=StrCell;
+    VarStruct.Type='TXT';
+
 elseif strcmpi(Ext, '.mat')
+    IsMAT = 1;
     M=load(FullName);
     FN=fieldnames(M);
     StrCell=[];

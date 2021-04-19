@@ -1441,7 +1441,6 @@ flag = '';
 if ~isempty(CircosStruct.ElementLabel)
     flag = [flag,'L'];
 end
-flag = '';
 if ~isempty(CircosStruct.HigherOrderNetworkLabel)
     flag = [flag,'N'];
 end
@@ -1452,7 +1451,7 @@ CircosConfPath=EditConf(WorkDir, flag, offsetPixel);
 fprintf('Circos Config Created: %\n', CircosConfPath);
 
 % run Circos command, if need run Matlab in Terminal
-Command=['docker run -ti --rm -v ',pwd,':/data yancircos /bin/sh -c ''cd /data && /opt/circos/bin/circos -conf /data/CircosPlot.conf'''];
+Command=['docker run -ti --rm -v ',pwd,':/data cgyan/circos /bin/sh -c ''cd /data && /opt/circos/bin/circos -conf /data/CircosPlot.conf'''];
 system(Command);
 figure;imshow('circos.png')
 
@@ -1515,8 +1514,7 @@ function BrainNetButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 if isempty(handles.Node.ColorMap)
-    errordlg('Please set colormap first!');
-    return
+    handles.Node.ColorMap=[]; %YAN Chao-Gan, 210419. Node ColorMap can be empty
 end
 
 if isempty(handles.Surf.CoordStruct)
@@ -1562,26 +1560,39 @@ else
     error('Invalid Input!');
 end
 
-[VarStruct, StatOpt]=w_uiLoadMat(PDir);
+[VarStruct, StatOpt, IsMAT]=w_uiLoadMat(PDir);
 if isempty(VarStruct)
     return
 end
-Ind=listdlg('PromptString', 'Select a Var:',...
-    'SelectionMode', 'single',...
-    'ListString', VarStruct.StrCell);
-if isempty(Ind)
-    return
+
+if IsMAT %YAN Chao-Gan, 210419. Depends on if .mat or .txt
+    Ind=listdlg('PromptString', 'Select a Var:',...
+        'SelectionMode', 'single',...
+        'ListString', VarStruct.StrCell);
+    if isempty(Ind)
+        return
+    end
+    
+    VarName=VarStruct.FieldNames{Ind};
+    [Data, Header]=y_ReadMat(VarStruct.Path, {VarName});
+    
+    S.Header=Header;
+    S.Name=VarName;
+    S.Var=VarStruct.Var.(VarName);
+    S.Str=VarStruct.StrCell{Ind};
+    S.Path=VarStruct.Path;
+    S.StatOpt=StatOpt;
+    
+else
+    VarName='TXT';
+    S.Header=[];
+    S.Name=VarName;
+    S.Var=VarStruct.Var.(VarName);
+    S.Str=VarStruct.StrCell{1};
+    S.Path=VarStruct.Path;
+    S.StatOpt=StatOpt;
+    
 end
-
-VarName=VarStruct.FieldNames{Ind};
-[Data, Header]=y_ReadMat(VarStruct.Path, {VarName});
-
-S.Header=Header;
-S.Name=VarName;
-S.Var=VarStruct.Var.(VarName);
-S.Str=VarStruct.StrCell{Ind};
-S.Path=VarStruct.Path;
-S.StatOpt=StatOpt;
 
 function UpdateNodeFrame(hObject)
 handles=guidata(hObject);
@@ -2366,5 +2377,6 @@ CircosStruct.ElementLabel=NodeLab;
 CircosStruct.HigherOrderNetworkIndex=NodeNet;
 CircosStruct.HigherOrderNetworkLabel=NodeNetLab;
 CircosStruct.ProcMatrix=Edge;
-CircosStruct.ColorMap=handles.Edge.ColorMap;
+CircosStruct.netCmap=handles.Node.ColorMap;
+CircosStruct.linkCmap=handles.Edge.ColorMap;
 CircosStruct.CmapLimit=Limit;
