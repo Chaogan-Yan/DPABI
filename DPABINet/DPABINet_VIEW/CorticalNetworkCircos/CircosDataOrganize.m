@@ -93,23 +93,23 @@ for k = 1:nRegion
 end
 
 
-% generate network colormap
+% generate network RGB colormap
 if (~isfield(CircosStruct,'netCmap') || isempty(CircosStruct.netCmap))
     netCmap = fix(zeros(nNetwork,3)*255); % default color black
 else
-    netCmap = CircosStruct.netCmap;
+    netCmap = fix(CircosStruct.netCmap*255);
 end
-% generate region colormap
+% generate region RGB colormap
 if (~isfield(CircosStruct,'regCmap') || isempty(CircosStruct.regCmap))
     regCmap = fix(hsv(nRegion)*255);  % default color hsv
 else
-    regCmap = CircosStruct.regCmap;
+    regCmap = fix(CircosStruct.regCmap*255);
 end
-% generate or load link colormap
+% generate or load link RGB colormap
 if (~isfield(CircosStruct,'linkCmap') || isempty(CircosStruct.linkCmap))
     load('linkCmap.mat','linkCmap');
 else
-    linkCmap = CircosStruct.linkCmap; % default color part of jet
+    linkCmap = fix(CircosStruct.linkCmap*255); % default color part of jet
 end
 nCmap = length(linkCmap);
 
@@ -137,7 +137,7 @@ for k = 1:nCorr
         norArrCorRatio(k) = (arrPlot(k)-rightMinLimit)/(rightMaxLimit-rightMinLimit);
         cmapArrCorr(k) = fix(norArrCorRatio(k)*(nCmap/2))+(nCmap/2);
     end
-    matColor(k,:) = fix(linkCmap(cmapArrCorr(k),:)*255);
+    matColor(k,:) = linkCmap(cmapArrCorr(k),:);
 end
 
 % write data of networks
