@@ -1844,10 +1844,11 @@ function pushbuttonRun_Callback(hObject, eventdata, handles)
     Cfg=handles.Cfg; %Added by YAN Chao-Gan, 100130. Save the configuration parameters automatically.
     Datetime=fix(clock); %Added by YAN Chao-Gan, 100130.
     save([handles.Cfg.DataProcessDir,filesep,'DPARSFA_AutoSave_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
-    [Error]=DPARSFA_run(handles.Cfg);
+    [Error, Cfg]=DPARSFA_run(handles.Cfg);
     
     if ((handles.Cfg.IsCovremove==1) && (handles.Cfg.Covremove.WholeBrain.IsBothWithWithoutGSR == 1)) %YAN Chao-Gan, 151123
-        [Error]=DPARSFA_RerunWithGSR(handles.Cfg);
+        handles.Cfg.SubjectID = Cfg.SubjectID;
+        [Error]=DPARSFA_RerunWithGSR(handles.Cfg); %YAN Chao-Gan, 210419. In case the subject ID was changed during the first run, e.g., thresholding quality after reorient.%[Error]=DPARSFA_RerunWithGSR(handles.Cfg);
     end
     
     if ~isempty(Error)

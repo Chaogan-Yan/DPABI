@@ -1425,6 +1425,9 @@ function CircoPlotButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Circos Struct
+
+uiwait(msgbox('This function is based on Dr. Martin I Krzywinski’’s circos. Please cite: Krzywinski, M. et al. Circos: an Information Aesthetic for Comparative Genomics. Genome Res (2009) 19:1639-1645.','Citing'));
+
 CircosStruct=GetCircosStruct(hObject);
 
 % Work Dir
@@ -1436,17 +1439,30 @@ fprintf('Band Information Created: %\n', CircosBandPath);
 fprintf('Label Information Created: %\n', CircosLabelPath);
 fprintf('Link Information Created: %\n', CircosLinkPath);
 
-
+offsetPixel=0;
 flag = '';
 if ~isempty(CircosStruct.ElementLabel)
     flag = [flag,'L'];
+    
+    if isfield(handles,'NodeLabelSetting')
+        NodeLabelSetting=NodeLabelDirection(handles.NodeLabelSetting);
+    else
+        NodeLabelSetting=NodeLabelDirection;
+    end
+    handles.NodeLabelSetting=NodeLabelSetting;
+    guidata(hObject, handles);
+    if strcmpi(NodeLabelSetting.NodeLabelDirection,'T')
+        flag = [flag,'P'];
+    end
+    offsetPixel=NodeLabelSetting.InnerCircleOffset;
 end
 if ~isempty(CircosStruct.HigherOrderNetworkLabel)
     flag = [flag,'N'];
 end
 
 
-offsetPixel=0;
+
+
 CircosConfPath=EditConf(WorkDir, flag, offsetPixel);
 fprintf('Circos Config Created: %\n', CircosConfPath);
 
@@ -1545,6 +1561,7 @@ if isempty(which('BrainNet'))
     errordlg('Please install BrainNet Viewer first!');
     return
 end
+uiwait(msgbox('This function is based on Dr. Mingrui-Xia’’s BrainNet Viewer. Please cite: Xia M, Wang J, He Y (2013) BrainNet Viewer: A Network Visualization Tool for Human Brain Connectomics. PLoS ONE 8: e68910.','Citing'));
 y_CallBrainNetViewer_NodeEdge(Coord,...
     EdgeMat, 0,...
     NodeWei, 1, NodeNet, NodeCM, NodeLab, [],...

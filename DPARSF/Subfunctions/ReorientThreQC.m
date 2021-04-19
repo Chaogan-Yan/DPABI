@@ -22,7 +22,7 @@ function varargout = ReorientThreQC(varargin)
 
 % Edit the above text to modify the response to help ReorientThreQC
 
-% Last Modified by GUIDE v2.5 15-Apr-2021 14:32:49
+% Last Modified by GUIDE v2.5 19-Apr-2021 13:51:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -51,19 +51,42 @@ function ReorientThreQC_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ReorientThreQC (see VARARGIN)
-handles.cfg.IsThreT1 = 1;
-handles.cfg.IsThreFun = 1;
-handles.cfg.ThreT1 = 3;
-handles.cfg.ThreFun = 3;
+if isempty(varargin)
+    QCThreshold.IsThreT1 = 1;
+    QCThreshold.IsThreFun = 1;
+    QCThreshold.ThreT1 = 3;
+    QCThreshold.ThreFun = 3;
+else
+    QCThreshold=varargin{1};
+end
 
+if QCThreshold.IsThreT1 == 1
+    set(handles.checkboxT1,'Value',1);
+    set(handles.editT1,'Enable','on');
+else
+    set(handles.checkboxT1,'Value',0);
+    set(handles.editT1,'Enable','off');
+end
+
+if QCThreshold.IsThreFun == 1
+    set(handles.checkboxFun,'Value',1);
+    set(handles.editFun,'Enable','on');
+else
+    set(handles.checkboxFun,'Value',0);
+    set(handles.editFun,'Enable','off');
+end
+
+set(handles.editFun,'String',num2str(QCThreshold.ThreFun));
+set(handles.editT1,'String',num2str(QCThreshold.ThreT1));
 % Choose default command line output for ReorientThreQC
 handles.output = hObject;
 
 % Update handles structure
+handles.QCThreshold = QCThreshold;
 guidata(hObject, handles);
 
 % UIWAIT makes ReorientThreQC wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+uiwait(handles.figureThresholingQuality);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -74,7 +97,12 @@ function varargout = ReorientThreQC_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
+if isempty(handles)
+    varargout{1} = [];
+else
+    varargout{1} = handles.QCThreshold;
+    delete(handles.figureThresholingQuality)
+end
 
 
 % --- Executes on button press in pushbuttonRun.
@@ -82,18 +110,7 @@ function pushbuttonRun_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonRun (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.cfg.IsThreT1 = get(handles.checkboxT1,'Value');
-handles.cfg.IsThreFun = get(handles.checkboxFun,'Value');
-handles.cfg.ThreT1 = str2num(get(handles.editT1,'String'));
-handles.cfg.ThreFun = str2num(get(handles.editFun,'String'));
-
-clc;
-handles.cfg.IsThreT1
-handles.cfg.ThreT1
-handles.cfg.IsThreFun
-handles.cfg.ThreFun
-
-
+uiresume(handles.figureThresholingQuality);
 
 
 % --- Executes on button press in checkboxT1.
@@ -101,11 +118,13 @@ function checkboxT1_Callback(hObject, eventdata, handles)
 % hObject    handle to checkboxT1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if get(handles.checkboxT1,'Value')
+handles.QCThreshold.IsThreT1 = get(handles.checkboxT1,'Value');
+if handles.QCThreshold.IsThreT1
     set(handles.editT1,'Enable','on');
 else
     set(handles.editT1,'Enable','off');
 end
+guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of checkboxT1
 
 
@@ -114,11 +133,13 @@ function checkboxFun_Callback(hObject, eventdata, handles)
 % hObject    handle to checkboxFun (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if get(handles.checkboxFun,'Value')
+handles.QCThreshold.IsThreFun = get(handles.checkboxFun,'Value');
+if handles.QCThreshold.IsThreFun
     set(handles.editFun,'Enable','on');
 else
     set(handles.editFun,'Enable','off');
 end
+guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of checkboxFun
 
 
@@ -127,7 +148,8 @@ function editT1_Callback(hObject, eventdata, handles)
 % hObject    handle to editT1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.QCThreshold.ThreT1 = str2num(get(handles.editT1,'String'));
+guidata(hObject, handles);
 % Hints: get(hObject,'String') returns contents of editT1 as text
 %        str2double(get(hObject,'String')) returns contents of editT1 as a double
 
@@ -152,6 +174,8 @@ function editFun_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 % Hints: get(hObject,'String') returns contents of editFun as text
 %        str2double(get(hObject,'String')) returns contents of editFun as a double
+handles.QCThreshold.ThreFun = str2num(get(handles.editFun,'String'));
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.

@@ -1,5 +1,5 @@
-function [Error]=DPARSFA_run(AutoDataProcessParameter,WorkingDir,SubjectListFile,IsAllowGUI)
-% FORMAT [Error]=DPARSFA_run(AutoDataProcessParameter,WorkingDir,SubjectListFile,IsAllowGUI)
+function [Error, AutoDataProcessParameter]=DPARSFA_run(AutoDataProcessParameter,WorkingDir,SubjectListFile,IsAllowGUI)
+% FORMAT [Error, AutoDataProcessParameter]=DPARSFA_run(AutoDataProcessParameter,WorkingDir,SubjectListFile,IsAllowGUI)
 % Input:
 %   AutoDataProcessParameter - the parameters for auto data processing. Read http://rfmri.org/content/configurations-dparsfarun to learn how to define it.
 %   WorkingDir - Define the working directory to replace the one defined in AutoDataProcessParameter
@@ -1456,6 +1456,22 @@ end
 if ~isempty(Error)
     disp(Error);
     return;
+end
+
+
+%YAN Chao-Gan, 210419. We will threshold those subjects with bad T1 and Fun quality
+if ((AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1) || (AutoDataProcessParameter.IsNeedReorientFunImgInteractively==1) ) && AutoDataProcessParameter.IsAllowGUI
+    ThreQC=ReorientThreQC;
+    GoodSub=ones(AutoDataProcessParameter.SubjectNum,1);
+    if ThreQC.IsThreT1
+        GoodSub=GoodSub.*(AutoDataProcessParameter.QC.RawT1ImgQC.QCScore>=ThreQC.ThreT1);
+    end
+    if ThreQC.IsThreFun
+        GoodSub=GoodSub.*(AutoDataProcessParameter.QC.RawFunImgQC.QCScore>=ThreQC.ThreFun);
+    end
+    
+    AutoDataProcessParameter.SubjectID=AutoDataProcessParameter.SubjectID(find(GoodSub));
+    AutoDataProcessParameter.SubjectNum=length(AutoDataProcessParameter.SubjectID);
 end
 
 
