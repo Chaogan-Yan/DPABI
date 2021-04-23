@@ -88,7 +88,7 @@ handles.Cfg.NetworkConstruction.MethodParameter = '';
 handles.Cfg.NetworkConstruction.IsRtoZ = 1;
 handles.Cfg.NetworkConstruction.IsApplyRtoZScalingFactor = 0;
 handles.Cfg.IsHigherOrderAveraging = 0;
-handles.Cfg.HigherOrderAveraginMergeLabel = '';
+handles.Cfg.HigherOrderAveraginMergeLabel = [];
 handles.Cfg.OutDir = pwd; 
 
 PCTVer = ver('distcomp');
@@ -489,8 +489,10 @@ function editOrderLabel_Callback(hObject, eventdata, handles)
 % hObject    handle to editOrderLabel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Cfg.HigherOrderAveraginMergeLabel = get(handles.editOrderLabel, 'String');
+Text = get(handles.editOrderLabel, 'String');
+handles.Cfg.HigherOrderAveraginMergeLabel = eval(['[',Text,']']);
 guidata(hObject,handles);
+UpdateDisplay(hObject,handles);
 % Hints: get(hObject,'String') returns contents of editOrderLabel as text
 %        str2double(get(hObject,'String')) returns contents of editOrderLabel as a double
 
@@ -513,13 +515,51 @@ function pushbuttonOrderLabel_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonOrderLabel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[FileName,PathName]=uigetfile;
-if ~ischar(FileName)
+% [FileName,PathName]=uigetfile;
+% if ~ischar(FileName)
+%     return
+% end
+% set(handles.editOrderLabel, 'String', fullfile(PathName,FileName));
+% handles.Cfg.HigherOrderAveraginMergeLabel = get(handles.editOrderLabel, 'String');
+% 
+
+[VarStruct, StatOpt, IsMAT]=w_uiLoadMat(pwd);
+if isempty(VarStruct)
     return
 end
-set(handles.editOrderLabel, 'String', fullfile(PathName,FileName));
-handles.Cfg.HigherOrderAveraginMergeLabel = get(handles.editOrderLabel, 'String');
+
+if IsMAT %YAN Chao-Gan, 210419. Depends on if .mat or .txt
+    Ind=listdlg('PromptString', 'Select a Var:',...
+        'SelectionMode', 'single',...
+        'ListString', VarStruct.StrCell);
+    if isempty(Ind)
+        return
+    end
+    
+    VarName=VarStruct.FieldNames{Ind};
+    [Data, Header]=y_ReadMat(VarStruct.Path, {VarName});
+    
+    S.Header=Header;
+    S.Name=VarName;
+    S.Var=VarStruct.Var.(VarName);
+    S.Str=VarStruct.StrCell{Ind};
+    S.Path=VarStruct.Path;
+    S.StatOpt=StatOpt;
+    
+else
+    VarName='TXT';
+    S.Header=[];
+    S.Name=VarName;
+    S.Var=VarStruct.Var.(VarName);
+    S.Str=VarStruct.StrCell{1};
+    S.Path=VarStruct.Path;
+    S.StatOpt=StatOpt;
+end
+
+handles.Cfg.HigherOrderAveraginMergeLabel = S.Var;
+
 guidata(hObject,handles);
+UpdateDisplay(hObject,handles);
 
 
 % --- Executes on button press in pushbuttonOutputDir.
@@ -643,7 +683,7 @@ else
     set(handles.editOrderLabel, 'Enable', 'off');
     set(handles.pushbuttonOrderLabel, 'Enable', 'off');
 end
-set(handles.editOrderLabel, 'String', handles.Cfg.HigherOrderAveraginMergeLabel);
+set(handles.editOrderLabel, 'String', num2str(handles.Cfg.HigherOrderAveraginMergeLabel(:)'));
 set(handles.editOutputDir, 'String', handles.Cfg.OutDir);
 set(handles.editParallel, 'String', handles.Cfg.ParallelWorkersNumber);
 ShowDataList(hObject,handles)

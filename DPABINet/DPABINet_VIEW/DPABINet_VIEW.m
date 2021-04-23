@@ -114,7 +114,7 @@ handles.Edge.PermStruct=[];
 handles.Edge.PermP=0.05;
 handles.Edge.PermFDRQ=0.05;
 handles.Edge.NBSStruct=[];
-handles.Edge.NBSEdgeP=0.05;
+handles.Edge.NBSEdgeP=0.001;
 handles.Edge.NBSCompP=0.05;
 
 % BrainNet Viewer Configure
@@ -1481,21 +1481,21 @@ Value=get(handles.UtilitiesPopup, 'Value');
 switch Value
     case 1
         %DO NOTING
-    case 2 % Generate Binary Matrix
+    case 2 % Generate Matrix
         Edge=GetThresholdedEdge(hObject);
         if isempty(Edge)
             errordlg('Please set edge matrix first!');
             return
         end
-        EdgeBin=Edge;
+        EdgeMatrix=Edge;
         
         [File , Path]=uiputfile({'*.mat','MAT-File (*.mat)'}, ...
-            'Save Binary Edge Matrix', pwd);
+            'Save Edge Matrix', pwd);
         if ~ischar(File)
             return
         end
         OutPath=fullfile(Path, File);
-        save(OutPath, 'EdgeBin');
+        save(OutPath, 'EdgeMatrix');
     case 3
         CountEdgeS=CountEdge(hObject);
         [File , Path]=uiputfile({'*.mat','MAT-File (*.mat)'}, ...
@@ -2202,11 +2202,15 @@ switch MCCType
         for n=1:numel(RealCompEdgeNum)
             CurCompP=(1+length(find(CSNullModel>=RealCompEdgeNum(n, 1))))/(1+NumPerm);
             if CurCompP<CompP
-                NBSMsk(RealCi==n, :)=true;
-                NBSMsk(:, RealCi==n)=true;
+                NBSMsk(RealCi==n, RealCi==n)=true; %YAN Chao-Gan. 210421. Might be quicker
+                %NBSMsk(RealCi==n, :)=true;
+                %NBSMsk(:, RealCi==n)=true;
             end
         end
         Mat=Mat.*NBSMsk.*Bin;
+        
+        EdgeMatrix_NBSCorrected=Mat;
+        save('EdgeMatrix_NBSCorrected.mat','EdgeMatrix_NBSCorrected'); %%YAN Chao-Gan. 210421.
         
         fprintf('NBS Finished.\n');
 end
@@ -2309,7 +2313,7 @@ for j=1:length(LabelIndex)
         Matrix = A*B';
         MatrixIndex = find(Matrix);
         CountSet_Pos(j,k) = sum(PSurviveCount(MatrixIndex));
-        CountSet_Nos(j,k) = sum(NSurviveCount(MatrixIndex));
+        CountSet_Neg(j,k) = sum(NSurviveCount(MatrixIndex));
         CountSet_Full(j,k) = sum(FullMatrix(MatrixIndex));
     end
 end

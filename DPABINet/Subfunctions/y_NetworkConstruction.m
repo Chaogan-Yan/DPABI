@@ -100,6 +100,7 @@ if (Cfg.IsHigherOrderAveraging==1)
     else
         HigherOrderAveraginMergeLabel = Cfg.HigherOrderAveraginMergeLabel;
     end
+    HigherOrderAveraginMergeLabel=HigherOrderAveraginMergeLabel(:);
 end
 
 if (Cfg.NetworkConstruction.IsRtoZ==1) && (Cfg.NetworkConstruction.IsApplyRtoZScalingFactor==1)

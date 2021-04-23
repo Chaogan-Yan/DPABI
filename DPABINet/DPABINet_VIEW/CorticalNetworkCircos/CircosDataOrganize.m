@@ -80,7 +80,11 @@ maxabsArrPlot = max(abs(min(arrPlot)),abs(max(arrPlot)));
 arrCorRatio = roundn((arrPlot/maxabsArrPlot),COLORBAR_ROUNDN_SENS); % correlation normalization, sensitivity
 % normalize to appropriate range
 maxArrPlot = max(abs(arrPlot(:))); minArrPlot = min(abs(arrPlot(:)));
-normArrPlot = roundn(MIN_WIDTH+(MAX_WIDTH-MIN_WIDTH)*(abs(arrPlot)-minArrPlot)/(maxArrPlot-minArrPlot),COLORBAR_ROUNDN_SENS);
+if maxArrPlot~=minArrPlot
+    normArrPlot = roundn(MIN_WIDTH+(MAX_WIDTH-MIN_WIDTH)*(abs(arrPlot)-minArrPlot)/(maxArrPlot-minArrPlot),COLORBAR_ROUNDN_SENS);
+else
+    normArrPlot = arrPlot./arrPlot;
+end
 
 % calculate correlation for plot
 logiMatIndexLink = false(nCorr,nCorr);
