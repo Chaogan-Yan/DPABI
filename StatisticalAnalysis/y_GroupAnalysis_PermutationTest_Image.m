@@ -163,11 +163,13 @@ palm([TempDir,filesep,'PALMConfig.txt']);
 %If this is DPABINet Matrix, then read the gifti fwep and save into matrices
 if exist('Header_DPABINetMatrix','var') && (~isempty(Header_DPABINetMatrix))
     [Path, Name, Ext]=fileparts(OutputName); %YAN Chao-Gan, 200516. Deal with the Ext
-    FileName=fullfile(Path, [Name,'_dpv_tstat_fwep.gii']);
+    DirFile=dir(fullfile(Path, [Name,'_dpv_*stat_fwep.gii']));
+    FileName=fullfile(Path, DirFile(1).name);
     Data=y_ReadAll(FileName);
     y_Write(Data,Header_DPABINetMatrix,fullfile(Path, [Name,'_PALM_fwep.mat']));
     
-    FileName=fullfile(Path, [Name,'_dpv_tstat_uncp.gii']);
+    DirFile=dir(fullfile(Path, [Name,'_dpv_*stat_uncp.gii']));
+    FileName=fullfile(Path, DirFile(1).name);
     Data=y_ReadAll(FileName);
     y_Write(Data,Header_DPABINetMatrix,fullfile(Path, [Name,'_PALM_uncp.mat']));
 end
