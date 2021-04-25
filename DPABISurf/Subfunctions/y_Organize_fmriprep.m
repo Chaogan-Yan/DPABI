@@ -162,7 +162,7 @@ end
 
 
 fprintf('Organize Anat Segment Volume...\n');
-Command = sprintf('%s python2 /opt/freesurfer/bin/asegstats2table --subjects %s --meas volume --tablefile %s', CommandInit, SubjectIDString,fullfile('/data','Results','AnatVolu','Anat_Segment_Volume.tsv'));
+Command = sprintf('%s python2 /opt/freesurfer/bin/asegstats2table --subjects %s --meas volume --tablefile %s', CommandInit, SubjectIDString,'/data/Results/AnatVolu/Anat_Segment_Volume.tsv');
 system(Command);
 
 

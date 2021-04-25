@@ -51,7 +51,7 @@ function NodeLabelDirection_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to NodeLabelDirection (see VARARGIN)
-if isempty(varargin)
+if isempty(varargin) || isempty(varargin{1})
     NodeLabelDirection.NodeLabelDirection = 'T'; 
     NodeLabelDirection.InnerCircleOffset = 0;
 else

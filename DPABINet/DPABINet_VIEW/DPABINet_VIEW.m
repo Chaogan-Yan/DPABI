@@ -1467,7 +1467,7 @@ CircosConfPath=EditConf(WorkDir, flag, offsetPixel);
 fprintf('Circos Config Created: %\n', CircosConfPath);
 
 % run Circos command, if need run Matlab in Terminal
-Command=['docker run -ti --rm -v ',pwd,':/data cgyan/circos /bin/sh -c ''cd /data && /opt/circos/bin/circos -conf /data/CircosPlot.conf'''];
+Command=['docker run -ti --rm -v ',WorkDir,':/data cgyan/circos /bin/sh -c ''cd /data && /opt/circos/bin/circos -conf /data/CircosPlot.conf'''];
 system(Command);
 figure;imshow('circos.png')
 
