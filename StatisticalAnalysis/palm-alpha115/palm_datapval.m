@@ -63,15 +63,22 @@ if rev, % if small G are significant
     
 else % if large G are significant (typical case)
     
-    % Sort the data and compute the empirical distribution
-    [~,cdfG,distp] = palm_competitive(Gvals(:),'descend',true);
-    cdfG  = unique(cdfG);
-    distp = flipud(unique(distp))./numel(Gvals);
-    
-    % Convert the data to p-values
-    pvals = zeros(size(G));
-    for g = numel(cdfG):-1:1,
-        pvals(G <= cdfG(g)) = distp(g);
+    AllInf=isinf(Gvals); %YAN Chao-Gan, 210426. Handle if Gvals are all Inf.
+    if all(AllInf)
+        pvals = ones(size(G));
+    else
+        
+        % Sort the data and compute the empirical distribution
+        [~,cdfG,distp] = palm_competitive(Gvals(:),'descend',true);
+        cdfG  = unique(cdfG);
+        distp = flipud(unique(distp))./numel(Gvals);
+        
+        % Convert the data to p-values
+        pvals = zeros(size(G));
+        for g = numel(cdfG):-1:1,
+            pvals(G <= cdfG(g)) = distp(g);
+        end
+        pvals(G > cdfG(end)) = 0;
+        
     end
-    pvals(G > cdfG(end)) = 0;
 end

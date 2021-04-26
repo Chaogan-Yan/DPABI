@@ -135,6 +135,7 @@ end
 if iscell(NodeCoordinates)
     NodeCoordinates=cell2mat(NodeCoordinates);
 end
+NodeCoordinates=double(NodeCoordinates);
 surf.nsph=size(NodeCoordinates,1);
 surf.sphere=[NodeCoordinates,NodeNetwork,abs(NodeWeight)];
 surf.label=NodeLabel;

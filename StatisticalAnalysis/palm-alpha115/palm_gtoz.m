@@ -42,6 +42,8 @@ function Z = palm_gtoz(G,df1,df2)
 
 % Note that for speed, there's no argument checking.
 
+G(find(isnan(G)))=0; %YAN Chao-Gan, 210426. In case there are NaNs in G!
+
 % If df2 is NaN, this is r, R^2, or z already
 if isnan(df2(1)),
     
