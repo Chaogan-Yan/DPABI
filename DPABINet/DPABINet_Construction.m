@@ -108,6 +108,29 @@ if ~isempty(PCTVer)
     end
 end
 
+% Make UI display correct in PC and linux
+if ~ismac
+    TextHandle = findall(handles.figDPABINet_Construction,'-property','FontSize');
+    for i = 1:length(TextHandle)
+        if strcmp(TextHandle(i).Type,'uicontrol')
+            if strcmp(TextHandle(i).Style,'popupmenu')
+                set(TextHandle(i), 'FontSize',0.4);
+            else
+                set(TextHandle(i), 'FontSize',0.58);
+            end
+        else
+            set(TextHandle(i), 'FontUnits','points','FontSize',8);
+        end
+    end
+    if ispc
+        ZoonMatrix = [1 1 1.3 1.2];  %For pc
+    else
+        ZoonMatrix = [1 1 1.2 1.1];  %For Linux
+    end
+    UISize = get(handles.figDPABINet_Construction,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figDPABINet_Construction,'Position',UISize);
+end
 % Refresh the UI
 UpdateDisplay(hObject,handles);
 %uiwait(msgbox('Please cite: New small-world paper of Yan'))
