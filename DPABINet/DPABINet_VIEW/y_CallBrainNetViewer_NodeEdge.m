@@ -186,14 +186,15 @@ else
     EC.edg.draw_threshold=EdgeThreshold;
 end
 
-
-EC.edg.color=1; %EC.edg.color=2;
+% Adjust Color of Pos & Neg by Sandy
+EC.edg.color=3; %EC.edg.color=2;
 %EC.edg.CM=jet(64);
 EC.edg.CM=[0 0 1; 1 0 0];
 %EC.edg.CM=[1 0 0;0 0 1];
 EC.edg.draw_abs=1;
 EC.edg.size_abs=1;
-EC.edg.color_abs=1;  %this is a bug, color_abs==1, then not abs value
+EC.edg.color_abs=0;  %this is a bug, color_abs==1, then not abs value
+EC.edg.color_threshold=0;
 % Will only get the up triangle of edge net matrix.
 
 if ~exist('NodeNetwork','var') || isempty(NodeNetwork)
