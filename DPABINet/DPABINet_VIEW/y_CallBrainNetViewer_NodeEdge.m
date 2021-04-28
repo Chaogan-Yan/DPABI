@@ -189,7 +189,8 @@ end
 % Adjust Color of Pos & Neg by Sandy
 EC.edg.color=3; %EC.edg.color=2;
 %EC.edg.CM=jet(64);
-EC.edg.CM=[0 0 1; 1 0 0];
+%EC.edg.CM=[0 0 1; 1 0 0];
+EC.edg.CM=[repmat([1 0 0],[32,1]);repmat([0 0 1],[32,1])];
 %EC.edg.CM=[1 0 0;0 0 1];
 EC.edg.draw_abs=1;
 EC.edg.size_abs=1;
