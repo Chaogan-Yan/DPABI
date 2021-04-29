@@ -34,7 +34,7 @@ end
 
 % --- Executes just before DPARSFA is made visible.
 function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V5.1_201001';
+    Release='V5.2_210501';
     handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
     
     if ispc
@@ -430,12 +430,12 @@ function SetWorkingDir(hObject, handles, ADir)
 function listSubjectID_Callback(hObject, eventdata, handles)
 	theIndex =get(hObject, 'Value');
 
-function listSubjectID_KeyPressFcn(hObject, eventdata, handles)
-	%Delete the selected item when 'Del' is pressed
-    key =get(handles.figDPARSFAMain, 'currentkey');
-    if seqmatch({key},{'delete', 'backspace'})
-       DeleteSelectedSubjectID(hObject, eventdata,handles);
-    end   
+% function listSubjectID_KeyPressFcn(hObject, eventdata, handles)
+% 	%Delete the selected item when 'Del' is pressed
+%     key =get(handles.figDPARSFAMain, 'currentkey');
+%     if seqmatch({key},{'delete', 'backspace'})
+%        DeleteSelectedSubjectID(hObject, eventdata,handles);
+%     end   
 	
 function DeleteSelectedSubjectID(hObject, eventdata, handles)	
 	theIndex =get(handles.listSubjectID, 'Value');
