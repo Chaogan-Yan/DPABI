@@ -241,16 +241,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%Predefine Cfg End%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Make UI display correct in PC and linux
-if ~ismac
-    if ispc
-        ZoonMatrix = [1 1 0.8 0.8];  %For pc
-    else
-        ZoonMatrix = [1 1 0.7 0.8];  %For Linux
-    end
-    UISize = get(handles.figureDPABISurf,'Position');
-    UISize = UISize.*ZoonMatrix;
-    set(handles.figureDPABISurf,'Position',UISize);
-end
+% if ~ismac
+%     if ispc
+%         ZoonMatrix = [1 1 0.8 0.8];  %For pc
+%     else
+%         ZoonMatrix = [1 1 0.7 0.8];  %For Linux
+%     end
+%     UISize = get(handles.figureDPABISurf,'Position');
+%     UISize = UISize.*ZoonMatrix;
+%     set(handles.figureDPABISurf,'Position',UISize);
+% end
 
 UpdateDisplay(handles);
 
