@@ -109,15 +109,15 @@ for n=1:NumEstimate
     
     if size(ResVal, 2)==1
         IsStatMap=true;
-        SSminus=0;
-        S2=0;
     else
         IsStatMap=false;
-        VD=zeros(NumVertex, 1);
-        VAR1=zeros(NumVertex, 1);
     end
-    
-    for i=1:NumVertex
+    SSminus=0;
+    S2=0;
+    VD=zeros(NumVertex, 1);
+    VAR1=zeros(NumVertex, 1);
+
+    parfor i=1:NumVertex
         v_ind=sum(Faces==i, 2)~=0;
         n_ind=unique(Faces(v_ind, :));
         

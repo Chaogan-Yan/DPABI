@@ -32,6 +32,16 @@ if ~exist('MaskFile','var')
     MaskFile = '';
 end
 
+if ~exist('CovVolume','var')
+    CovVolume = [];
+end
+
+if ~exist('Contrast','var')
+    Contrast = [];
+end
+
+
+
 if ~isnumeric(DependentVolume)
     if (ischar(DependentVolume)) && (exist(DependentVolume,'file')==2) %YAN Chao-Gan, 210416. Read txt file
         [pathstr, name, ext] = fileparts(DependentVolume);
@@ -94,18 +104,18 @@ if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 1812
     SSE_OLS_brain=zeros(nDim1,nDim2,nDim3); %YAN Chao-Gan, 151125. Also outpur the SSE Brain.
 
     fprintf('\n\tRegression Calculating...\n');
-    for i=1:nDim1
+    parfor i=1:nDim1
         fprintf('.');
         for j=1:nDim2
             for k=1:nDim3
                 if MaskData(i,j,k)
                     DependentVariable=squeeze(DependentVolume(i,j,k,:));
-                    if exist('CovVolume','var') && ~isempty(CovVolume)
+                    if ~isempty(CovVolume)
                         CovVariable=squeeze(CovVolume(i,j,k,:));
                     else
                         CovVariable = [];
                     end
-                    if exist('Contrast','var') && ~isempty(Contrast)
+                    if ~isempty(Contrast)
                         [b,r,SSE,SSR, T, TF_ForContrast, Cohen_f2] = y_regress_ss(DependentVariable,[Predictor,CovVariable],Contrast,TF_Flag); %YAN Chao-Gan 170714, Added Cohen's f squared (Effect Size) %[b,r,SSE,SSR, T, TF_ForContrast] = y_regress_ss(DependentVariable,[Predictor,CovVariable],Contrast,TF_Flag);
                         b_OLS_brain(i,j,k,:)=b;
                         t_OLS_brain(i,j,k,:)=T;
@@ -131,7 +141,7 @@ if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 1812
     Header.pinfo = [1;0;0];
     Header.dt    = [16,0];
     
-    DOF = nDim4 - size([Predictor,CovVariable],2);
+    DOF = nDim4 - size(Predictor,2) - (~isempty(CovVolume));
     
     VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));
     [dLh,resels,FWHM, nVoxels] = y_Smoothest(r_OLS_brain, MaskFile, DOF, VoxelSize);
@@ -169,15 +179,16 @@ else %YAN Chao-Gan 181204. Take care GIfTI data
     SSE_OLS_brain=zeros(nDimVertex, 1); 
     
     fprintf('\n\tRegression Calculating...\n');
-    for i=1:nDimVertex
+
+    parfor i=1:nDimVertex
         if MaskData(i,1)
             DependentVariable=DependentVolume(i,:)';
-            if exist('CovVolume','var') && ~isempty(CovVolume)
+            if ~isempty(CovVolume)
                 CovVariable=squeeze(CovVolume(i,:));
             else
                 CovVariable = [];
             end
-            if exist('Contrast','var') && ~isempty(Contrast)
+            if ~isempty(Contrast)
                 [b,r,SSE,SSR, T, TF_ForContrast, Cohen_f2] = y_regress_ss(DependentVariable,[Predictor,CovVariable],Contrast,TF_Flag); %YAN Chao-Gan 170714, Added Cohen's f squared (Effect Size) %[b,r,SSE,SSR, T, TF_ForContrast] = y_regress_ss(DependentVariable,[Predictor,CovVariable],Contrast,TF_Flag);
                 b_OLS_brain(i,:)=b;
                 t_OLS_brain(i,:)=T;
@@ -198,7 +209,7 @@ else %YAN Chao-Gan 181204. Take care GIfTI data
     TF_ForContrast_brain(isnan(TF_ForContrast_brain))=0;
     Cohen_f2_brain(isnan(Cohen_f2_brain))=0;
     
-    DOF = nDimTimePoints - size([Predictor,CovVariable],2);
+    DOF = nDimTimePoints - size(Predictor,2) - (~isempty(CovVolume));
 
     HeaderTWithDOF=Header;
     
@@ -229,11 +240,11 @@ if exist('Contrast','var') && ~isempty(Contrast)
     if strcmpi(TF_Flag,'F') %If TF_Flag is 'T', then still use the previously defined T Header.
         Df_Group = length(find(Contrast));
         if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
-            Df_E = nDim4 - size([Predictor,CovVariable],2);
+            Df_E = nDim4 - size(Predictor,2) - (~isempty(CovVolume));
             HeaderTWithDOF=Header;
-            HeaderTWithDOF.descrip=sprintf('DPABI{F_[%.1f,%.1f]}{dLh_%f}{FWHMx_%fFWHMy_%fFWHMz_%fmm}',Df_Group,Df_E,dLh,FWHM(1),FWHM(2),FWHM(3));
+            HeaderTWithDOF.descrip=sprintf('DPABI{F_[%.1f,%.1f]}{dLh_%f}{FWHMx_%.3fFWHMy_%.3fFWHMz_%.3fmm}',Df_Group,Df_E,dLh,FWHM(1),FWHM(2),FWHM(3));
         else
-            Df_E = nDimTimePoints - size([Predictor,CovVariable],2);
+            Df_E = nDimTimePoints - size(Predictor,2) - (~isempty(CovVolume));
             HeaderTWithDOF=Header;
 
             if isfield(Header,'cdata')
