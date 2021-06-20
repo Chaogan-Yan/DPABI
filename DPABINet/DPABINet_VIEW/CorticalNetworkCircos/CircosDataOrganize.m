@@ -136,9 +136,17 @@ norArrCorRatio = zeros(nCorr,1);
 for k = 1:nCorr
     if arrCorRatio(k) < 0
         norArrCorRatio(k) = (arrPlot(k)-leftMaxLimit)/(leftMaxLimit-leftMinLimit);
+        % fixed a bug when leftMaxLimit=leftMinLimit
+        if isnan(norArrCorRatio(k))
+            norArrCorRatio(k) = -1;
+        end
         cmapArrCorr(k) = fix(norArrCorRatio(k)*(nCmap/2))+(nCmap/2)+1;
     elseif arrCorRatio(k) > 0
         norArrCorRatio(k) = (arrPlot(k)-rightMinLimit)/(rightMaxLimit-rightMinLimit);
+        % fixed a bug when rightMaxLimit=rightMinLimit
+        if isinf(norArrCorRatio(k))
+            norArrCorRatio(k) = 1;
+        end
         cmapArrCorr(k) = fix(norArrCorRatio(k)*(nCmap/2))+(nCmap/2);
     end
     matColor(k,:) = linkCmap(cmapArrCorr(k),:);
