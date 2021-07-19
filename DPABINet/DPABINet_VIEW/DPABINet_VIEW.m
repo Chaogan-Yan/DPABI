@@ -2215,6 +2215,10 @@ switch MCCType
         save('EdgeMatrix_NBSCorrected.mat','EdgeMatrix_NBSCorrected'); %%YAN Chao-Gan. 210421.
         
         fprintf('NBS Finished.\n');
+        
+        if all(Mat(:)==0)
+            warning('There was no edge survived NBS correction!')
+        end
 end
 
 % Thres Type: Full, Pos, or Neg

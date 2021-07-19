@@ -117,7 +117,7 @@ for n=1:NumEstimate
     VD=zeros(NumVertex, 1);
     VAR1=zeros(NumVertex, 1);
 
-    parfor i=1:NumVertex
+    for i=1:NumVertex
         v_ind=sum(Faces==i, 2)~=0;
         n_ind=unique(Faces(v_ind, :));
         

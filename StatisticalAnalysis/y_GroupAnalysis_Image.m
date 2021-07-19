@@ -104,7 +104,7 @@ if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 1812
     SSE_OLS_brain=zeros(nDim1,nDim2,nDim3); %YAN Chao-Gan, 151125. Also outpur the SSE Brain.
 
     fprintf('\n\tRegression Calculating...\n');
-    parfor i=1:nDim1
+    for i=1:nDim1
         fprintf('.');
         for j=1:nDim2
             for k=1:nDim3
@@ -180,7 +180,7 @@ else %YAN Chao-Gan 181204. Take care GIfTI data
     
     fprintf('\n\tRegression Calculating...\n');
 
-    parfor i=1:nDimVertex
+    for i=1:nDimVertex
         if MaskData(i,1)
             DependentVariable=DependentVolume(i,:)';
             if ~isempty(CovVolume)
