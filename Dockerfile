@@ -4,7 +4,7 @@ MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
 # Update system and istall pakages
 RUN apt-get -qq update && apt-get -qq install -y \
-    x11vnc xvfb suckless-tools stterm connectome-workbench parallel wget unzip qt4-default libjpeg62 && \
+    x11vnc xvfb suckless-tools stterm connectome-workbench parallel wget unzip && \
     apt-get update
 
 
@@ -45,6 +45,9 @@ RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABISurf_run_StandAlone
 RUN /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 RUN /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 RUN /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
+
+# For freeview
+RUN apt-get -qq install -y qt4-default libjpeg62
 
 ENTRYPOINT []
 

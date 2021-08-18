@@ -405,6 +405,17 @@ if (Cfg.RemoveFirstTimePoints>0)
                     %y_Write(Nii.dat(:,:,:,Cfg.RemoveFirstTimePoints+1:end),Nii,DirImg(1).name);
                     %YAN Chao-Gan, 210309. Save in single incase of Philips data.
                     [Data Header]=y_Read(DirImg(1).name);
+                    
+                    %YAN Chao-Gan, 210818. In case the TR info in NIfTI header is incorrect.
+                    if Cfg.TR~=0
+                        try
+                            if Header.private.timing.tspace ~= Cfg.TR
+                                Header.private.timing.tspace=Cfg.TR;
+                            end
+                        catch
+                        end
+                    end
+                    
                     Header.pinfo=[1;0;0]; Header.dt=[16,0];
                     y_Write(Data(:,:,:,Cfg.RemoveFirstTimePoints+1:end),Header,DirImg(1).name);
                     
