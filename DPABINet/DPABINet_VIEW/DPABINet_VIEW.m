@@ -2061,6 +2061,12 @@ switch VecThresType
         Vec=Vec.*(Vec<0);
 end
 
+if ~any(Vec(:)) %YAN Chao-Gan, 210923
+    warndlg('There was no node survived!'); %YAN Chao-Gan, 210923
+end
+
+
+
 function Mat=GetThresholdedEdge(hObject)
 handles=guidata(hObject);
 
@@ -2217,7 +2223,8 @@ switch MCCType
         fprintf('NBS Finished.\n');
         
         if all(Mat(:)==0)
-            warning('There was no edge survived NBS correction!')
+            warning('There was no edge survived NBS correction!');
+            warndlg('There was no edge survived NBS correction!'); %YAN Chao-Gan, 210923
         end
 end
 
@@ -2229,6 +2236,10 @@ switch MatThresType
         Mat=Mat.*(Mat>0);
     case 3 % Negative
         Mat=Mat.*(Mat<0);
+end
+
+if ~any(Mat(:)) %YAN Chao-Gan, 210923
+    warndlg('There was no edge survived!'); %YAN Chao-Gan, 210923
 end
 
 function CompEdgeNum=GetCompEdgeNum(Bin, Ci, CompSizes)
@@ -2271,7 +2282,7 @@ else
         end
         
         Ind=Vec<0;
-        if isempty(Ind)
+        if isempty(find(Ind, 1)) %  YAN Chao-Gan, 210926. Fixed a bug.   if isempty(Ind)
             NMin=0;
         else
             NMin=max(Vec(Ind));
