@@ -130,9 +130,11 @@ Value=get(handles.ImgListbox, 'Value');
 if Value==0
     return
 end
-handles.ImgCells(Value)=[];
+
 if ~isempty(handles.ImgCellsSingleFiles) %YAN Chao-Gan, 200527. Should also work for adding single files
     handles.ImgCellsSingleFiles(Value)=[];
+else
+    handles.ImgCells(Value)=[]; %YAN Chao-Gan, 211007. Fixed a bug
 end
 RemoveString(handles.ImgListbox, Value);
 guidata(hObject, handles);
@@ -217,7 +219,7 @@ end
 
 Prefix=get(handles.PrefixEntry, 'String');
 
-parfor i=1:numel(ImgCells) %YAN Chao-Gan, 190105. Here don't need parfor. parfor i=1:numel(ImgCells)
+for i=1:numel(ImgCells) %YAN Chao-Gan, 190105. Here don't need parfor. parfor i=1:numel(ImgCells)
     Img=ImgCells{i};
     
     %By YAN Chao-Gan, 141101.

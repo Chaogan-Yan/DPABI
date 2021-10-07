@@ -151,7 +151,7 @@ for iROI=1:length(ROIDef)
     if strcmpi(int2str(size(ROIDef{iROI})),int2str([nDim1, nDim2, nDim3]))  %ROI Data
         MaskROI = ROIDef{iROI};
         MaskROIName{iROI} = sprintf('Mask Matrix definition %d',iROI);
-    elseif size(ROIDef{iROI},1) == nDimTimePoints %Seed series% strcmpi(int2str(size(ROIDef{iROI})),int2str([nDimTimePoints, 1])) %Seed series
+    elseif (size(ROIDef{iROI},1) == nDimTimePoints) && (nDimTimePoints > 1) %size(ROIDef{iROI},1) == nDimTimePoints %Seed series% strcmpi(int2str(size(ROIDef{iROI})),int2str([nDimTimePoints, 1])) %Seed series
         SeedSeries{1,iROI} = ROIDef{iROI};
         IsDefinedROITimeCourse =1;
         MaskROIName{iROI} = sprintf('Seed Series definition %d',iROI);
