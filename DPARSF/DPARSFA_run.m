@@ -2034,7 +2034,7 @@ if (AutoDataProcessParameter.IsAutoMask==1)
     fprintf('Generating AutoMasks begin...\n');
     mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'AutoMasks'])
     
-    parfor i=1:AutoDataProcessParameter.SubjectNum
+    for i=1:AutoDataProcessParameter.SubjectNum
         
         for iFunSession=1:AutoDataProcessParameter.FunctionalSessionNumber
             %Apply to the functional images
@@ -2044,7 +2044,23 @@ if (AutoDataProcessParameter.IsAutoMask==1)
             
             OutputFile = [AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'AutoMasks',filesep,FunSessionPrefixSet{iFunSession},'AutoMask_',AutoDataProcessParameter.SubjectID{i},'.nii'];
 
-            w_Automask(InputDir, OutputFile);
+            HasDocker = system('which docker'); %Test if docker installed, I will use AFNI's 3dautomask %YAN CHao-Gan, 211011
+            if HasDocker == 0
+                CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), AutoDataProcessParameter.DataProcessDir);
+                if isdeployed % If running within docker with compiled version
+                    CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', WorkingDir);
+                end
+                DirFile=dir([InputDir,filesep,'*.nii']);
+                InputFilename=[InputDir,filesep,DirFile(1).name];
+                
+                InputFilename = strrep(InputFilename,AutoDataProcessParameter.DataProcessDir,'/data'); %Replace the path for docker
+                OutputFile = strrep(OutputFile,AutoDataProcessParameter.DataProcessDir,'/data');
+                Command = [CommandInit, ' 3dAutomask -prefix ',OutputFile,' ',InputFilename];
+                system(Command);
+            else
+                w_Automask(InputDir, OutputFile);
+            end
+            
         end
         
         fprintf('Generating AutoMasks for %s: OK\n',AutoDataProcessParameter.SubjectID{i});

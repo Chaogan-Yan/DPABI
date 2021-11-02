@@ -406,19 +406,6 @@ if (Cfg.RemoveFirstTimePoints>0)
                     %YAN Chao-Gan, 210309. Save in single incase of Philips data.
                     [Data Header]=y_Read(DirImg(1).name);
                     
-                    %YAN Chao-Gan, 210818. In case the TR info in NIfTI header is incorrect.
-                    if Cfg.TR~=0
-                        try
-                            if Header.private.timing.tspace ~= Cfg.TR
-                                Header.private.timing.tspace=Cfg.TR;
-                            end
-                        catch
-                        end
-                    end
-                    
-                    Header.pinfo=[1;0;0]; Header.dt=[16,0];
-                    y_Write(Data(:,:,:,Cfg.RemoveFirstTimePoints+1:end),Header,DirImg(1).name);
-                    
                 end
                 
             end
@@ -481,6 +468,69 @@ if (Cfg.Isfmriprep==1)
     end
     
 
+    %YAN Chao-Gan, 211102. In case the TR info in NIfTI header is incorrect.
+    if Cfg.TR~=0
+        DirSessions=dir([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{1,1},filesep,'ses*']);
+        if length(DirSessions)==0
+            parfor i=1:Cfg.SubjectNum
+                DirFile=dir([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,'func',filesep,'*.nii*']);
+                [Data Header]=y_Read([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,'func',filesep,DirFile(1).name]);
+                try
+                    if Header.private.timing.tspace ~= Cfg.TR
+                        Header.private.timing.tspace=Cfg.TR;
+                        Header.pinfo=[1;0;0]; Header.dt=[16,0];
+                        [Path, fileN, extn] = fileparts(DirFile(1).name);
+                        if strcmpi(extn,'.gz')
+                            delete([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,'func',filesep,DirFile(1).name])
+                            DirFile(1).name=DirFile(1).name(1:end-3);
+                        end
+                        y_Write(Data,Header,[Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,'func',filesep,DirFile(1).name]);
+                    end
+                catch
+                    Header.private.timing.tspace=Cfg.TR;
+                    Header.pinfo=[1;0;0]; Header.dt=[16,0];
+                    [Path, fileN, extn] = fileparts(DirFile(1).name);
+                    if strcmpi(extn,'.gz')
+                        delete([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,'func',filesep,DirFile(1).name])
+                        DirFile(1).name=DirFile(1).name(1:end-3);
+                    end
+                    y_Write(Data,Header,[Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,'func',filesep,DirFile(1).name]);
+                end
+            end
+            
+        else
+            for iFunSession=1:Cfg.FunctionalSessionNumber
+                parfor i=1:Cfg.SubjectNum
+                    DirFile=dir([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,DirSessions(iFunSession).name,filesep,'func',filesep,'*.nii*']);
+                    [Data Header]=y_Read([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,DirSessions(iFunSession).name,filesep,'func',filesep,DirFile(1).name]);
+                    try
+                        if Header.private.timing.tspace ~= Cfg.TR
+                            Header.private.timing.tspace=Cfg.TR;
+                            Header.pinfo=[1;0;0]; Header.dt=[16,0];
+                            [Path, fileN, extn] = fileparts(DirFile(1).name);
+                            if strcmpi(extn,'.gz')
+                                delete([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,DirSessions(iFunSession).name,filesep,'func',filesep,DirFile(1).name])
+                                DirFile(1).name=DirFile(1).name(1:end-3);
+                            end
+                            y_Write(Data,Header,[Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,DirSessions(iFunSession).name,filesep,'func',filesep,DirFile(1).name]);
+                        end
+                    catch
+                        Header.private.timing.tspace=Cfg.TR;
+                        Header.pinfo=[1;0;0]; Header.dt=[16,0];
+                        [Path, fileN, extn] = fileparts(DirFile(1).name);
+                        if strcmpi(extn,'.gz')
+                            delete([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,DirSessions(iFunSession).name,filesep,'func',filesep,DirFile(1).name])
+                            DirFile(1).name=DirFile(1).name(1:end-3);
+                        end
+                        y_Write(Data,Header,[Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,DirSessions(iFunSession).name,filesep,'func',filesep,DirFile(1).name]);
+                    end
+                end
+            end
+        end
+    end
+    
+    
+    
     if ~exist([Cfg.WorkingDir,filesep,'fmriprep'],'dir') % If it's the first time to run fmriprep
         
         if isdeployed % If running within docker with compiled version
