@@ -22,7 +22,7 @@ function varargout = DPABI_DCMSORTER_TOOL(varargin)
 
 % Edit the above text to modify the response to help DPABI_DCMSORTER_TOOL
 
-% Last Modified by GUIDE v2.5 14-Apr-2021 20:49:07
+% Last Modified by GUIDE v2.5 28-Apr-2021 15:11:04
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,12 +55,17 @@ function DPABI_DCMSORTER_TOOL_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.DICOMCells={};
 handles.CurDir=pwd;
 handles.cfg.OutputLayer1 = 1;
-handles.cfg.OutputLayer2 = 3;
+handles.cfg.OutputLayer2 = 5;
 handles.cfg.IsAddDate = 0;
 handles.cfg.IsAddTime = 0;
+handles.cfg.IsPrefix = 0;
+handles.cfg.Prefix = '';
+handles.cfg.FolderIndex = 1;
 handles.cfg.Demo.nChange = 0;
 handles.cfg.Demo.PatientID = 'PatientID';
+handles.cfg.Demo.PatientName = 'PatientName';
 handles.cfg.Demo.FamilyName = 'FamilyName';
+handles.cfg.Demo.GivenName = 'GivenName';
 handles.cfg.Demo.ProtocolName = 'ProtocolName';
 handles.cfg.Demo.SeriesDescription = 'SeriesDescription';
 handles.cfg.Demo.StudyDate = 'StudyDate';
@@ -71,7 +76,10 @@ set(handles.HierarchyPopup1,'Value',handles.cfg.OutputLayer1);
 set(handles.HierarchyPopup2,'Value',handles.cfg.OutputLayer2);
 set(handles.checkboxAddDate,'Value',handles.cfg.IsAddDate);
 set(handles.checkboxAddTime,'Value',handles.cfg.IsAddTime);
-
+set(handles.checkboxIsPrefix,'Value',handles.cfg.IsPrefix);
+set(handles.editPrefix,'Enable','off');
+set(handles.pushbuttonChangeImage,'Enable','off');
+set(handles.pushbuttonConvert2DPABI,'Visible','off');
 % Choose default command line output for DPABI_DCMSORTER_TOOL
 handles.output = hObject;
 
@@ -79,7 +87,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes DPABI_DCMSORTER_TOOL wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.figureDicomSorter);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -240,8 +248,7 @@ end
 HierarchyValue1=get(handles.HierarchyPopup1, 'Value');
 HierarchyValue2=get(handles.HierarchyPopup2, 'Value');
 
-if HierarchyValue1 == HierarchyValue2 || HierarchyValue1+HierarchyValue2 < 4 ||...
-        HierarchyValue1+HierarchyValue2 >6
+if (HierarchyValue1 <=4 && HierarchyValue2 <=4)|| (HierarchyValue1 >= 5 && HierarchyValue2 >= 5)
     uiwait(msgbox({'The first-layer folder type is same as the second-layer folder type. Please recheck!'},...
         'Layout Check'));
     return
@@ -251,8 +258,20 @@ AnonyFlag=get(handles.AnonyButton, 'Value');
 IsAddDate = handles.cfg.IsAddDate;
 IsAddTime = handles.cfg.IsAddTime;
 set(handles.ComputeButton, 'BackgroundColor', 'Red');
-w_DCMSort(DICOMCells, HierarchyValue1, HierarchyValue2, IsAddDate, IsAddTime, AnonyFlag, OutputDir);
-set(handles.ComputeButton, 'BackgroundColor', 'White');
+if handles.cfg.IsPrefix
+    if ~isempty(handles.cfg.Prefix)
+        Prefix = [handles.cfg.Prefix,'_'];
+    else
+        Prefix = '';
+    end
+else
+    Prefix = '';
+end
+FolderIndex = handles.cfg.FolderIndex;
+w_DCMSort(DICOMCells, HierarchyValue1, HierarchyValue2, Prefix, IsAddDate, IsAddTime, FolderIndex, AnonyFlag, OutputDir);
+set(handles.ComputeButton,'Visible','off');
+set(handles.pushbuttonChangeImage,'Visible','off');
+set(handles.pushbuttonConvert2DPABI,'Visible','on');
 fprintf('\n\tDICOM files sorting finished!\n');
 
 % --- Executes on selection change in HierarchyPopup1.
@@ -344,10 +363,11 @@ Path=uigetdir(handles.CurDir, 'Pick DICOM Parent Directory');
 if isnumeric(Path)
     return
 end
-handles.CurDir=Path;
+handles.cfg.InputDir=Path;
 Suffix=get(handles.SuffixEntry, 'String');
 
-
+set(handles.DICOMListbox, 'BackgroundColor', 'Green');
+drawnow;
 
 %YAN Chao-Gan, 150518. Recursively add Path
 SubjPath = y_GetRecursivePath(Path,[]);
@@ -363,8 +383,6 @@ SubjPath = y_GetRecursivePath(Path,[]);
 %     'UniformOutput', false);
 
 
-set(handles.DICOMListbox, 'BackgroundColor', 'Green');
-drawnow;
 for i=1:numel(SubjPath);
     if strcmpi(Suffix, 'None')
         Suffix='';
@@ -395,6 +413,7 @@ set(handles.DICOMListbox, 'BackgroundColor', 'White');
 LoadDemoImage(hObject, handles)
 handles = guidata(hObject);
 ShowOutputLayout(hObject, handles)
+set(handles.pushbuttonChangeImage,'Enable','on');
 guidata(hObject, handles);
 
 
@@ -500,24 +519,55 @@ else
     nChange = handles.cfg.Demo.nChange;
     if nChange == 0
         Index = 1;
-        DcmInfo = dicominfo(DicomCells{Index}{1});
+        try
+            DcmInfo = dicominfo(DicomCells{Index}{1});
+        catch
+            Flag = 1;
+            while Flag % Sometime even the biggist session still have non-image file
+                try
+                    DcmInfo = dicominfo(DicomCells{1}{randi(length(DicomCells{Index}))});
+                    Flag = 0;
+                catch
+                end
+            end
+        end
     else
-        while 1
+        Flag = 1;
+        while Flag % make "change..." button work at the first click, no need to retry
             try
-                Index = randi(length(FileNumSort));
-                DcmInfo = dicominfo(DicomCells{Index}{1});
-                break
+                iCell = randi(length(FileNumSort));
+                nFile = length(DicomCells{iCell});
+                iFile = randi(nFile);
+                DcmInfo = dicominfo(DicomCells{iCell}{iFile});
+                while strcmp(handles.cfg.Demo.PatientID,DcmInfo.PatientID) &&  strcmp(handles.cfg.Demo.FamilyName,DcmInfo.PatientName.FamilyName)
+                    iCell = randi(length(FileNumSort));
+                    nFile = length(DicomCells{iCell});
+                    iFile = randi(nFile);
+                    DcmInfo = dicominfo(DicomCells{iCell}{iFile});
+                end
+                Flag = 0;
             catch
             end
         end
     end
     handles.cfg.Demo.PatientID = DcmInfo.PatientID;
-    handles.cfg.Demo.FamilyName = DcmInfo.PatientName.FamilyName;
+    handles.cfg.Demo.FamilyName = DcmInfo.PatientName.FamilyName; 
+    if isfield(DcmInfo.PatientName,'GivenName') % It seems like that field 'FamilyName' always exists, but not for 'GivenName'
+        handles.cfg.Demo.GivenName = DcmInfo.PatientName.GivenName;
+    else
+        handles.cfg.Demo.GivenName = '';
+    end
+    handles.cfg.Demo.PatientName = [handles.cfg.Demo.GivenName,handles.cfg.Demo.FamilyName];
     handles.cfg.Demo.ProtocolName = DcmInfo.ProtocolName;
     handles.cfg.Demo.SeriesDescription = DcmInfo.SeriesDescription;
     handles.cfg.Demo.StudyDate = DcmInfo.StudyDate;
     handles.cfg.Demo.StudyTime = DcmInfo.StudyTime;
     handles.cfg.Demo.nChange = handles.cfg.Demo.nChange+1;
+    % Add [folder name] option for anonymous dicom image % BinLu 20210601
+    FolderDir = strsplit(handles.cfg.InputDir,filesep);
+    handles.cfg.FolderIndex = length(FolderDir)+1;
+    DicomDir = strsplit(DcmInfo.Filename,filesep);
+    handles.cfg.Demo.FolderName = DicomDir{handles.cfg.FolderIndex};
 end
 guidata(hObject, handles);
 
@@ -525,6 +575,16 @@ function ShowOutputLayout(hObject, handles)
 LayoutString = '~OutputDir';
 Layer1 = get(handles.HierarchyPopup1,'Value');
 Layer2 = get(handles.HierarchyPopup2,'Value');
+
+if handles.cfg.IsPrefix == 1
+    if ~isempty(handles.cfg.Prefix)
+        Prefix = [handles.cfg.Prefix,'_'];
+    else
+        Prefix = '';
+    end
+else
+    Prefix = '';
+end
 
 if handles.cfg.IsAddDate==1 && handles.cfg.IsAddTime == 1 
     Suffix = ['_',handles.cfg.Demo.StudyDate,'_',handles.cfg.Demo.StudyTime];
@@ -537,25 +597,88 @@ else
 end
 
 switch Layer1
-    case 1
-        LayoutString = [LayoutString,filesep,handles.cfg.Demo.PatientID,Suffix];
+    case 1 
+        LayoutString = [LayoutString,filesep,Prefix,handles.cfg.Demo.PatientID,Suffix];
     case 2
-        LayoutString = [LayoutString,filesep,handles.cfg.Demo.FamilyName,Suffix];
+        LayoutString = [LayoutString,filesep,Prefix,handles.cfg.Demo.PatientName,Suffix];
     case 3
-        LayoutString = [LayoutString,filesep,handles.cfg.Demo.ProtocolName];
+        LayoutString = [LayoutString,filesep,Prefix,handles.cfg.Demo.FamilyName,Suffix];
     case 4
+        LayoutString = [LayoutString,filesep,Prefix,handles.cfg.Demo.FolderName,Suffix];    
+    case 5
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.ProtocolName];
+    case 6
         LayoutString = [LayoutString,filesep,handles.cfg.Demo.SeriesDescription];
 end
 
 switch Layer2
-    case 1
-        LayoutString = [LayoutString,filesep,handles.cfg.Demo.PatientID,Suffix];
+    case 1 
+        LayoutString = [LayoutString,filesep,Prefix,handles.cfg.Demo.PatientID,Suffix];
     case 2
-        LayoutString = [LayoutString,filesep,handles.cfg.Demo.FamilyName,Suffix];
+        LayoutString = [LayoutString,filesep,Prefix,handles.cfg.Demo.PatientName,Suffix];
     case 3
-        LayoutString = [LayoutString,filesep,handles.cfg.Demo.ProtocolName];
+        LayoutString = [LayoutString,filesep,Prefix,handles.cfg.Demo.FamilyName,Suffix];
     case 4
+        LayoutString = [LayoutString,filesep,Prefix,handles.cfg.Demo.FolderName,Suffix];
+    case 5
+        LayoutString = [LayoutString,filesep,handles.cfg.Demo.ProtocolName];
+    case 6
         LayoutString = [LayoutString,filesep,handles.cfg.Demo.SeriesDescription];
 end
 
 set(handles.textOutputLayout,'String',LayoutString);
+
+
+% --- Executes on button press in pushbuttonConvert2DPABI.
+function pushbuttonConvert2DPABI_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonConvert2DPABI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+OutputDir=get(handles.OutputDirEntry, 'String');
+if isempty(OutputDir)
+    OutputDir=handles.CurDir;
+end
+HierarchyValue1=get(handles.HierarchyPopup1, 'Value');
+DPABI_InputPreparer(OutputDir,HierarchyValue1);
+% close(handle.figureDicomSorter);
+
+
+% --- Executes on button press in checkboxIsPrefix.
+function checkboxIsPrefix_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxIsPrefix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.cfg.IsPrefix = get(handles.checkboxIsPrefix,'Value');
+if handles.cfg.IsPrefix
+    set(handles.editPrefix,'Enable','on');
+else
+    set(handles.editPrefix,'Enable','off');
+end
+ShowOutputLayout(hObject, handles)
+guidata(hObject,handles);
+% Hint: get(hObject,'Value') returns toggle state of checkboxIsPrefix
+
+
+
+function editPrefix_Callback(hObject, eventdata, handles)
+% hObject    handle to editPrefix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.cfg.Prefix = get(handles.editPrefix,'String');
+ShowOutputLayout(hObject, handles)
+guidata(hObject,handles);
+% Hints: get(hObject,'String') returns contents of editPrefix as text
+%        str2double(get(hObject,'String')) returns contents of editPrefix as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editPrefix_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editPrefix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

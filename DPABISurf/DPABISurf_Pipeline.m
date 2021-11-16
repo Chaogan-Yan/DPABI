@@ -193,33 +193,47 @@ TemplateParameters={'Template Parameters'...
     'Blank'};
 set(handles.popupmenuTemplate,'String',TemplateParameters);
 
+%YAN Chao-Gan, 211116. Can input parameter .mat file or Cfg.
+if nargin<4
+    %Load Default!
+    load(fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'Jobmats','Template_Default.mat'))
+    Cfg.MaskFileSurfLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_cortex.label.gii');
+    Cfg.MaskFileSurfRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_cortex.label.gii');
+    Cfg.MaskFileVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_91x109x91.img');
+    Cfg.SurfFileLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_white.surf.gii');
+    Cfg.SurfFileRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_white.surf.gii');
+    Cfg.CalFC.ROIDefSurfLH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_HCP-MMP1.label.gii');...
+        fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
+    Cfg.CalFC.ROIDefSurfRH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_HCP-MMP1.label.gii');...
+        fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
+    Cfg.CalFC.ROIDefVolu = {[handles.Cfg.DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
+        [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
+        [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
+        [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
+        [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
+        [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
+        [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
+        [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii'];... %YAN Chao-Gan, 170104. Add Power 264.
+        [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii'];... %YAN Chao-Gan, 180824. Add Schaefer 400.
+        [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Tian2020_Subcortex_Atlas',filesep,'Tian_Subcortex_S4_3T_2009cAsym.nii']}; %YAN Chao-Gan, 210414. Add Tian2020_Subcortex_Atlas.
+    
+    
+    handles.Cfg=Cfg;
+    handles.Cfg.WorkingDir=pwd;
 
-%Load Default!
-load(fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'Jobmats','Template_Default.mat'))
-Cfg.MaskFileSurfLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_cortex.label.gii');
-Cfg.MaskFileSurfRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_cortex.label.gii');
-Cfg.MaskFileVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_91x109x91.img');
-Cfg.SurfFileLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_white.surf.gii');
-Cfg.SurfFileRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_white.surf.gii');
-Cfg.CalFC.ROIDefSurfLH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_HCP-MMP1.label.gii');...
-    fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
-Cfg.CalFC.ROIDefSurfRH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_HCP-MMP1.label.gii');...
-    fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
-Cfg.CalFC.ROIDefVolu = {[handles.Cfg.DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
-    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
-    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
-    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
-    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
-    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
-    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
-    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii'];... %YAN Chao-Gan, 170104. Add Power 264.
-    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii'];... %YAN Chao-Gan, 180824. Add Schaefer 400.
-    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Tian2020_Subcortex_Atlas',filesep,'Tian_Subcortex_S4_3T_2009cAsym.nii']}; %YAN Chao-Gan, 210414. Add Tian2020_Subcortex_Atlas.
+else
+    if ischar(varargin{1})
+        load(varargin{1});
+        handles.Cfg=Cfg;
+        handles.Cfg.WorkingDir=pwd;
+    else
+        Cfg=varargin{1};
+        handles.Cfg=Cfg;
+    end
+    
+end
 
-
-handles.Cfg=Cfg;
 handles.Cfg.DPABISurfVersion=Release;
-handles.Cfg.WorkingDir=pwd; 
 
 PCTVer = ver('distcomp');
 if ~isempty(PCTVer)

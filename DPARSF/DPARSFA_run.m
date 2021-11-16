@@ -1464,10 +1464,16 @@ if ((AutoDataProcessParameter.IsNeedReorientT1ImgInteractively==1) || (AutoDataP
     ThreQC=ReorientThreQC;
     GoodSub=ones(AutoDataProcessParameter.SubjectNum,1);
     if ThreQC.IsThreT1
-        GoodSub=GoodSub.*(AutoDataProcessParameter.QC.RawT1ImgQC.QCScore>=ThreQC.ThreT1);
+        try
+            GoodSub=GoodSub.*(AutoDataProcessParameter.QC.RawT1ImgQC.QCScore>=ThreQC.ThreT1);
+        catch % YAN Chao-Gan, 211116. In case no field of RawT1ImgQC.QCScore
+        end
     end
     if ThreQC.IsThreFun
-        GoodSub=GoodSub.*(AutoDataProcessParameter.QC.RawFunImgQC.QCScore>=ThreQC.ThreFun);
+        try
+            GoodSub=GoodSub.*(AutoDataProcessParameter.QC.RawFunImgQC.QCScore>=ThreQC.ThreFun);
+        catch % YAN Chao-Gan, 211116. In case no field of RawFunImgQC.QCScore
+        end
     end
     
     AutoDataProcessParameter.SubjectID=AutoDataProcessParameter.SubjectID(find(GoodSub));

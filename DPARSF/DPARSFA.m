@@ -279,22 +279,29 @@ function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
             [DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii'];... %YAN Chao-Gan, 180824. Add Schaefer 400.
             [DPABIPath,filesep,'Templates',filesep,'Tian2020_Subcortex_Atlas',filesep,'Tian_Subcortex_S4_3T.nii']}; %YAN Chao-Gan, 210414. Add Tian2020_Subcortex_Atlas.
         Cfg.CalFC.IsMultipleLabel = 1;
-%         load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
-%         ROICenter=Dosenbach_Science_160ROIs_Center;
-%         ROIRadius=5;
-%         for iROI=1:size(ROICenter,1)
-%             ROIDef{iROI,1}=[ROICenter(iROI,:), ROIRadius];
-%         end
-%         Cfg.CalFC.ROIDef = [Cfg.CalFC.ROIDef;ROIDef];
+        %         load([DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Center.mat']);
+        %         ROICenter=Dosenbach_Science_160ROIs_Center;
+        %         ROIRadius=5;
+        %         for iROI=1:size(ROICenter,1)
+        %             ROIDef{iROI,1}=[ROICenter(iROI,:), ROIRadius];
+        %         end
+        %         Cfg.CalFC.ROIDef = [Cfg.CalFC.ROIDef;ROIDef];
+        
+        handles.Cfg=Cfg;
+        handles.Cfg.WorkingDir =pwd;
     else
-        load(varargin{1});
+        if ischar(varargin{1})
+            load(varargin{1});
+            handles.Cfg=Cfg;
+            handles.Cfg.WorkingDir =pwd;
+        else
+            Cfg=varargin{1};
+            handles.Cfg=Cfg;
+        end
     end
-    
-    handles.Cfg=Cfg;
-    handles.Cfg.WorkingDir =pwd;
+
     handles.Cfg.DataProcessDir =handles.Cfg.WorkingDir;
-    
-    
+
     handles.Cfg.ParallelWorkersNumber=0;%%%%
     % Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
     

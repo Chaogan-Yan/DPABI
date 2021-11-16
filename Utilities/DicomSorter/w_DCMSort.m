@@ -1,20 +1,22 @@
-function w_DCMSort(DICOMCells, HierarchyValue1, HierarchyValue2, IsAddDate, IsAddTime, AnonyFlag, OutputDir)
+function w_DCMSort(DICOMCells, HierarchyValue1, HierarchyValue2, Prefix, IsAddDate, IsAddTime, FolderIndex, AnonyFlag, OutputDir)
 % Format w_DCMSort(DICOMCells, HierarchyValue, AnonyFlag, OutputDir)
 % Input:
-%       DICOMCells     - The DICOM File from N subjects N by 1 Cells
-%       HierarchyValue1 - First layer of output directory: 1-PatientID, 2-PatientName.FamilyName, 3-ProtocolName, 4-SeriesDescription
-%       HierarchyValue2 - Second layer of output directory: 1-PatientID, 2-PatientName.FamilyName, 3-ProtocolName, 4-SeriesDescription
-%       IsAddDate      - Whether adding date suffix to partientID/Name
-%       IsAddTime      - Whether adding time suffix to partientID/Name
-%       AnonyFlag      - Anonymous DICOM Output or not
-%       OutputDir      - The directory of Output File
+%       DICOMCells      - The DICOM File from N subjects N by 1 Cells
+%       HierarchyValue1 - First layer of output directory: 1-PatientID, 2-PatientName 3-PatientName.FamilyName, 4-ProtocolName, 5-SeriesDescription
+%       HierarchyValue2 - Second layer of output directory: 1-PatientID, 2-PatientName 3-PatientName.FamilyName, 4-ProtocolName, 5-SeriesDescription
+%       Prefix          - Prefix added to each partientID/Name, if not empty
+%       IsAddDate       - Whether adding date suffix to partientID/Name
+%       IsAddTime       - Whether adding time suffix to partientID/Name
+%       FolderIndex     - The index of subject folder name in the directory of dicom images
+%       AnonyFlag       - Anonymous DICOM Output or not
+%       OutputDir       - The directory of Output File
 %___________________________________________________________________
 % Written by Xindi Wang
 % State Key Laboratory of Cognitive Neuroscience and Learning & IDG/McGovern Institute for Brain Research, Beijing Normal University
 % Reference: rest_DicomSorter written by Yan Chao-Gan and Dong Zhang-Ye
 % Edited by Bin Lu for adapting more diverse situations of input
 
-for i=1:numel(DICOMCells)
+parfor i=1:numel(DICOMCells)
     OneDICOM=DICOMCells{i};
     fprintf('Read %s etc.\n', OneDICOM{1});
     for j=1:numel(OneDICOM)
@@ -26,10 +28,19 @@ for i=1:numel(DICOMCells)
             BadChar = '<|>| |:|"|/|?|*|''|\||\\';
             DCM_Info.PatientID = regexprep(DCM_Info.PatientID, BadChar, '');
             DCM_Info.PatientName.FamilyName = regexprep(DCM_Info.PatientName.FamilyName, BadChar, '');
+            if isfield(DCM_Info.PatientName,'GivenName') % It seems like that field 'FamilyName' always exists, but not for 'GivenName'
+                DCM_Info.PatientName.GivenName = regexprep(DCM_Info.PatientName.GivenName, BadChar, '');
+                PatientName = [DCM_Info.PatientName.GivenName,DCM_Info.PatientName.FamilyName];
+            else
+                PatientName = DCM_Info.PatientName.FamilyName;
+            end
             DCM_Info.ProtocolName = regexprep(DCM_Info.ProtocolName, BadChar, '');
             DCM_Info.SeriesDescription = regexprep(DCM_Info.SeriesDescription, BadChar, '');
             DCM_Info.StudyDate = regexprep(DCM_Info.StudyDate, BadChar, '');
             DCM_Info.StudyTime = regexprep(DCM_Info.StudyTime, BadChar, '');
+            OneDir = strsplit(DCM_Info.Filename,filesep);
+            FolderName = OneDir{FolderIndex};
+            FolderName = regexprep(FolderName, BadChar, '');
             
             if IsAddDate==1 && IsAddTime == 1
                 Suffix = ['_',DCM_Info.StudyDate,'_',DCM_Info.StudyTime];
@@ -65,23 +76,31 @@ for i=1:numel(DICOMCells)
                              
                 switch HierarchyValue1
                     case 1 % PatientID
-                        DirName=fullfile(OutputDir,[DCM_Info.PatientID,Suffix]);
-                    case 2 % PatientName.FamilyName
-                        DirName=fullfile(OutputDir,[DCM_Info.PatientName.FamilyName,Suffix]);
-                    case 3 % ProtocolName 
+                        DirName=fullfile(OutputDir,[Prefix,DCM_Info.PatientID,Suffix]);
+                    case 2 % PatientName
+                        DirName=fullfile(OutputDir,[Prefix,DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % FamilyName
+                        DirName=fullfile(OutputDir,[Prefix,DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 4 % FolderName
+                        DirName=fullfile(OutputDir,[Prefix,FolderName,Suffix]);
+                    case 5 % ProtocolName
                         DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
-                    case 4 % SeriesDescription
+                    case 6 % SeriesDescription
                         DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
                 
                 switch HierarchyValue2
                     case 1 % PatientID
-                        DirName=fullfile(DirName,[DCM_Info.PatientID,Suffix]);
-                    case 2 % PatientName.FamilyName
-                        DirName=fullfile(DirName,[DCM_Info.PatientName.FamilyName,Suffix]);
-                    case 3 % ProtocolName 
+                        DirName=fullfile(DirName,[Prefix,DCM_Info.PatientID,Suffix]);
+                    case 2 % PatientName
+                        DirName=fullfile(DirName,[Prefix,DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % FamilyName
+                        DirName=fullfile(DirName,[Prefix,DCM_Info.PatientName.FamilyName,Suffix]); 
+                    case 4 % FolderName
+                        DirName=fullfile(DirName,[Prefix,FolderName,Suffix]);
+                    case 5 % ProtocolName 
                         DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
-                    case 4 % SeriesDescription
+                    case 6 % SeriesDescription
                         DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
                 
@@ -93,23 +112,31 @@ for i=1:numel(DICOMCells)
             else
                 switch HierarchyValue1
                     case 1 % PatientID
-                        DirName=fullfile(OutputDir,[DCM_Info.PatientID,Suffix]);
-                    case 2 % PatientName.FamilyName
-                        DirName=fullfile(OutputDir,[DCM_Info.PatientName.FamilyName,Suffix]);
-                    case 3 % ProtocolName 
+                        DirName=fullfile(OutputDir,[Prefix,DCM_Info.PatientID,Suffix]);
+                    case 2 % PatientName
+                        DirName=fullfile(OutputDir,[Prefix,DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % FamilyName
+                        DirName=fullfile(OutputDir,[Prefix,DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 4 % FolderName
+                        DirName=fullfile(OutputDir,[Prefix,FolderName,Suffix]);
+                    case 5 % ProtocolName
                         DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
-                    case 4 % SeriesDescription
+                    case 6 % SeriesDescription
                         DirName=fullfile(OutputDir,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
                 
                 switch HierarchyValue2
                     case 1 % PatientID
-                        DirName=fullfile(DirName,[DCM_Info.PatientID,Suffix]);
-                    case 2 % PatientName.FamilyName
-                        DirName=fullfile(DirName,[DCM_Info.PatientName.FamilyName,Suffix]);
-                    case 3 % ProtocolName 
+                        DirName=fullfile(DirName,[Prefix,DCM_Info.PatientID,Suffix]);
+                    case 2 % PatientName
+                        DirName=fullfile(DirName,[Prefix,DCM_Info.PatientName.FamilyName,Suffix]);
+                    case 3 % FamilyName
+                        DirName=fullfile(DirName,[Prefix,DCM_Info.PatientName.FamilyName,Suffix]); 
+                    case 4 % FolderName
+                        DirName=fullfile(DirName,[Prefix,FolderName,Suffix]);
+                    case 5 % ProtocolName 
                         DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.ProtocolName));
-                    case 4 % SeriesDescription
+                    case 6 % SeriesDescription
                         DirName=fullfile(DirName,sprintf('%.4d_%s', Index, DCM_Info.SeriesDescription));
                 end
                 
