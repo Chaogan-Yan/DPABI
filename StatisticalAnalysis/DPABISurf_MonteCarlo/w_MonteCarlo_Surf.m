@@ -134,7 +134,7 @@ for n=1:NumEstimate
 
         Command = sprintf('%s mri_surf2surf --s %s --hemi %s --sval /data/%s --fwhm %f --tval /data/%s',...
             CommandInit, SurfLab, HemiLab, 'Tmp.func.gii', FWHM, 'sTmp.func.gii');
-        if isdeployed % If running within docker with compiled version
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
             Command = sprintf('mri_surf2surf --s %s --hemi %s --sval %s --fwhm %f --tval %s',...
                 SurfLab, HemiLab, TmpRandPath, FWHM, TmpRandSmoothPath);
         end

@@ -533,7 +533,7 @@ if (Cfg.Isfmriprep==1)
     
     if ~exist([Cfg.WorkingDir,filesep,'fmriprep'],'dir') % If it's the first time to run fmriprep
         
-        if isdeployed % If running within docker with compiled version
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
             Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/fsl/5.0 && parallel -j %g /usr/local/miniconda/bin/fmriprep %s/BIDS %s participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
         else
             Command=sprintf('%s cgyan/dpabi parallel -j %g /usr/local/miniconda/bin/fmriprep /data/BIDS /data participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
@@ -596,7 +596,7 @@ end
 
 
 
-if isdeployed % If running within docker with compiled version
+if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
     CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', Cfg.WorkingDir);
 else
     CommandInit=sprintf('%s -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', CommandInit);

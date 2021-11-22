@@ -36,7 +36,7 @@ if isempty(OutPath)
 end
 
 
-if isdeployed % If running within docker with compiled version
+if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
     Command = sprintf('mri_vol2surf --src %s --out %s --trgsubject %s --interp %s --hemi lh --mni152reg', fullfile(InPath,[InfileN, Inextn]),fullfile(OutPath,[OutfileN,'_lh',Outextn]),TargetSpace,interp);
     system(Command);
     Command = sprintf('mri_vol2surf --src %s --out %s --trgsubject %s --interp %s --hemi rh --mni152reg', fullfile(InPath,[InfileN, Inextn]),fullfile(OutPath,[OutfileN,'_rh',Outextn]),TargetSpace,interp);

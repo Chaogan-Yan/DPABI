@@ -139,7 +139,7 @@ if ~isempty(NeedReRunID) %(Cfg.Isfmriprep==1)
     end
     
 
-    if isdeployed % If running within docker with compiled version
+    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
             Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/fsl/5.0 && parallel -j %g /usr/local/miniconda/bin/fmriprep %s/BIDS %s participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
         else
             Command=sprintf('%s cgyan/dpabi parallel -j %g /usr/local/miniconda/bin/fmriprep /data/BIDS /data participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );

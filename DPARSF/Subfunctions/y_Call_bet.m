@@ -30,7 +30,7 @@ if ~ispc
         %If not, use FSL's bet in dpabi docker
         [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
         CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
-        if isdeployed % If running within docker with compiled version
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
             CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', WorkingDir);
         end
         

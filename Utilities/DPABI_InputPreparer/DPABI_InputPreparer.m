@@ -986,7 +986,7 @@ switch Flag
         handles.Cfg.Demo.PreviousSubID = handles.Cfg.Demo.SubID;
         handles.Cfg.Demo.SubID = '';
         handles.Cfg.IsOtherFun = 0;
-        handles.Cfg.FunOtherNumber = 1;
+        handles.Cfg.FunOtherNumber = 0;
         handles.Cfg.SeriesName.T1 = '';
         handles.Cfg.SeriesName.Fun = '';
         handles.Cfg.SeriesName.FunOther = {};

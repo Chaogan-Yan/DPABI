@@ -2053,7 +2053,7 @@ if (AutoDataProcessParameter.IsAutoMask==1)
             HasDocker = system('which docker'); %Test if docker installed, I will use AFNI's 3dautomask %YAN CHao-Gan, 211011
             if HasDocker == 0
                 CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), AutoDataProcessParameter.DataProcessDir);
-                if isdeployed % If running within docker with compiled version
+                if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
                     CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', WorkingDir);
                 end
                 DirFile=dir([InputDir,filesep,'*.nii']);
