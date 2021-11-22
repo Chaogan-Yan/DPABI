@@ -1683,11 +1683,29 @@ if handles.Cfg.IsDCM2NII
     end
 end
 
-
-T = cell2table(Text,'VariableNames',Titles);
 Datetime=fix(clock); %Added by YAN Chao-Gan, 100130.
-writetable(T,[handles.Cfg.OutputDir,filesep,'DPABI_Format_Conversion_Report_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.csv']);
-disp([newline,'Write out DPABI-format conversion report.']);
+
+% T = cell2table(Text,'VariableNames',Titles);
+% writetable(T,[handles.Cfg.OutputDir,filesep,'DPABI_Format_Conversion_Report_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.csv']);
+
+% YAN Chao-Gan, 211122. I don't know why for some system writetable is not working, so I try to re-write with old funcitons.
+fid = fopen([handles.Cfg.OutputDir,filesep,'DPABI_Input_Preparer_Report_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.tsv'],'w');
+
+for i=1:size(Titles,2)-1
+    fprintf(fid,'%s\t',Titles{i});
+end
+fprintf(fid,'%s\n',Titles{size(Titles,2)});
+for i=1:size(Text,1)
+    for j=1:size(Text,2)-1
+        fprintf(fid,'%s\t',Text{i,j});
+    end
+    fprintf(fid,'%s\n',Text{i,size(Text,2)});
+end
+fclose(fid);
+
+
+
+disp([newline,'Write out DPABI Input Preparer report.']);
  
 
 function DCM2NII(hObject, handles)
