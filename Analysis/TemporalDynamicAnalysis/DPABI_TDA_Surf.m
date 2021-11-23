@@ -112,6 +112,18 @@ fprintf('\n\nDPABI Temporal Dynamic Analysis module is based on our previous wor
 fprintf('Yan CG, Yang Z, Colcombe S, Zuo XN, Milham MP (2017) Concordance among indices of intrinsic brain function: insights from inter-individual variation and temporal dynamics. Science Bulletin. 62: 1572-1584.\n');
 
 
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1 1];  %For pc
+    else
+        ZoonMatrix = [1 1 1.2 1.1];  %For Linux
+    end
+    UISize = get(handles.figDPABI_TDA,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figDPABI_TDA,'Position',UISize);
+end
+movegui(handles.figDPABI_TDA,'center');
 
 % Choose default command line output for DPABI_TDA_Surf
 handles.output = hObject;

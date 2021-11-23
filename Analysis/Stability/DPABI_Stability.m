@@ -100,6 +100,20 @@ fprintf('\nDPABI Stability Analysis module is based on our previous work, please
 fprintf('Li, L., Lu, B., Yan, C.G. (2019). Stability of dynamic functional architecture differs between brain networks and states. Neuroimage, 116230, doi:10.1016/j.neuroimage.2019.116230.\n');
 
 
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1 1.1];  %For pc
+    else
+        ZoonMatrix = [1 1 1.2 1.2];  %For Linux
+    end
+    UISize = get(handles.figDPABI_TDA,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figDPABI_TDA,'Position',UISize);
+end
+movegui(handles.figDPABI_TDA,'center');
+
+
 % Choose default command line output for DPABI_Stability
 handles.output = hObject;
 

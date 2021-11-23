@@ -83,6 +83,20 @@ set(handles.pushbuttonConvert2DPABI,'Visible','off');
 % Choose default command line output for DPABI_DCMSORTER_TOOL
 handles.output = hObject;
 
+
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.4 1.2];  %For pc
+    else
+        ZoonMatrix = [1 1 1.4 1.2];  %For Linux
+    end
+    UISize = get(handles.figureDicomSorter,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figureDicomSorter,'Position',UISize);
+end
+movegui(handles.figureDicomSorter,'center');
+
 % Update handles structure
 guidata(hObject, handles);
 

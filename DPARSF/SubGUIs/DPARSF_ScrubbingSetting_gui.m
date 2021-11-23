@@ -47,20 +47,34 @@ else
     handles.ScrubbingMethod = 'cut';
 end
 InitControls(hObject, handles);
+% 
+% % Make Display correct in linux - YAN Chao-Gan 111025 Added.
+% if ~ispc
+%     ZoomFactor=0.85;
+%     ObjectNames = fieldnames(handles);
+%     for i=1:length(ObjectNames);
+%         eval(['IsFontSizeProp=isprop(handles.',ObjectNames{i},',''FontSize'');']);
+%         if IsFontSizeProp
+%             eval(['PCFontSize=get(handles.',ObjectNames{i},',''FontSize'');']);
+%             FontSize=PCFontSize*ZoomFactor;
+%             eval(['set(handles.',ObjectNames{i},',''FontSize'',',num2str(FontSize),');']);
+%         end
+%     end
+% end
 
-% Make Display correct in linux - YAN Chao-Gan 111025 Added.
-if ~ispc
-    ZoomFactor=0.85;
-    ObjectNames = fieldnames(handles);
-    for i=1:length(ObjectNames);
-        eval(['IsFontSizeProp=isprop(handles.',ObjectNames{i},',''FontSize'');']);
-        if IsFontSizeProp
-            eval(['PCFontSize=get(handles.',ObjectNames{i},',''FontSize'');']);
-            FontSize=PCFontSize*ZoomFactor;
-            eval(['set(handles.',ObjectNames{i},',''FontSize'',',num2str(FontSize),');']);
-        end
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.5 1.5];  %For pc
+    else
+        ZoonMatrix = [1 1 1.5 1.5];  %For Linux
     end
+    UISize = get(handles.figScrubbingSetting,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figScrubbingSetting,'Position',UISize);
 end
+movegui(handles.figScrubbingSetting,'center');
+
 
 % Update handles structure
 guidata(hObject, handles);

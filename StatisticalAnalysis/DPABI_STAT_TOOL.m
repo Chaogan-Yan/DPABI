@@ -69,6 +69,19 @@ handles.output = hObject;
 
 uiwait(msgbox('According to our recent study, permutation test with Threshold-Free Cluster Enhancement (TFCE) reaches the best balance between family-wise error rate (under 5%) and test-retest reliability / replicability, thus outperforms the other multiple comparison correction strategies. Please consider use and cite: Chen, X., Lu, B., Yan, C.G.*, 2018. Reproducibility of R-fMRI metrics on the impact of different strategies for multiple comparison correction and sample sizes. Hum Brain Mapp 39, 300-318.'))
 
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.2 1.2];  %For pc
+    else
+        ZoonMatrix = [1 1 1.2 1.2];  %For Linux
+    end
+    UISize = get(handles.figure1,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figure1,'Position',UISize);
+end
+movegui(handles.figure1,'center');
+
 % Update handles structure
 guidata(hObject, handles);
 

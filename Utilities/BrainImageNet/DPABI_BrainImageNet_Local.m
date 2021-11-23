@@ -64,6 +64,20 @@ imshow('BrainImageNetLogo.jpg');
 % Choose default command line output for DPABI_BrainImageNet_Local
 handles.output = hObject;
 
+
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1 1];  %For pc
+    else
+        ZoonMatrix = [1 1 1.2 1.2];  %For Linux
+    end
+    UISize = get(handles.figDPABI_TDA,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figDPABI_TDA,'Position',UISize);
+end
+movegui(handles.figDPABI_TDA,'center');
+
 % Update handles structure
 guidata(hObject, handles);
 

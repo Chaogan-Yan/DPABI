@@ -83,6 +83,24 @@ handles.output = hObject;
 
 % Update handles structure
 handles.QCThreshold = QCThreshold;
+
+% Make UI display correct in PC and linux
+
+if ismac
+    ZoonMatrix = [1 1 1.8 1.8];  %For mac
+elseif ispc
+    ZoonMatrix = [1 1 1.5 1.5];  %For pc
+else
+    ZoonMatrix = [1 1 1.3 1.3];  %For Linux
+end
+
+UISize = get(handles.figureThresholingQuality,'Position');
+UISize = UISize.*ZoonMatrix;
+set(handles.figureThresholingQuality,'Position',UISize);
+
+movegui(handles.figureThresholingQuality,'center');
+
+
 guidata(hObject, handles);
 
 % UIWAIT makes ReorientThreQC wait for user response (see UIRESUME)

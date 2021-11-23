@@ -121,7 +121,21 @@ end
 UpdateDisplay(handles)
 % Choose default command line output for DPABI_InputPreparer
 handles.output = hObject;
-movegui(handles.figureConvertDPABIFormat, 'center');
+
+
+% Make UI display correct in PC and linux
+if ismac
+    ZoonMatrix = [1 1 1.6 1.2];  %For mac
+elseif ispc
+    ZoonMatrix = [1 1 1.6 1];  %For pc
+else
+    ZoonMatrix = [1 1 1.6 1.2];  %For Linux
+end
+UISize = get(handles.figureConvertDPABIFormat,'Position');
+UISize = UISize.*ZoonMatrix;
+set(handles.figureConvertDPABIFormat,'Position',UISize);
+movegui(handles.figureConvertDPABIFormat,'center');
+
 
 % Update handles structure
 guidata(hObject, handles);

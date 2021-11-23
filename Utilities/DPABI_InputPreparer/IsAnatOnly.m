@@ -70,6 +70,18 @@ handles.output = hObject;
 % Update handles structure
 handles.IsAnatOnly=IsAnatOnly;
 guidata(hObject, handles);
+
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.6 1.2];  %For pc
+    else
+        ZoonMatrix = [1 1 1.6 1.2];  %For Linux
+    end
+    UISize = get(handles.figureIsAnatOnly,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figureIsAnatOnly,'Position',UISize);
+end
 movegui(handles.figureIsAnatOnly, 'center');
 
 % UIWAIT makes IsAnatOnly wait for user response (see UIRESUME)

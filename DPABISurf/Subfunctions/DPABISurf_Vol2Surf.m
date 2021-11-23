@@ -59,6 +59,20 @@ set(handles.OutputDirEntry, 'String', pwd);
 % Choose default command line output for DPABISurf_Vol2Surf
 handles.output = hObject;
 
+
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.8 1.5];  %For pc
+    else
+        ZoonMatrix = [1 1 1.5 1.5];  %For Linux
+    end
+    UISize = get(handles.figure1,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figure1,'Position',UISize);
+end
+movegui(handles.figure1,'center');
+
 % Update handles structure
 guidata(hObject, handles);
 

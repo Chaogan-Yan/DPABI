@@ -78,6 +78,21 @@ Init(Covremove, handles);
 
 % Update handles structure
 handles.Covremove=Covremove;
+
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.5 1.5];  %For pc
+    else
+        ZoonMatrix = [1 1 1.3 1.3];  %For Linux
+    end
+    UISize = get(handles.figure1,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figure1,'Position',UISize);
+end
+movegui(handles.figure1,'center');
+
+
 guidata(hObject, handles);
 
 % UIWAIT makes DPARSF_NuisanceSetting wait for user response (see UIRESUME)

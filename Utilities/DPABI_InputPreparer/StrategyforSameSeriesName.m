@@ -81,6 +81,18 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.6 1.2];  %For pc
+    else
+        ZoonMatrix = [1 1 1.6 1.2];  %For Linux
+    end
+    UISize = get(handles.figureStrategyforSameSeriesStrategy,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figureStrategyforSameSeriesStrategy,'Position',UISize);
+end
 movegui(handles.figureStrategyforSameSeriesStrategy, 'center');
 
 % UIWAIT makes StrategyforSameSeriesStrategy wait for user response (see UIRESUME)

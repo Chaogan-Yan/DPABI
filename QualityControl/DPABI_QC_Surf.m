@@ -63,6 +63,20 @@ handles.MeanFD='';
 % Choose default command line output for DPABI_QC_Surf
 handles.output = hObject;
 
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.5 1.5];  %For pc
+    else
+        ZoonMatrix = [1 1 1.5 1.5];  %For Linux
+    end
+    UISize = get(handles.figure1,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figure1,'Position',UISize);
+end
+movegui(handles.figure1,'center');
+
+
 % Update handles structure
 guidata(hObject, handles);
 

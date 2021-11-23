@@ -95,6 +95,18 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.6 1.2];  %For pc
+    else
+        ZoonMatrix = [1 1 1.6 1.2];  %For Linux
+    end
+    UISize = get(handles.figureSelectSeries,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figureSelectSeries,'Position',UISize);
+end
 movegui(handles.figureSelectSeries, 'center');
 
 % UIWAIT makes ManuallySelectSeries wait for user response (see UIRESUME)

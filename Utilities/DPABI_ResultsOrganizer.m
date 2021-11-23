@@ -74,6 +74,20 @@ end
 % Choose default command line output for DPABI_ResultsOrganizer
 handles.output = hObject;
 
+% Make UI display correct in PC and linux
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.4 1.2];  %For pc
+    else
+        ZoonMatrix = [1 1 1.4 1.2];  %For Linux
+    end
+    UISize = get(handles.figure1,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figure1,'Position',UISize);
+end
+movegui(handles.figure1, 'center');
+
+
 % Update handles structure
 guidata(hObject, handles);
 

@@ -83,6 +83,21 @@ end
 
 % Update handles structure
 handles.FieldMap=FieldMap;
+
+% Make UI display correct in PC and linux
+if ismac
+    ZoonMatrix = [1 1 1.8 1.8];  %For mac
+elseif ispc
+    ZoonMatrix = [1 1 1.5 1.5];  %For pc
+else
+    ZoonMatrix = [1 1 1.7 1.5];  %For Linux
+end
+UISize = get(handles.DPARSF_FieldMap,'Position');
+UISize = UISize.*ZoonMatrix;
+set(handles.DPARSF_FieldMap,'Position',UISize);
+movegui(handles.DPARSF_FieldMap,'center');
+
+
 guidata(hObject, handles);
 
 % UIWAIT makes DPARSF_FieldMap wait for user response (see UIRESUME)
