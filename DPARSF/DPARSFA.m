@@ -34,7 +34,7 @@ end
 
 % --- Executes just before DPARSFA is made visible.
 function DPARSFA_OpeningFcn(hObject, eventdata, handles, varargin)
-    Release='V5.2_210501';
+    Release='V5.3_220101';
     handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
     
     if ispc

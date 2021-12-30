@@ -252,10 +252,10 @@ function HasMissingFiles = CheckMissingFiles(WorkingDir,SubjectID)
 HasMissingFiles = 0;
 DirFiles_surf=dir(fullfile(WorkingDir,'freesurfer',SubjectID,'surf','*'));
 DirFiles_func=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'func','*'));
-if length(DirFiles_func)~=17
+if length(DirFiles_func)<17   %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_func)~=17
     DirFiles_func=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'ses-1','func','*'));
 end
-if length(DirFiles_surf)~=84 || length(DirFiles_func)~=17
+if length(DirFiles_surf)~=84 || length(DirFiles_func)<17 %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_surf)~=84 || length(DirFiles_func)~=17
     HasMissingFiles = 1;
 end
 

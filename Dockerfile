@@ -1,4 +1,4 @@
-FROM nipreps/fmriprep:20.2.1
+FROM nipreps/fmriprep:20.2.6
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 

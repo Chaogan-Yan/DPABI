@@ -53,7 +53,7 @@ function DPABINet_Construction_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to DPABINet_Construction (see VARARGIN)
 
 
-Release='V1.0_210501';
+Release='V1.1_220101';
 handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
 
 if ispc
