@@ -986,8 +986,10 @@ if get(hObject,'Value')
     ROIDef=handles.Cfg.Covremove.OtherCovariatesROI;
     ROIDef=DPABI_ROIList(ROIDef);
     handles.Cfg.Covremove.OtherCovariatesROI=ROIDef;
+    handles.Cfg.Covremove.IsOtherCovariates=1;
 else
     handles.Cfg.Covremove.OtherCovariatesROI=[];
+    handles.Cfg.Covremove.IsOtherCovariates=0;
 end
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of checkboxOtherCovariates
