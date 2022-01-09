@@ -75,7 +75,7 @@ for iColor=1:fix(ColorLen/2)
 end
 
 if PMax==PMin
-    PMin=PMin-realmin;
+    PMin=PMin-(PMax/10000); %YAN Chao-Gan, 220109. PMin=PMin-realmin;
 end
 PositiveColorSegment = ceil(100000*(PMax-PMin)/(PMax-NMax)/(ColorLen/2));
 for iColor=ColorLen:-1:ceil(ColorLen/2+1)

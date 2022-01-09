@@ -1507,6 +1507,23 @@ switch Value
         end
         OutPath=fullfile(Path, File);
         save(OutPath, '-struct', 'CountEdgeS');
+        
+    case 4 % Generate Matrix
+        NodeWei=GetThresholdedNode(hObject);
+        if isempty(NodeWei)
+            errordlg('Please set node weight first!');
+            return
+        end
+        NodeWeight=NodeWei;
+        
+        [File , Path]=uiputfile({'*.mat','MAT-File (*.mat)'}, ...
+            'Save Node Weight', pwd);
+        if ~ischar(File)
+            return
+        end
+        OutPath=fullfile(Path, File);
+        save(OutPath, 'NodeWeight');
+        
 end
 % Hints: contents = cellstr(get(hObject,'String')) returns UtilitiesPopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from UtilitiesPopup
