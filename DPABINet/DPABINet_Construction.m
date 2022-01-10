@@ -91,6 +91,7 @@ handles.Cfg.IsHigherOrderAveraging = 0;
 handles.Cfg.HigherOrderAveraginMergeLabel = [];
 handles.Cfg.OutDir = pwd; 
 
+handles.Cfg.ParallelWorkersNumber = 0;
 PCTVer = ver('distcomp');
 if ~isempty(PCTVer)
     FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');

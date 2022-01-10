@@ -89,7 +89,7 @@ handles.Cfg.SparsityRange_ForAUC = [0.10:0.01:0.34]';
 handles.Cfg.NetworkWeighting = 'Weighted';
 handles.Cfg.RandomTimes=100;
 
-
+handles.Cfg.ParallelWorkersNumber = 0;
 PCTVer = ver('distcomp');
 if ~isempty(PCTVer)
     FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
