@@ -49,6 +49,9 @@ RUN /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh /opt/mcr/${MCR_V
 # For freeview
 RUN apt-get -qq install -y qt4-default libjpeg62
 
+# For processing .nii.gz in Windows docker
+RUN pip install indexed_gzip -U
+
 ENTRYPOINT []
 
 # Start VNC after launching
