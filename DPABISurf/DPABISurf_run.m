@@ -405,6 +405,8 @@ if (Cfg.RemoveFirstTimePoints>0)
                     %y_Write(Nii.dat(:,:,:,Cfg.RemoveFirstTimePoints+1:end),Nii,DirImg(1).name);
                     %YAN Chao-Gan, 210309. Save in single incase of Philips data.
                     [Data Header]=y_Read(DirImg(1).name);
+                    Header.pinfo=[1;0;0]; Header.dt=[16,0];
+                    y_Write(Data(:,:,:,Cfg.RemoveFirstTimePoints+1:end),Header,DirImg(1).name);
                     
                 end
                 
