@@ -22,7 +22,7 @@ function varargout = NodeLabelDirection(varargin)
 
 % Edit the above text to modify the response to help NodeLabelDirection
 
-% Last Modified by GUIDE v2.5 19-Apr-2021 11:36:43
+% Last Modified by GUIDE v2.5 12-Apr-2022 15:08:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,6 +54,7 @@ function NodeLabelDirection_OpeningFcn(hObject, eventdata, handles, varargin)
 if isempty(varargin) || isempty(varargin{1})
     NodeLabelDirection.NodeLabelDirection = 'T'; 
     NodeLabelDirection.InnerCircleOffset = 0;
+    NodeLabelDirection.TextSize = 36;
 else
     NodeLabelDirection=varargin{1};
 end
@@ -66,6 +67,7 @@ else
     set(handles.radiobuttonNormal,'Value',1);
 end
 set(handles.editPixel,'String',num2str(NodeLabelDirection.InnerCircleOffset));
+set(handles.editTextSize,'String',num2str(NodeLabelDirection.TextSize));
 % Choose default command line output for NodeLabelDirection
 handles.output = hObject;
 
@@ -129,6 +131,29 @@ guidata(hObject, handles);
 % --- Executes during object creation, after setting all properties.
 function editPixel_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to editPixel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function editTextSize_Callback(hObject, eventdata, handles)
+% hObject    handle to editTextSize (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.NodeLabelDirection.TextSize = str2num(get(handles.editTextSize,'String'));
+guidata(hObject, handles);
+% Hints: get(hObject,'String') returns contents of editTextSize as text
+%        str2double(get(hObject,'String')) returns contents of  as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editTextSize_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editTextSize (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
