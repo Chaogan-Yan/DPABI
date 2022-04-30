@@ -749,14 +749,14 @@ if (Cfg.IsCovremove==1) && ((strcmpi(Cfg.Covremove.Timing,'AfterNormalize'))&&(C
             SubjectROI=Cfg.Covremove.OtherCovariatesROI;%%!!! Change as in Fuction
             
             % Set the reference image
-            RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1},filesep,'*.img']);
+            RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,'*.img']);
             if isempty(RefFile)  %YAN Chao-Gan, 120827. Also support .nii.gz files.
-                RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1},filesep,'*.nii.gz']);
+                RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
             end
             if isempty(RefFile)  %YAN Chao-Gan, 111114. Also support .nii files.
-                RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1},filesep,'*.nii']);
+                RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,'*.nii']);
             end
-            RefFile=[Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1},filesep,RefFile(1).name];
+            RefFile=[Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,RefFile(1).name];
             [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
             
             % Ball to mask

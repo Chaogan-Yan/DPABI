@@ -2419,7 +2419,7 @@ else
     end
     
     Ind=Vec<0;
-    if isempty(Ind)
+    if isempty(find(Ind, 1))
         NMin=0;
     else
         NMin=max(Vec(Ind));

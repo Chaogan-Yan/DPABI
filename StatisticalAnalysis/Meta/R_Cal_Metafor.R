@@ -1,21 +1,21 @@
 # Calcuate meta.
-# args[1]: The input matlab .mat file. Has: 'TVal','N1','N2','nTests'
+# args[1]: The input matlab .mat file. Has: 'TVal','N1','N2','nTests','Regressor'
 # args[2]: The name for the output matlab .mat file.
 
 # install the following R packages:
 # 
-# install.packages("metansue")
+# install.packages("metafor")
 # install.packages("R.matlab")
 # 
-# More details about 'metansue' R package can be found at
-# https://www.metansue.com/
+# More details about 'metafor' R package can be found at
+# https://www.metafor-project.org/
 # 
-# Written by YAN Chao-Gan 170208.
+# Written by YAN Chao-Gan 220429
 # Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 # ycg.yan@gmail.com
 
 
-library("metansue")
+library("metafor")
 library("R.matlab")
 
 args = commandArgs(trailingOnly=TRUE)
@@ -37,23 +37,21 @@ P = matrix(0, nTests, 1)
 EffectSize = matrix(0, nrow(TVal), nTests)
 
 for (n in 1:nTests){
-  
-  if(length(N2) == 0){
-    x <- smc_from_t(c(TVal[,n]),c(N1))
-  } else {
-    x <- smd_from_t(c(TVal[,n]),c(N1),c(N2))
-  }
-  
+
+  y <- escalc(measure = "SMD", vtype = "UB",
+              m1i = TVal[,n] * sqrt(1 / N1 + 1 / N2),
+              n1i = N1, n2i = N2,
+              m2i = rep(0, nrow(TVal)), sd1i = rep(1, nrow(TVal)), sd2i = rep(1, nrow(TVal)))
   
   if(length(Regressor) == 0){
-    m <- meta(x)
+    m <- rma(y)
   } else {
-    m <- meta(x, ~ Regressor)
+    m <- rma(y, mods = Regressor)
   }
   
-  Z[n] = m[['hypothesis']][['z']]
-  P[n] = m[['hypothesis']][['p.value']]
-  EffectSize[,n] = x[['y']]
+  Z[n] = m['zval']
+  P[n] = m['pval']
+  EffectSize[,n] = as.matrix(y['yi'])
 }
 
 writeMat(OutputName, Z = Z, P = P, EffectSize = EffectSize)
