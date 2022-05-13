@@ -1,21 +1,26 @@
-function filePathConf = EditConf(workingDir,flag,offsetPixel)
+function filePathConf = EditConf(workingDir,CircosConf)
 % FORMAT filePathConf = EditConf(workingDir,flag,offsetPixel)
 % Set .conf configuration file, parameters
 % Input:
 %   working_dir - working directory that generate scripts and Circos figure
-%   flag - string contains specific command character
+%   CircosConf.flag - string contains specific command character
 %       'L' - show node labels
 %       'N' - show network label
 %       'P' - set labels perpendicular
-%   offsetPixel - incase of adapting perpendicular label, scale inner content
+%   CircosConf.offsetPixel - incase of adapting perpendicular label, scale inner content
+%   CircosConf.
 %__________________________________________________________________________
-% Written by DENG Zhao-Yu 210408 for DPARBI.
+% Written by DENG Zhao-Yu 210408 for DPARBI. Update in 220412
 % Institute of Psychology, Chinese Academy of Sciences
 % dengzy@psych.ac.cn
 %__________________________________________________________________________
 %%
 
 % offsetPixel = 200; % offset pixels to better organization of partions
+
+flag = CircosConf.flag;
+offsetPixel = CircosConf.offsetPixel;
+textSize = CircosConf.textSize;
 
 % change working directory
 cd(workingDir);
@@ -65,7 +70,7 @@ if contains(flag,'L')
     
     fprintf(fid,'r0 = 0.9r+30p-%up \n',offsetPixel); % band label radius(R) inner +20p
     fprintf(fid,'r1 = 0.9r+500p-%up \n',offsetPixel); % band label radius(R) outter 380p
-    fprintf(fid,'label_size = 36 \n');
+    fprintf(fid,'label_size = %d \n', textSize);
     fprintf(fid,'label_font = light \n');
     if contains(flag,'P')
         fprintf(fid,'label_parallel   = yes \n');

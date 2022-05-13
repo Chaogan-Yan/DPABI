@@ -1439,10 +1439,11 @@ fprintf('Band Information Created: %\n', CircosBandPath);
 fprintf('Label Information Created: %\n', CircosLabelPath);
 fprintf('Link Information Created: %\n', CircosLinkPath);
 
-offsetPixel=0;
-flag = '';
+CircosConf.offsetPixel=0;
+CircosConf.textSize=36;
+CircosConf.flag = '';
 if ~isempty(CircosStruct.ElementLabel)
-    flag = [flag,'L'];
+    CircosConf.flag = [CircosConf.flag,'L'];
     
     if isfield(handles,'NodeLabelSetting')
         NodeLabelSetting=NodeLabelDirection(handles.NodeLabelSetting);
@@ -1452,18 +1453,19 @@ if ~isempty(CircosStruct.ElementLabel)
     handles.NodeLabelSetting=NodeLabelSetting;
     guidata(hObject, handles);
     if strcmpi(NodeLabelSetting.NodeLabelDirection,'T')
-        flag = [flag,'P'];
+        CircosConf.flag = [CircosConf.flag,'P'];
     end
-    offsetPixel=NodeLabelSetting.InnerCircleOffset;
+    CircosConf.offsetPixel=NodeLabelSetting.InnerCircleOffset;
+    CircosConf.textSize=NodeLabelSetting.TextSize; % Add textSize in 220412
 end
 if ~isempty(CircosStruct.HigherOrderNetworkLabel)
-    flag = [flag,'N'];
+    CircosConf.flag = [CircosConf.flag,'N'];
 end
 
 
 
 
-CircosConfPath=EditConf(WorkDir, flag, offsetPixel);
+CircosConfPath=EditConf(WorkDir,CircosConf); % Simplify struct CircosConf 
 fprintf('Circos Config Created: %\n', CircosConfPath);
 
 % run Circos command, if need run Matlab in Terminal

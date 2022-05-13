@@ -1,7 +1,0 @@
-chr - net1 VN 0 6776 rgb(120,18,134)
-chr - net2 SMN 0 8932 rgb(70,130,180)
-chr - net3 DAN 0 4312 rgb(0,118,14)
-chr - net4 VAN 0 4928 rgb(196,58,250)
-chr - net5 SC 0 2156 rgb(220,248,164)
-chr - net6 FPN 0 6468 rgb(230,148,34)
-chr - net7 DMN 0 10164 rgb(205,62,78)

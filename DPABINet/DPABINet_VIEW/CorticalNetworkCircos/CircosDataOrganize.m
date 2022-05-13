@@ -55,7 +55,7 @@ if (~isfield(CircosStruct,'HigherOrderNetworkLabel') || isempty(CircosStruct.Hig
 else
     nameNetwork = CircosStruct.HigherOrderNetworkLabel(:,2);
 end
-nameNetwork = strrep(nameNetwork,' ','_'); % replace space with underline
+nameNetwork = strrep(nameNetwork,' ','-'); % replace space with hyphen Update 220418
 
 if (~isfield(CircosStruct,'ElementLabel') || isempty(CircosStruct.ElementLabel))
     nameRegion = cell(nRegion,1);
@@ -65,7 +65,7 @@ if (~isfield(CircosStruct,'ElementLabel') || isempty(CircosStruct.ElementLabel))
 else
     nameRegion = CircosStruct.ElementLabel(:,2);
 end
-nameRegion = strrep(nameRegion,' ','_'); % replace space with underline
+nameRegion = strrep(nameRegion,' ','-'); % replace space with hyphen Update 220418
 
 
 % generate correlation matrix for links, filter threshold
@@ -136,15 +136,15 @@ norArrCorRatio = zeros(nCorr,1);
 for k = 1:nCorr
     if arrCorRatio(k) < 0
         norArrCorRatio(k) = (arrPlot(k)-leftMaxLimit)/(leftMaxLimit-leftMinLimit);
-        % fixed a bug when leftMaxLimit=leftMinLimit
-        if isnan(norArrCorRatio(k))
+        % fixed a bug when leftMaxLimit=leftMinLimit, Update in 220412
+        if isinf(norArrCorRatio(k)) || isnan(norArrCorRatio(k))
             norArrCorRatio(k) = -1;
         end
         cmapArrCorr(k) = fix(norArrCorRatio(k)*(nCmap/2))+(nCmap/2)+1;
     elseif arrCorRatio(k) > 0
         norArrCorRatio(k) = (arrPlot(k)-rightMinLimit)/(rightMaxLimit-rightMinLimit);
-        % fixed a bug when rightMaxLimit=rightMinLimit
-        if isinf(norArrCorRatio(k))
+        % fixed a bug when rightMaxLimit=rightMinLimit, Update in 220412
+        if isinf(norArrCorRatio(k)) || isnan(norArrCorRatio(k))
             norArrCorRatio(k) = 1;
         end
         cmapArrCorr(k) = fix(norArrCorRatio(k)*(nCmap/2))+(nCmap/2);
