@@ -19,6 +19,9 @@ function [GTA] = y_GraphTheoreticalAnalysis_wu(G,RandomTimes)
 % ycg.yan@gmail.com
 
 G = double(G);
+if min(G)<0
+    G = G+min(G); % Keep all values in the weighted undirected connection matrix to be positive, in case of negative distance and et al., Bin
+end
 N = size(G,1);
 
 GTA.ClusteringCoefficient = clustering_coef_wu(G);
@@ -34,7 +37,8 @@ if exist('RandomTimes','var') && RandomTimes>0
     Lp_Rand = zeros(RandomTimes,1);
     for iRand = 1:RandomTimes
         [R]=randmio_und(G, 4); % ITER set to 4 as the default value in Maslov's program: http://www.cmth.bnl.gov/~maslov/sym_generate_srand.m
-        ClusteringCoefficient = clustering_coef_wu(R);
+        R_Scaled = weight_conversion(R, 'normalize'); % The input of clustering_coef_wu should be in range of [0,1], Bin
+        ClusteringCoefficient = clustering_coef_wu(R_Scaled);
         Cp_Rand(iRand) = mean(ClusteringCoefficient);
         D=distance_wei(1./R);
         D(find(eye(size(D)))) = Inf; % Put the length from one node to itself to Inf
@@ -50,20 +54,21 @@ if exist('RandomTimes','var') && RandomTimes>0
     GTA.Lp_Rand=Lp_Rand;
 end
 
-GTA.Eglob = efficiency_wei(G);
-GTA.NodalEfficiency = efficiency_wei(G,1);
+G_Scaled = weight_conversion(G, 'normalize'); % The input of efficiency_wei should be in range of [0,1], Bin
+GTA.Eglob = efficiency_wei(G_Scaled);
+GTA.NodalEfficiency = efficiency_wei(G_Scaled,1);
 GTA.Eloc = mean(GTA.NodalEfficiency);
 
 GTA.Assortativity = assortativity_bin(G,0); %Although take the weighted input, all connection weights are ignored in assortativity calculation.
 
-[Ci Q]=modularity_und(G);
+[Ci,Q]=modularity_und(G);
 GTA.Modularity = Q;
 GTA.ParticipantCoefficient = participation_coef(G,Ci);
 
 
 GTA.Degree = sum(G)';
 
-GTA.Betweenness = betweenness_wei(G);
+GTA.Betweenness = betweenness_wei(D); % The input of betweenness_wei should be distance matrix
 
 
 G=double(G~=0); %%%Convert to binarized for the following centrality calculation.
