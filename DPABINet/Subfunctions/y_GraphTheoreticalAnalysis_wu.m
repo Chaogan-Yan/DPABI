@@ -24,7 +24,8 @@ if min(G)<0
 end
 N = size(G,1);
 
-GTA.ClusteringCoefficient = clustering_coef_wu(G);
+G_Scaled = weight_conversion(G, 'normalize'); % The input of clustering_coef_wu should be in range of [0,1], Bin
+GTA.ClusteringCoefficient = clustering_coef_wu(G_Scaled);
 GTA.Cp = mean(GTA.ClusteringCoefficient);
 
 
@@ -54,8 +55,7 @@ if exist('RandomTimes','var') && RandomTimes>0
     GTA.Lp_Rand=Lp_Rand;
 end
 
-G_Scaled = weight_conversion(G, 'normalize'); % The input of efficiency_wei should be in range of [0,1], Bin
-GTA.Eglob = efficiency_wei(G_Scaled);
+GTA.Eglob = efficiency_wei(G_Scaled); % The input of efficiency_wei should be in range of [0,1], Bin
 GTA.NodalEfficiency = efficiency_wei(G_Scaled,1);
 GTA.Eloc = mean(GTA.NodalEfficiency);
 
@@ -68,7 +68,7 @@ GTA.ParticipantCoefficient = participation_coef(G,Ci);
 
 GTA.Degree = sum(G)';
 
-GTA.Betweenness = betweenness_wei(D); % The input of betweenness_wei should be distance matrix
+GTA.Betweenness = betweenness_wei(D); % The input of betweenness_wei should be distance matrix, Bin
 
 
 G=double(G~=0); %%%Convert to binarized for the following centrality calculation.
