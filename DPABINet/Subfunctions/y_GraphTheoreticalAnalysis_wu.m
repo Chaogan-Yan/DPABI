@@ -19,9 +19,6 @@ function [GTA] = y_GraphTheoreticalAnalysis_wu(G,RandomTimes)
 % ycg.yan@gmail.com
 
 G = double(G);
-if min(G)<0
-    G = G+min(G); % Keep all values in the weighted undirected connection matrix to be positive, in case of negative distance and et al., Bin
-end
 N = size(G,1);
 
 G_Scaled = weight_conversion(G, 'normalize'); % The input of clustering_coef_wu should be in range of [0,1], Bin
