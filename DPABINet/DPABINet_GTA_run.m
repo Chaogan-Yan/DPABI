@@ -130,11 +130,8 @@ if (Cfg.IsCalGTA==1)
                 if (SparsityRange(iSparsity)<=MaxSparsity) % If not reached the maximum sparsity
                     EdgeNumber=round(SparsityRange(iSparsity)*NodeNumber*(NodeNumber-1));
                     MatrixValue=Matrix(:);
-                    if min(MatrixValue)<0
-                        MatrixValue = MatrixValue-min(MatrixValue); % Keep all values in the connection matrix to be positive, in case of negative distance and mistakes in graph theoratical matrics. Bin
-                    end
                     MatrixValueSorted=sort(MatrixValue,'descend');
-                    MatrixValueThreshold=MatrixValueSorted(EdgeNumber+1);
+                    MatrixValueThreshold=max(MatrixValueSorted(EdgeNumber+1),0); % Keep all values in the connection matrix to be positive, in case of negative distance and mistakes in graph theoratical matrics. Bin
                     MatrixThresholded_bu=Matrix>MatrixValueThreshold;
                     MatrixThresholded_wu=Matrix.*(Matrix>MatrixValueThreshold);
                     

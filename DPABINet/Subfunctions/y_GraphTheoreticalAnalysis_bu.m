@@ -63,7 +63,7 @@ GTA.ParticipantCoefficient = participation_coef(G,Ci);
 
 GTA.Degree = sum(G)';
 
-GTA.Betweenness = betweenness_bin(D)';
+GTA.Betweenness = betweenness_bin(G)'; % length matrix equal to connection weight matrix
 
 GTA.SubgraphCentrality = subgraph_centrality(G);
 GTA.EigenvectorCentrality = eigenvector_centrality_und(G);
