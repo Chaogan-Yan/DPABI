@@ -1298,7 +1298,8 @@ if PMax==PMin && PMax==0
     end
     NegativeColorSegment = ceil(100000*(NMin-NMax)/(0-NMax)/(TmpColorLen));
     if ~isnan(NegativeColorSegment)
-        for iColor=1:Range
+        %for iColor=1:Range
+        for iColor=Range
             Segment=NegativeColorSegment;
             Begin=(iColor-1)*NegativeColorSegment+1;
             if Begin < 1

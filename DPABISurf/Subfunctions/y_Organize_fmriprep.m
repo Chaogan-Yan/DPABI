@@ -306,7 +306,8 @@ for iFunSession=1:Cfg.FunctionalSessionNumber
         %The matrix in Header is needed, thus look for the functional image before realignment
         DirFile=dir([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,fmriprepfuncSessionPrefixSet{iFunSession},filesep,'*.nii*']);
         RefFile=[Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{i},filesep,fmriprepfuncSessionPrefixSet{iFunSession},filesep,DirFile(1).name];
-        FD_Jenkinson = y_FD_Jenkinson(fullfile(Cfg.WorkingDir,'RealignParameter',Cfg.SubjectID{i},['rp_',Cfg.SubjectID{i},'.txt']),RefFile);
+        FD_Jenkinson = y_FD_Jenkinson(fullfile(Cfg.WorkingDir,'RealignParameter',Cfg.SubjectID{i},[FunSessionPrefixSet{iFunSession},'rp_',Cfg.SubjectID{i},'.txt']),RefFile); %YAN Chao-Gan 220525. Fix for multiple sessions.
+        %FD_Jenkinson = y_FD_Jenkinson(fullfile(Cfg.WorkingDir,'RealignParameter',Cfg.SubjectID{i},['rp_',Cfg.SubjectID{i},'.txt']),RefFile);
         save([FunSessionPrefixSet{iFunSession},'FD_Jenkinson_',Cfg.SubjectID{i},'.txt'], 'FD_Jenkinson', '-ASCII', '-DOUBLE','-TABS');
         MeanFD_Jenkinson = mean(FD_Jenkinson);
         
