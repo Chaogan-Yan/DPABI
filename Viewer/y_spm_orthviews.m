@@ -1614,9 +1614,19 @@ cent = is(1:3,1:3)*st{curfig}.centre(:) + is(1:3,4);
                 mn = min([mn min(min(tmp))]);
             end
         else
-            mx=max(max(max(st{curfig}.vols{i}.Data)));
-            mn=min(min(min(st{curfig}.vols{i}.Data)));
+            if ~isfield(st{curfig}.vols{i},'mx')
+                mx=max(max(max(st{curfig}.vols{i}.Data)));
+            else
+                mx=st{curfig}.vols{i}.mx;
+            end
+            
+            if ~isfield(st{curfig}.vols{i},'mn')
+                mn=min(min(min(st{curfig}.vols{i}.Data)));
+            else
+                mn=st{curfig}.vols{i}.mn;
+            end
         end
+        
         if mx==mn, mx=mn+eps; end
         
         if isfield(st{curfig}.vols{i},'blobs')

@@ -92,7 +92,9 @@ UnderlayFileName=fullfile(TemplatePath,'ch2.nii');
 
 [UnderlayVolume UnderlayVox UnderlayHeader] = y_ReadRPI(UnderlayFileName);
 handles.UnderlayFileName='';
-handles.UserDefinedFileName=UnderlayFileName;
+handles.UserDefinedFileName='';
+handles.UserDefinedUnderlayMx='';
+handles.UserDefinedUnderlayMn='';
 set(handles.UnderlayEntry, 'String', 'ch2.nii');
 
 UnderlayHeader.Data = UnderlayVolume;
@@ -679,7 +681,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in UnderlayButton.
 function UnderlayButton_Callback(hObject, eventdata, handles)
 % hObject    handle to UnderlayButton (see GCBO)
@@ -699,7 +700,13 @@ end
 UnderlayFileName=[Path, File];
 handles.UnderlayFileName=UnderlayFileName;
 handles.UserDefinedFileName=UnderlayFileName;
+handles.UserDefinedUnderlayMx='';
+handles.UserDefinedUnderlayMn='';
+
+UnderlayFlag=length(get(handles.TemplatePopup, 'String'))-1;
+set(handles.TemplatePopup, 'Value', UnderlayFlag);
 set(handles.UnderlayEntry, 'String', File);
+
 guidata(hObject, handles);
 ShowUnderlay(handles);
 
@@ -716,10 +723,44 @@ end
 UnderlayHeader.Data = UnderlayVolume;
 UnderlayHeader.Vox  = UnderlayVox;
 
-y_spm_orthviews('Image',UnderlayHeader);
+UnderlayMx = max(UnderlayVolume(:));
+UnderlayMn = min(UnderlayVolume(:));
+if isempty(handles.UserDefinedUnderlayMx)
+    UserDefinedMx=UnderlayMx;
+else
+    UserDefinedMx=handles.UserDefinedUnderlayMx;
+end
+if isempty(handles.UserDefinedUnderlayMn)
+    UserDefinedMn=UnderlayMn;
+else
+    UserDefinedMn=handles.UserDefinedUnderlayMn;
+end
 
-Max=length(get(handles.TemplatePopup, 'String'));
-set(handles.TemplatePopup, 'Value', Max-1);
+UnderlayFlag=get(handles.TemplatePopup, 'Value');
+UnderlayLen=length(get(handles.TemplatePopup, 'String'));
+if UnderlayFlag==UnderlayLen-1
+    AnsPrompt={sprintf('User-Defined Max Intensity (Original Max: %g)', UnderlayMx), ...
+        sprintf('User-Defined Min Intensity (Original Min: %g)', UnderlayMn)};
+    AnsTitle='Please Set User-Defined Max/Min Intensity';
+    NumLine=1;
+    Defaultans={num2str(UserDefinedMx), num2str(UserDefinedMn)};
+    Params=inputdlg(AnsPrompt, AnsTitle, NumLine, Defaultans);
+    if ~isempty(Params)
+        UnderlayMx=str2double(Params{1});
+        UnderlayMn=str2double(Params{2});
+        
+        handles.UserDefinedUnderlayMx=UnderlayMx;
+        handles.UserDefinedUnderlayMn=UnderlayMn;
+        guidata(handles.DPABI_fig, handles);
+    else
+        UnderlayMx=UserDefinedMx;
+        UnderlayMn=UserDefinedMn;
+    end
+end
+UnderlayHeader.mx=UnderlayMx;
+UnderlayHeader.mn=UnderlayMn;
+
+y_spm_orthviews('Image',UnderlayHeader);
 
 function handles=NoneUnderlay(handles)
 global st
@@ -735,7 +776,6 @@ else
     y_spm_orthviews('Image', OverlayHeader);
     handles.UnderlayFileName=OverlayHeader.fname;
 end
-
 
 % --- Executes on selection change in TemplatePopup.
 function TemplatePopup_Callback(hObject, eventdata, handles)
@@ -756,11 +796,13 @@ switch flag
     case 4
         File='mni_icbm152_t1_tal_nlin_asym_09c.nii';
     case 5
-        UnderlayFileName=handles.UserDefinedFileName;
-        [UnderlayVolume UnderlayVox UnderlayHeader] = y_ReadRPI(UnderlayFileName);
-        UnderlayHeader.Data = UnderlayVolume;
-        UnderlayHeader.Vox  = UnderlayVox;
-        y_spm_orthviews('Image',UnderlayHeader);
+        if isempty(handles.UserDefinedFileName)
+            warndlg('Please set user-defined underlay first!');
+            return
+        end
+        handles.UnderlayFileName=handles.UserDefinedFileName;
+        guidata(hObject, handles);
+        ShowUnderlay(handles);
         return;
     case Max
         handles=NoneUnderlay(handles);
@@ -771,16 +813,15 @@ switch flag
         return;
 end
 UnderlayFileName=[DPABIPath,filesep,'Templates',filesep, File];
-[UnderlayVolume UnderlayVox UnderlayHeader] = y_ReadRPI(UnderlayFileName);
-UnderlayHeader.Data = UnderlayVolume;
-UnderlayHeader.Vox  = UnderlayVox;
-y_spm_orthviews('Image',UnderlayHeader);
 
 set(handles.UnderlayEntry, 'String', File);
 set(handles.TemplatePopup, 'Value', flag);
 
 handles.UnderlayFileName=UnderlayFileName;
+%handles.UserDefinedUnderlayMx='';
+%handles.UserDefinedUnderlayMn='';
 guidata(hObject, handles);
+ShowUnderlay(handles);
 
 % Hints: contents = get(hObject,'String') returns TemplatePopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from TemplatePopup
