@@ -720,6 +720,9 @@ else
     UnderlayFileName=handles.UnderlayFileName;
 end
 [UnderlayVolume UnderlayVox UnderlayHeader] = y_ReadRPI(UnderlayFileName);
+if size(UnderlayVolume, 4)>1
+	UnderlayVolume=UnderlayVolume(:,:,:,1);
+end
 UnderlayHeader.Data = UnderlayVolume;
 UnderlayHeader.Vox  = UnderlayVox;
 
