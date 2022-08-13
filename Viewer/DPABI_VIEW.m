@@ -104,6 +104,10 @@ UnderlayHeader.Vox  = UnderlayVox;
 handles.output = hObject;
 handles.OverlayHeaders=cell(5, 1);
 
+TransP=zeros(12, 1);
+TransP(7:9)=1;
+handles.TransP=TransP;
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -1636,12 +1640,55 @@ switch Value
         OverlayHeader=RedrawOverlay(OverlayHeader, handles.DPABI_fig);
         
         handles.OverlayHeaders{index}=OverlayHeader; %YAN Chao-Gan, 161218. Fixed a bug: handles.OverlayHeader{index}=OverlayHeader;
+    case 12 % Set Transformation
+        ok=w_TransMat(curfig);
+        if ok==0
+            return
+        end
+        handles=guidata(hObject);
+        TransMat=spm_matrix(handles.TransP);
+        st{curfig}.vols{1}.premul=TransMat;
+        y_spm_orthviews('Redraw', curfig);
+    case 13 % Save Reoriented Images
+        TransP=handles.TransP;
+        TransMat=spm_matrix(TransP);
+        if ~any(TransMat-eye(4))
+            warndlg('There is no reorientation!');
+            return
+        end
+        OutDir=uigetdir(pwd, 'Pick Output Directory for Reoriented Images');
+        if isnumeric(OutDir) && OutDir==0
+            return
+        end
+        % Underlay
+        UnderlayFilePath=st{curfig}.vols{1}.fname;
+        SaveReorientation(UnderlayFilePath, OutDir, TransMat);
         
+        % Overlay
+        OverlayHeaders=handles.OverlayHeaders;
+        for i=1:numel(OverlayHeaders)
+            if ~isempty(OverlayHeaders{i})
+                OverlayFilePath=OverlayHeaders{i}.fname;
+                SaveReorientation(OverlayFilePath, OutDir, TransMat);
+            end
+        end
+        OutMatPath=fullfile(OutDir, 'Reorientation.mat');
+        save(OutMatPath, 'TransMat');
+        fprintf('Save Reorientation to %s\n', OutMatPath);
 end
 guidata(hObject, handles);
 % Hints: contents = get(hObject,'String') returns MorePopup contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from MorePopup
 
+function SaveReorientation(InputPath, OutDir, TransMat)
+[Path, Name, Ext]=fileparts(InputPath);
+OutPath=fullfile(OutDir, ['Reorient_', Name, '.nii']);
+
+[Data, Vox, Header]=y_ReadRPI(InputPath);
+OutHeader=Header;
+OutHeader.mat=TransMat*Header.mat;
+y_Write(Data, OutHeader, OutPath);
+fprintf('Save Reoriented %s to %s\n', InputPath, OutPath);
 
 % --- Executes during object creation, after setting all properties.
 function MorePopup_CreateFcn(hObject, eventdata, handles)
