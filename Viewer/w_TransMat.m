@@ -22,7 +22,7 @@ function varargout = w_TransMat(varargin)
 
 % Edit the above text to modify the response to help w_TransMat
 
-% Last Modified by GUIDE v2.5 11-Aug-2022 22:40:51
+% Last Modified by GUIDE v2.5 14-Aug-2022 15:12:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,19 +59,7 @@ end
 handles.MainFig=varargin{1};
 MainHandle=guidata(handles.MainFig);
 
-% Set Tran P
-set(handles.RightEty, 'string', num2str(MainHandle.TransP(1)));
-set(handles.ForwardEty, 'string', num2str(MainHandle.TransP(2)));
-set(handles.UpEty, 'string', num2str(MainHandle.TransP(3)));
-set(handles.PitchEty, 'string', num2str(MainHandle.TransP(4)));
-set(handles.RollEty, 'string', num2str(MainHandle.TransP(5)));
-set(handles.YawEty, 'string', num2str(MainHandle.TransP(6)));
-set(handles.XResizeEty, 'string', num2str(MainHandle.TransP(7)));
-set(handles.YResizeEty, 'string', num2str(MainHandle.TransP(8)));
-set(handles.ZResizeEty, 'string', num2str(MainHandle.TransP(9)));
-set(handles.XAffineEty, 'string', num2str(MainHandle.TransP(10)));
-set(handles.YAffineEty, 'string', num2str(MainHandle.TransP(11)));
-set(handles.ZAffineEty, 'string', num2str(MainHandle.TransP(12)));
+SetTrans(hObject, MainHandle.TransP);
 
 handles.output = 0;
 
@@ -102,6 +90,7 @@ function RightEty_Callback(hObject, eventdata, handles)
 % hObject    handle to RightEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of RightEty as text
 %        str2double(get(hObject,'String')) returns contents of RightEty as a double
@@ -125,6 +114,7 @@ function ForwardEty_Callback(hObject, eventdata, handles)
 % hObject    handle to ForwardEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of ForwardEty as text
 %        str2double(get(hObject,'String')) returns contents of ForwardEty as a double
@@ -148,6 +138,7 @@ function UpEty_Callback(hObject, eventdata, handles)
 % hObject    handle to UpEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of UpEty as text
 %        str2double(get(hObject,'String')) returns contents of UpEty as a double
@@ -171,6 +162,7 @@ function PitchEty_Callback(hObject, eventdata, handles)
 % hObject    handle to PitchEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of PitchEty as text
 %        str2double(get(hObject,'String')) returns contents of PitchEty as a double
@@ -194,6 +186,7 @@ function RollEty_Callback(hObject, eventdata, handles)
 % hObject    handle to RollEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of RollEty as text
 %        str2double(get(hObject,'String')) returns contents of RollEty as a double
@@ -217,6 +210,7 @@ function YawEty_Callback(hObject, eventdata, handles)
 % hObject    handle to YawEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of YawEty as text
 %        str2double(get(hObject,'String')) returns contents of YawEty as a double
@@ -234,12 +228,11 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function XResizeEty_Callback(hObject, eventdata, handles)
 % hObject    handle to XResizeEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of XResizeEty as text
 %        str2double(get(hObject,'String')) returns contents of XResizeEty as a double
@@ -263,6 +256,7 @@ function YResizeEty_Callback(hObject, eventdata, handles)
 % hObject    handle to YResizeEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of YResizeEty as text
 %        str2double(get(hObject,'String')) returns contents of YResizeEty as a double
@@ -286,6 +280,7 @@ function ZResizeEty_Callback(hObject, eventdata, handles)
 % hObject    handle to ZResizeEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of ZResizeEty as text
 %        str2double(get(hObject,'String')) returns contents of ZResizeEty as a double
@@ -309,6 +304,7 @@ function XAffineEty_Callback(hObject, eventdata, handles)
 % hObject    handle to XAffineEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of XAffineEty as text
 %        str2double(get(hObject,'String')) returns contents of XAffineEty as a double
@@ -332,6 +328,7 @@ function YAffineEty_Callback(hObject, eventdata, handles)
 % hObject    handle to YAffineEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of YAffineEty as text
 %        str2double(get(hObject,'String')) returns contents of YAffineEty as a double
@@ -355,6 +352,7 @@ function ZAffineEty_Callback(hObject, eventdata, handles)
 % hObject    handle to ZAffineEty (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
 
 % Hints: get(hObject,'String') returns contents of ZAffineEty as text
 %        str2double(get(hObject,'String')) returns contents of ZAffineEty as a double
@@ -386,6 +384,34 @@ function AcceptBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to AcceptBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
+
+handles=guidata(hObject);
+handles.output=1;
+guidata(hObject, handles);
+
+uiresume(handles.ObjFigure);
+
+% --- Executes on button press in ApplyBtn.
+function ApplyBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to ApplyBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ApplyTrans(hObject);
+
+% --- Executes on button press in ResetBtn.
+function ResetBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to ResetBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+TransP=zeros(12, 1);
+TransP(7:9)=1;
+
+SetTrans(hObject, TransP);
+ApplyTrans(hObject);
+
+function ApplyTrans(hObject)
+handles=guidata(hObject);
 TransP=zeros(12, 1);
 TransP(1)=str2double(get(handles.RightEty, 'String'));
 TransP(2)=str2double(get(handles.ForwardEty, 'String'));
@@ -407,6 +433,28 @@ end
 MainHandle=guidata(handles.MainFig);
 MainHandle.TransP=TransP;
 guidata(handles.MainFig, MainHandle)
-handles.output=1;
 guidata(hObject, handles);
-uiresume(handles.ObjFigure);
+
+global st
+curfig=handles.MainFig;
+curfig=w_Compatible2014bFig(curfig);
+TransMat=spm_matrix(TransP);
+st{curfig}.vols{1}.premul=TransMat;
+y_spm_orthviews('Redraw', curfig);
+
+function SetTrans(hObject, TransP)
+handles=guidata(hObject);
+% Set Tran P
+set(handles.RightEty, 'string', num2str(TransP(1)));
+set(handles.ForwardEty, 'string', num2str(TransP(2)));
+set(handles.UpEty, 'string', num2str(TransP(3)));
+set(handles.PitchEty, 'string', num2str(TransP(4)));
+set(handles.RollEty, 'string', num2str(TransP(5)));
+set(handles.YawEty, 'string', num2str(TransP(6)));
+set(handles.XResizeEty, 'string', num2str(TransP(7)));
+set(handles.YResizeEty, 'string', num2str(TransP(8)));
+set(handles.ZResizeEty, 'string', num2str(TransP(9)));
+set(handles.XAffineEty, 'string', num2str(TransP(10)));
+set(handles.YAffineEty, 'string', num2str(TransP(11)));
+set(handles.ZAffineEty, 'string', num2str(TransP(12)));
+

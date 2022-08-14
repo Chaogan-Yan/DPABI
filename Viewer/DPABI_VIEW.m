@@ -1645,10 +1645,7 @@ switch Value
         if ok==0
             return
         end
-        handles=guidata(hObject);
-        TransMat=spm_matrix(handles.TransP);
-        st{curfig}.vols{1}.premul=TransMat;
-        y_spm_orthviews('Redraw', curfig);
+
     case 13 % Save Reoriented Images
         TransP=handles.TransP;
         TransMat=spm_matrix(TransP);
