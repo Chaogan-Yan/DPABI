@@ -18,7 +18,7 @@ function [GTA] = y_GraphTheoreticalAnalysis_bu(G,RandomTimes)
 % The Phyllis Green and Randolph Cowen Institute for Pediatric Neuroscience, New York University Child Study Center, New York, NY 10016, USA
 % ycg.yan@gmail.com
 
-G = double(G); 
+G = double(G);
 N = size(G,1);
 
 GTA.ClusteringCoefficient = clustering_coef_bu(G);
@@ -63,7 +63,7 @@ GTA.ParticipantCoefficient = participation_coef(G,Ci);
 
 GTA.Degree = sum(G)';
 
-GTA.Betweenness = betweenness_bin(G)'; % length matrix equal to connection weight matrix
+GTA.Betweenness = betweenness_bin(G)';
 
 GTA.SubgraphCentrality = subgraph_centrality(G);
 GTA.EigenvectorCentrality = eigenvector_centrality_und(G);
