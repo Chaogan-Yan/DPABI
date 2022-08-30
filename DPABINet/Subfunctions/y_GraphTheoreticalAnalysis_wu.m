@@ -25,8 +25,8 @@ G_Scaled = weight_conversion(G, 'normalize'); % The input of clustering_coef_wu 
 GTA.ClusteringCoefficient = clustering_coef_wu(G_Scaled);
 GTA.Cp = mean(GTA.ClusteringCoefficient);
 
-
-D=distance_wei(1./G);
+L = zeros(size(G));E = find(G); L(E) = 1./G(E); % suggestion from Prof.Rubinov.
+D=distance_wei(L);
 D(find(eye(size(D)))) = Inf; % Put the length from one node to itself to Inf
 GTA.Lp = 1/(sum(sum(1./D))/(N*(N-1))); %Harmonic mean
 
@@ -65,7 +65,6 @@ GTA.ParticipantCoefficient = participation_coef(G,Ci);
 
 GTA.Degree = sum(G)';
 
-L = zeros(size(G));E = find(G); L(E) = 1./G(E); % suggestion from Prof.Rubinov.
 GTA.Betweenness = betweenness_wei(L); % The input of betweenness_wei should be connnection length matrix, Bin Lu, 20220629
 
 
