@@ -21,11 +21,12 @@ function [GTA] = y_GraphTheoreticalAnalysis_wu(G,RandomTimes)
 G = double(G);
 N = size(G,1);
 
-GTA.ClusteringCoefficient = clustering_coef_wu(G);
+G_Scaled = weight_conversion(G, 'normalize'); % The input of clustering_coef_wu should be in range of [0,1], Bin Lu, 20220629
+GTA.ClusteringCoefficient = clustering_coef_wu(G_Scaled);
 GTA.Cp = mean(GTA.ClusteringCoefficient);
 
-
-D=distance_wei(1./G);
+L = zeros(size(G));E = find(G); L(E) = 1./G(E); % suggestion from Prof.Rubinov.
+D=distance_wei(L);
 D(find(eye(size(D)))) = Inf; % Put the length from one node to itself to Inf
 GTA.Lp = 1/(sum(sum(1./D))/(N*(N-1))); %Harmonic mean
 
@@ -34,7 +35,8 @@ if exist('RandomTimes','var') && RandomTimes>0
     Lp_Rand = zeros(RandomTimes,1);
     for iRand = 1:RandomTimes
         [R]=randmio_und(G, 4); % ITER set to 4 as the default value in Maslov's program: http://www.cmth.bnl.gov/~maslov/sym_generate_srand.m
-        ClusteringCoefficient = clustering_coef_wu(R);
+        R_Scaled = weight_conversion(R, 'normalize'); % The input of clustering_coef_wu should be in range of [0,1], Bin Lu, 20220629
+        ClusteringCoefficient = clustering_coef_wu(R_Scaled);
         Cp_Rand(iRand) = mean(ClusteringCoefficient);
         D=distance_wei(1./R);
         D(find(eye(size(D)))) = Inf; % Put the length from one node to itself to Inf
@@ -50,20 +52,20 @@ if exist('RandomTimes','var') && RandomTimes>0
     GTA.Lp_Rand=Lp_Rand;
 end
 
-GTA.Eglob = efficiency_wei(G);
+GTA.Eglob = efficiency_wei(G); 
 GTA.NodalEfficiency = efficiency_wei(G,1);
 GTA.Eloc = mean(GTA.NodalEfficiency);
 
 GTA.Assortativity = assortativity_bin(G,0); %Although take the weighted input, all connection weights are ignored in assortativity calculation.
 
-[Ci Q]=modularity_und(G);
+[Ci,Q]=modularity_und(G);
 GTA.Modularity = Q;
 GTA.ParticipantCoefficient = participation_coef(G,Ci);
 
 
 GTA.Degree = sum(G)';
 
-GTA.Betweenness = betweenness_wei(G);
+GTA.Betweenness = betweenness_wei(L); % The input of betweenness_wei should be connnection length matrix, Bin Lu, 20220629
 
 
 G=double(G~=0); %%%Convert to binarized for the following centrality calculation.

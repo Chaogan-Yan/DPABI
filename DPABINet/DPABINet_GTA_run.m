@@ -131,13 +131,14 @@ if (Cfg.IsCalGTA==1)
                     EdgeNumber=round(SparsityRange(iSparsity)*NodeNumber*(NodeNumber-1));
                     MatrixValue=Matrix(:);
                     MatrixValueSorted=sort(MatrixValue,'descend');
-                    MatrixValueThreshold=MatrixValueSorted(EdgeNumber+1);
-                    MatrixThresholded=Matrix.*(Matrix>MatrixValueThreshold);
+                    MatrixValueThreshold=max(MatrixValueSorted(EdgeNumber+1),0); % Keep all values in the connection matrix to be positive, in case of negative distance and mistakes in graph theoratical matrics. Bin
+                    MatrixThresholded_bu=Matrix>MatrixValueThreshold;
+                    MatrixThresholded_wu=Matrix.*(Matrix>MatrixValueThreshold);
                     
                     if strcmpi(Cfg.NetworkWeighting,'Weighted')
-                        [GTA] = y_GraphTheoreticalAnalysis_wu(MatrixThresholded,Cfg.RandomTimes);
-                    elseif strcmpi(Cfg.NetworkWeighting,'Binarized');
-                        [GTA] = y_GraphTheoreticalAnalysis_bu(MatrixThresholded,Cfg.RandomTimes);
+                        [GTA] = y_GraphTheoreticalAnalysis_wu(MatrixThresholded_wu,Cfg.RandomTimes);
+                    elseif strcmpi(Cfg.NetworkWeighting,'Binarized')
+                        [GTA] = y_GraphTheoreticalAnalysis_bu(MatrixThresholded_bu,Cfg.RandomTimes);
                     end
 
                     CpSet(1,iSparsity) = GTA.Cp;
