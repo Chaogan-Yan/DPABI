@@ -52,8 +52,8 @@ if exist('RandomTimes','var') && RandomTimes>0
     GTA.Lp_Rand=Lp_Rand;
 end
 
-GTA.Eglob = efficiency_wei(G_Scaled); % The input of efficiency_wei should be in range of [0,1], Bin Lu, 20220629
-GTA.NodalEfficiency = efficiency_wei(G_Scaled,1);
+GTA.Eglob = efficiency_wei(G); 
+GTA.NodalEfficiency = efficiency_wei(G,1);
 GTA.Eloc = mean(GTA.NodalEfficiency);
 
 GTA.Assortativity = assortativity_bin(G,0); %Although take the weighted input, all connection weights are ignored in assortativity calculation.
