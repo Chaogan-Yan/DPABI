@@ -53,7 +53,7 @@ function DPABINet_GTA_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to DPABINet_GTA (see VARARGIN)
 
 
-Release='V1.1_220101';
+Release='V1.2_220915';
 handles.Release = Release; % Will be used in mat file version checking (e.g., in function SetLoadedData)
 
 if ispc

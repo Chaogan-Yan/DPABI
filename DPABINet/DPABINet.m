@@ -55,7 +55,7 @@ function DPABINet_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABINet
 
 
-Release='V1.1_220101';
+Release='V1.2_220915';
 if ispc
     UserName =getenv('USERNAME');
 else
