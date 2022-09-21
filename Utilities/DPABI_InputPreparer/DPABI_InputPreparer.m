@@ -6,12 +6,13 @@ function varargout = DPABI_InputPreparer(varargin)
 % B108, CAS Key Laboratory of Behavioral Science, Institute of Psychology, Beijing, China; 
 % Department of Psychology, University of Chinese Academy of Sciences, Beijing, China;
 % Written by Bin Lu
+% Modified by Bin Lu, 20220919. Be compatible to xnat-like input directory. Add option for setting lower limit for number of files of a series.
 % http://rfmri.org/dpabi
 % $mail=larslu@foxmail.com
 %-----------------------------------------------------------
 % Mail to Author:  <a href="larslu@foxmail.com">Bin Lu</a> 
 
-% Last Modified by GUIDE v2.5 15-Nov-2021 16:13:41
+% Last Modified by GUIDE v2.5 19-Sep-2022 12:17:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,11 +65,11 @@ handles.Cfg.Demo.SeriesNames = {handles.Cfg.Demo.SeriesNamesDefault};
 handles.Cfg.Demo.SubID = '';
 handles.Cfg.Demo.PreviousSubID = '';
 handles.Cfg.Demo.nChangeSub = 0;
-handles.Cfg.IsChangeSubID = 1;
+handles.Cfg.IsChangeSubID = 0;
 handles.Cfg.AlwaysLatterSeries = 0;
 handles.Cfg.AnatOnly = 0;
 handles.Cfg.IsOtherFun = 0;
-handles.Cfg.FunOtherNumber = 0;
+handles.Cfg.FunOtherNumber = 0; % Change default to 0, Bin Lu, 20220919
 handles.Cfg.SeriesName.T1 = '';
 handles.Cfg.SeriesName.Fun = '';
 handles.Cfg.SeriesName.FunOther = {};
@@ -81,6 +82,15 @@ handles.Cfg.SeriesFileNumber.List.FunOther = {0};
 handles.Cfg.SeriesFileNumber.Flag.T1 = 1;
 handles.Cfg.SeriesFileNumber.Flag.Fun = 1;
 handles.Cfg.SeriesFileNumber.Flag.FunOther = [1];
+handles.Cfg.SeriesFileNumber.LowLimitMode.T1 = 0; % Add lower limit mode for setting number of files for a series, Bin Lu, 20220919
+handles.Cfg.SeriesFileNumber.LowLimitMode.Fun = 0;
+handles.Cfg.SeriesFileNumber.LowLimitMode.FunOther = {0};
+handles.Cfg.SeriesFileNumber.LowThreshold.T1 = 0; % Add lower threshold for setting number of files for a series, Bin Lu, 20220919
+handles.Cfg.SeriesFileNumber.LowThreshold.Fun = 0;
+handles.Cfg.SeriesFileNumber.LowThreshold.FunOther = {0};
+handles.Cfg.SeriesFileNumber.Percent.T1 = 0; % Record percentage of each type number of files for a series, Bin Lu, 20220919
+handles.Cfg.SeriesFileNumber.Percent.Fun = 0;
+handles.Cfg.SeriesFileNumber.Percent.FunOther = {0};
 handles.Cfg.SxFunRawList = {'S2_FunRaw'};
 handles.Cfg.SxFunRawFlag = 1;
 handles.Cfg.SameSeriesName.Strategy = 1; % 1 - follow the series index; 2 - mannually choose always
@@ -125,11 +135,11 @@ handles.output = hObject;
 
 % Make UI display correct in PC and linux
 if ismac
-    ZoonMatrix = [1 1 1.6 1.2];  %For mac
+    ZoonMatrix = [1 1 1.4 1.2];  %For mac
 elseif ispc
     ZoonMatrix = [1 1 1.6 1];  %For pc
 else
-    ZoonMatrix = [1 1 1.6 1.2];  %For Linux
+    ZoonMatrix = [1 1 1.4 1.2];  %For Linux
 end
 UISize = get(handles.figureConvertDPABIFormat,'Position');
 UISize = UISize.*ZoonMatrix;
@@ -325,14 +335,18 @@ function editFunOtherNumber_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.FunOtherNumber = str2num(get(handles.editFunOtherNumber,'String'));
-ResetCfg(hObject, handles, 2);
-handles = guidata(hObject);
+ResetCfg(hObject, handles, 2); 
+guidata(hObject,handles);
 for iSession = 1:handles.Cfg.FunOtherNumber
         handles.Cfg.SxFunRawList{iSession} = ['S',num2str(iSession+1),'_FunRaw'];
 end
 handles.Cfg.SeriesIndex.FunOther = ones(handles.Cfg.FunOtherNumber,1);
 handles.Cfg.SeriesFileNumber.List.FunOther = cell(1,handles.Cfg.FunOtherNumber);
 handles.Cfg.SeriesFileNumber.List.FunOther(:) = {[0]};
+handles.Cfg.SeriesFileNumber.LowLimitMode.FunOther = cell(1,handles.Cfg.FunOtherNumber);
+handles.Cfg.SeriesFileNumber.LowLimitMode.FunOther(:) = {[0]};
+handles.Cfg.SeriesFileNumber.LowThreshold.FunOther = cell(1,handles.Cfg.FunOtherNumber);
+handles.Cfg.SeriesFileNumber.LowThreshold.FunOther(:) = {[0]};
 handles.Cfg.SeriesFileNumber.Flag.FunOther = ones(handles.Cfg.FunOtherNumber,1);
 handles.Cfg.SxFunRawFlag = 1;
 UpdateDisplay(handles);
@@ -619,17 +633,7 @@ function checkboxIsOtherFun_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.IsOtherFun = get(handles.checkboxIsOtherFun,'Value');
-if handles.Cfg.IsOtherFun  
-    set(handles.popupmenuSxFunRaw,'Enable','on');
-    set(handles.popupmenuFunOther,'Enable','on');
-    set(handles.popupmenuFunOtherFileNumber,'Enable','on');
-    set(handles.editFunOtherNumber,'Enable','on');
-else
-    set(handles.popupmenuSxFunRaw,'Enable','off');
-    set(handles.popupmenuFunOther,'Enable','off');
-    set(handles.popupmenuFunOtherFileNumber,'Enable','off');
-    set(handles.editFunOtherNumber,'Enable','off');
-end
+UpdateDisplay(handles);
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of checkboxIsOtherFun
 
@@ -671,6 +675,7 @@ set(handles.popupmenuFunOtherFileNumber,'String','Computing...');
 drawnow;
 [handles.Cfg.SeriesFileNumber.List.FunOther{SessionFlag},Percentage] = CheckFileNumber(hObject, handles,handles.Cfg.SeriesIndex.FunOther(SessionFlag));
 handles.Cfg.SeriesFileNumber.Flag.FunOther(SessionFlag) = 1;
+handles.Cfg.SeriesFileNumber.Percent.FunOther{SessionFlag} = Percentage;
 % Added 20210722, add percentage info to reduce wrong selections
 DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),num2cell(handles.Cfg.SeriesFileNumber.List.FunOther{SessionFlag}),num2cell(Percentage),'UniformOutput',false);
 set(handles.popupmenuFunOtherFileNumber,...
@@ -706,6 +711,7 @@ drawnow;
 handles.Cfg.SeriesName.Fun = handles.Cfg.Demo.SeriesNames{handles.Cfg.SeriesIndex.Fun};
 [handles.Cfg.SeriesFileNumber.List.Fun,Percentage] = CheckFileNumber(hObject, handles,handles.Cfg.SeriesIndex.Fun);
 handles.Cfg.SeriesFileNumber.Flag.Fun = 1;
+handles.Cfg.SeriesFileNumber.Percent.Fun = Percentage;
 % Added 20210722, add percentage info to reduce wrong selections
 DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),num2cell(handles.Cfg.SeriesFileNumber.List.Fun),num2cell(Percentage),'UniformOutput',false);
 set(handles.popupmenuFunFileNumber,...
@@ -741,6 +747,7 @@ drawnow;
 handles.Cfg.SeriesName.T1 = handles.Cfg.Demo.SeriesNames{handles.Cfg.SeriesIndex.T1};
 [handles.Cfg.SeriesFileNumber.List.T1,Percentage] = CheckFileNumber(hObject, handles,handles.Cfg.SeriesIndex.T1);
 handles.Cfg.SeriesFileNumber.Flag.T1 = 1;
+handles.Cfg.SeriesFileNumber.Percent.T1 = Percentage;
 % Added 20210722, add percentage info to reduce wrong selections
 DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),num2cell(handles.Cfg.SeriesFileNumber.List.T1),num2cell(Percentage),'UniformOutput',false);
 set(handles.popupmenuT1FileNumber,...
@@ -1013,6 +1020,15 @@ switch Flag
         handles.Cfg.SeriesFileNumber.Flag.T1 = 1;
         handles.Cfg.SeriesFileNumber.Flag.Fun = 1;
         handles.Cfg.SeriesFileNumber.Flag.FunOther = [1];
+        handles.Cfg.SeriesFileNumber.LowLimitMode.T1 = 0; % Add lower limit mode for setting number of files for a series, Bin Lu, 20220919
+        handles.Cfg.SeriesFileNumber.LowLimitMode.Fun = 0;
+        handles.Cfg.SeriesFileNumber.LowLimitMode.FunOther = {0};
+        handles.Cfg.SeriesFileNumber.LowThreshold.T1 = 0;
+        handles.Cfg.SeriesFileNumber.LowThreshold.Fun = 0;
+        handles.Cfg.SeriesFileNumber.LowThreshold.FunOther = {0};
+        handles.Cfg.SeriesFileNumber.Percent.T1 = 0;
+        handles.Cfg.SeriesFileNumber.Percent.Fun = 0;
+        handles.Cfg.SeriesFileNumber.Percent.FunOther = {0};
         handles.Cfg.SxFunRawList = {'S2_FunRaw'};
         handles.Cfg.SxFunRawFlag = 1;
     case 2
@@ -1020,6 +1036,8 @@ switch Flag
         handles.Cfg.SeriesIndex.FunOther = [1];
         handles.Cfg.SeriesFileNumber.List.FunOther = {0};
         handles.Cfg.SeriesFileNumber.Flag.FunOther = [1];
+        handles.Cfg.SeriesFileNumber.LowLimitMode.FunOther = {0};
+        handles.Cfg.SeriesFileNumber.LowThreshold.FunOther = {0};
         handles.Cfg.SxFunRawFlag = 1;
 end
 guidata(hObject,handles);
@@ -1081,9 +1099,9 @@ if isempty(handles.Cfg.SeriesName.T1) || FunMiss || FunOtherMiss
     uiwait(msgbox({'Some sessions have not been determined, please select MR Series before run'},'Please select MR Series before run!'));
 end
 
-%% For data from DPABI_DicomSorter, the index should be removed here to match more series
+%% For data from DPABI_DicomSorter and xnat-like system, the index should be removed here to match more series
 Index = strfind(handles.Cfg.SeriesName.T1,'_');
-if ~isempty(Index) && ~isnan(str2double(handles.Cfg.SeriesName.T1(1:Index(1)-1))) && Index(1) == 5 %% Is so, the working dir was derived from DPABI_DicomSorter, series number should be removed.
+if ~isempty(Index) && ~isnan(str2double(handles.Cfg.SeriesName.T1(1:Index(1)-1)))%% Is so, the working dir was derived from DPABI_DicomSorter or xnat-like system, series number should be removed.
     SeriesT1 = handles.Cfg.SeriesName.T1(Index(1)+1:end);
     if ~handles.Cfg.AnatOnly
         SeriesFun = handles.Cfg.SeriesName.Fun(Index(1)+1:end);
@@ -1158,7 +1176,7 @@ else % Series first
 end
 
 %% Unnest the cell data of Session Lists
-MaxColumn = max(cellfun('length', T1String));  % in case the numbers of elements in each cell are different (in that case, cat functional will goes wrong)
+MaxColumn = max(cellfun('length', T1String));  % in case the numbers of elements in each cell are different (in that case, concatenate functional sessions will goes wrong)
 MinColumn = min(cellfun('length', T1String));
 if MaxColumn==1 && MinColumn==1
     T1String = cellfun(@(Series) Series{1},T1String, 'UniformOutput', false); %unnest the cell
@@ -1806,40 +1824,240 @@ set(handles.checkboxIsOtherFun,'Value',handles.Cfg.IsOtherFun);
 set(handles.editFunOtherNumber,'string',num2str(handles.Cfg.FunOtherNumber));
 set(handles.checkboxIsChangeSubID,'Value',handles.Cfg.IsChangeSubID);
 
+%T1Raw
+set(handles.popupmenuT1,'String',handles.Cfg.Demo.SeriesNames,'Value',handles.Cfg.SeriesIndex.T1);
+Percentage = handles.Cfg.SeriesFileNumber.Percent.T1;
+DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),...
+    num2cell(handles.Cfg.SeriesFileNumber.List.T1),num2cell(Percentage),'UniformOutput',false);
+set(handles.popupmenuT1FileNumber,'String',DisplayString,'Value',handles.Cfg.SeriesFileNumber.Flag.T1);
+set(handles.editT1nFile,'String',num2str(handles.Cfg.SeriesFileNumber.LowThreshold.T1));
+if handles.Cfg.SeriesFileNumber.LowLimitMode.T1 == 0
+    set(handles.popupmenuT1FileNumber,'Enable','on');
+    set(handles.radiobuttonT1FixednFile,'Value',1);
+    set(handles.radiobuttonT1ChangeablenFile,'Value',0);
+    set(handles.textMoreThanT1,'Enable','off');
+    set(handles.editT1nFile,'Enable','off');
+    set(handles.textFilesT1,'Enable','off');
+else
+    set(handles.popupmenuT1FileNumber,'Enable','off');
+    set(handles.radiobuttonT1FixednFile,'Value',0);
+    set(handles.radiobuttonT1ChangeablenFile,'Value',1);
+    set(handles.textMoreThanT1,'Enable','on');
+    set(handles.editT1nFile,'Enable','on');
+    set(handles.textFilesT1,'Enable','on');
+end
+
+%FunRaw
+set(handles.popupmenuFun,'String',handles.Cfg.Demo.SeriesNames,'Value',handles.Cfg.SeriesIndex.Fun);
+Percentage = handles.Cfg.SeriesFileNumber.Percent.Fun;
+DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),...
+    num2cell(handles.Cfg.SeriesFileNumber.List.Fun),num2cell(Percentage),'UniformOutput',false);
+set(handles.popupmenuFunFileNumber,'String',DisplayString,'Value',handles.Cfg.SeriesFileNumber.Flag.Fun);
+set(handles.editFunnFile,'String',num2str(handles.Cfg.SeriesFileNumber.LowThreshold.Fun));
+if handles.Cfg.SeriesFileNumber.LowLimitMode.Fun == 0
+    set(handles.popupmenuFunFileNumber,'Enable','on');
+    set(handles.radiobuttonFunFixednFile,'Value',1);
+    set(handles.radiobuttonFunChangeablenFile,'Value',0);
+    set(handles.textMoreThanFun,'Enable','off');
+    set(handles.editFunnFile,'Enable','off');
+    set(handles.textFilesFun,'Enable','off');
+else
+    set(handles.popupmenuFunFileNumber,'Enable','off');
+    set(handles.radiobuttonFunFixednFile,'Value',0);
+    set(handles.radiobuttonFunChangeablenFile,'Value',1);
+    set(handles.textMoreThanFun,'Enable','on');
+    set(handles.editFunnFile,'Enable','on');
+    set(handles.textFilesFun,'Enable','on');
+end
+
+%Sx_FunRaw
 if handles.Cfg.IsOtherFun  
     set(handles.popupmenuSxFunRaw,'Enable','on');
     set(handles.popupmenuFunOther,'Enable','on');
-    set(handles.popupmenuFunOtherFileNumber,'Enable','on');
     set(handles.editFunOtherNumber,'Enable','on');
+    Percentage = handles.Cfg.SeriesFileNumber.Percent.FunOther{handles.Cfg.SxFunRawFlag};
+    DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),...
+        num2cell(handles.Cfg.SeriesFileNumber.List.FunOther{handles.Cfg.SxFunRawFlag}),num2cell(Percentage),'UniformOutput',false);
+    set(handles.popupmenuFunOtherFileNumber,'String',DisplayString,...
+        'Value',handles.Cfg.SeriesFileNumber.Flag.FunOther(handles.Cfg.SxFunRawFlag));
+    set(handles.editFunOthernFile,'String',...
+        num2str(handles.Cfg.SeriesFileNumber.LowThreshold.FunOther{handles.Cfg.SxFunRawFlag}));
+    set(handles.radiobuttonFunOtherFixednFile,'Enable','on');
+    set(handles.radiobuttonFunOtherChangeablenFile,'Enable','on');
+    if handles.Cfg.SeriesFileNumber.LowLimitMode.FunOther{handles.Cfg.SxFunRawFlag} ==0
+        set(handles.popupmenuFunOtherFileNumber,'Enable','on');
+        set(handles.radiobuttonFunOtherFixednFile,'Value',1);
+        set(handles.radiobuttonFunOtherChangeablenFile,'Value',0);
+        set(handles.textMoreThanFunOther,'Enable','off');
+        set(handles.editFunOthernFile,'Enable','off');
+        set(handles.textFilesFunOther,'Enable','off');
+    else
+        set(handles.popupmenuFunOtherFileNumber,'Enable','off');
+        set(handles.radiobuttonFunOtherFixednFile,'Value',0);
+        set(handles.radiobuttonFunOtherChangeablenFile,'Value',1);
+        set(handles.textMoreThanFunOther,'Enable','on');
+        set(handles.editFunOthernFile,'Enable','on');
+        set(handles.textFilesFunOther,'Enable','on');
+    end
 else
     set(handles.popupmenuSxFunRaw,'Enable','off');
     set(handles.popupmenuFunOther,'Enable','off');
     set(handles.popupmenuFunOtherFileNumber,'Enable','off');
     set(handles.editFunOtherNumber,'Enable','off');
+    set(handles.popupmenuFunOtherFileNumber,'Enable','off');
+    set(handles.textMoreThanFunOther,'Enable','off');
+    set(handles.editFunOthernFile,'Enable','off');
+    set(handles.textFilesFunOther,'Enable','off');
+    set(handles.radiobuttonFunOtherFixednFile,'Enable','off');
+    set(handles.radiobuttonFunOtherChangeablenFile,'Enable','off');
 end
-%T1Raw
-set(handles.popupmenuT1,'String',handles.Cfg.Demo.SeriesNames);
-set(handles.popupmenuT1,'Value',handles.Cfg.SeriesIndex.T1);
-set(handles.popupmenuT1FileNumber,'String',num2cell(handles.Cfg.SeriesFileNumber.List.T1));
-set(handles.popupmenuT1FileNumber,'Value',handles.Cfg.SeriesFileNumber.Flag.T1);
-%FunRaw
-set(handles.popupmenuFun,'String',handles.Cfg.Demo.SeriesNames);
-set(handles.popupmenuFun,'Value',handles.Cfg.SeriesIndex.Fun);
-set(handles.popupmenuFunFileNumber,'String',num2cell(handles.Cfg.SeriesFileNumber.List.Fun));
-set(handles.popupmenuFunFileNumber,'Value',handles.Cfg.SeriesFileNumber.Flag.Fun);
-%Sx_FunRaw
-set(handles.popupmenuSxFunRaw,'String',handles.Cfg.SxFunRawList);
-set(handles.popupmenuSxFunRaw,'Value',handles.Cfg.SxFunRawFlag);
-set(handles.popupmenuFunOther,'String',handles.Cfg.Demo.SeriesNames);
-set(handles.popupmenuFunOther,'Value',handles.Cfg.SeriesIndex.FunOther(...
-    handles.Cfg.SxFunRawFlag));
-set(handles.popupmenuFunOtherFileNumber,'String',num2str(handles.Cfg.SeriesFileNumber.List.FunOther{...
-    handles.Cfg.SxFunRawFlag}));
-set(handles.popupmenuFunOtherFileNumber,'Value',handles.Cfg.SeriesFileNumber.Flag.FunOther(...
-    handles.Cfg.SxFunRawFlag));
+set(handles.popupmenuSxFunRaw,'String',handles.Cfg.SxFunRawList,'Value',handles.Cfg.SxFunRawFlag);
+set(handles.popupmenuFunOther,'String',handles.Cfg.Demo.SeriesNames,'Value',handles.Cfg.SeriesIndex.FunOther(handles.Cfg.SxFunRawFlag));
 drawnow
 
 
-    
-    
-    
+% --- Executes on button press in radiobuttonT1FixednFile.
+function radiobuttonT1FixednFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonT1FixednFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.T1 = ~get(handles.radiobuttonT1FixednFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonT1FixednFile
+
+
+% --- Executes on button press in radiobutton8.
+function radiobutton8_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobutton8
+
+
+% --- Executes on button press in radiobuttonT1ChangeablenFile.
+function radiobuttonT1ChangeablenFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonT1ChangeablenFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.T1 = get(handles.radiobuttonT1ChangeablenFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonT1ChangeablenFile
+
+
+
+function editT1nFile_Callback(hObject, eventdata, handles)
+% hObject    handle to editT1nFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowThreshold.T1 = str2num(get(handles.editT1nFile,'String'));
+guidata(hObject,handles);
+% Hints: get(hObject,'String') returns contents of editT1nFile as text
+%        str2double(get(hObject,'String')) returns contents of editT1nFile as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editT1nFile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editT1nFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in radiobuttonFunFixednFile.
+function radiobuttonFunFixednFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonFunFixednFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.Fun = ~get(handles.radiobuttonFunFixednFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonFunFixednFile
+
+
+% --- Executes on button press in radiobuttonFunChangeablenFile.
+function radiobuttonFunChangeablenFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonFunChangeablenFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.Fun = get(handles.radiobuttonFunChangeablenFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonFunChangeablenFile
+
+
+
+function editFunnFile_Callback(hObject, eventdata, handles)
+% hObject    handle to editFunnFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowThreshold.Fun = str2num(get(handles.editFunnFile,'String'));
+guidata(hObject,handles);
+% Hints: get(hObject,'String') returns contents of editFunnFile as text
+%        str2double(get(hObject,'String')) returns contents of editFunnFile as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editFunnFile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editFunnFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in radiobuttonFunOtherFixednFile.
+function radiobuttonFunOtherFixednFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonFunOtherFixednFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.FunOther{handles.Cfg.SxFunRawFlag} = ~get(handles.radiobuttonFunOtherFixednFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonFunOtherFixednFile
+
+
+% --- Executes on button press in radiobuttonFunOtherChangeablenFile.
+function radiobuttonFunOtherChangeablenFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonFunOtherChangeablenFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.FunOther{handles.Cfg.SxFunRawFlag} = get(handles.radiobuttonFunOtherChangeablenFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonFunOtherChangeablenFile
+
+
+
+function editFunOthernFile_Callback(hObject, eventdata, handles)
+% hObject    handle to editFunOthernFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowThreshold.FunOther{handles.Cfg.SxFunRawFlag} = str2num(get(handles.editFunOthernFile,'String'));
+guidata(hObject,handles);
+% Hints: get(hObject,'String') returns contents of editFunOthernFile as text
+%        str2double(get(hObject,'String')) returns contents of editFunOthernFile as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editFunOthernFile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editFunOthernFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
