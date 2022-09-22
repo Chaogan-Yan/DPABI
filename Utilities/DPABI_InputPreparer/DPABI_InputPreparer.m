@@ -12,7 +12,7 @@ function varargout = DPABI_InputPreparer(varargin)
 %-----------------------------------------------------------
 % Mail to Author:  <a href="larslu@foxmail.com">Bin Lu</a> 
 
-% Last Modified by GUIDE v2.5 19-Sep-2022 12:17:43
+% Last Modified by GUIDE v2.5 22-Sep-2022 16:39:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2123,4 +2123,3 @@ function editFunOthernFile_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
