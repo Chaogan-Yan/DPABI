@@ -336,7 +336,7 @@ function editFunOtherNumber_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.FunOtherNumber = str2num(get(handles.editFunOtherNumber,'String'));
 ResetCfg(hObject, handles, 2); 
-guidata(hObject,handles);
+handles = guidata(hObject);
 for iSession = 1:handles.Cfg.FunOtherNumber
         handles.Cfg.SxFunRawList{iSession} = ['S',num2str(iSession+1),'_FunRaw'];
 end
