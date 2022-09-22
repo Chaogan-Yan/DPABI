@@ -1811,14 +1811,14 @@ else
 end
 
 %Convert T1 DICOM files to NIFTI images
-for i=1:length(handles.Cfg.SubList)
-    OutputDir=[handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{i}];
+for iSub=1:length(handles.Cfg.SubList)
+    OutputDir=[handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{iSub}];
     mkdir(OutputDir);
-    DirDCM=dir([handles.Cfg.OutputDir,filesep,'T1Raw',filesep,SubjectID{i},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
-    InputFilename=[handles.Cfg.OutputDir,filesep,'T1Raw',filesep,SubjectID{i},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
+    DirDCM=dir([handles.Cfg.OutputDir,filesep,'T1Raw',filesep,SubjectID{iSub},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
+    InputFilename=[handles.Cfg.OutputDir,filesep,'T1Raw',filesep,SubjectID{iSub},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
     %YAN Chao-Gan 120817.
     y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
-    fprintf(['Converting T1 Images: ',SubjectID{i},' OK']);
+    fprintf(['Converting T1 Images: ',SubjectID{iSub},' OK']);
 end
 
 %Convert Functional DICOM files to NIFTI images
@@ -1831,14 +1831,14 @@ end
 
 if ~handles.Cfg.AnatOnly 
     for iFunSession=1:handles.Cfg.FunOtherNumber+1
-        for i=1:length(handles.Cfg.SubList)
-            OutputDir=[handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,SubjectID{i}];
+        for iSub=1:length(handles.Cfg.SubList)
+            OutputDir=[handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,SubjectID{iSub}];
             mkdir(OutputDir);
-            DirDCM=dir([handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw',filesep,SubjectID{i},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
-            InputFilename=[handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw',filesep,SubjectID{i},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
+            DirDCM=dir([handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw',filesep,SubjectID{iSub},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
+            InputFilename=[handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw',filesep,SubjectID{iSub},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
             %YAN Chao-Gan 120817.
             y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
-            fprintf(['Converting Functional Images: ',SubjectID{i},' OK']);
+            fprintf(['Converting Functional Images: ',SubjectID{iSub},' OK']);
         end
         fprintf('\n');
     end
@@ -1847,7 +1847,7 @@ end
 % Check whether DCM2NII is successful
 Flag = zeros(length(handles.Cfg.SubList));
 for iSub = 1:length(handles.Cfg.SubList)
-    if ~isempty(dir([handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{i},filesep,'*.nii']))
+    if ~isempty(dir([handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{iSub},filesep,'*.nii']))
         handles.Cfg.DCM2NIIStatus{1}{iSub,1} = 'Success';
     else
         handles.Cfg.DCM2NIIStatus{1}{iSub,1} = 'Failure';
@@ -1855,7 +1855,7 @@ for iSub = 1:length(handles.Cfg.SubList)
     end
     if ~handles.Cfg.AnatOnly
         for iSession = 1:handles.Cfg.FunOtherNumber+1
-            if ~isempty(dir([handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,SubjectID{i},filesep,'*.nii']))
+            if ~isempty(dir([handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,SubjectID{iSub},filesep,'*.nii']))
                 handles.Cfg.DCM2NIIStatus{iSession+1}{iSub,1} = 'Success';
             else
                 handles.Cfg.DCM2NIIStatus{iSession+1}{iSub,1} = 'Failure';
@@ -1864,10 +1864,10 @@ for iSub = 1:length(handles.Cfg.SubList)
         end
     end
     if Flag(iSub) == 1
-        rmdir([handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{i}],'s');
+        rmdir([handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{iSub}],'s');
         if ~handles.Cfg.AnatOnly
             for iSession = 1:handles.Cfg.FunOtherNumber+1
-                rmdir([handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,SubjectID{i}],'s');
+                rmdir([handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,SubjectID{iSub}],'s');
             end
         end
     end
@@ -2123,3 +2123,4 @@ function editFunOthernFile_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
