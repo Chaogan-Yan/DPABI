@@ -135,6 +135,10 @@ end
 if PALMSettings.TFCE
     fprintf(fid,'-T\n');
 end
+if isfield(PALMSettings,'TFCE2D') && (PALMSettings.TFCE2D) %YAN Chao-Gan 221115. TFCE2D
+    fprintf(fid,'-T\n');
+    fprintf(fid,'-tfce2D\n');
+end
 if PALMSettings.FDR
     fprintf(fid,'-fdr\n');
 end

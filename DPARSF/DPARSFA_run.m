@@ -207,8 +207,13 @@ if ~isfield(AutoDataProcessParameter,'IsCalFC')
 end
 if ~isfield(AutoDataProcessParameter,'CalFC')
     AutoDataProcessParameter.CalFC.ROIDef = {};
-elseif ~isfield(AutoDataProcessParameter.CalFC,'ROIDef')
-    AutoDataProcessParameter.CalFC.ROIDef = {};
+else
+    if ~isfield(AutoDataProcessParameter.CalFC,'ROIDef')
+        AutoDataProcessParameter.CalFC.ROIDef = {};
+    end
+    if ~isfield(AutoDataProcessParameter.CalFC,'ROISelectedIndex')
+        AutoDataProcessParameter.CalFC.ROISelectedIndex = [];
+    end
 end
 if ~isfield(AutoDataProcessParameter,'IsExtractROISignals')
     AutoDataProcessParameter.IsExtractROISignals=0; 
@@ -4368,7 +4373,7 @@ if (AutoDataProcessParameter.IsCalFC==1)
                 AutoDataProcessParameter.CalFC.ROIDefForEachSubject{i}, ...
                 [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FC_',AutoDataProcessParameter.StartingDirName,filesep,'FCMap_',AutoDataProcessParameter.SubjectID{i}], ...
                 AutoDataProcessParameter.MaskFileForEachSubject{i}, ...
-                AutoDataProcessParameter.CalFC.IsMultipleLabel);
+                AutoDataProcessParameter.CalFC.IsMultipleLabel,AutoDataProcessParameter.CalFC.ROISelectedIndex);
             
             % Fisher's r to z transformation has been performed inside y_SCA
             
@@ -4392,13 +4397,13 @@ if (AutoDataProcessParameter.IsExtractROISignals==1)
                 AutoDataProcessParameter.CalFC.ROIDefForEachSubject{i}, ...
                 [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_',AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}], ...
                 '', ... % Will not restrict into the brain mask in extracting ROI signals
-                AutoDataProcessParameter.CalFC.IsMultipleLabel);
+                AutoDataProcessParameter.CalFC.IsMultipleLabel,AutoDataProcessParameter.CalFC.ROISelectedIndex);
             
             
             %YAN Chao-Gan, 210119. Also Extract Center of Mass.
             y_ExtractROICenterOfMass(AutoDataProcessParameter.CalFC.ROIDefForEachSubject{i}, ...
                 [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_',AutoDataProcessParameter.StartingDirName,filesep,'ROI_CenterOfMass_',AutoDataProcessParameter.SubjectID{i}], ...
-                AutoDataProcessParameter.CalFC.IsMultipleLabel, ...
+                AutoDataProcessParameter.CalFC.IsMultipleLabel, AutoDataProcessParameter.CalFC.ROISelectedIndex, ...
                 [AutoDataProcessParameter.DataProcessDir,filesep,FunSessionPrefixSet{iFunSession},AutoDataProcessParameter.StartingDirName,filesep,AutoDataProcessParameter.SubjectID{i}]);
             
             %y_ExtractROICenterOfMass(ROIDef, OutputName, IsMultipleLabel, RefFile, Header)    

@@ -35,6 +35,23 @@ if ~isfield(Cfg,'MaskFileVolu')
     Cfg.MaskFileVolu=fullfile(Cfg.WorkingDir, 'Masks','AllResampled_BrainMask_05_91x109x91.nii');
 end
 
+if ~isfield(Cfg,'CalFC')
+    Cfg.CalFC.ROIDefVolu = {};
+else
+    if ~isfield(Cfg.CalFC,'ROIDefVolu')
+        Cfg.CalFC.ROIDefVolu = {};
+    end
+    if ~isfield(Cfg.CalFC,'ROISelectedIndexVolu')
+        Cfg.CalFC.ROISelectedIndexVolu = [];
+    end
+    if ~isfield(Cfg.CalFC,'ROISelectedIndexSurfLH')
+        Cfg.CalFC.ROISelectedIndexSurfLH = [];
+    end
+    if ~isfield(Cfg.CalFC,'ROISelectedIndexSurfRH')
+        Cfg.CalFC.ROISelectedIndexSurfRH = [];
+    end
+end
+
 Cfg.StartingDirName_Volume = ['FunVolu',Cfg.StartingDirName(8:end)];
 
 %Dynamic ALFF
@@ -400,7 +417,7 @@ if (Cfg.IsFC==1)
                         Cfg.CalFC.ROIDefSurfLH, ...
                         [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'TemporalDynamics',filesep,'ROISignals_',Cfg.StartingDirName,filesep,Cfg.SubjectID{i}], ...
                         '', ... % Will not restrict into the brain mask in extracting ROI signals
-                        Cfg.CalFC.IsMultipleLabel);
+                        Cfg.CalFC.IsMultipleLabel,Cfg.CalFC.ROISelectedIndexSurfLH);
                 end
             end
             
@@ -413,7 +430,7 @@ if (Cfg.IsFC==1)
                         Cfg.CalFC.ROIDefSurfRH, ...
                         [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'TemporalDynamics',filesep,'ROISignals_',Cfg.StartingDirName,filesep,Cfg.SubjectID{i}], ...
                         '', ... % Will not restrict into the brain mask in extracting ROI signals
-                        Cfg.CalFC.IsMultipleLabel);
+                        Cfg.CalFC.IsMultipleLabel,Cfg.CalFC.ROISelectedIndexSurfRH);
                 end
             end
             
@@ -423,7 +440,7 @@ if (Cfg.IsFC==1)
                 Cfg.CalFC.ROIDefVolu, ...
                 [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'TemporalDynamics',filesep,'ROISignals_',Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i}], ...
                 '', ... % Will not restrict into the brain mask in extracting ROI signals
-                Cfg.CalFC.IsMultipleLabel);
+                Cfg.CalFC.IsMultipleLabel,Cfg.CalFC.ROISelectedIndexVolu);
             end
             
             ROISignals = [ROISignalsSurfLH, ROISignalsSurfRH, ROISignalsVolu];

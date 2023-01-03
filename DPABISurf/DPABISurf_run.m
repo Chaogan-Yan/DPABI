@@ -55,11 +55,17 @@ end
 if ~isfield(Cfg,'IsNeedConvertT1DCM2IMG')
     Cfg.IsNeedConvertT1DCM2IMG=0; 
 end
+if ~isfield(Cfg,'IsNeedConvertDwiDCM2IMG')
+    Cfg.IsNeedConvertDwiDCM2IMG=0; 
+end
 if ~isfield(Cfg,'RemoveFirstTimePoints')
     Cfg.RemoveFirstTimePoints=0; 
 end
 if ~isfield(Cfg,'IsConvert2BIDS')
     Cfg.IsConvert2BIDS=0; 
+end
+if ~isfield(Cfg,'Isfastsurfer')
+    Cfg.Isfastsurfer=0; 
 end
 if ~isfield(Cfg,'IsSliceTiming')
     Cfg.IsSliceTiming=0; 
@@ -70,14 +76,23 @@ end
 if ~isfield(Cfg,'Isfmriprep')
     Cfg.Isfmriprep=0; 
 end
+if ~isfield(Cfg,'AlreadyHaveFreesurferResults')
+    Cfg.AlreadyHaveFreesurferResults=0; 
+end
 if ~isfield(Cfg,'IsLowMem')
     Cfg.IsLowMem=0; 
 end
 if ~isfield(Cfg,'IsOrganizefmriprepResults')
     Cfg.IsOrganizefmriprepResults=0; 
 end
-if ~isfield(Cfg,'IsWarpMasksIntoIndividualSpace')
-    Cfg.IsWarpMasksIntoIndividualSpace=0; 
+if ~isfield(Cfg,'IsSegmentSubregions')
+    Cfg.IsSegmentSubregions=0; 
+end
+% if ~isfield(Cfg,'IsWarpMasksIntoIndividualSpace') %!!!
+%     Cfg.IsWarpMasksIntoIndividualSpace=0; 
+% end
+if ~isfield(Cfg,'IsBasedOnFunSurf')
+    Cfg.IsBasedOnFunSurf=0; 
 end
 if ~isfield(Cfg,'MaskFileSurfLH')
     Cfg.MaskFileSurfLH = fullfile(DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_cortex.label.gii');
@@ -103,6 +118,9 @@ end
 if ~isfield(Cfg,'IsProcessVolumeSpace')
     Cfg.IsProcessVolumeSpace=1; 
 end
+if ~isfield(Cfg,'IsNormalize') 
+    Cfg.IsNormalize=0; 
+end
 if ~isfield(Cfg,'IsSmooth') 
     Cfg.IsSmooth=0; 
 end
@@ -126,8 +144,19 @@ if ~isfield(Cfg,'IsCalFC')
 end
 if ~isfield(Cfg,'CalFC')
     Cfg.CalFC.ROIDefVolu = {};
-elseif ~isfield(Cfg.CalFC,'ROIDefVolu')
-    Cfg.CalFC.ROIDefVolu = {};
+else
+    if ~isfield(Cfg.CalFC,'ROIDefVolu')
+        Cfg.CalFC.ROIDefVolu = {};
+    end
+    if ~isfield(Cfg.CalFC,'ROISelectedIndexVolu')
+        Cfg.CalFC.ROISelectedIndexVolu = [];
+    end
+    if ~isfield(Cfg.CalFC,'ROISelectedIndexSurfLH')
+        Cfg.CalFC.ROISelectedIndexSurfLH = [];
+    end
+    if ~isfield(Cfg.CalFC,'ROISelectedIndexSurfRH')
+        Cfg.CalFC.ROISelectedIndexSurfRH = [];
+    end
 end
 if ~isfield(Cfg,'IsExtractROISignals')
     Cfg.IsExtractROISignals=0; 
@@ -194,6 +223,38 @@ if (Cfg.IsNeedConvertT1DCM2IMG==1)
             y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
 
             fprintf(['Converting T1 Images:',Cfg.SubjectID{i},' OK']);
+        end
+        fprintf('\n');
+    end
+end
+
+
+%Convert Dwi DICOM files to NIFTI images
+if (Cfg.IsNeedConvertDwiDCM2IMG==1)
+    %Check if exist S2_DwiRaw, that means mutiple run of Dwi image exist
+    if 7==exist([Cfg.WorkingDir,filesep,'S2_DwiRaw'],'dir')
+        DwiSessionNumber = Cfg.FunctionalSessionNumber;
+    else
+        DwiSessionNumber = 1;
+    end
+    
+    for iFunSession=1:DwiSessionNumber
+        cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'DwiRaw']);
+        for i=1:Cfg.SubjectNum
+            OutputDir=[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'DwiImg',filesep,Cfg.SubjectID{i}];
+            mkdir(OutputDir);
+            DirDCM=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'DwiRaw',filesep,Cfg.SubjectID{i},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([Cfg.WorkingDir,filesep,'FunRaw',filesep,Cfg.SubjectID{i},filesep,'*.*']);
+            if strcmpi(DirDCM(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+                StartIndex=4;
+            else
+                StartIndex=3;
+            end
+            InputFilename=[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'DwiRaw',filesep,Cfg.SubjectID{i},filesep,DirDCM(StartIndex).name];
+
+            %YAN Chao-Gan 120817.
+            y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
+
+            fprintf(['Converting Dwi Images:',Cfg.SubjectID{i},' OK']);
         end
         fprintf('\n');
     end
@@ -267,17 +328,43 @@ if isfield(Cfg,'TR')
                 VoxelSize = zeros(Cfg.SubjectNum,Cfg.FunctionalSessionNumber,3);
                 for iFunSession=1:Cfg.FunctionalSessionNumber
                     for i=1:Cfg.SubjectNum
-                        cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i}]);
-                        DirImg=dir('*.img');
-                        if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii
-                            DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
-                            if length(DirImg)==1
-                                gunzip(DirImg(1).name);
-                                delete(DirImg(1).name);
+
+
+                        if strcmpi(Cfg.StartingDirName,'BIDS') || strcmpi(Cfg.StartingDirName,'fmriprep') % YAN Chao-Gan, 221002. Also detect TR if start with BIDS or fmriprep
+
+                            if Cfg.FunctionalSessionNumber==1
+                                cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'func']);
+                            else
+                                cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'ses-',num2str(iFunSession),filesep,'func']);
                             end
-                            DirImg=dir('*.nii');
+
+                            DirImg=dir('*_bold.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                            if length(DirImg)>=1
+                                gunzip(DirImg(1).name,tempdir);
+                                ImgFileName=fullfile(tempdir,DirImg(1).name(1:end-3));
+                            else
+                                DirImg=dir('*_bold.nii');
+                                ImgFileName=DirImg(1).name;
+                            end
+                            Nii  = nifti(ImgFileName);
+
+
+                        else
+
+                            cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i}]);
+                            DirImg=dir('*.img');
+                            if isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files. % Either in .nii.gz or in .nii
+                                DirImg=dir('*.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
+                                if length(DirImg)==1
+                                    gunzip(DirImg(1).name);
+                                    delete(DirImg(1).name);
+                                end
+                                DirImg=dir('*.nii');
+                            end
+                            Nii  = nifti(DirImg(1).name);
                         end
-                        Nii  = nifti(DirImg(1).name);
+
+
                         if (~isfield(Nii.timing,'tspace'))
                             error('Can NOT retrieve the TR information from the NIfTI images');
                         end
@@ -371,7 +458,18 @@ if (Cfg.RemoveFirstTimePoints>0)
     for iFunSession=1:Cfg.FunctionalSessionNumber
         cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName]);
         parfor i=1:Cfg.SubjectNum
-            cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i}]);
+
+
+            if strcmpi(Cfg.StartingDirName,'BIDS')  % YAN Chao-Gan, 221002. Also delete first time points if start with BIDS
+                if Cfg.FunctionalSessionNumber==1
+                    cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'func']);
+                else
+                    cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'ses-',num2str(iFunSession),filesep,'func']);
+                end
+            else
+                cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i}]);
+            end
+
             DirImg=dir('*.img');
             if ~isempty(DirImg)  %YAN Chao-Gan, 111114. Also support .nii files.
                 if Cfg.TimePoints>0 && length(DirImg)~=Cfg.TimePoints % Will not check if TimePoints set to 0. YAN Chao-Gan 120806.
@@ -444,6 +542,96 @@ SubjectIDString=[];
 for i=1:Cfg.SubjectNum
     SubjectIDString = sprintf('%s %s',SubjectIDString,Cfg.SubjectID{i});
 end
+
+
+
+
+
+
+%Preprocessing T1 image with fastsurfer
+if (Cfg.Isfastsurfer==1)
+    % Let's stop parpool before entering fastsurfer
+
+    % YAN Chao-Gan, 190312. To be compatible with early matlab versions
+    PCTVer = ver('distcomp');
+    if ~isempty(PCTVer)
+        FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+        if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+            CurrentSize_MatlabPool = matlabpool('size');
+            if (CurrentSize_MatlabPool~=0)
+                matlabpool close
+            end
+        else
+            if ~isempty(gcp('nocreate'))
+                delete(gcp('nocreate'));
+            end
+        end
+    end
+    
+
+    
+    %!docker run -ti --rm -v /mnt/Data45/RfMRILab/yan/YAN_Work/DPABIUpdating/Program/DPABI_V6.1_220101/DPABISurf/FreeSurferLicense/license.txt:/opt/freesurfer/license.txt -v /mnt/Data45/RfMRILab/yan/YAN_Work/DPABIUpdating/DPABISurf/FastSurferDev/Work/datatest2:/data  cgyan/dpabidev /opt/fastsurfer/run_fastsurfer.sh --fs_license /opt/freesurfer/license.txt --t1 /data/BIDS/sub-Sub001/anat/sub-Sub001_T1w.nii --sid sub-Sub001 --sd /data/freesurfer --threads 1
+
+
+    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+        Command=sprintf('parallel -j %g /opt/fastsurfer/run_fastsurfer.sh --fs_license /opt/freesurfer/license.txt --surfreg --sd %s/freesurfer', Cfg.ParallelWorkersNumber,Cfg.WorkingDir);
+    else
+        Command=sprintf('%s cgyan/fastsurfer parallel -j %g /fastsurfer/run_fastsurfer.sh --fs_license /opt/freesurfer/license.txt --surfreg --sd /data/freesurfer', CommandInit, Cfg.ParallelWorkersNumber );
+    end
+
+    if Cfg.ParallelWorkersNumber~=0
+        Command = sprintf('%s --threads 1', Command);
+    end
+
+    DirSessions=dir([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{1},filesep,'ses*']);
+    if length(DirSessions)==0
+        if exist([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{1},filesep,'anat',filesep,Cfg.SubjectID{1},'_T1w.nii.gz'])
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command = sprintf('%s --t1 %s/BIDS/{1}/anat/{1}_T1w.nii.gz', Command,Cfg.WorkingDir); %Specify the T1 image for fastsurfer
+            else
+                Command = sprintf('%s --t1 /data/BIDS/{1}/anat/{1}_T1w.nii.gz', Command); %Specify the T1 image for fastsurfer
+            end
+        elseif exist([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{1},filesep,'anat',filesep,Cfg.SubjectID{1},'_T1w.nii'])
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command = sprintf('%s --t1 %s/BIDS/{1}/anat/{1}_T1w.nii', Command,Cfg.WorkingDir); %Specify the T1 image for fastsurfer
+            else
+                Command = sprintf('%s --t1 /data/BIDS/{1}/anat/{1}_T1w.nii', Command); %Specify the T1 image for fastsurfer
+            end
+        else
+            error([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{1},filesep,'anat',filesep,Cfg.SubjectID{1},'_T1w.nii or .nii.gz does not exist!'])
+        end
+    else
+        if exist([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{1},filesep,'ses-1',filesep,'anat',filesep,Cfg.SubjectID{1},'_ses-1_T1w.nii.gz'])
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command = sprintf('%s --t1 %s/BIDS/{1}/ses-1/anat/{1}_ses-1_T1w.nii.gz', Command,Cfg.WorkingDir); %Specify the T1 image for fastsurfer
+            else
+                Command = sprintf('%s --t1 /data/BIDS/{1}/ses-1/anat/{1}_ses-1_T1w.nii.gz', Command); %Specify the T1 image for fastsurfer
+            end
+        elseif exist([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{1},filesep,'ses-1',filesep,'anat',filesep,Cfg.SubjectID{1},'_ses-1_T1w.nii'])
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command = sprintf('%s --t1 %s/BIDS/{1}/ses-1/anat/{1}_ses-1_T1w.nii', Command,Cfg.WorkingDir); %Specify the T1 image for fastsurfer
+            else
+                Command = sprintf('%s --t1 /data/BIDS/{1}/ses-1/anat/{1}_ses-1_T1w.nii', Command); %Specify the T1 image for fastsurfer
+            end
+        else
+            error([Cfg.WorkingDir,filesep,'BIDS',filesep,Cfg.SubjectID{1},filesep,'ses-1',filesep,'anat',filesep,Cfg.SubjectID{1},'_ses-1_T1w.nii or .nii.gz does not exist!'])
+        end
+    end
+
+
+
+    Command = sprintf('%s --sid {1} ::: %s', Command, SubjectIDString);
+
+    fprintf('Preprocessing T1 image with fastsurfer, this process is very time consuming, please be patient...\n');
+
+    system(Command);
+
+end
+
+
+
+
+
 
 
 
@@ -535,10 +723,27 @@ if (Cfg.Isfmriprep==1)
     
     if ~exist([Cfg.WorkingDir,filesep,'fmriprep'],'dir') % If it's the first time to run fmriprep
         
+        %Copy fsaverage and fsaverage5 %YAN Chao-Gan, 221018.
+        mkdir(fullfile(Cfg.WorkingDir,'fmriprep','sourcedata','freesurfer'));
         if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-            Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/fsl/5.0 && parallel -j %g /usr/local/miniconda/bin/fmriprep %s/BIDS %s participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
+            Command=sprintf('cp -rf /opt/freesurfer/subjects/fsaverage %s/fmriprep/sourcedata/freesurfer/fsaverage', Cfg.WorkingDir);
         else
-            Command=sprintf('%s cgyan/dpabi parallel -j %g /usr/local/miniconda/bin/fmriprep /data/BIDS /data participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
+            Command=sprintf('%s cgyan/dpabi cp -rf /opt/freesurfer/subjects/fsaverage /data/fmriprep/sourcedata/freesurfer/fsaverage', CommandInit);
+        end
+        system(Command);
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('cp -rf /opt/freesurfer/subjects/fsaverage5 %s/fmriprep/sourcedata/freesurfer/fsaverage5', Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cgyan/dpabi cp -rf /opt/freesurfer/subjects/fsaverage5 /data/fmriprep/sourcedata/freesurfer/fsaverage5', CommandInit);
+        end
+        system(Command);
+
+        
+        
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/fsl-6.0.5.1/lib && parallel -j %g /opt/conda/bin/fmriprep %s/BIDS %s/fmriprep participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cgyan/dpabi parallel -j %g /opt/conda/bin/fmriprep /data/BIDS /data/fmriprep participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber);
         end
         
         if Cfg.ParallelWorkersNumber~=0
@@ -561,7 +766,7 @@ if (Cfg.Isfmriprep==1)
         if strcmpi(Cfg.Normalize.VoxelSize(end-1:end),'mm')
             Cfg.Normalize.VoxelSize=Cfg.Normalize.VoxelSize(1); %Change 1mm to 1; 2mm to 2.
         end
-        Command = sprintf('%s --output-spaces fsaverage5 MNI152NLin2009cAsym:res-%s', Command, Cfg.Normalize.VoxelSize);
+        Command = sprintf('%s --output-spaces fsaverage5 MNI152NLin2009cAsym:res-%s fsnative T1w', Command, Cfg.Normalize.VoxelSize); %YAN Chao-Gan, 221204. Also output native results. Command = sprintf('%s --output-spaces fsaverage5 MNI152NLin2009cAsym:res-%s', Command, Cfg.Normalize.VoxelSize);
 
         if Cfg.IsLowMem==1
             Command = sprintf('%s --low-mem', Command);
@@ -569,6 +774,15 @@ if (Cfg.Isfmriprep==1)
         
         if Cfg.FunctionalSessionNumber==0 %YAN Chao-Gan, 210414. If no anatomical images
             Command = sprintf('%s --anat-only', Command);
+        end
+
+
+        if isfield(Cfg,'AlreadyHaveFreesurferResults') && Cfg.AlreadyHaveFreesurferResults==1 %YAN Chao-Gan, 221007. If Already Have Freesurfer Results. E.g., from fastsurfer outputs
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command = sprintf('%s --fs-subjects-dir %s/freesurfer', Command,Cfg.WorkingDir);
+            else
+                Command = sprintf('%s --fs-subjects-dir /data/freesurfer', Command);
+            end
         end
         
         Command = sprintf('%s -w /data/fmriprepwork/{1}', Command); %Specify the working dir for fmriprep
@@ -593,25 +807,213 @@ if (Cfg.Isfmriprep==1)
         error('Error detected during running fmriprep, please check!');
     end
     
+    
+    if exist([Cfg.WorkingDir,filesep,'fmriprep',filesep,'sourcedata'],'dir')
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('mv %s/fmriprep/sourcedata/freesurfer %s/freesurfer', Cfg.WorkingDir, Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cgyan/dpabi mv /data/fmriprep/sourcedata/freesurfer /data/freesurfer', CommandInit);
+        end
+        system(Command);
+        
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('rm -rf %s/fmriprep/sourcedata', Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cgyan/dpabi rm -rf /data/fmriprep/sourcedata', CommandInit);
+        end
+        system(Command);
+
+    end
+    
+
+    if ~(isdeployed && (isunix && (~ismac))) % Give permission
+        Command=sprintf('%s cgyan/dpabi chmod -R 777 /data/fmriprep/', CommandInit);
+        system(Command);
+    end
+    
     Cfg.StartingDirName = 'fmriprep';
 end
 
 
-
 if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-    CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', Cfg.WorkingDir);
+    CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ');
+    CommandParallel=sprintf('%s parallel -j %g', CommandInit, Cfg.ParallelWorkersNumber);
+    WorkingDir=Cfg.WorkingDir;
 else
     CommandInit=sprintf('%s -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', CommandInit);
+    CommandParallel=sprintf('%s parallel -j %g', CommandInit, Cfg.ParallelWorkersNumber );
+    WorkingDir='/data';
 end
 
 
 %Organize the results generated by fmriprep
 if (Cfg.IsOrganizefmriprepResults==1)
+    
+    if ~exist([Cfg.WorkingDir,filesep,'freesurfer',filesep,'fsaverage'],'dir') %Check if /data/freesurfer/fsaverage exist
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('cp -rf /opt/freesurfer/subjects/fsaverage %s/freesurfer/fsaverage', Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cp -rf /opt/freesurfer/subjects/fsaverage /data/freesurfer/fsaverage', CommandInit);
+        end
+        system(Command);
+    end
+    
+    if ~exist([Cfg.WorkingDir,filesep,'freesurfer',filesep,'fsaverage5'],'dir') %Check if /data/freesurfer/fsaverage5 exist
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('cp -rf /opt/freesurfer/subjects/fsaverage5 %s/freesurfer/fsaverage5', Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cp -rf /opt/freesurfer/subjects/fsaverage5 /data/freesurfer/fsaverage5', CommandInit);
+        end
+        system(Command);
+    end
+    
     y_Organize_fmriprep(Cfg);
-    Cfg.StartingDirName = 'FunSurfW';
+    if Cfg.IsBasedOnFunSurf==1
+        Cfg.StartingDirName = 'FunSurf';
+    else
+        Cfg.StartingDirName = 'FunSurfW';
+    end
 end
 
 Cfg.StartingDirName_Volume = ['FunVolu',Cfg.StartingDirName(8:end)];
+
+
+
+
+% Segment Subregions with freesurfer 7.3+
+if (Cfg.IsSegmentSubregions==1)
+    if ispc
+        CommandTemp=sprintf('docker run -i --rm -v %s:/usr/local/freesurfer/7.3.2/license.txt -v %s:/data ', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), Cfg.WorkingDir);
+    else
+        CommandTemp=sprintf('docker run -ti --rm -v %s:/usr/local/freesurfer/7.3.2/license.txt -v %s:/data ', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), Cfg.WorkingDir);
+    end
+
+    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+        Command=sprintf('export SUBJECTS_DIR=%s/freesurfer && parallel -j %g segment_subregions thalamus --cross {1} ::: %s', Cfg.ParallelWorkersNumber, SubjectIDString);
+    else
+        Command=sprintf('%s -e SUBJECTS_DIR=/data/freesurfer cgyan/freesurfer parallel -j %g segment_subregions thalamus --cross {1} ::: %s', CommandTemp, Cfg.ParallelWorkersNumber,SubjectIDString);
+    end
+    fprintf('Segment thalamus subregions with freesurfer, please be patient...\n');
+    system(Command);
+
+
+    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+        Command=sprintf('export SUBJECTS_DIR=%s/freesurfer && parallel -j %g segment_subregions hippo-amygdala --cross {1} ::: %s', Cfg.ParallelWorkersNumber, SubjectIDString);
+    else
+        Command=sprintf('%s -e SUBJECTS_DIR=/data/freesurfer cgyan/freesurfer parallel -j %g segment_subregions hippo-amygdala --cross {1} ::: %s', CommandTemp, Cfg.ParallelWorkersNumber,SubjectIDString);
+    end
+    fprintf('Segment hippo-amygdala subregions with freesurfer, please be patient...\n');
+    system(Command);
+
+    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+        Command=sprintf('export SUBJECTS_DIR=%s/freesurfer && parallel -j %g segment_subregions brainstem --cross {1} ::: %s', Cfg.ParallelWorkersNumber, SubjectIDString);
+    else
+        Command=sprintf('%s -e SUBJECTS_DIR=/data/freesurfer cgyan/freesurfer parallel -j %g segment_subregions brainstem --cross {1} ::: %s', CommandTemp, Cfg.ParallelWorkersNumber,SubjectIDString);
+    end
+    fprintf('Segment brainstem subregions with freesurfer, please be patient...\n');
+    system(Command);
+
+    
+    %Write table
+    SegTable=[];
+    for i=1:Cfg.SubjectNum
+        
+        SubjectID={Cfg.SubjectID{i}};
+        OneSub=table(SubjectID);
+        
+        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','lh.hippoSfVolumes.txt'),'ReadRowNames',true);
+        SegVolume=rows2vars(SegVolume);
+        SegVolume=removevars(SegVolume,'OriginalVariableNames');
+        VarName=SegVolume.Properties.VariableNames;
+        VarName = append('Left-',VarName);
+        SegVolume=renamevars(SegVolume,1:width(SegVolume),VarName);
+        SegVolume.SubjectID={Cfg.SubjectID{i}};
+        OneSub=join(OneSub,SegVolume);
+        
+        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','rh.hippoSfVolumes.txt'),'ReadRowNames',true);
+        SegVolume=rows2vars(SegVolume);
+        SegVolume=removevars(SegVolume,'OriginalVariableNames');
+        VarName=SegVolume.Properties.VariableNames;
+        VarName = append('Right-',VarName);
+        SegVolume=renamevars(SegVolume,1:width(SegVolume),VarName);
+        SegVolume.SubjectID={Cfg.SubjectID{i}};
+        OneSub=join(OneSub,SegVolume);
+        
+        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','lh.amygNucVolumes.txt'),'ReadRowNames',true);
+        SegVolume=rows2vars(SegVolume);
+        SegVolume=removevars(SegVolume,'OriginalVariableNames');
+        VarName=SegVolume.Properties.VariableNames;
+        VarName = append('Left-',VarName);
+        SegVolume=renamevars(SegVolume,1:width(SegVolume),VarName);
+        SegVolume.SubjectID={Cfg.SubjectID{i}};
+        OneSub=join(OneSub,SegVolume);
+        
+        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','rh.amygNucVolumes.txt'),'ReadRowNames',true);
+        SegVolume=rows2vars(SegVolume);
+        SegVolume=removevars(SegVolume,'OriginalVariableNames');
+        VarName=SegVolume.Properties.VariableNames;
+        VarName = append('Right-',VarName);
+        SegVolume=renamevars(SegVolume,1:width(SegVolume),VarName);
+        SegVolume.SubjectID={Cfg.SubjectID{i}};
+        OneSub=join(OneSub,SegVolume);
+        
+        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','ThalamicNuclei.volumes.txt'),'ReadRowNames',true);
+        SegVolume=rows2vars(SegVolume);
+        SegVolume=removevars(SegVolume,'OriginalVariableNames');
+        SegVolume.SubjectID={Cfg.SubjectID{i}};
+        OneSub=join(OneSub,SegVolume);
+        
+        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','brainstemSsLabels.volumes.txt'),'ReadRowNames',true);
+        SegVolume=rows2vars(SegVolume);
+        SegVolume=removevars(SegVolume,'OriginalVariableNames');
+        SegVolume.SubjectID={Cfg.SubjectID{i}};
+        OneSub=join(OneSub,SegVolume);
+        
+        SegTable=[SegTable;OneSub];
+    end
+ 
+    writetable(SegTable,fullfile(Cfg.WorkingDir,'Results','AnatVolu','Anat_Segment_Subregions_Volume.csv'),'Delimiter','\t');
+    
+    
+     %Convert to .nii
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.CA.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.CA.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.FS60.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.FS60.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.HBT.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.HBT.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+     
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.CA.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.CA.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.FS60.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.FS60.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.HBT.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.HBT.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/ThalamicNuclei.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_ThalamicNuclei.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/brainstemSsLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_brainstemSsLabels.FSvoxelSpace.nii.gz ::: %s', ...
+         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+     system(Command);
+
+end
+
+
+
+
 
 % The parpool might be shut down, restart it.
 % if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
@@ -635,15 +1037,49 @@ end
 
 
 
+%%%%%%%
+%Genereated the masks based on Segmentation results
+%Reslice WM and CSF masks to functional space.
+% YAN Chao-Gan, 221205.
+if (Cfg.IsCovremove==1) && (Cfg.IsBasedOnFunSurf==1) %(strcmpi(Cfg.Covremove.Timing,'AfterNormalize')))
+    if ~(2==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_ThrdMask_',Cfg.SubjectID{1},'_WM.nii'],'file'))
+        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks'],'dir'))
+            mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks']);
+        end
+        % If have not generated previously.
+        parfor i=1:Cfg.SubjectNum
+            RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+
+            [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
+
+            %Use new logic according to fmriprep changes
+            DirFile=dir(fullfile(Cfg.WorkingDir,'Results','AnatVolu','T1wSpace',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*label-WM_probseg.nii*']));
+            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu','T1wSpace',Cfg.SubjectID{i},DirFile(1).name);
+            [OutVolume OutHead] = y_Reslice(File,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_',Cfg.SubjectID{i},'_WM.nii'],RefVox,1, RefFile);
+            OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
+            y_Write(OutVolume,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_',Cfg.SubjectID{i},'_WM.nii']);
+            OutHead.pinfo = [1;0;0]; OutHead.dt    =[2,0];
+            y_Write(OutVolume>Cfg.Covremove.WM.MaskThreshold,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_ThrdMask_',Cfg.SubjectID{i},'_WM.nii']);
+            
+            %Use new logic according to fmriprep changes
+            DirFile=dir(fullfile(Cfg.WorkingDir,'Results','AnatVolu','T1wSpace',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*label-CSF_probseg.nii*']));
+            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu','T1wSpace',Cfg.SubjectID{i},DirFile(1).name);
+            [OutVolume OutHead] = y_Reslice(File,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_',Cfg.SubjectID{i},'_CSF.nii'],RefVox,1, RefFile);
+            OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
+            y_Write(OutVolume,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_',Cfg.SubjectID{i},'_CSF.nii']);
+            OutHead.pinfo = [1;0;0]; OutHead.dt    =[2,0];
+            y_Write(OutVolume>Cfg.Covremove.CSF.MaskThreshold,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_ThrdMask_',Cfg.SubjectID{i},'_CSF.nii']);
+        end
+    end
+end
 
 
 
 
 %%%%%%%
 %Genereated the masks based on Segmentation results
-% YAN Chao-Gan, 140617
 %Reslice WM and CSF masks to MNI functional space.
-if ((Cfg.IsCovremove==1) && (strcmpi(Cfg.Covremove.Timing,'AfterNormalize')))
+if (Cfg.IsCovremove==1) && (Cfg.IsBasedOnFunSurf==0) %&& (strcmpi(Cfg.Covremove.Timing,'AfterNormalize')))
     if ~(2==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{1},'_WM.nii'],'file'))
         if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks'],'dir'))
             mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks']);
@@ -660,26 +1096,18 @@ if ((Cfg.IsCovremove==1) && (strcmpi(Cfg.Covremove.Timing,'AfterNormalize')))
             RefFile=[Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,RefFile(1).name];
             [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
 
-%             File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*_space-MNI152NLin2009cAsym_label-WM_probseg.nii.gz']);
-%             if ~exist(File,'file')
-%                 File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*_space-MNI152NLin2009cAsym_label-WM_probseg.nii']);
-%             end
             %Use new logic according to fmriprep changes
-            DirFile=dir(fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*_space-MNI152NLin2009cAsym_*label-WM_probseg.nii*']));
-            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},DirFile(1).name);
+            DirFile=dir(fullfile(Cfg.WorkingDir,'Results','AnatVolu','MNISpace',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*_space-MNI152NLin2009cAsym_*label-WM_probseg.nii*']));
+            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu','MNISpace',Cfg.SubjectID{i},DirFile(1).name);
             [OutVolume OutHead] = y_Reslice(File,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',Cfg.SubjectID{i},'_WM.nii'],RefVox,1, RefFile);
             OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
             y_Write(OutVolume,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',Cfg.SubjectID{i},'_WM.nii']);
             OutHead.pinfo = [1;0;0]; OutHead.dt    =[2,0];
             y_Write(OutVolume>Cfg.Covremove.WM.MaskThreshold,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_WM.nii']);
             
-%             File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*_space-MNI152NLin2009cAsym_label-CSF_probseg.nii.gz']);
-%             if ~exist(File,'file')
-%                 File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*_space-MNI152NLin2009cAsym_label-CSF_probseg.nii']);
-%             end
             %Use new logic according to fmriprep changes
-            DirFile=dir(fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*_space-MNI152NLin2009cAsym_*label-CSF_probseg.nii*']));
-            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu',Cfg.SubjectID{i},DirFile(1).name);
+            DirFile=dir(fullfile(Cfg.WorkingDir,'Results','AnatVolu','MNISpace',Cfg.SubjectID{i},[Cfg.SubjectID{i},'*_space-MNI152NLin2009cAsym_*label-CSF_probseg.nii*']));
+            File=fullfile(Cfg.WorkingDir,'Results','AnatVolu','MNISpace',Cfg.SubjectID{i},DirFile(1).name);
             [OutVolume OutHead] = y_Reslice(File,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',Cfg.SubjectID{i},'_CSF.nii'],RefVox,1, RefFile);
             OutHead.pinfo = [1;0;0]; OutHead.dt    =[16,0];
             y_Write(OutVolume,OutHead,[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_',Cfg.SubjectID{i},'_CSF.nii']);
@@ -691,9 +1119,9 @@ end
 
 
 %%%%%%%%
-% If don't need to Warp into original space, then check if the masks are appropriate and resample if not.
-% YAN Chao-Gan, 120827.
-if (Cfg.IsWarpMasksIntoIndividualSpace==0) && ((Cfg.IsCalALFF==1)||( (Cfg.IsCovremove==1) && (strcmpi(Cfg.Covremove.Timing,'AfterNormalize')) )||(Cfg.IsCalReHo==1)||(Cfg.IsCalDegreeCentrality==1)||(Cfg.IsCalFC==1)) %||(Cfg.IsCalVMHC==1)||(Cfg.IsCWAS==1))
+% Warp the common-used masks into original space
+% YAN Chao-Gan, 221205.
+if (Cfg.IsBasedOnFunSurf==1) && ((Cfg.IsCalALFF==1)||(Cfg.IsCovremove==1)||(Cfg.IsCalReHo==1)||(Cfg.IsCalDegreeCentrality==1)||(Cfg.IsCalFC==1)) 
     MasksName{1,1}=[TemplatePath,filesep,'BrainMask_05_91x109x91.img'];
     MasksName{2,1}=[TemplatePath,filesep,'CsfMask_07_91x109x91.img'];
     MasksName{3,1}=[TemplatePath,filesep,'WhiteMask_09_91x109x91.img'];
@@ -701,8 +1129,81 @@ if (Cfg.IsWarpMasksIntoIndividualSpace==0) && ((Cfg.IsCalALFF==1)||( (Cfg.IsCovr
     if (isfield(Cfg,'MaskFileVolu')) && (~isempty(Cfg.MaskFileVolu)) && (~isequal(Cfg.MaskFileVolu, 'Default'))
         MasksName{5,1}=Cfg.MaskFileVolu;
     end
-    if ~(7==exist([Cfg.WorkingDir,filesep,'Masks'],'dir'))
-        mkdir([Cfg.WorkingDir,filesep,'Masks']);
+    if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_FunSpace'],'dir'))
+        mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_FunSpace']);
+    end
+
+    for i=1:Cfg.SubjectNum
+
+        RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+
+        [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
+
+        TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+        Interpolation='MultiLabel';
+        Dimensionality=3;
+        InputImageType=0;
+        DefaultValue=0;
+        IsFloat0=0;
+        DockerName='cgyan/dpabi';
+
+        for iMask=1:length(MasksName)
+            iROIDef = MasksName{iMask};
+
+            if exist(iROIDef,'file')==2 % MNI Mask files need to be warped
+                SourceFile=iROIDef;
+                [pathstr, name, ext] = fileparts(iROIDef);
+                MaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep,'Masks_FunSpace',filesep,'FunSpace_',Cfg.SubjectID{i},'_',name,'.nii'];
+                fprintf('\nWarp Masks (%s) for "%s" to individual space by ANTs.\n',iROIDef, Cfg.SubjectID{i});
+                y_WarpByANTs(SourceFile,MaskName,RefFile,TransformFile,Interpolation,Dimensionality,InputImageType,DefaultValue,IsFloat0,DockerName)
+                %y_WarpByANTs(SourceFile,OutFile,RefFile,TransformFile,Interpolation,Dimensionality,InputImageType,DefaultValue,IsFloat0,DockerName)
+                MaskName = replace(MaskName,Cfg.SubjectID{i},'{SubjectID}');
+                MaskName = replace(MaskName,Cfg.WorkingDir,'{WorkingDir}');
+                iROIDef=MaskName;
+            elseif (ischar(iROIDef)) && ~isempty(strfind(iROIDef,'{SubjectID}')) % Process the individual ROI from an expression
+                NewStrDef = replace(iROIDef,'{SubjectID}',Cfg.SubjectID{i});
+                NewStrDef = replace(NewStrDef,'{WorkingDir}',Cfg.WorkingDir);
+                if exist(NewStrDef,'file')==2
+                    [MaskData,MaskVox,MaskHeader]=y_ReadRPI(NewStrDef);
+                    if ~isequal(size(MaskData), size(RefData))
+                        fprintf('\nReslice %s Mask (%s) for "%s" since the dimension of mask mismatched the dimension of the target data.\n',NewStrDef, Cfg.SubjectID{i});
+                        [pathstr, name, ext] = fileparts(NewStrDef);
+                        MaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep,'Masks_FunSpace',filesep,'FunSpace_',Cfg.SubjectID{i},'_',name,'.nii'];
+                        y_Reslice(NewStrDef,MaskName,[],0, RefFile);
+                        MaskName = replace(MaskName,Cfg.SubjectID{i},'{SubjectID}');
+                        MaskName = replace(MaskName,Cfg.WorkingDir,'{WorkingDir}');
+                        iROIDef=MaskName;
+                    end
+                else
+                    error(['The Mask File ',NewStrDef,' does not exist!'])
+                end
+            else
+                error(['This Mask definition can not be processed: ',iROIDef])
+            end
+        end
+
+        if (isequal(Cfg.MaskFileVolu, 'Default'))
+            Cfg.MaskFileVolu = ['{WorkingDir}',filesep,'Masks',filesep, 'MasksForFun',filesep,'Masks_FunSpace',filesep,'FunSpace_{SubjectID}_BrainMask_05_91x109x91','.nii'];
+        else
+            Cfg.MaskFileVolu = iROIDef; %The final iROIDef is iMask==5, processed for user defined mask.
+        end
+    end
+end
+
+
+
+%%%%%%%%
+% If don't need to Warp into original space, then check if the masks are appropriate and resample if not.
+if (Cfg.IsBasedOnFunSurf==0) && ((Cfg.IsCalALFF==1)||(Cfg.IsCovremove==1)||(Cfg.IsCalReHo==1)||(Cfg.IsCalDegreeCentrality==1)||(Cfg.IsCalFC==1)) 
+    MasksName{1,1}=[TemplatePath,filesep,'BrainMask_05_91x109x91.img'];
+    MasksName{2,1}=[TemplatePath,filesep,'CsfMask_07_91x109x91.img'];
+    MasksName{3,1}=[TemplatePath,filesep,'WhiteMask_09_91x109x91.img'];
+    MasksName{4,1}=[TemplatePath,filesep,'GreyMask_02_91x109x91.img'];
+    if (isfield(Cfg,'MaskFileVolu')) && (~isempty(Cfg.MaskFileVolu)) && (~isequal(Cfg.MaskFileVolu, 'Default'))
+        MasksName{5,1}=Cfg.MaskFileVolu;
+    end
+    if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace'],'dir'))
+        mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace']);
     end
     RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1},filesep,'*.img']);
     if isempty(RefFile)  %YAN Chao-Gan, 120827. Also support .nii.gz files.
@@ -718,35 +1219,143 @@ if (Cfg.IsWarpMasksIntoIndividualSpace==0) && ((Cfg.IsCalALFF==1)||( (Cfg.IsCovr
         AMaskFilename = MasksName{iMask};
         fprintf('\nResample Masks (%s) to the resolution of functional images.\n',AMaskFilename);
         [pathstr, name, ext] = fileparts(AMaskFilename);
-        ReslicedMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep,'AllResampled_',name,'.nii'];
+        ReslicedMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,'AllResampled_',name,'.nii'];
         y_Reslice(AMaskFilename,ReslicedMaskName,RefVox,0, RefFile);
     end
 
     if (isequal(Cfg.MaskFileVolu, 'Default'))
-        Cfg.MaskFileVolu = [Cfg.WorkingDir,filesep,'Masks',filesep,'AllResampled_BrainMask_05_91x109x91.nii'];
+        Cfg.MaskFileVolu = [Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,'AllResampled_BrainMask_05_91x109x91.nii'];
     else
         [pathstr, name, ext] = fileparts(Cfg.MaskFileVolu);
-        Cfg.MaskFileVolu = [Cfg.WorkingDir,filesep,'Masks',filesep,'AllResampled_',name,'.nii'];
+        Cfg.MaskFileVolu = [Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,'AllResampled_',name,'.nii'];
+    end
+end
+
+
+
+%Deal with the other covariables mask: warp into original space
+%YAN Chao-Gan, 221205
+if (Cfg.IsCovremove==1) && (Cfg.IsBasedOnFunSurf==1)
+    if ~isempty(Cfg.Covremove.OtherCovariatesROI)
+        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_FunSpace'],'dir'))
+            mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_FunSpace']);
+        end
+
+        Suffix='OtherCovariateROI_'; %%!!! Change as in Function
+        OtherCovariatesROIForEachSubject=cell(Cfg.SubjectNum,1);
+
+        % Ball to mask
+        AllSubjectROI=Cfg.Covremove.OtherCovariatesROI;
+        for iROI=1:length(AllSubjectROI)
+            if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace'],'dir'))
+                mkdir([Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace']);
+            end
+            if strcmpi(int2str(size(AllSubjectROI{iROI})),int2str([1, 4]))  %Sphere ROI definition: CenterX, CenterY, CenterZ, Radius
+                ROIMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace',filesep,Suffix,'SphereMask_',num2str(iROI),'_Center_',num2str(AllSubjectROI{iROI}(1)),'_',num2str(AllSubjectROI{iROI}(2)),'_',num2str(AllSubjectROI{iROI}(3)),'_',num2str(AllSubjectROI{iROI}(4)),'.nii'];
+                y_Sphere(AllSubjectROI{iROI}(1:3), AllSubjectROI{iROI}(4), [DPABIPath,filesep,'Templates',filesep,'aal.nii'], ROIMaskName);
+                AllSubjectROI{iROI}=ROIMaskName;
+            end
+        end
+
+        for i=1:Cfg.SubjectNum
+            SubjectROI=AllSubjectROI;%%!!! Change as in Fuction
+            
+            % Set the reference image
+            RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+            [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
+
+            TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+            Interpolation='MultiLabel';
+            Dimensionality=3;
+            InputImageType=0;
+            DefaultValue=0;
+            IsFloat0=0;
+            DockerName='cgyan/dpabi';
+
+            for iROI=1:length(SubjectROI)
+                if exist(SubjectROI{iROI},'file')==2 % MNI Mask files need to be warped
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (~strcmpi(ext, '.txt'))
+                        SourceFile=SubjectROI{iROI};
+                        MaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_FunSpace',filesep,Suffix,'MaskFile_',num2str(iROI),'_',Cfg.SubjectID{i},'.nii'];
+                        fprintf('\nWarp Masks (%s) for "%s" to individual space by ANTs.\n',SourceFile, Cfg.SubjectID{i});
+                        y_WarpByANTs(SourceFile,MaskName,RefFile,TransformFile,Interpolation,Dimensionality,InputImageType,DefaultValue,IsFloat0,DockerName)
+                        %y_WarpByANTs(SourceFile,OutFile,RefFile,TransformFile,Interpolation,Dimensionality,InputImageType,DefaultValue,IsFloat0,DockerName)
+                        SubjectROI{iROI}=MaskName;
+                    end
+
+                elseif (ischar(SubjectROI{iROI})) && ~isempty(strfind(SubjectROI{iROI},'{SubjectID}')) % Process the individual ROI from an expression
+                    NewStrDef = replace(SubjectROI{iROI},'{SubjectID}',Cfg.SubjectID{i});
+                    NewStrDef = replace(NewStrDef,'{WorkingDir}',Cfg.WorkingDir);
+                    if exist(NewStrDef,'file')==2
+                        [MaskData,MaskVox,MaskHeader]=y_ReadRPI(NewStrDef);
+                        if ~isequal(size(MaskData), size(RefData))
+                            fprintf('\nReslice %s Mask (%s) for "%s" since the dimension of mask mismatched the dimension of the target data.\n',Suffix,NewStrDef, Cfg.SubjectID{i});
+                            ReslicedMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_FunSpace',filesep,Suffix,'MaskFile_',num2str(iROI),'_',Cfg.SubjectID{i},'.nii'];
+                            y_Reslice(NewStrDef,ReslicedMaskName,[],0, RefFile);
+                            SubjectROI{iROI}=ReslicedMaskName;
+                        else
+                            SubjectROI{iROI}=NewStrDef;
+                        end
+                    else
+                        error(['The Mask File ',NewStrDef,' does not exist!'])
+                    end
+                else
+                    error(['This Mask definition can not be processed: ',SubjectROI{iROI}])
+                end
+            end
+
+            % Check if the text file is a definition for multiple subjects. i.e., the first line is 'Covariables_List:', then get the corresponded covariables file
+            for iROI=1:length(SubjectROI)
+                if (ischar(SubjectROI{iROI})) && (exist(SubjectROI{iROI},'file')==2)
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (strcmpi(ext, '.txt'))
+                        fid = fopen(SubjectROI{iROI});
+                        SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n'); 
+                        fclose(fid);
+                        if strcmpi(SeedTimeCourseList{1}{1},'Covariables_List:')
+                            SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
+                        end
+                    end
+                end
+                
+            end
+            
+            OtherCovariatesROIForEachSubject{i}=SubjectROI; %%!!! Change as in Fuction
+        end
+        
+        Cfg.Covremove.OtherCovariatesROIForEachSubject = OtherCovariatesROIForEachSubject;
     end
 end
 
 
 
 
-
-
 %If don't need to Warp into original space, then resample the other covariables mask
-if (Cfg.IsCovremove==1) && ((strcmpi(Cfg.Covremove.Timing,'AfterNormalize'))&&(Cfg.IsWarpMasksIntoIndividualSpace==0))
+if (Cfg.IsCovremove==1) && (Cfg.IsBasedOnFunSurf==0)
     if ~isempty(Cfg.Covremove.OtherCovariatesROI)
-        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks'],'dir'))
-            mkdir([Cfg.WorkingDir,filesep,'Masks']);
+        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace'],'dir'))
+            mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace']);
+        end
+
+        Suffix='OtherCovariateROI_'; %%!!! Change as in Function
+        % Ball to mask
+        AllSubjectROI=Cfg.Covremove.OtherCovariatesROI;
+        for iROI=1:length(AllSubjectROI)
+            if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace'],'dir'))
+                mkdir([Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace']);
+            end
+            if strcmpi(int2str(size(AllSubjectROI{iROI})),int2str([1, 4]))  %Sphere ROI definition: CenterX, CenterY, CenterZ, Radius
+                ROIMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace',filesep,Suffix,'SphereMask_',num2str(iROI),'_Center_',num2str(AllSubjectROI{iROI}(1)),'_',num2str(AllSubjectROI{iROI}(2)),'_',num2str(AllSubjectROI{iROI}(3)),'_',num2str(AllSubjectROI{iROI}(4)),'.nii'];
+                y_Sphere(AllSubjectROI{iROI}(1:3), AllSubjectROI{iROI}(4), [DPABIPath,filesep,'Templates',filesep,'aal.nii'], ROIMaskName);
+                AllSubjectROI{iROI}=ROIMaskName;
+            end
         end
 
         % Check if masks appropriate %This can be used as a function!!! ONLY FOR RESAMPLE
         OtherCovariatesROIForEachSubject=cell(Cfg.SubjectNum,1);
-        parfor i=1:Cfg.SubjectNum
-            Suffix='OtherCovariateROI_'; %%!!! Change as in Function
-            SubjectROI=Cfg.Covremove.OtherCovariatesROI;%%!!! Change as in Fuction
+        for i=1:Cfg.SubjectNum
+            SubjectROI=AllSubjectROI;%%!!! Change as in Fuction
             
             % Set the reference image
             RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,'*.img']);
@@ -759,25 +1368,19 @@ if (Cfg.IsCovremove==1) && ((strcmpi(Cfg.Covremove.Timing,'AfterNormalize'))&&(C
             RefFile=[Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,RefFile(1).name];
             [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
             
-            % Ball to mask
-            for iROI=1:length(SubjectROI)
-                if strcmpi(int2str(size(SubjectROI{iROI})),int2str([1, 4]))  %Sphere ROI definition: CenterX, CenterY, CenterZ, Radius
-                    ROIMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep,Suffix,num2str(iROI),'_',Cfg.SubjectID{i},'.nii'];
-                    y_Sphere(SubjectROI{iROI}(1:3), SubjectROI{iROI}(4), RefFile, ROIMaskName);
-                    SubjectROI{iROI}=[ROIMaskName];
-                end
-            end
-            
             % Check if the ROI mask is appropriate
             for iROI=1:length(SubjectROI)
                 AMaskFilename=SubjectROI{iROI};
+                AMaskFilename = replace(AMaskFilename,'{SubjectID}',Cfg.SubjectID{i});
+                AMaskFilename = replace(AMaskFilename,'{WorkingDir}',Cfg.WorkingDir);
+
                 if exist(SubjectROI{iROI},'file')==2
                     [pathstr, name, ext] = fileparts(SubjectROI{iROI});
                     if (~strcmpi(ext, '.txt'))
                         [MaskData,MaskVox,MaskHeader]=y_ReadRPI(AMaskFilename);
                         if ~isequal(size(MaskData), size(RefData))
                             fprintf('\nReslice %s Mask (%s) for "%s" since the dimension of mask mismatched the dimension of the functional data.\n',Suffix,AMaskFilename, Cfg.SubjectID{i});
-                            ReslicedMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep,Suffix,num2str(iROI),'_',Cfg.SubjectID{i},'.nii'];
+                            ReslicedMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,Suffix,num2str(iROI),'_',Cfg.SubjectID{i},'.nii'];
                             y_Reslice(AMaskFilename,ReslicedMaskName,RefVox,0, RefFile);
                             SubjectROI{iROI}=ReslicedMaskName;
                         end
@@ -805,6 +1408,27 @@ if (Cfg.IsCovremove==1) && ((strcmpi(Cfg.Covremove.Timing,'AfterNormalize'))&&(C
         end
         
         Cfg.Covremove.OtherCovariatesROIForEachSubject = OtherCovariatesROIForEachSubject;
+    end
+end
+
+
+% The parpool might be shut down, restart it.
+% if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+%     parpool(Cfg.ParallelWorkersNumber);
+% end
+% YAN Chao-Gan, 190312. To be compatible with early matlab versions
+PCTVer = ver('distcomp');
+if ~isempty(PCTVer)
+    FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+    if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+        CurrentSize_MatlabPool = matlabpool('size');
+        if (CurrentSize_MatlabPool==0) && (Cfg.ParallelWorkersNumber~=0)
+            matlabpool(Cfg.ParallelWorkersNumber)
+        end
+    else
+        if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+            parpool(Cfg.ParallelWorkersNumber);
+        end
     end
 end
 
@@ -838,7 +1462,7 @@ if Cfg.NonAgressiveRegressICAAROMANoise==1
             y_RegressOutCovariates_NonAggressive(InFile,CovariablesDef,OutFile,'');
 
             mkdir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'I'],Cfg.SubjectID{i}));
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-*.func.gii'));
             for iFile=1:length(DirName)
                 InFile=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(iFile).name);
                 OutFile=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'I'],Cfg.SubjectID{i},DirName(iFile).name);
@@ -854,7 +1478,7 @@ end
 
 
 %Remove the nuisance Covaribles ('AfterNormalize')
-if (Cfg.IsCovremove==1) && (strcmpi(Cfg.Covremove.Timing,'AfterNormalize')) 
+if (Cfg.IsCovremove==1) %&& (strcmpi(Cfg.Covremove.Timing,'AfterNormalize')) 
     %Remove the Covariables
     for iFunSession=1:Cfg.FunctionalSessionNumber
         parfor i=1:Cfg.SubjectNum
@@ -917,20 +1541,40 @@ if (Cfg.IsCovremove==1) && (strcmpi(Cfg.Covremove.Timing,'AfterNormalize'))
 
             %Mask covariates CompCor methods %YAN Chao-Gan, 140628. Deal with different kind of nuisance covarites.
             CompCorMasks = [];
-            if (Cfg.Covremove.WM.IsRemove==1) && strcmpi(Cfg.Covremove.WM.Method,'CompCor')
-                if strcmpi(Cfg.Covremove.WM.Mask,'SPM')
-                    CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'AllResampled','_WhiteMask_09_91x109x91.nii']}];
-                elseif strcmpi(Cfg.Covremove.WM.Mask,'Segment')
-                    CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_WM.nii']}];
+
+            %YAN Chao-Gan, 221205
+            if (Cfg.IsBasedOnFunSurf==1) %YAN Chao-Gan, 221205. If calculate in individual space
+                if (Cfg.Covremove.WM.IsRemove==1) && strcmpi(Cfg.Covremove.WM.Method,'CompCor')
+                    if strcmpi(Cfg.Covremove.WM.Mask,'SPM')
+                        CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep,'Masks_FunSpace',filesep,'FunSpace_',Cfg.SubjectID{i},'_WhiteMask_09_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.WM.Mask,'Segment')
+                        CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_ThrdMask_',Cfg.SubjectID{i},'_WM.nii']}];
+                    end
+                end
+                if (Cfg.Covremove.CSF.IsRemove==1) && strcmpi(Cfg.Covremove.CSF.Method,'CompCor')
+                    if strcmpi(Cfg.Covremove.CSF.Mask,'SPM')
+                        CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep,'Masks_FunSpace',filesep,'FunSpace_',Cfg.SubjectID{i},'_CsfMask_07_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.CSF.Mask,'Segment')
+                        CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_ThrdMask_',Cfg.SubjectID{i},'_CSF.nii']}];
+                    end
+                end
+            else %YAN Chao-Gan, 221205. If calculate in MNI space
+                if (Cfg.Covremove.WM.IsRemove==1) && strcmpi(Cfg.Covremove.WM.Method,'CompCor')
+                    if strcmpi(Cfg.Covremove.WM.Mask,'SPM')
+                        CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,'AllResampled','_WhiteMask_09_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.WM.Mask,'Segment')
+                        CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_WM.nii']}];
+                    end
+                end
+                if (Cfg.Covremove.CSF.IsRemove==1) && strcmpi(Cfg.Covremove.CSF.Method,'CompCor')
+                    if strcmpi(Cfg.Covremove.CSF.Mask,'SPM')
+                        CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,'AllResampled','_CsfMask_07_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.CSF.Mask,'Segment')
+                        CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_CSF.nii']}];
+                    end
                 end
             end
-            if (Cfg.Covremove.CSF.IsRemove==1) && strcmpi(Cfg.Covremove.CSF.Method,'CompCor')
-                if strcmpi(Cfg.Covremove.CSF.Mask,'SPM')
-                    CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'AllResampled','_CsfMask_07_91x109x91.nii']}];
-                elseif strcmpi(Cfg.Covremove.CSF.Mask,'Segment')
-                    CompCorMasks=[CompCorMasks;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_CSF.nii']}];
-                end
-            end
+
             if ~isempty(CompCorMasks)
                 if ~(7==exist([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,'Covs'],'dir'))
                     mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,'Covs']);
@@ -941,29 +1585,58 @@ if (Cfg.IsCovremove==1) && (strcmpi(Cfg.Covremove.Timing,'AfterNormalize'))
                 CovariablesDef.CovMat = [CovariablesDef.CovMat, PCs];
             end
 
+
             %Mask covariates %YAN Chao-Gan, 140628. Deal with different kind of nuisance covarites.
             SubjectCovariatesROI=[];
-            if (Cfg.Covremove.WM.IsRemove==1) && strcmpi(Cfg.Covremove.WM.Method,'Mean')
-                if strcmpi(Cfg.Covremove.WM.Mask,'SPM')
-                    SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'AllResampled','_WhiteMask_09_91x109x91.nii']}];
-                elseif strcmpi(Cfg.Covremove.WM.Mask,'Segment')
-                    SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_WM.nii']}];
+
+            %YAN Chao-Gan, 221205
+            if (Cfg.IsBasedOnFunSurf==1) %YAN Chao-Gan, 221205. If calculate in individual space
+                if (Cfg.Covremove.WM.IsRemove==1) && strcmpi(Cfg.Covremove.WM.Method,'Mean')
+                    if strcmpi(Cfg.Covremove.WM.Mask,'SPM')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep,'Masks_FunSpace',filesep,'FunSpace_',Cfg.SubjectID{i},'_WhiteMask_09_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.WM.Mask,'Segment')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_ThrdMask_',Cfg.SubjectID{i},'_WM.nii']}];
+                    end
                 end
-            end
-            
-            if (Cfg.Covremove.CSF.IsRemove==1) && strcmpi(Cfg.Covremove.CSF.Method,'Mean')
-                if strcmpi(Cfg.Covremove.CSF.Mask,'SPM')
-                    SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'AllResampled','_CsfMask_07_91x109x91.nii']}];
-                elseif strcmpi(Cfg.Covremove.CSF.Mask,'Segment')
-                    SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_CSF.nii']}];
+
+                if (Cfg.Covremove.CSF.IsRemove==1) && strcmpi(Cfg.Covremove.CSF.Method,'Mean')
+                    if strcmpi(Cfg.Covremove.CSF.Mask,'SPM')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep,'Masks_FunSpace',filesep,'FunSpace_',Cfg.SubjectID{i},'_CsfMask_07_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.CSF.Mask,'Segment')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'FunSpace_ThrdMask_',Cfg.SubjectID{i},'_CSF.nii']}];
+                    end
                 end
-            end
-            
-            if (Cfg.Covremove.WholeBrain.IsRemove==1)
-                if strcmpi(Cfg.Covremove.WholeBrain.Mask,'SPM')
-                    SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'AllResampled','_BrainMask_05_91x109x91.nii']}];
-                elseif strcmpi(Cfg.Covremove.WholeBrain.Mask,'AutoMask')
-                    SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,'w',FunSessionPrefixSet{iFunSession},'AutoMask_',Cfg.SubjectID{i},'.nii']}];
+
+                if (Cfg.Covremove.WholeBrain.IsRemove==1)
+                    if strcmpi(Cfg.Covremove.WholeBrain.Mask,'SPM')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep,'Masks_FunSpace',filesep,'FunSpace_',Cfg.SubjectID{i},'_BrainMask_05_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.WholeBrain.Mask,'AutoMask')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz']}];
+                    end
+                end
+            else
+                if (Cfg.Covremove.WM.IsRemove==1) && strcmpi(Cfg.Covremove.WM.Method,'Mean')
+                    if strcmpi(Cfg.Covremove.WM.Mask,'SPM')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,'AllResampled','_WhiteMask_09_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.WM.Mask,'Segment')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_WM.nii']}];
+                    end
+                end
+
+                if (Cfg.Covremove.CSF.IsRemove==1) && strcmpi(Cfg.Covremove.CSF.Method,'Mean')
+                    if strcmpi(Cfg.Covremove.CSF.Mask,'SPM')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,'AllResampled','_CsfMask_07_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.CSF.Mask,'Segment')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'SegmentationMasks',filesep,'MNIFunSpace_ThrdMask_',Cfg.SubjectID{i},'_CSF.nii']}];
+                    end
+                end
+
+                if (Cfg.Covremove.WholeBrain.IsRemove==1)
+                    if strcmpi(Cfg.Covremove.WholeBrain.Mask,'SPM')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,'AllResampled','_BrainMask_05_91x109x91.nii']}];
+                    elseif strcmpi(Cfg.Covremove.WholeBrain.Mask,'AutoMask')
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz']}];
+                    end
                 end
             end
 
@@ -993,7 +1666,7 @@ if (Cfg.IsCovremove==1) && (strcmpi(Cfg.Covremove.Timing,'AfterNormalize'))
             y_CallSave([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,'Covs',filesep,'Covariables',Cfg.SubjectID{i},'.txt'], Covariables, ' ''-ASCII'', ''-DOUBLE'',''-TABS''');
 
             mkdir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'C'],Cfg.SubjectID{i}));
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-*.func.gii'));
             for iFile=1:length(DirName)
                 InFile=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(iFile).name);
                 OutFile=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'C'],Cfg.SubjectID{i},DirName(iFile).name);
@@ -1025,22 +1698,27 @@ end
 %Smooth on functional data
 if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnFunctionalData')
     %Smooth on functional surface data
+    if (Cfg.IsBasedOnFunSurf==1) %YAN Chao-Gan, 221205. If calculate in individual space
+        SpaceName='{1}';
+    else
+        SpaceName='fsaverage5';
+    end
     for iFunSession=1:Cfg.FunctionalSessionNumber
         for i=1:Cfg.SubjectNum
             mkdir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S'],Cfg.SubjectID{i}));
         end
         %Smooth left hemi
-        DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{1},'*fsaverage5_hemi-L*.func.gii'));
+        DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{1},'*_hemi-L*.func.gii'));
         for iFile=1:length(DirName)
             Suffix=DirName(iFile).name(length(Cfg.SubjectID{1})+1:end);
-            Command = sprintf('%s parallel -j %g mri_surf2surf --s fsaverage5 --hemi lh --sval /data/%s%s/{1}/{1}%s  --fwhm %g --cortex --tval /data/%s%sS/{1}/s{1}%s ::: %s', CommandInit, Cfg.ParallelWorkersNumber, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, Cfg.Smooth.FWHMSurf, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, SubjectIDString);
+            Command = sprintf('%s parallel -j %g mri_surf2surf --s %s --hemi lh --sval %s/%s%s/{1}/{1}%s  --fwhm %g --cortex --tval %s/%s%sS/{1}/s{1}%s ::: %s', CommandInit, Cfg.ParallelWorkersNumber, SpaceName, WorkingDir, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, Cfg.Smooth.FWHMSurf, WorkingDir, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, SubjectIDString);
             system(Command);
         end
         %Smooth right hemi
-        DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{1},'*fsaverage5_hemi-R*.func.gii'));
+        DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{1},'*_hemi-R*.func.gii'));
         for iFile=1:length(DirName)
             Suffix=DirName(iFile).name(length(Cfg.SubjectID{1})+1:end);
-            Command = sprintf('%s parallel -j %g mri_surf2surf --s fsaverage5 --hemi rh --sval /data/%s%s/{1}/{1}%s  --fwhm %g --cortex --tval /data/%s%sS/{1}/s{1}%s ::: %s', CommandInit, Cfg.ParallelWorkersNumber, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, Cfg.Smooth.FWHMSurf, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, SubjectIDString);
+            Command = sprintf('%s parallel -j %g mri_surf2surf --s %s --hemi rh --sval %s/%s%s/{1}/{1}%s  --fwhm %g --cortex --tval %s/%s%sS/{1}/s{1}%s ::: %s', CommandInit, Cfg.ParallelWorkersNumber, SpaceName, WorkingDir, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, Cfg.Smooth.FWHMSurf, WorkingDir, FunSessionPrefixSet{iFunSession}, Cfg.StartingDirName, Suffix, SubjectIDString);
             system(Command);
         end
     end
@@ -1135,6 +1813,17 @@ if (Cfg.IsCalALFF==1)
             mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'fALFF_',Cfg.StartingDirName_Volume]);
         end
         parfor i=1:Cfg.SubjectNum
+
+            MaskFileSurfLH = Cfg.MaskFileSurfLH;
+            MaskFileSurfLH = replace(MaskFileSurfLH,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileSurfLH = replace(MaskFileSurfLH,'{WorkingDir}',Cfg.WorkingDir);
+            MaskFileSurfRH = Cfg.MaskFileSurfRH;
+            MaskFileSurfRH = replace(MaskFileSurfRH,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileSurfRH = replace(MaskFileSurfRH,'{WorkingDir}',Cfg.WorkingDir);
+            MaskFileVolu = Cfg.MaskFileVolu;
+            MaskFileVolu = replace(MaskFileVolu,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileVolu = replace(MaskFileVolu,'{WorkingDir}',Cfg.WorkingDir);
+
             if Cfg.TR==0  % Need to retrieve the TR information from the NIfTI images
                 TR = Cfg.TRSet(i,iFunSession);
             else
@@ -1143,48 +1832,24 @@ if (Cfg.IsCalALFF==1)
 
             % ALFF and fALFF calculation
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
-                [ALFFBrain, fALFFBrain, Header] = y_alff_falff_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName),TR, Cfg.CalALFF.ALowPass_HighCutoff, Cfg.CalALFF.AHighPass_LowCutoff, Cfg.MaskFileSurfLH, ...
+                [ALFFBrain, fALFFBrain, Header] = y_alff_falff_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName),TR, Cfg.CalALFF.ALowPass_HighCutoff, Cfg.CalALFF.AHighPass_LowCutoff, MaskFileSurfLH, ...
                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii']});
-%                 % Get the m* files: divided by the mean within the mask
-%                 % and the z* files: substract by the mean and then divided by the std within the mask
-%                 BrainMaskData=gifti(Cfg.MaskFileSurfLH);
-%                 BrainMaskData=BrainMaskData.cdata;
-%                 Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'mALFF_',Cfg.SubjectID{i},'.func.gii']);
-%                 Temp = ((ALFFBrain - mean(ALFFBrain(find(BrainMaskData)))) ./ std(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii']);
-%                 Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'mfALFF_',Cfg.SubjectID{i},'.func.gii']);
-%                 Temp = ((fALFFBrain - mean(fALFFBrain(find(BrainMaskData)))) ./ std(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii']);
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
-                [ALFFBrain, fALFFBrain, Header] = y_alff_falff_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName),TR, Cfg.CalALFF.ALowPass_HighCutoff, Cfg.CalALFF.AHighPass_LowCutoff, Cfg.MaskFileSurfRH, ...
+                [ALFFBrain, fALFFBrain, Header] = y_alff_falff_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName),TR, Cfg.CalALFF.ALowPass_HighCutoff, Cfg.CalALFF.AHighPass_LowCutoff, MaskFileSurfRH, ...
                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii']});
-%                 % Get the m* files: divided by the mean within the mask
-%                 % and the z* files: substract by the mean and then divided by the std within the mask
-%                 BrainMaskData=gifti(Cfg.MaskFileSurfRH);
-%                 BrainMaskData=BrainMaskData.cdata;
-%                 Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'mALFF_',Cfg.SubjectID{i},'.func.gii']);
-%                 Temp = ((ALFFBrain - mean(ALFFBrain(find(BrainMaskData)))) ./ std(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii']);
-%                 Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'mfALFF_',Cfg.SubjectID{i},'.func.gii']);
-%                 Temp = ((fALFFBrain - mean(fALFFBrain(find(BrainMaskData)))) ./ std(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii']);
             end
             
             % ZStandardization for bilateral hemispheres % YAN Chao-Gan, 190522
-            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
-            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'ALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ALFF_',Cfg.StartingDirName,filesep,'zALFF_',Cfg.SubjectID{i},'.func.gii'], MaskFileSurfLH, MaskFileSurfRH);
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'fALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'fALFF_',Cfg.StartingDirName,filesep,'zfALFF_',Cfg.SubjectID{i},'.func.gii'], MaskFileSurfLH, MaskFileSurfRH);
 
             
             % Volume
@@ -1194,18 +1859,14 @@ if (Cfg.IsCalALFF==1)
                     TR, ...
                     Cfg.CalALFF.ALowPass_HighCutoff, ...
                     Cfg.CalALFF.AHighPass_LowCutoff, ...
-                    Cfg.MaskFileVolu, ...
+                    MaskFileVolu, ...
                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ALFF_',Cfg.StartingDirName_Volume,filesep,'ALFF_',Cfg.SubjectID{i},'.nii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'fALFF_',Cfg.StartingDirName_Volume,filesep,'fALFF_',Cfg.SubjectID{i},'.nii']});
                 % Get the m* files: divided by the mean within the mask
                 % and the z* files: substract by the mean and then divided by the std within the mask
-                if ~isempty(Cfg.MaskFileVolu) %Added by YAN Chao-Gan 130605. Skip if mask is not defined.
-                    BrainMaskData=y_ReadRPI(Cfg.MaskFileVolu);
-%                     Temp = (ALFFBrain ./ mean(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ALFF_',Cfg.StartingDirName_Volume,filesep,'mALFF_',Cfg.SubjectID{i},'.nii']);
+                if ~isempty(MaskFileVolu) %Added by YAN Chao-Gan 130605. Skip if mask is not defined.
+                    BrainMaskData=y_ReadRPI(MaskFileVolu);
                     Temp = ((ALFFBrain - mean(ALFFBrain(find(BrainMaskData)))) ./ std(ALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ALFF_',Cfg.StartingDirName_Volume,filesep,'zALFF_',Cfg.SubjectID{i},'.nii']);
-%                     Temp = (fALFFBrain ./ mean(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'fALFF_',Cfg.StartingDirName_Volume,filesep,'mfALFF_',Cfg.SubjectID{i},'.nii']);
                     Temp = ((fALFFBrain - mean(fALFFBrain(find(BrainMaskData)))) ./ std(fALFFBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'fALFF_',Cfg.StartingDirName_Volume,filesep,'zfALFF_',Cfg.SubjectID{i},'.nii']);
                 end
@@ -1232,7 +1893,7 @@ if (Cfg.IsFilter==1) && (strcmpi(Cfg.Filter.Timing,'AfterNormalize'))
                 ''); %
 
             mkdir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'F'],Cfg.SubjectID{i}));
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-*.func.gii'));
             for iFile=1:length(DirName)
                 InFile=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(iFile).name);
                 OutFile=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'F'],Cfg.SubjectID{i},DirName(iFile).name);
@@ -1293,7 +1954,7 @@ if (Cfg.IsScrubbing==1) && (strcmpi(Cfg.Scrubbing.Timing,'AfterPreprocessing'))
                 TemporalMask, Cfg.Scrubbing.ScrubbingMethod, '');
             
             mkdir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'B'],Cfg.SubjectID{i}));
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-*.func.gii'));
             for iFile=1:length(DirName)
                 InFile=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(iFile).name);
                 OutFile=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'B'],Cfg.SubjectID{i},DirName(iFile).name);
@@ -1320,44 +1981,45 @@ if (Cfg.IsCalReHo==1)
         
         parfor i=1:Cfg.SubjectNum
             % ReHo calculation
+            MaskFileSurfLH = Cfg.MaskFileSurfLH;
+            MaskFileSurfLH = replace(MaskFileSurfLH,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileSurfLH = replace(MaskFileSurfLH,'{WorkingDir}',Cfg.WorkingDir);
+            MaskFileSurfRH = Cfg.MaskFileSurfRH;
+            MaskFileSurfRH = replace(MaskFileSurfRH,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileSurfRH = replace(MaskFileSurfRH,'{WorkingDir}',Cfg.WorkingDir);
+            MaskFileVolu = Cfg.MaskFileVolu;
+            MaskFileVolu = replace(MaskFileVolu,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileVolu = replace(MaskFileVolu,'{WorkingDir}',Cfg.WorkingDir);
+
+            SurfFileLH = Cfg.SurfFileLH;
+            SurfFileLH = replace(SurfFileLH,'{SubjectID}',Cfg.SubjectID{i});
+            SurfFileLH = replace(SurfFileLH,'{WorkingDir}',Cfg.WorkingDir);
+            SurfFileRH = Cfg.SurfFileRH;
+            SurfFileRH = replace(SurfFileRH,'{SubjectID}',Cfg.SubjectID{i});
+            SurfFileRH = replace(SurfFileRH,'{WorkingDir}',Cfg.WorkingDir);
+
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 [ReHoBrain, Header] = y_reho_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
-                    Cfg.CalReHo.SurfNNeighbor, Cfg.MaskFileSurfLH, ...
+                    Cfg.CalReHo.SurfNNeighbor, MaskFileSurfLH, ...
                     [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], ...
-                    Cfg.SurfFileLH);
-%                 % Get the m* files: divided by the mean within the mask
-%                 % and the z* files: substract by the mean and then divided by the std within the mask
-%                 BrainMaskData=gifti(Cfg.MaskFileSurfLH);
-%                 BrainMaskData=BrainMaskData.cdata;
-%                 Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'mReHo_',Cfg.SubjectID{i},'.func.gii']);
-%                 Temp = ((ReHoBrain - mean(ReHoBrain(find(BrainMaskData)))) ./ std(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii']);
+                    SurfFileLH);
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 [ReHoBrain, Header] = y_reho_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
-                    Cfg.CalReHo.SurfNNeighbor, Cfg.MaskFileSurfRH, ...
+                    Cfg.CalReHo.SurfNNeighbor, MaskFileSurfRH, ...
                     [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], ...
-                    Cfg.SurfFileRH);
-%                 % Get the m* files: divided by the mean within the mask
-%                 % and the z* files: substract by the mean and then divided by the std within the mask
-%                 BrainMaskData=gifti(Cfg.MaskFileSurfRH);
-%                 BrainMaskData=BrainMaskData.cdata;
-%                 Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'mReHo_',Cfg.SubjectID{i},'.func.gii']);
-%                 Temp = ((ReHoBrain - mean(ReHoBrain(find(BrainMaskData)))) ./ std(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii']);
+                    SurfFileRH);
             end
             
             % ZStandardization for bilateral hemispheres % YAN Chao-Gan, 190522
-            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'ReHo_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ReHo_',Cfg.StartingDirName,filesep,'zReHo_',Cfg.SubjectID{i},'.func.gii'], MaskFileSurfLH, MaskFileSurfRH);
             
             
             % Volume
@@ -1365,14 +2027,12 @@ if (Cfg.IsCalReHo==1)
                 % ReHo Calculation
                 [ReHoBrain, Header] = y_reho([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i}], ...
                     Cfg.CalReHo.ClusterNVoxel, ...
-                    Cfg.MaskFileVolu, ...
+                    MaskFileVolu, ...
                     [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ReHo_',Cfg.StartingDirName_Volume,filesep,'ReHo_',Cfg.SubjectID{i},'.nii']);
                 % Get the m* files: divided by the mean within the mask
                 % and the z* files: substract by the mean and then divided by the std within the mask
-                if ~isempty(Cfg.MaskFileVolu) %Added by YAN Chao-Gan 130605. Skip if mask is not defined.
-                    BrainMaskData=y_ReadRPI(Cfg.MaskFileVolu);
-%                     Temp = (ReHoBrain ./ mean(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
-%                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ReHo_',Cfg.StartingDirName_Volume,filesep,'mReHo_',Cfg.SubjectID{i},'.nii']);
+                if ~isempty(MaskFileVolu) %Added by YAN Chao-Gan 130605. Skip if mask is not defined.
+                    BrainMaskData=y_ReadRPI(MaskFileVolu);
                     Temp = ((ReHoBrain - mean(ReHoBrain(find(BrainMaskData)))) ./ std(ReHoBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ReHo_',Cfg.StartingDirName_Volume,filesep,'zReHo_',Cfg.SubjectID{i},'.nii']);
                 end
@@ -1391,18 +2051,29 @@ if (Cfg.IsCalDegreeCentrality==1)
             mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume]);
         end
         parfor i=1:Cfg.SubjectNum
+
+            MaskFileSurfLH = Cfg.MaskFileSurfLH;
+            MaskFileSurfLH = replace(MaskFileSurfLH,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileSurfLH = replace(MaskFileSurfLH,'{WorkingDir}',Cfg.WorkingDir);
+            MaskFileSurfRH = Cfg.MaskFileSurfRH;
+            MaskFileSurfRH = replace(MaskFileSurfRH,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileSurfRH = replace(MaskFileSurfRH,'{WorkingDir}',Cfg.WorkingDir);
+            MaskFileVolu = Cfg.MaskFileVolu;
+            MaskFileVolu = replace(MaskFileVolu,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileVolu = replace(MaskFileVolu,'{WorkingDir}',Cfg.WorkingDir);
+
             % Degree Centrality Calculation
 %             % Left Hemi
-%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
 %             for iFile=1:length(DirName)
 %                 FileName=DirName(iFile).name;
 %                 [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
 %                     Cfg.CalDegreeCentrality.rThreshold, ...
 %                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
-%                     Cfg.MaskFileSurfLH);
+%                     MaskFileSurfLH);
 %                 % Get the m* files: divided by the mean within the mask
 %                 % and the z* files: substract by the mean and then divided by the std within the mask
-%                 BrainMaskData=gifti(Cfg.MaskFileSurfLH);
+%                 BrainMaskData=gifti(MaskFileSurfLH);
 %                 BrainMaskData=BrainMaskData.cdata;
 %                 Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
 %                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
@@ -1416,16 +2087,16 @@ if (Cfg.IsCalDegreeCentrality==1)
 %              end
 %             
 %             % Right Hemi
-%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+%             DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
 %             for iFile=1:length(DirName)
 %                 FileName=DirName(iFile).name;
 %                 [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
 %                     Cfg.CalDegreeCentrality.rThreshold, ...
 %                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
-%                     Cfg.MaskFileSurfRH);
+%                     MaskFileSurfRH);
 %                 % Get the m* files: divided by the mean within the mask
 %                 % and the z* files: substract by the mean and then divided by the std within the mask
-%                 BrainMaskData=gifti(Cfg.MaskFileSurfRH);
+%                 BrainMaskData=gifti(MaskFileSurfRH);
 %                 BrainMaskData=BrainMaskData.cdata;
 %                 Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
 %                 y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'mDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii']);
@@ -1440,19 +2111,19 @@ if (Cfg.IsCalDegreeCentrality==1)
 %             
             
             %Degree Centrality Calculation while consider bilateral hemishperes % YAN Chao-Gan, 190521
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
             FileName_LH=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(1).name);
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
             FileName_RH=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(1).name);
             
             y_DegreeCentrality_Bilateral_Surf(FileName_LH, FileName_RH, ...
                 Cfg.CalDegreeCentrality.rThreshold, ...
                 {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
                 {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii']}, ...
-                Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+                MaskFileSurfLH, MaskFileSurfRH);
             
-            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
-            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], Cfg.MaskFileSurfLH, Cfg.MaskFileSurfRH);
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.func.gii'], MaskFileSurfLH, MaskFileSurfRH);
+            y_ZStandardization_Bilateral_Surf([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'DegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'DegreeCentrality_',Cfg.StartingDirName,filesep,'zDegreeCentrality_Bilateral_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.func.gii'], MaskFileSurfLH, MaskFileSurfRH);
             
 
 
@@ -1462,11 +2133,11 @@ if (Cfg.IsCalDegreeCentrality==1)
                 [DegreeCentrality_PositiveWeightedSumBrain, DegreeCentrality_PositiveBinarizedSumBrain, Header] = y_DegreeCentrality([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i}], ...
                     Cfg.CalDegreeCentrality.rThreshold, ...
                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'DegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.nii'];[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'DegreeCentrality_PositiveBinarizedSumBrain_',Cfg.SubjectID{i},'.nii']}, ...
-                    Cfg.MaskFileVolu);
+                    MaskFileVolu);
                 % Get the m* files: divided by the mean within the mask
                 % and the z* files: substract by the mean and then divided by the std within the mask
-                if ~isempty(Cfg.MaskFileVolu) %Added by YAN Chao-Gan 130605. Skip if mask is not defined.
-                    BrainMaskData=y_ReadRPI(Cfg.MaskFileVolu);
+                if ~isempty(MaskFileVolu) %Added by YAN Chao-Gan 130605. Skip if mask is not defined.
+                    BrainMaskData=y_ReadRPI(MaskFileVolu);
 %                     Temp = (DegreeCentrality_PositiveWeightedSumBrain ./ mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
 %                     y_Write(Temp,Header,[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'DegreeCentrality_',Cfg.StartingDirName_Volume,filesep,'mDegreeCentrality_PositiveWeightedSumBrain_',Cfg.SubjectID{i},'.nii']);
                     Temp = ((DegreeCentrality_PositiveWeightedSumBrain - mean(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) ./ std(DegreeCentrality_PositiveWeightedSumBrain(find(BrainMaskData)))) .* (BrainMaskData~=0);
@@ -1484,45 +2155,415 @@ end
 
 
 
+%Deal with the ROI masks: warp into original space
+%YAN Chao-Gan, 221205
+if (Cfg.IsBasedOnFunSurf==1) && ( (~isempty(Cfg.CalFC.ROIDefVolu)) || (~isempty(Cfg.CalFC.ROIDefSurfLH)) || (~isempty(Cfg.CalFC.ROIDefSurfRH)) ) && ((Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1))
+    if ~isempty(Cfg.CalFC.ROIDefVolu)
+        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_FunSpace'],'dir'))
+            mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_FunSpace']);
+        end
 
-% Generate the appropriate ROI masks
-if (~isempty(Cfg.CalFC.ROIDefVolu)) && ((Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1))
-    if ~(7==exist([Cfg.WorkingDir,filesep,'Masks'],'dir'))
-        mkdir([Cfg.WorkingDir,filesep,'Masks']);
-    end
-    RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1},filesep,'*.img']);
-    if isempty(RefFile)  %YAN Chao-Gan, 120827. Also support .nii.gz files.
-        RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1},filesep,'*.nii.gz']);
-    end
-    if isempty(RefFile)  %YAN Chao-Gan, 111114. Also support .nii files.
-        RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1},filesep,'*.nii']);
-    end
-    RefFile=[Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1},filesep,RefFile(1).name];
-    [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
+        Suffix='ROI_'; %%!!! Change as in Function
+        ROIDefVoluForEachSubject=cell(Cfg.SubjectNum,1);
 
-    Suffix='FCROI_'; %%!!! Change as in Function
-    SubjectROI=Cfg.CalFC.ROIDefVolu;%%!!! Change as in Fuction
-    % Check if the ROI mask is appropriate
-    for iROI=1:length(SubjectROI)
-        AMaskFilename=SubjectROI{iROI};
-        if ischar(SubjectROI{iROI}) && exist(SubjectROI{iROI},'file')==2
-            [pathstr, name, ext] = fileparts(SubjectROI{iROI});
-            if (~strcmpi(ext, '.txt'))
-                [MaskData,MaskVox,MaskHeader]=y_ReadRPI(AMaskFilename);
-                if ~isequal(size(MaskData), size(RefData))
-                    fprintf('\nReslice %s Mask (%s) for "%s" since the dimension of mask mismatched the dimension of the functional data.\n',Suffix,AMaskFilename,'AllResampled');
-                    
-                    ReslicedMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep,Suffix,num2str(iROI),'_AllResampled','.nii'];
-                    y_Reslice(AMaskFilename,ReslicedMaskName,RefVox,0, RefFile);
-                    SubjectROI{iROI}=ReslicedMaskName;
-                end
+        % Ball to mask
+        AllSubjectROI=Cfg.CalFC.ROIDefVolu;
+        for iROI=1:length(AllSubjectROI)
+            if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace'],'dir'))
+                mkdir([Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace']);
+            end
+            if strcmpi(int2str(size(AllSubjectROI{iROI})),int2str([1, 4]))  %Sphere ROI definition: CenterX, CenterY, CenterZ, Radius
+                ROIMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace',filesep,Suffix,'SphereMask_',num2str(iROI),'_Center_',num2str(AllSubjectROI{iROI}(1)),'_',num2str(AllSubjectROI{iROI}(2)),'_',num2str(AllSubjectROI{iROI}(3)),'_',num2str(AllSubjectROI{iROI}(4)),'.nii'];
+                y_Sphere(AllSubjectROI{iROI}(1:3), AllSubjectROI{iROI}(4), [DPABIPath,filesep,'Templates',filesep,'aal.nii'], ROIMaskName);
+                AllSubjectROI{iROI}=ROIMaskName;
             end
         end
+
+        for i=1:Cfg.SubjectNum
+            SubjectROI=AllSubjectROI;%%!!! Change as in Fuction
+            
+            % Set the reference image
+            RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+            [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
+
+            TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+            Interpolation='MultiLabel';
+            Dimensionality=3;
+            InputImageType=0;
+            DefaultValue=0;
+            IsFloat0=0;
+            DockerName='cgyan/dpabi';
+
+            for iROI=1:length(SubjectROI)
+                if exist(SubjectROI{iROI},'file')==2 % MNI Mask files need to be warped
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (~strcmpi(ext, '.txt'))
+                        SourceFile=SubjectROI{iROI};
+                        MaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_FunSpace',filesep,Suffix,'MaskFile_',num2str(iROI),'_',Cfg.SubjectID{i},'_',name,'.nii'];
+                        fprintf('\nWarp %s Mask (%s) for "%s" to individual space by ANTs.\n',Suffix,SourceFile, Cfg.SubjectID{i});
+                        y_WarpByANTs(SourceFile,MaskName,RefFile,TransformFile,Interpolation,Dimensionality,InputImageType,DefaultValue,IsFloat0,DockerName)
+                        %y_WarpByANTs(SourceFile,OutFile,RefFile,TransformFile,Interpolation,Dimensionality,InputImageType,DefaultValue,IsFloat0,DockerName)
+                        SubjectROI{iROI}=MaskName;
+                    end
+
+                elseif (ischar(SubjectROI{iROI})) && ~isempty(strfind(SubjectROI{iROI},'{SubjectID}')) % Process the individual ROI from an expression
+                    NewStrDef = replace(SubjectROI{iROI},'{SubjectID}',Cfg.SubjectID{i});
+                    NewStrDef = replace(NewStrDef,'{WorkingDir}',Cfg.WorkingDir);
+                    if exist(NewStrDef,'file')==2
+                        [pathstr, name, ext] = fileparts(NewStrDef);
+                        [MaskData,MaskVox,MaskHeader]=y_ReadRPI(NewStrDef);
+                        if ~isequal(size(MaskData), size(RefData))
+                            fprintf('\nReslice %s Mask (%s) for "%s" since the dimension of mask mismatched the dimension of the target data.\n',Suffix,NewStrDef, Cfg.SubjectID{i});
+                            ReslicedMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_FunSpace',filesep,Suffix,'MaskFile_',num2str(iROI),'_',Cfg.SubjectID{i},'_',name,'.nii'];
+                            y_Reslice(NewStrDef,ReslicedMaskName,[],0, RefFile);
+                            SubjectROI{iROI}=ReslicedMaskName;
+                        else
+                            SubjectROI{iROI}=NewStrDef;
+                        end
+                    else
+                        error(['The Mask File ',NewStrDef,' does not exist!'])
+                    end
+                else
+                    error(['This Mask definition can not be processed: ',SubjectROI{iROI}])
+                end
+            end
+
+            % Check if the text file is a definition for multiple subjects. i.e., the first line is 'Seed_ROI_List:', then get the corresponded ROI file
+            for iROI=1:length(SubjectROI)
+                if (ischar(SubjectROI{iROI})) && (exist(SubjectROI{iROI},'file')==2)
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (strcmpi(ext, '.txt'))
+                        fid = fopen(SubjectROI{iROI});
+                        SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n'); 
+                        fclose(fid);
+                        if strcmpi(SeedTimeCourseList{1}{1},'Seed_ROI_List:')
+                            SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
+                        end
+                    end
+                end
+                
+            end
+            
+            ROIDefVoluForEachSubject{i}=SubjectROI; %%!!! Change as in Fuction
+        end
+        
+        Cfg.CalFC.ROIDefVoluForEachSubject = ROIDefVoluForEachSubject;
     end
 
-    Cfg.CalFC.ROIDefVolu=SubjectROI; %%!!! Change as in Fuction
+
+    if ~isempty(Cfg.CalFC.ROIDefSurfLH)
+        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsnativeSpace'],'dir'))
+            mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsnativeSpace']);
+        end
+
+        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsaverage5Space'],'dir'))
+            mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsaverage5Space']);
+        end
+
+        Suffix='ROI_'; 
+        ROIDefSurfLHForEachSubject=cell(Cfg.SubjectNum,1);
+
+        for i=1:Cfg.SubjectNum
+            SubjectROI=Cfg.CalFC.ROIDefSurfLH;
+
+            for iROI=1:length(SubjectROI)
+                if exist(SubjectROI{iROI},'file')==2 % fsaverage5 Mask files need to be warped
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (~strcmpi(ext, '.txt'))
+                        Data=y_ReadAll(SubjectROI{iROI});
+                        SourceFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsaverage5Space',filesep,name, '.gii'];
+                        y_Write(Data,gifti(Data),SourceFile);
+                        MaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_fsnativeSpace',filesep,Suffix,'MaskFile_',num2str(iROI),'_',Cfg.SubjectID{i},'_',name,'.gii'];
+                        Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject fsaverage5 --trgsubject {1} --mapmethod nnf --hemi lh --sval %s/Masks/MasksForFun/Masks_fsaverage5Space/%s%s --tval %s/Masks/MasksForFun/Masks_fsnativeSpace/%sMaskFile_%g_{1}_%s.gii ::: %s', CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,name, '.gii', WorkingDir, Suffix, iROI, name, Cfg.SubjectID{i});
+                        fprintf('\nWarp %s Mask (%s) for "%s" to individual space by mri_surf2surf.\n',Suffix,SourceFile, Cfg.SubjectID{i});
+                        system(Command);
+                        SubjectROI{iROI}=MaskName;
+                    end
+                elseif (ischar(SubjectROI{iROI})) && ~isempty(strfind(SubjectROI{iROI},'{SubjectID}')) % Process the individual ROI from an expression
+                    NewStrDef = replace(SubjectROI{iROI},'{SubjectID}',Cfg.SubjectID{i});
+                    NewStrDef = replace(NewStrDef,'{WorkingDir}',Cfg.WorkingDir);
+                    if exist(NewStrDef,'file')==2
+                        SubjectROI{iROI}=NewStrDef;
+                    else
+                        error(['The Mask File ',NewStrDef,' does not exist!'])
+                    end
+                else
+                    error(['This Mask definition can not be processed: ',SubjectROI{iROI}])
+                end
+            end
+
+            % Check if the text file is a definition for multiple subjects. i.e., the first line is 'Seed_ROI_List:', then get the corresponded ROI file
+            for iROI=1:length(SubjectROI)
+                if (ischar(SubjectROI{iROI})) && (exist(SubjectROI{iROI},'file')==2)
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (strcmpi(ext, '.txt'))
+                        fid = fopen(SubjectROI{iROI});
+                        SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n');
+                        fclose(fid);
+                        if strcmpi(SeedTimeCourseList{1}{1},'Seed_ROI_List:')
+                            SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
+                        end
+                    end
+                end
+            end
+
+            ROIDefSurfLHForEachSubject{i}=SubjectROI; %%!!! Change as in Fuction
+        end
+
+        Cfg.CalFC.ROIDefSurfLHForEachSubject = ROIDefSurfLHForEachSubject;
+    end
+
+
+    if ~isempty(Cfg.CalFC.ROIDefSurfRH)
+        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsnativeSpace'],'dir'))
+            mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsnativeSpace']);
+        end
+
+        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsaverage5Space'],'dir'))
+            mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsaverage5Space']);
+        end
+
+        Suffix='ROI_'; %%!!! Change as in Function
+        ROIDefSurfRHForEachSubject=cell(Cfg.SubjectNum,1);
+
+        for i=1:Cfg.SubjectNum
+            SubjectROI=Cfg.CalFC.ROIDefSurfRH;
+
+            for iROI=1:length(SubjectROI)
+                if exist(SubjectROI{iROI},'file')==2 % fsaverage5 Mask files need to be warped
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (~strcmpi(ext, '.txt'))
+                        Data=y_ReadAll(SubjectROI{iROI});
+                        SourceFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_fsaverage5Space',filesep,name, '.gii'];
+                        y_Write(Data,gifti(Data),SourceFile);
+                        MaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_fsnativeSpace',filesep,Suffix,'MaskFile_',num2str(iROI),'_',Cfg.SubjectID{i},'_',name,'.gii'];
+                        Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject fsaverage5 --trgsubject {1} --mapmethod nnf --hemi rh --sval %s/Masks/MasksForFun/Masks_fsaverage5Space/%s%s --tval %s/Masks/MasksForFun/Masks_fsnativeSpace/%sMaskFile_%g_{1}_%s.gii ::: %s', CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,name, '.gii', WorkingDir, Suffix, iROI, name, Cfg.SubjectID{i});
+                        fprintf('\nWarp %s Mask (%s) for "%s" to individual space by mri_surf2surf.\n',Suffix,SourceFile, Cfg.SubjectID{i});
+                        system(Command);
+                        SubjectROI{iROI}=MaskName;
+                    end
+                elseif (ischar(SubjectROI{iROI})) && ~isempty(strfind(SubjectROI{iROI},'{SubjectID}')) % Process the individual ROI from an expression
+                    NewStrDef = replace(SubjectROI{iROI},'{SubjectID}',Cfg.SubjectID{i});
+                    NewStrDef = replace(NewStrDef,'{WorkingDir}',Cfg.WorkingDir);
+                    if exist(NewStrDef,'file')==2
+                        SubjectROI{iROI}=NewStrDef;
+                    else
+                        error(['The Mask File ',NewStrDef,' does not exist!'])
+                    end
+                else
+                    error(['This Mask definition can not be processed: ',SubjectROI{iROI}])
+                end
+            end
+
+            % Check if the text file is a definition for multiple subjects. i.e., the first line is 'Seed_ROI_List:', then get the corresponded ROI file
+            for iROI=1:length(SubjectROI)
+                if (ischar(SubjectROI{iROI})) && (exist(SubjectROI{iROI},'file')==2)
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (strcmpi(ext, '.txt'))
+                        fid = fopen(SubjectROI{iROI});
+                        SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n');
+                        fclose(fid);
+                        if strcmpi(SeedTimeCourseList{1}{1},'Seed_ROI_List:')
+                            SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
+                        end
+                    end
+                end
+            end
+
+            ROIDefSurfRHForEachSubject{i}=SubjectROI; %%!!! Change as in Fuction
+        end
+
+        Cfg.CalFC.ROIDefSurfRHForEachSubject = ROIDefSurfRHForEachSubject;
+    end
+
 end
 
+
+
+%If don't need to Warp into original space, then resample the ROI masks
+if (Cfg.IsBasedOnFunSurf==0) && ( (~isempty(Cfg.CalFC.ROIDefVolu)) ) && ((Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1))
+    if ~isempty(Cfg.CalFC.ROIDefVolu)
+        if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace'],'dir'))
+            mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace']);
+        end
+
+        Suffix='ROI_'; %%!!! Change as in Function
+        % Ball to mask
+        AllSubjectROI=Cfg.CalFC.ROIDefVolu;
+        for iROI=1:length(AllSubjectROI)
+            if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace'],'dir'))
+                mkdir([Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace']);
+            end
+            if strcmpi(int2str(size(AllSubjectROI{iROI})),int2str([1, 4]))  %Sphere ROI definition: CenterX, CenterY, CenterZ, Radius
+                ROIMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep, 'Masks_MNISpace',filesep,Suffix,'SphereMask_',num2str(iROI),'_Center_',num2str(AllSubjectROI{iROI}(1)),'_',num2str(AllSubjectROI{iROI}(2)),'_',num2str(AllSubjectROI{iROI}(3)),'_',num2str(AllSubjectROI{iROI}(4)),'.nii'];
+                y_Sphere(AllSubjectROI{iROI}(1:3), AllSubjectROI{iROI}(4), [DPABIPath,filesep,'Templates',filesep,'aal.nii'], ROIMaskName);
+                AllSubjectROI{iROI}=ROIMaskName;
+            end
+        end
+
+        % Check if masks appropriate %This can be used as a function!!! ONLY FOR RESAMPLE
+        ROIDefVoluForEachSubject=cell(Cfg.SubjectNum,1);
+        for i=1:Cfg.SubjectNum
+            SubjectROI=AllSubjectROI;%%!!! Change as in Fuction
+            
+            % Set the reference image
+            RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,'*.img']);
+            if isempty(RefFile)  %YAN Chao-Gan, 120827. Also support .nii.gz files.
+                RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+            end
+            if isempty(RefFile)  %YAN Chao-Gan, 111114. Also support .nii files.
+                RefFile=dir([Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            end
+            RefFile=[Cfg.WorkingDir,filesep,Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,RefFile(1).name];
+            [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
+            
+            % Check if the ROI mask is appropriate
+            for iROI=1:length(SubjectROI)
+                AMaskFilename=SubjectROI{iROI};
+                AMaskFilename = replace(AMaskFilename,'{SubjectID}',Cfg.SubjectID{i});
+                AMaskFilename = replace(AMaskFilename,'{WorkingDir}',Cfg.WorkingDir);
+
+                if exist(SubjectROI{iROI},'file')==2
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (~strcmpi(ext, '.txt'))
+                        [MaskData,MaskVox,MaskHeader]=y_ReadRPI(AMaskFilename);
+                        if ~isequal(size(MaskData), size(RefData))
+                            fprintf('\nReslice %s Mask (%s) for "%s" since the dimension of mask mismatched the dimension of the functional data.\n',Suffix,AMaskFilename, Cfg.SubjectID{i});
+                            ReslicedMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,Suffix,num2str(iROI),'_',Cfg.SubjectID{i},'_',name,'.nii'];
+                            y_Reslice(AMaskFilename,ReslicedMaskName,RefVox,0, RefFile);
+                            SubjectROI{iROI}=ReslicedMaskName;
+                        end
+                    end
+                end
+            end
+            
+            % Check if the text file is a definition for multiple subjects. i.e., the first line is 'Seed_ROI_List:', then get the corresponded ROI file
+            for iROI=1:length(SubjectROI)
+                if (ischar(SubjectROI{iROI})) && (exist(SubjectROI{iROI},'file')==2)
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (strcmpi(ext, '.txt'))
+                        fid = fopen(SubjectROI{iROI});
+                        SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n'); 
+                        fclose(fid);
+                        if strcmpi(SeedTimeCourseList{1}{1},'Seed_ROI_List:')
+                            SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
+                        end
+                    end
+                end
+                
+            end
+            
+            ROIDefVoluForEachSubject{i}=SubjectROI; %%!!! Change as in Fuction
+        end
+        
+        Cfg.CalFC.ROIDefVoluForEachSubject = ROIDefVoluForEachSubject;
+    end
+
+
+    if ~isempty(Cfg.CalFC.ROIDefSurfLH)
+        ROIDefSurfLHForEachSubject=cell(Cfg.SubjectNum,1);
+        for i=1:Cfg.SubjectNum
+            SubjectROI=Cfg.CalFC.ROIDefSurfLH;%%!!! Change as in Fuction
+            for iROI=1:length(SubjectROI)
+                if exist(SubjectROI{iROI},'file')==2 % MNI Mask files need to be warped
+
+                elseif (ischar(SubjectROI{iROI})) && ~isempty(strfind(SubjectROI{iROI},'{SubjectID}')) % Process the individual ROI from an expression
+                    NewStrDef = replace(SubjectROI{iROI},'{SubjectID}',Cfg.SubjectID{i});
+                    NewStrDef = replace(NewStrDef,'{WorkingDir}',Cfg.WorkingDir);
+                    if exist(NewStrDef,'file')==2
+                        SubjectROI{iROI}=NewStrDef;
+                    else
+                        error(['The Mask File ',NewStrDef,' does not exist!'])
+                    end
+                else
+                    error(['This Mask definition can not be processed: ',SubjectROI{iROI}])
+                end
+            end
+
+            % Check if the text file is a definition for multiple subjects. i.e., the first line is 'Seed_ROI_List:', then get the corresponded ROI file
+            for iROI=1:length(SubjectROI)
+                if (ischar(SubjectROI{iROI})) && (exist(SubjectROI{iROI},'file')==2)
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (strcmpi(ext, '.txt'))
+                        fid = fopen(SubjectROI{iROI});
+                        SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n');
+                        fclose(fid);
+                        if strcmpi(SeedTimeCourseList{1}{1},'Seed_ROI_List:')
+                            SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
+                        end
+                    end
+                end
+            end
+
+            ROIDefSurfLHForEachSubject{i}=SubjectROI; %%!!! Change as in Fuction
+        end
+
+        Cfg.CalFC.ROIDefSurfLHForEachSubject = ROIDefSurfLHForEachSubject;
+    end
+
+
+    if ~isempty(Cfg.CalFC.ROIDefSurfRH)
+        ROIDefSurfRHForEachSubject=cell(Cfg.SubjectNum,1);
+        for i=1:Cfg.SubjectNum
+            SubjectROI=Cfg.CalFC.ROIDefSurfRH;%%!!! Change as in Fuction
+            for iROI=1:length(SubjectROI)
+                if exist(SubjectROI{iROI},'file')==2 % MNI Mask files need to be warped
+                elseif (ischar(SubjectROI{iROI})) && ~isempty(strfind(SubjectROI{iROI},'{SubjectID}')) % Process the individual ROI from an expression
+                    NewStrDef = replace(SubjectROI{iROI},'{SubjectID}',Cfg.SubjectID{i});
+                    NewStrDef = replace(NewStrDef,'{WorkingDir}',Cfg.WorkingDir);
+                    if exist(NewStrDef,'file')==2
+                        SubjectROI{iROI}=NewStrDef;
+                    else
+                        error(['The Mask File ',NewStrDef,' does not exist!'])
+                    end
+                else
+                    error(['This Mask definition can not be processed: ',SubjectROI{iROI}])
+                end
+            end
+
+            % Check if the text file is a definition for multiple subjects. i.e., the first line is 'Seed_ROI_List:', then get the corresponded ROI file
+            for iROI=1:length(SubjectROI)
+                if (ischar(SubjectROI{iROI})) && (exist(SubjectROI{iROI},'file')==2)
+                    [pathstr, name, ext] = fileparts(SubjectROI{iROI});
+                    if (strcmpi(ext, '.txt'))
+                        fid = fopen(SubjectROI{iROI});
+                        SeedTimeCourseList=textscan(fid,'%s\n'); %YAN Chao-Gan, 180320. For compatiblity of MALLAB 2014b. SeedTimeCourseList=textscan(fid,'%s','\n');
+                        fclose(fid);
+                        if strcmpi(SeedTimeCourseList{1}{1},'Seed_ROI_List:')
+                            SubjectROI{iROI}=SeedTimeCourseList{1}{i+1};
+                        end
+                    end
+                end
+            end
+
+            ROIDefSurfRHForEachSubject{i}=SubjectROI; %%!!! Change as in Fuction
+        end
+
+        Cfg.CalFC.ROIDefSurfRHForEachSubject = ROIDefSurfRHForEachSubject;
+    end
+
+end
+
+
+% The parpool might be shut down, restart it.
+% if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+%     parpool(Cfg.ParallelWorkersNumber);
+% end
+% YAN Chao-Gan, 190312. To be compatible with early matlab versions
+PCTVer = ver('distcomp');
+if ~isempty(PCTVer)
+    FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+    if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+        CurrentSize_MatlabPool = matlabpool('size');
+        if (CurrentSize_MatlabPool==0) && (Cfg.ParallelWorkersNumber~=0)
+            matlabpool(Cfg.ParallelWorkersNumber)
+        end
+    else
+        if isempty(gcp('nocreate')) && Cfg.ParallelWorkersNumber~=0
+            parpool(Cfg.ParallelWorkersNumber);
+        end
+    end
+end
 
 
 %Extract ROI Signals and Functional Connectivity Analysis
@@ -1541,41 +2582,41 @@ if (Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1)
             ROISignalsSurfRH=[];
             ROISignalsVolu=[];
             % Left Hemi
-            if ~isempty(Cfg.CalFC.ROIDefSurfLH)
-                IndividualROI = y_CheckIndividualROI(Cfg.CalFC.ROIDefSurfLH, i, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI
-                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            if isfield(Cfg.CalFC,'ROIDefSurfLHForEachSubject') && (~isempty(Cfg.CalFC.ROIDefSurfLHForEachSubject)) && (~isempty(Cfg.CalFC.ROIDefSurfLHForEachSubject{i})) % if ~isempty(Cfg.CalFC.ROIDefSurfLH)
+                IndividualROI = Cfg.CalFC.ROIDefSurfLHForEachSubject{i}; %y_CheckIndividualROI(Cfg.CalFC.ROIDefSurfLH, i, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI
+                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
                 for iFile=1:length(DirName)
                     FileName=DirName(iFile).name;
                     [ROISignalsSurfLH] = y_ExtractROISignal_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
                         IndividualROI, ...
                         [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'ROISignals_',Cfg.StartingDirName,filesep,Cfg.SubjectID{i}], ...
                         '', ... % Will not restrict into the brain mask in extracting ROI signals
-                        Cfg.CalFC.IsMultipleLabel);
+                        Cfg.CalFC.IsMultipleLabel,Cfg.CalFC.ROISelectedIndexSurfLH);
                 end
             end
             
             % Right Hemi
-            if ~isempty(Cfg.CalFC.ROIDefSurfRH)
-                IndividualROI = y_CheckIndividualROI(Cfg.CalFC.ROIDefSurfRH, i, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI
-                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            if isfield(Cfg.CalFC,'ROIDefSurfRHForEachSubject') && (~isempty(Cfg.CalFC.ROIDefSurfRHForEachSubject)) && (~isempty(Cfg.CalFC.ROIDefSurfRHForEachSubject{i})) %~isempty(Cfg.CalFC.ROIDefSurfRH)
+                IndividualROI = Cfg.CalFC.ROIDefSurfRHForEachSubject{i}; %y_CheckIndividualROI(Cfg.CalFC.ROIDefSurfRH, i, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI
+                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
                 for iFile=1:length(DirName)
                     FileName=DirName(iFile).name;
                     [ROISignalsSurfRH] = y_ExtractROISignal_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
                         IndividualROI, ...
                         [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'ROISignals_',Cfg.StartingDirName,filesep,Cfg.SubjectID{i}], ...
                         '', ... % Will not restrict into the brain mask in extracting ROI signals
-                        Cfg.CalFC.IsMultipleLabel);
+                        Cfg.CalFC.IsMultipleLabel,Cfg.CalFC.ROISelectedIndexSurfRH);
                 end
             end
             
             % Volume
-            if ~isempty(Cfg.CalFC.ROIDefVolu)  % YAN Chao-Gan, 190708: if (Cfg.IsProcessVolumeSpace==1) && (~isempty(Cfg.CalFC.ROIDefVolu))
-                IndividualROI = y_CheckIndividualROI(Cfg.CalFC.ROIDefVolu, i, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI
+            if isfield(Cfg.CalFC,'ROIDefVoluForEachSubject') && (~isempty(Cfg.CalFC.ROIDefVoluForEachSubject)) && (~isempty(Cfg.CalFC.ROIDefVoluForEachSubject{i})) %~isempty(Cfg.CalFC.ROIDefVolu)  % YAN Chao-Gan, 190708: if (Cfg.IsProcessVolumeSpace==1) && (~isempty(Cfg.CalFC.ROIDefVolu))
+                IndividualROI = Cfg.CalFC.ROIDefVoluForEachSubject{i}; %y_CheckIndividualROI(Cfg.CalFC.ROIDefVolu, i, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI
                 [ROISignalsVolu] = y_ExtractROISignal([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i}], ...
                 IndividualROI, ...
                 [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'ROISignals_',Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i}], ...
                 '', ... % Will not restrict into the brain mask in extracting ROI signals
-                Cfg.CalFC.IsMultipleLabel);
+                Cfg.CalFC.IsMultipleLabel,Cfg.CalFC.ROISelectedIndexVolu);
             end
             
             ROISignals = [ROISignalsSurfLH, ROISignalsSurfRH, ROISignalsVolu];
@@ -1590,22 +2631,30 @@ if (Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1)
         end
         
         
-        %Extract the ROI Center of Mass for Surf
-        
-        IndividualROI = y_CheckIndividualROI(Cfg.CalFC.ROIDefSurfLH, 1, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI. Use the first subject
-        [ROICenterLH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(IndividualROI, [], Cfg.CalFC.IsMultipleLabel, Cfg.SurfFileLH);
-        %[ROICenter,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(ROIDef, OutputName, IsMultipleLabel, SurfFile)  
-        
-        IndividualROI = y_CheckIndividualROI(Cfg.CalFC.ROIDefSurfRH, 1, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI. Use the first subject
-        [ROICenterRH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(IndividualROI, [], Cfg.CalFC.IsMultipleLabel, Cfg.SurfFileRH);
-        
-        IndividualROI = y_CheckIndividualROI(Cfg.CalFC.ROIDefVolu, 1, {'Seed_ROI_List:'}); %YAN Chao-Gan, 210415. Check if need to deal with individual ROI. Use the first subject
-        [ROICenterVolu,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(IndividualROI, [], Cfg.CalFC.IsMultipleLabel, [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1}]);
-        %[ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, OutputName, IsMultipleLabel, RefFile, Header)   
-        
-        ROICenter=[[ROICenterLH,zeros(size(ROICenterLH,1),2)];[ROICenterRH,zeros(size(ROICenterRH,1),2)];ROICenterVolu];
-        
-        save([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROI_CenterOfMass.mat'],'ROICenter');
+        %Extract the ROI Center of Mass for Surf. Only do it in the case of calculating in template space
+        if (Cfg.IsBasedOnFunSurf==0)
+            ROICenter=[];
+            if isfield(Cfg.CalFC,'ROIDefSurfLHForEachSubject') && (~isempty(Cfg.CalFC.ROIDefSurfLHForEachSubject)) && (~isempty(Cfg.CalFC.ROIDefSurfLHForEachSubject{1})) 
+                [ROICenterLH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(Cfg.CalFC.ROIDefSurfLHForEachSubject{1}, [], Cfg.CalFC.IsMultipleLabel,Cfg.CalFC.ROISelectedIndexSurfLH, Cfg.SurfFileLH);
+                %[ROICenter,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(ROIDef, OutputName, IsMultipleLabel, SurfFile)
+                ROICenter=[ROICenter;[ROICenterLH,zeros(size(ROICenterLH,1),2)]];
+            end
+
+            if isfield(Cfg.CalFC,'ROIDefSurfRHForEachSubject') && (~isempty(Cfg.CalFC.ROIDefSurfRHForEachSubject)) && (~isempty(Cfg.CalFC.ROIDefSurfRHForEachSubject{1})) 
+                [ROICenterRH,XYZCenter,VertexCenter] = y_ExtractCenterOfMass_Surf(Cfg.CalFC.ROIDefSurfRHForEachSubject{1}, [], Cfg.CalFC.IsMultipleLabel,Cfg.CalFC.ROISelectedIndexSurfRH, Cfg.SurfFileRH);
+                ROICenter=[ROICenter;[ROICenterRH,zeros(size(ROICenterRH,1),2)]];
+            end
+
+            if isfield(Cfg.CalFC,'ROIDefVoluForEachSubject') && (~isempty(Cfg.CalFC.ROIDefVoluForEachSubject)) && (~isempty(Cfg.CalFC.ROIDefVoluForEachSubject{1}))
+                [ROICenterVolu,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(Cfg.CalFC.ROIDefVoluForEachSubject{1}, [], Cfg.CalFC.IsMultipleLabel,Cfg.CalFC.ROISelectedIndexVolu, [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{1}]);
+                %[ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, OutputName, IsMultipleLabel, RefFile, Header)
+                ROICenter=[ROICenter;ROICenterVolu];
+            end
+
+            %ROICenter=[[ROICenterLH,zeros(size(ROICenterLH,1),2)];[ROICenterRH,zeros(size(ROICenterRH,1),2)];ROICenterVolu];
+
+            save([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROI_CenterOfMass.mat'],'ROICenter');
+        end
 
         %Merge ROI_OrderKey
         fidw = fopen([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROI_OrderKey.tsv'],'a+');
@@ -1648,25 +2697,35 @@ if (Cfg.IsCalFC==1)
         
         parfor i=1:Cfg.SubjectNum
             % Calculate Functional Connectivity by Seed based Correlation Anlyasis
+            MaskFileSurfLH = Cfg.MaskFileSurfLH;
+            MaskFileSurfLH = replace(MaskFileSurfLH,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileSurfLH = replace(MaskFileSurfLH,'{WorkingDir}',Cfg.WorkingDir);
+            MaskFileSurfRH = Cfg.MaskFileSurfRH;
+            MaskFileSurfRH = replace(MaskFileSurfRH,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileSurfRH = replace(MaskFileSurfRH,'{WorkingDir}',Cfg.WorkingDir);
+            MaskFileVolu = Cfg.MaskFileVolu;
+            MaskFileVolu = replace(MaskFileVolu,'{SubjectID}',Cfg.SubjectID{i});
+            MaskFileVolu = replace(MaskFileVolu,'{WorkingDir}',Cfg.WorkingDir);
+            
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 y_SCA_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROISignals_',Cfg.SubjectID{i},'.txt']}, ... %This is the ROI Signals extracted by the previous step
                     [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfLH',filesep,'FC_SeedSurfLHSurfRHVolu_',Cfg.StartingDirName,filesep,'FC_',Cfg.SubjectID{i},'.func.gii'], ...
-                    Cfg.MaskFileSurfLH, ...
+                    MaskFileSurfLH, ...
                     1);
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 y_SCA_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROISignals_',Cfg.SubjectID{i},'.txt']}, ...
                     [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunSurfRH',filesep,'FC_SeedSurfLHSurfRHVolu_',Cfg.StartingDirName,filesep,'FC_',Cfg.SubjectID{i},'.func.gii'], ...
-                    Cfg.MaskFileSurfRH, ...
+                    MaskFileSurfRH, ...
                     1);
             end
             
@@ -1676,7 +2735,7 @@ if (Cfg.IsCalFC==1)
                 y_SCA([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i}], ...
                     {[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'ROISignals_SurfLHSurfRHVolu_',Cfg.StartingDirName,filesep, 'ROISignals_',Cfg.SubjectID{i},'.txt']}, ...
                     [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'FunVolu',filesep,'FC_SeedSurfLHSurfRHVolu_',Cfg.StartingDirName_Volume,filesep,'FC_',Cfg.SubjectID{i},'.nii'], ...
-                    Cfg.MaskFileVolu, ...
+                    MaskFileVolu, ...
                     1);
             end
         end
@@ -1686,11 +2745,130 @@ end
 
 
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%***Smooth the results***%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%***Normalize and/or Smooth the results***%%%%%%%%%%%%%%%%
 
 Cfg.StartingDirName = 'Results';
+
+
+%Normalize on Results
+if (Cfg.IsNormalize>0) && strcmpi(Cfg.Normalize.Timing,'OnResults')
+
+    %Prepare the ref file
+    if ~(7==exist([Cfg.WorkingDir,filesep,'Masks'],'dir'))
+        mkdir([Cfg.WorkingDir,filesep,'Masks']);
+    end
+    copyfile([DPABIPath,filesep,'Templates',filesep,'BrainMask_05_97x115x97.nii'],[Cfg.WorkingDir,filesep,'Masks']);
+
+    fprintf(['Normalizing the resutls...\n']);
+
+    try
+        mkdir([Cfg.WorkingDir,filesep,Cfg.StartingDirName,'W',filesep,'AnatSurfLH']);
+        movefile([Cfg.WorkingDir,filesep,Cfg.StartingDirName,filesep,'AnatSurfLH',filesep,'fsaverage'],[Cfg.WorkingDir,filesep,Cfg.StartingDirName,'W',filesep,'AnatSurfLH']);
+        movefile([Cfg.WorkingDir,filesep,Cfg.StartingDirName,filesep,'AnatSurfLH',filesep,'fsaverage5'],[Cfg.WorkingDir,filesep,Cfg.StartingDirName,'W',filesep,'AnatSurfLH']);
+
+        mkdir([Cfg.WorkingDir,filesep,Cfg.StartingDirName,'W',filesep,'AnatSurfRH']);
+        movefile([Cfg.WorkingDir,filesep,Cfg.StartingDirName,filesep,'AnatSurfRH',filesep,'fsaverage'],[Cfg.WorkingDir,filesep,Cfg.StartingDirName,'W',filesep,'AnatSurfRH']);
+        movefile([Cfg.WorkingDir,filesep,Cfg.StartingDirName,filesep,'AnatSurfRH',filesep,'fsaverage5'],[Cfg.WorkingDir,filesep,Cfg.StartingDirName,'W',filesep,'AnatSurfRH']);
+
+        mkdir([Cfg.WorkingDir,filesep,Cfg.StartingDirName,'W',filesep,'AnatVolu']);
+        movefile([Cfg.WorkingDir,filesep,Cfg.StartingDirName,filesep,'AnatVolu',filesep,'MNISpace'],[Cfg.WorkingDir,filesep,Cfg.StartingDirName,'W',filesep,'AnatVolu']);
+    catch
+    end
+
+    for iFunSession=1:Cfg.FunctionalSessionNumber
+        for i=1:Cfg.SubjectNum
+            %Check the DSpaces need to be normalized
+            DirDSpace = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName]);
+            if strcmpi(DirDSpace(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+                StartIndex=4;
+            else
+                StartIndex=3;
+            end
+            DSpaceSet=[];
+            for iDir=StartIndex:length(DirDSpace)
+                if DirDSpace(iDir).isdir
+                    DSpaceSet = [DSpaceSet;{DirDSpace(iDir).name}];
+                end
+
+            end
+
+            for iDSpace=1:length(DSpaceSet)
+                switch DSpaceSet{iDSpace}
+
+                    case {'FunSurfLH','FunSurfRH'}
+                        SpaceName='fsaverage5';
+                        %Check the measures need to be normalized
+                        DirMeasure = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace}]);
+                        if strcmpi(DirMeasure(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+                            StartIndex=4;
+                        else
+                            StartIndex=3;
+                        end
+                        MeasureSet=[];
+                        for iDir=StartIndex:length(DirMeasure)
+                            if DirMeasure(iDir).isdir
+                                if ~((length(DirMeasure(iDir).name)>=10 && strcmpi(DirMeasure(iDir).name(1:10),'ROISignals'))) %~((length(DirMeasure(iDir).name)>10 && strcmpi(DirMeasure(iDir).name(end-10:end),'_ROISignals')))
+                                    MeasureSet = [MeasureSet;{DirMeasure(iDir).name}];
+                                end
+                            end
+                        end
+                        for iMeasure=1:length(MeasureSet)
+                            [tmp1 tmp2]=mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'W',filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure}]);
+                            FileList=[];
+                            DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'*',Cfg.SubjectID{i},'*.gii']);
+                            for j=1:length(DirImg)
+                                FileList=[FileList,' ',DirImg(j).name];
+                            end
+                            if strcmpi(DSpaceSet{iDSpace},'FunSurfLH')
+                                Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject %s --trgsubject %s --hemi lh --sval %s/%s/FunSurfLH/%s/{1}  --tval %s/%sW/FunSurfLH/%s/s{1} ::: %s', ...
+                                    CommandInit, Cfg.ParallelWorkersNumber, Cfg.SubjectID{i}, SpaceName,WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure},FileList);
+                                system(Command);
+                            elseif strcmpi(DSpaceSet{iDSpace},'FunSurfRH')
+                                Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject %s --trgsubject %s --hemi rh --sval %s/%s/FunSurfRH/%s/{1}  --tval %s/%sW/FunSurfRH/%s/s{1} ::: %s', ...
+                                    CommandInit, Cfg.ParallelWorkersNumber, Cfg.SubjectID{i}, SpaceName,WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure},FileList);
+                                system(Command);
+                            end
+                        end
+
+                    case {'FunVolu'}
+                        %Check the measures need to be normalized
+                        DirMeasure = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace}]);
+                        if strcmpi(DirMeasure(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+                            StartIndex=4;
+                        else
+                            StartIndex=3;
+                        end
+                        MeasureSet=[];
+                        for iDir=StartIndex:length(DirMeasure)
+                            if DirMeasure(iDir).isdir
+                                if ~((length(DirMeasure(iDir).name)>=10 && strcmpi(DirMeasure(iDir).name(1:10),'ROISignals'))) %~((length(DirMeasure(iDir).name)>10 && strcmpi(DirMeasure(iDir).name(end-10:end),'_ROISignals')))
+                                    MeasureSet = [MeasureSet;{DirMeasure(iDir).name}];
+                                end
+                            end
+                        end
+
+                        for iMeasure=1:length(MeasureSet)
+                            [tmp1 tmp2]=mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'W',filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure}]);
+                            FileList=[];
+                            DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'*',Cfg.SubjectID{i},'*.nii*']);
+                            for j=1:length(DirImg)
+                                FileList=[FileList,' ',DirImg(j).name];
+                            end
+                            Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/fmriprep/%s/anat/%s_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
+                                CommandParallel, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+                            system(Command);
+
+                        end
+
+                end
+            end
+        end
+    end
+
+    Cfg.StartingDirName=[Cfg.StartingDirName,'W']; %Now StartingDirName is with new suffix 'S'
+end
+
+
 
 %Smooth on Results
 if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnResults')
@@ -1711,7 +2889,7 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnResults')
                         DSpaceSet = [DSpaceSet;{DirDSpace(iDir).name}];
                     end
                 end
-                
+
             end
 
             for iDSpace=1:length(DSpaceSet)
@@ -1725,6 +2903,12 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnResults')
                         end
                         for iDirLevel1=StartIndexLevel1:length(DirLevel1)
                             if DirLevel1(iDirLevel1).isdir
+
+                                SpaceName=DirLevel1(iDirLevel1).name;
+                                if strcmpi(SpaceName,'fsnative')
+                                    SpaceName=Cfg.SubjectID{i};
+                                end
+
                                 DirLevel2 = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name]);
                                 if strcmpi(DirLevel2(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
                                     StartIndexLevel2=4;
@@ -1733,30 +2917,34 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnResults')
                                 end
                                 for iDirLevel2=StartIndexLevel2:length(DirLevel2)
                                     if DirLevel2(iDirLevel2).isdir
-                                        SpaceName=DirLevel2(iDirLevel2).name;
-                                        [tmp1 tmp2]=mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,SpaceName]);
+                                        [tmp1 tmp2]=mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name]);
                                         FileList=[];
-                                        DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,SpaceName,filesep,'*',Cfg.SubjectID{i},'*.gii']);
+                                        DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'*',Cfg.SubjectID{i},'*.gii']);
                                         for j=1:length(DirImg)
                                             FileList=[FileList,' ',DirImg(j).name];
                                         end
                                         if strcmpi(DSpaceSet{iDSpace},'AnatSurfLH')
-                                            Command = sprintf('%s parallel -j %g mri_surf2surf --s %s --hemi lh --sval /data/%s/AnatSurfLH/%s/%s/{1}  --fwhm %g --cortex --tval /data/%sS/AnatSurfLH/%s/%s/s{1} ::: %s', ...
-                                                CommandInit, Cfg.ParallelWorkersNumber, SpaceName, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DirLevel1(iDirLevel1).name, SpaceName, Cfg.Smooth.FWHMSurf, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DirLevel1(iDirLevel1).name, SpaceName,FileList);
+                                            Command = sprintf('%s parallel -j %g mri_surf2surf --s %s --hemi lh --sval %s/%s/AnatSurfLH/%s/%s/{1}  --fwhm %g --cortex --tval %s/%sS/AnatSurfLH/%s/%s/s{1} ::: %s', ...
+                                                CommandInit, Cfg.ParallelWorkersNumber, SpaceName, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DirLevel1(iDirLevel1).name, DirLevel2(iDirLevel2).name, Cfg.Smooth.FWHMSurf, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DirLevel1(iDirLevel1).name, DirLevel2(iDirLevel2).name,FileList);
                                             system(Command);
-                                            
+
                                         elseif strcmpi(DSpaceSet{iDSpace},'AnatSurfRH')
-                                            Command = sprintf('%s parallel -j %g mri_surf2surf --s %s --hemi rh --sval /data/%s/AnatSurfRH/%s/%s/{1}  --fwhm %g --cortex --tval /data/%sS/AnatSurfRH/%s/%s/s{1} ::: %s', ...
-                                                CommandInit, Cfg.ParallelWorkersNumber, SpaceName, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DirLevel1(iDirLevel1).name, SpaceName, Cfg.Smooth.FWHMSurf, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DirLevel1(iDirLevel1).name, SpaceName,FileList);
+                                            Command = sprintf('%s parallel -j %g mri_surf2surf --s %s --hemi rh --sval %s/%s/AnatSurfRH/%s/%s/{1}  --fwhm %g --cortex --tval %s/%sS/AnatSurfRH/%s/%s/s{1} ::: %s', ...
+                                                CommandInit, Cfg.ParallelWorkersNumber, SpaceName, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DirLevel1(iDirLevel1).name, DirLevel2(iDirLevel2).name, Cfg.Smooth.FWHMSurf, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DirLevel1(iDirLevel1).name, DirLevel2(iDirLevel2).name,FileList);
                                             system(Command);
                                         end
                                     end
                                 end
                             end
                         end
-                        
+
                     case {'FunSurfLH','FunSurfRH'}
-                        SpaceName='fsaverage5';
+
+                        if (Cfg.IsBasedOnFunSurf==1) && (~strcmp(Cfg.StartingDirName(end),'W'))
+                            SpaceName=Cfg.SubjectID{i};
+                        else
+                            SpaceName='fsaverage5';
+                        end
                         %Check the measures need to be normalized
                         DirMeasure = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace}]);
                         if strcmpi(DirMeasure(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
@@ -1789,8 +2977,8 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnResults')
                                 system(Command);
                             end
                         end
-                        
-                    case {'FunVolu','AnatVolu'}
+
+                    case {'FunVolu'}
                         %Check the measures need to be normalized
                         DirMeasure = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace}]);
                         if strcmpi(DirMeasure(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
@@ -1825,7 +3013,7 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnResults')
                                 SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.data = FileList;
                                 SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.fwhm = Cfg.Smooth.FWHMVolu;
                                 spm_jobman('run',SPMJOB.matlabbatch);
-                                
+
                                 DirTemp=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'ss*']);
                                 if isempty(DirTemp)
                                     movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'s*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure}]);
@@ -1834,14 +3022,63 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnResults')
                                 end
                             end
                         end
+
+                    case {'AnatVolu'}
+                        %Check the measures need to be normalized
+                        DirLevel1 = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace}]);
+                        if strcmpi(DirLevel1(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+                            StartIndexLevel1=4;
+                        else
+                            StartIndexLevel1=3;
+                        end
+                        for iDirLevel1=StartIndexLevel1:length(DirLevel1)
+                            if DirLevel1(iDirLevel1).isdir
+                                DirLevel2 = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name]);
+                                if strcmpi(DirLevel2(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
+                                    StartIndexLevel2=4;
+                                else
+                                    StartIndexLevel2=3;
+                                end
+                                for iDirLevel2=StartIndexLevel2:length(DirLevel2)
+                                    if DirLevel2(iDirLevel2).isdir
+                                        [tmp1 tmp2]=mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name]);
+                                        FileList=[];
+                                        DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'*',Cfg.SubjectID{i},'*.nii.gz']);
+
+                                        if ~isempty(DirImg)
+                                            for j=1:length(DirImg)
+                                                gunzip([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,DirImg(j).name]);
+                                                delete([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,DirImg(j).name]);
+                                            end
+                                        end
+                                        DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'*',Cfg.SubjectID{i},'*.nii']);
+                                        if ~isempty(DirImg)
+                                            for j=1:length(DirImg)
+                                                FileList=[FileList;{[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,DirImg(j).name]}];
+                                            end
+                                            SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Smooth.mat']);
+                                            SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.data = FileList;
+                                            SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.fwhm = Cfg.Smooth.FWHMVolu;
+                                            spm_jobman('run',SPMJOB.matlabbatch);
+
+                                            DirTemp=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'ss*']);
+                                            if isempty(DirTemp)
+                                                movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'s*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name]);
+                                            else
+                                                movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'ss*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name]);
+                                            end
+                                        end
+                                    end
+                                end
+
+                            end
+                        end
                 end
             end
         end
     end
     Cfg.StartingDirName=[Cfg.StartingDirName,'S']; %Now StartingDirName is with new suffix 'S'
 end
-
-
 
 
 

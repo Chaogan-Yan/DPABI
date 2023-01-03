@@ -22,7 +22,7 @@ function varargout = y_PALMSetting(varargin)
 
 % Edit the above text to modify the response to help y_PALMSetting
 
-% Last Modified by GUIDE v2.5 23-Jan-2021 06:42:57
+% Last Modified by GUIDE v2.5 16-Nov-2022 09:07:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -56,6 +56,7 @@ if nargin<4
     PALMSettings.ClusterInference=0; %YAN Chao-Gan, 171022. Set to 0. PALMSettings.ClusterInference=1;
     PALMSettings.ClusterFormingThreshold=2.3;
     PALMSettings.TFCE=1;
+    PALMSettings.TFCE2D=0; %YAN Chao-Gan, 221116. Add TFCE2D
     PALMSettings.FDR=0;
     PALMSettings.TwoTailed=1; %YAN Chao-Gan, 171022. Set to 1. PALMSettings.TwoTailed=0;
     PALMSettings.SavePermutations=0; %YAN Chao-Gan, 210123. 
@@ -116,6 +117,7 @@ PALMSettings.nPerm=str2num(get(handles.edit_PermNumber, 'String'));
 PALMSettings.ClusterInference=get(handles.checkboxClusterInference, 'Value');
 PALMSettings.ClusterFormingThreshold=str2num(get(handles.editClusterFormingThreshold, 'String'));
 PALMSettings.TFCE=get(handles.checkboxTFCE, 'Value');
+PALMSettings.TFCE2D=get(handles.checkboxTFCE2D, 'Value');
 PALMSettings.FDR=get(handles.checkboxFDR, 'Value');
 PALMSettings.TwoTailed=get(handles.checkboxTwoTailed, 'Value');
 PALMSettings.SavePermutations=get(handles.checkboxSavePermutations, 'Value');; %YAN Chao-Gan, 210123. 
@@ -153,7 +155,9 @@ function checkboxTFCE_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hint: get(hObject,'Value') returns toggle state of checkboxTFCE
-
+if get(handles.checkboxTFCE, 'Value')
+    set(handles.checkboxTFCE2D, 'Value', 0);
+end
 
 % --- Executes on selection change in MethodPopup.
 function MethodPopup_Callback(hObject, eventdata, handles)
@@ -281,6 +285,7 @@ end
 set(handles.checkboxClusterInference, 'Value', Struct.ClusterInference);
 set(handles.editClusterFormingThreshold, 'Enable', Flag, 'String', num2str(Struct.ClusterFormingThreshold));
 set(handles.checkboxTFCE, 'Value', Struct.TFCE);
+set(handles.checkboxTFCE2D, 'Value', Struct.TFCE2D);
 set(handles.checkboxFDR, 'Value', Struct.FDR);
 set(handles.checkboxTwoTailed, 'Value', Struct.TwoTailed);
 set(handles.checkboxSavePermutations, 'Value', Struct.SavePermutations);
@@ -382,3 +387,16 @@ function checkboxSavePermutations_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of checkboxSavePermutations
+
+
+% --- Executes on button press in checkboxTFCE2D.
+function checkboxTFCE2D_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxTFCE2D (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkboxTFCE2D
+if get(handles.checkboxTFCE2D, 'Value')
+    set(handles.checkboxTFCE, 'Value', 0);
+end
+

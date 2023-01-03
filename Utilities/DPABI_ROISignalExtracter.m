@@ -56,6 +56,7 @@ handles.ImgCells={};
 handles.ImgCellsSingleFiles={}; %YAN Chao-Gan, 200527. Should also work for adding single files
 handles.CurDir=pwd;
 handles.ROIDef=[];
+handles.ROISelectedIndex=[];
 handles.IsMultipleLabel=0;
 
 set(handles.OutputDirEntry, 'String', pwd);
@@ -246,10 +247,10 @@ for i=1:numel(ImgCells) %YAN Chao-Gan, 190105. Here don't need parfor. parfor i=
     OutputFile=fullfile(OutputDir, sprintf('%s_%s.txt', Prefix, Name));
     
     if strcmpi(Ext,'.gii') %YAN Chao-Gan, 190105. Add GIFTI support.
-        [ROISignals] = y_ExtractROISignal_Surf(Img, handles.ROIDef, OutputFile, '', handles.IsMultipleLabel);
+        [ROISignals] = y_ExtractROISignal_Surf(Img, handles.ROIDef, OutputFile, '', handles.IsMultipleLabel,handles.ROISelectedIndex);
         %[ROISignals] = y_ExtractROISignal_Surf(AllVolume, ROIDef, OutputName, AMaskFilename, IsMultipleLabel, GHeader, CUTNUMBER)             
     else
-        [ROISignals] = y_ExtractROISignal(Img, handles.ROIDef, OutputFile, '', handles.IsMultipleLabel);
+        [ROISignals] = y_ExtractROISignal(Img, handles.ROIDef, OutputFile, '', handles.IsMultipleLabel,handles.ROISelectedIndex);
         %[ROISignals] = y_ExtractROISignal(AllVolume, ROIDef, OutputName, MaskData, IsMultipleLabel, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)
     end
     
@@ -449,25 +450,32 @@ function DefineROI_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 ROIDef=handles.ROIDef;
-% YAN Chao-Gan, 190105. No longer need to display these templates in this case.
-% if isempty(ROIDef)
-%     [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
-%     addpath([ProgramPath,filesep,'SubGUIs']);
-%     [ROIDef,IsMultipleLabel]=DPARSF_ROI_Template(ROIDef,handles.IsMultipleLabel);
-%     handles.IsMultipleLabel = IsMultipleLabel;
-% end
+
+if isfield(handles,'ROISelectedIndex')
+    ROISelectedIndex=handles.ROISelectedIndex;
+else
+    ROISelectedIndex=cell(size(ROIDef));
+end
+
+
 handles.IsMultipleLabel = 1; % YAN Chao-Gan, 190105. Let's setup IsMultipleLabel always to 1.
-
-
 if handles.IsMultipleLabel
     fprintf('\nIsMultipleLabel is set to 1: There are multiple labels in the ROI mask file.\n');
 else
     fprintf('\nIsMultipleLabel is set to 0: All the non-zero values will be used to define the only ROI.\n');
 end
 
-ROIDef=DPABI_ROIList(ROIDef);
-handles.ROIDef=ROIDef;
+ROIList.ROIDef=ROIDef;
+ROIList.ROISelectedIndex=ROISelectedIndex;
+
+ROIList=DPABI_ROIList(ROIList);
+
+handles.ROIDef=ROIList.ROIDef;
+handles.ROISelectedIndex=ROIList.ROISelectedIndex;
 guidata(hObject, handles);
+
+
+
 
 
 

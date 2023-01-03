@@ -1,0 +1,54 @@
+{
+  "name": "mrtrix_multishell_msmt_hsvs",
+  "space": "T1w",
+  "atlases": [],
+  "anatomical": [
+    "mrtrix_5tt_hsvs"
+  ],
+  "nodes": [
+    {
+      "name": "msmt_csd",
+      "software": "MRTrix3",
+      "action": "csd",
+      "output_suffix": "msmtcsd",
+      "input": "qsiprep",
+      "parameters": {
+        "mtnormalize": true,
+        "response": {
+          "algorithm": "dhollander"
+        },
+        "fod": {
+          "algorithm": "msmt_csd",
+          "max_sh": [
+            8,
+            8,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "track_ifod2",
+      "software": "MRTrix3",
+      "action": "tractography",
+      "output_suffix": "ifod2",
+      "input": "msmt_csd",
+      "parameters": {
+        "use_5tt": true,
+        "method_5tt": "hsvs",
+        "use_sift2": true,
+        "tckgen": {
+          "algorithm": "iFOD2",
+          "select": 10000000,
+          "max_length": 250,
+          "min_length": 30,
+          "power": 0.33,
+          "crop_at_gmwmi": true,
+          "backtrack": true,
+          "quiet": true
+        },
+        "sift2": {}
+      }
+    }
+  ]
+}

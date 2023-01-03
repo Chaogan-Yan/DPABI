@@ -101,6 +101,31 @@ else
 end
 
 
+%Then check Dwi
+if strcmpi(StartingDirName, 'FunRaw')
+    StartingDirName_Dwi='DwiRaw';
+else
+    StartingDirName_Dwi='DwiImg';
+end
+if exist(fullfile(WorkingDir,StartingDirName_Dwi))
+    for i=1:SubjectNum
+        if ~exist([WorkingDir,filesep,StartingDirName_Dwi,filesep,SubjectID{i}])
+            error('There is no such dir: %s!',[WorkingDir,filesep,StartingDirName_Dwi,filesep,SubjectID{i}]);
+        else
+            DirFile=dir([WorkingDir,filesep,StartingDirName_Dwi,filesep,SubjectID{i},filesep,'*']);
+            if (length(DirFile) >=3) && strcmpi(DirFile(3).name,'.DS_Store')
+                MinimumFile=3;
+            else
+                MinimumFile=2;
+            end
+            if length(DirFile)<=MinimumFile
+                error('There are no image files under dir: %s!',[WorkingDir,filesep,StartingDirName_Dwi,filesep,SubjectID{i}]);
+            end
+        end
+    end
+end
+
+
 %Then check FieldMap
 if exist([WorkingDir,filesep,'FieldMap'])
     if strcmpi(StartingDirName, 'FunRaw')

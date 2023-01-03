@@ -1,5 +1,5 @@
-function [FCBrain_AllWindow, zFCBrain_AllWindow, Header] = y_SCA_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, MaskData, IsMultipleLabel, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)
-% [FCBrain, Header] = y_SCA(AllVolume, ROIDef, OutputName, MaskData, IsMultipleLabel, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)
+function [FCBrain_AllWindow, zFCBrain_AllWindow, Header] = y_SCA_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, MaskData, IsMultipleLabel, ROISelectedIndex, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)
+% [FCBrain_AllWindow, zFCBrain_AllWindow, Header] = y_SCA_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, MaskData, IsMultipleLabel, ROISelectedIndex, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)
 % Calculate Dynamic Functional Connectivity by Seed based Correlation Anlyasis
 % Input:
 %   WindowSize      -   the size of the sliding window
@@ -17,6 +17,7 @@ function [FCBrain_AllWindow, zFCBrain_AllWindow, Header] = y_SCA_Window(WindowSi
 % 	MaskData		-   The Brain Mask matrix (DimX*DimY*DimZ) or the Brain Mask file name
 %   IsMultipleLabel -   1: There are multiple labels in the ROI mask file. Will extract each of them. (e.g., for aal.nii, extract all the time series for 116 regions)
 %                       0 (default): All the non-zero values will be used to define the only ROI
+%   ROISelectedIndex -  Only extract ROIs defined by ROISelectedIndex. Empty means extract all non-zero ROIs.
 %   IsNeedDetrend   -   0: Dot not detrend; 1: Use Matlab's detrend
 %   Band            -   Temporal filter band: matlab's ideal filter e.g. [0.01 0.08]
 %   TR              -   The TR of scanning. (Used for filtering.)
@@ -50,6 +51,10 @@ end
 
 if ~exist('CUTNUMBER','var')
     CUTNUMBER = 10;
+end
+
+if ~exist('ROISelectedIndex','var')
+    ROISelectedIndex = [];
 end
 
 theElapsedTime =cputime;
@@ -200,10 +205,17 @@ for iROI=1:length(ROIDef)
         % Speed up! YAN Chao-Gan 101010.
         MaskROI=reshape(MaskROI,1,[]);
         MaskROI=MaskROI(MaskIndex); %Apply the brain mask
-        
+
         if IsMultipleLabel == 1
-            Element = unique(MaskROI);
-            Element(find(Element==0)) = []; % This is the background 0
+
+            if ~isempty(ROISelectedIndex) && ~isempty(ROISelectedIndex{iROI})
+                Element=ROISelectedIndex{iROI};
+            else
+                Element = unique(MaskROI);
+                Element(find(isnan(Element))) = []; % ignore background if encoded as nan. Suggested by Dr. Martin Dyrba
+                Element(find(Element==0)) = []; % This is the background 0
+            end
+
             SeedSeries_MultipleLabel = zeros(nDimTimePoints,length(Element));
             for iElement=1:length(Element)
                 

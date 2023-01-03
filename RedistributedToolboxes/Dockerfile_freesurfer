@@ -1,0 +1,54 @@
+FROM ubuntu:20.04 AS build
+MAINTAINER Chao-Gan Yan "ycg.yan@gmail.com"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update system and install packages
+
+RUN apt-get -qq update
+
+RUN apt-get -qq update && apt-get -qq install -y \
+    x11vnc xvfb parallel wget unzip && \
+    apt-get update
+
+# x11vnc xvfb libqt4-opengl libqt4-scripttools libjpeg62 parallel wget unzip spyder3 && \
+
+COPY ./freesurfer_ubuntu20-7.3.2_amd64.deb /tmp/
+
+RUN apt-get -qq update && apt-get -qq install -y \
+    /tmp/freesurfer_ubuntu20-7.3.2_amd64.deb && \
+    apt-get update
+
+RUN rm /tmp/freesurfer_ubuntu20-7.3.2_amd64.deb
+
+# Setup x11vnc
+RUN mkdir -p ~/.vnc && \
+    x11vnc -storepasswd dpabi ~/.vnc/passwd && \
+    chmod 0600 ~/.vnc/passwd && \
+    export USER=$(whoami) && \
+    export DISPLAY=$HOSTNAME:25
+
+# RUN source $FREESURFER_HOME/SetUpFreeSurfer.sh
+ENV OS="Linux" \
+    FS_OVERRIDE=0 \
+    FIX_VERTEX_AREA="" \
+    FSF_OUTPUT_FORMAT="nii.gz" \
+    FREESURFER_HOME="/usr/local/freesurfer/7.3.2"
+ENV SUBJECTS_DIR="$FREESURFER_HOME/subjects" \
+    FUNCTIONALS_DIR="$FREESURFER_HOME/sessions" \
+    MNI_DIR="$FREESURFER_HOME/mni" \
+    LOCAL_DIR="$FREESURFER_HOME/local" \
+    MINC_BIN_DIR="$FREESURFER_HOME/mni/bin" \
+    MINC_LIB_DIR="$FREESURFER_HOME/mni/lib" \
+    MNI_DATAPATH="$FREESURFER_HOME/mni/data"
+ENV PERL5LIB="$MINC_LIB_DIR/perl5/5.8.5" \
+    MNI_PERL5LIB="$MINC_LIB_DIR/perl5/5.8.5" \
+    PATH="$FREESURFER_HOME/bin:$FREESURFER_HOME/tktools:$MINC_BIN_DIR:$PATH"
+
+
+
+ENTRYPOINT []
+
+# Start VNC after launching
+# x11vnc -forever -shared -usepw -create -rfbport 5925 &
+

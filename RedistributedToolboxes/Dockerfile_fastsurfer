@@ -1,0 +1,12 @@
+FROM deepmi/fastsurfer:cpu-v1.1.1
+
+
+MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
+
+# Update system and istall pakages
+RUN apt-get -qq update && apt-get -qq install -y \
+    parallel && \
+    apt-get update
+
+ENTRYPOINT []
+

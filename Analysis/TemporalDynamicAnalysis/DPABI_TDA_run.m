@@ -16,6 +16,20 @@ if ~isfield(Cfg,'ConcordanceMeasuresSelected') %YAN Chao-Gan, 180704. If Concord
 end
 
 
+
+if ~isfield(Cfg,'CalFC')
+    Cfg.CalFC.ROIDef = {};
+    Cfg.CalFC.ROISelectedIndex = [];
+else
+    if ~isfield(Cfg.CalFC,'ROIDef')
+        Cfg.CalFC.ROIDef = {};
+    end
+    if ~isfield(Cfg.CalFC,'ROISelectedIndex')
+        Cfg.CalFC.ROISelectedIndex = [];
+    end
+end
+
+
 [SPMversion,c]=spm('Ver');
 SPMversion=str2double(SPMversion(end));
 
@@ -176,7 +190,7 @@ if (Cfg.IsFC==1)
             OutFile = [Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'TemporalDynamics',filesep,'TemporalDynamics4D',filesep,'FC_',StartingDirName,filesep,'FC_',Cfg.SubjectID{iSub}];
             
             %[FCBrain_AllWindow, zFCBrain_AllWindow, Header] = y_SCA_Window(WindowSize, WindowStep, WindowType, AllVolume, ROIDef, OutputName, MaskData, IsMultipleLabel, IsNeedDetrend, Band, TR, TemporalMask, ScrubbingMethod, ScrubbingTiming, Header, CUTNUMBER)
-            [FCBrain_AllWindow, zFCBrain_AllWindow, Header] = y_SCA_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, Cfg.CalFC.ROIDef, OutFile, MaskFile, Cfg.CalFC.IsMultipleLabel, Cfg.IsDetrend);
+            [FCBrain_AllWindow, zFCBrain_AllWindow, Header] = y_SCA_Window(Cfg.WindowSize, Cfg.WindowStep, Cfg.WindowType, InFiles, Cfg.CalFC.ROIDef, OutFile, MaskFile, Cfg.CalFC.IsMultipleLabel, Cfg.CalFC.ROISelectedIndex, Cfg.IsDetrend);
             
             %Calculate mean and std
             for iROI=1:size(zFCBrain_AllWindow,5)

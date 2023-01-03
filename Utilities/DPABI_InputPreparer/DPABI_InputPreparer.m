@@ -6,12 +6,14 @@ function varargout = DPABI_InputPreparer(varargin)
 % B108, CAS Key Laboratory of Behavioral Science, Institute of Psychology, Beijing, China; 
 % Department of Psychology, University of Chinese Academy of Sciences, Beijing, China;
 % Written by Bin Lu
+% Modified by Bin Lu, 20220919. Be compatible to xnat-like input directory. Add option for setting lower limit for number of files of a series.
+% Modified by Bin Lu, 20221224. Be compatible to DWI images. Combine Fun and FunOther module. 
 % http://rfmri.org/dpabi
 % $mail=larslu@foxmail.com
 %-----------------------------------------------------------
 % Mail to Author:  <a href="larslu@foxmail.com">Bin Lu</a> 
 
-% Last Modified by GUIDE v2.5 15-Nov-2021 16:13:41
+% Last Modified by GUIDE v2.5 12-Dec-2022 15:43:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,31 +59,43 @@ handles.Cfg.OutputDir = pwd;
 handles.Cfg.IsPseudoSeries = 1; % for some participants who lack one session 
 % but have the others, we use a pseudo session to make it easy to process
 % for DPARSFA or DPABISurf. e.g. Sub001 have T1Raw and FunRaw but don't
-% have S2_FunRaw, while other subjects have two functional sessions.
+% have S2_FunRaw, while other subjects have two functional sessions. We
+% would put a S2_FunRaw series from another subject into this subject, and
+% mark Sub001 in the report.
 handles.Cfg.IsDCM2NII = 1;
-handles.Cfg.Demo.SeriesNamesDefault  = 'Please select a correct input direcroty.';
+handles.Cfg.Demo.SeriesNamesDefault  = 'Please select an appropriate input directory.';
 handles.Cfg.Demo.SeriesNames = {handles.Cfg.Demo.SeriesNamesDefault};
 handles.Cfg.Demo.SubID = '';
 handles.Cfg.Demo.PreviousSubID = '';
 handles.Cfg.Demo.nChangeSub = 0;
-handles.Cfg.IsChangeSubID = 1;
+handles.Cfg.IsChangeSubID = 0;  % Change default to 0, Bin Lu, 20220919
 handles.Cfg.AlwaysLatterSeries = 0;
 handles.Cfg.AnatOnly = 0;
-handles.Cfg.IsOtherFun = 0;
-handles.Cfg.FunOtherNumber = 0;
+handles.Cfg.IsOrganizeFun = 0;
+handles.Cfg.IsOrganizeDwi = 0;
+handles.Cfg.FunSessionNumber = 1;
 handles.Cfg.SeriesName.T1 = '';
-handles.Cfg.SeriesName.Fun = '';
-handles.Cfg.SeriesName.FunOther = {};
+handles.Cfg.SeriesName.Dwi = '';
+handles.Cfg.SeriesName.FunAll = {};
 handles.Cfg.SeriesIndex.T1 = 1;
-handles.Cfg.SeriesIndex.Fun = 1;
-handles.Cfg.SeriesIndex.FunOther = [1];
+handles.Cfg.SeriesIndex.Dwi = 1;
+handles.Cfg.SeriesIndex.FunAll = [1];
 handles.Cfg.SeriesFileNumber.List.T1 = 0;
-handles.Cfg.SeriesFileNumber.List.Fun = 0;
-handles.Cfg.SeriesFileNumber.List.FunOther = {0};
+handles.Cfg.SeriesFileNumber.List.Dwi = 0;
+handles.Cfg.SeriesFileNumber.List.FunAll = {0};
 handles.Cfg.SeriesFileNumber.Flag.T1 = 1;
-handles.Cfg.SeriesFileNumber.Flag.Fun = 1;
-handles.Cfg.SeriesFileNumber.Flag.FunOther = [1];
-handles.Cfg.SxFunRawList = {'S2_FunRaw'};
+handles.Cfg.SeriesFileNumber.Flag.Dwi = 1;
+handles.Cfg.SeriesFileNumber.Flag.FunAll = [1];
+handles.Cfg.SeriesFileNumber.LowLimitMode.T1 = 0; % Add lower limit mode for setting number of files for a series, Bin Lu, 20220919
+handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi = 0;
+handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll = {0};
+handles.Cfg.SeriesFileNumber.LowThreshold.T1 = 0; % Add lower threshold for setting number of files for a series, Bin Lu, 20220919
+handles.Cfg.SeriesFileNumber.LowThreshold.Dwi = 0;
+handles.Cfg.SeriesFileNumber.LowThreshold.FunAll = {0};
+handles.Cfg.SeriesFileNumber.Percent.T1 = 0; % Record percentage of each type number of files for a series, Bin Lu, 20220919
+handles.Cfg.SeriesFileNumber.Percent.Dwi = 0;
+handles.Cfg.SeriesFileNumber.Percent.FunAll = {[0]};
+handles.Cfg.SxFunRawList = {'FunRaw'};
 handles.Cfg.SxFunRawFlag = 1;
 handles.Cfg.SameSeriesName.Strategy = 1; % 1 - follow the series index; 2 - mannually choose always
 handles.Cfg.SameSeriesName.SessionName1 = '';
@@ -90,8 +104,8 @@ handles.Cfg.SameSeriesName.SeriesName1 = '';
 handles.Cfg.SameSeriesName.SeriesName2 = '';
 handles.Cfg.SameSeriesName.Flag = 0;
 handles.Cfg.ImageList.T1 = {};
-handles.Cfg.ImageList.Fun = {};
-handles.Cfg.ImageList.FunOther = {};
+handles.Cfg.ImageList.Dwi = {};
+handles.Cfg.ImageList.FunAll = {};
 handles.Cfg.ManuallySelect.SubName = {};
 handles.Cfg.ManuallySelect.Series = {}; 
 
@@ -125,11 +139,11 @@ handles.output = hObject;
 
 % Make UI display correct in PC and linux
 if ismac
-    ZoonMatrix = [1 1 1.6 1.2];  %For mac
+    ZoonMatrix = [1 1 1.7 1.1];  %For mac
 elseif ispc
-    ZoonMatrix = [1 1 1.6 1];  %For pc
+    ZoonMatrix = [1 1 1.6 0.9];  %For pc
 else
-    ZoonMatrix = [1 1 1.6 1.2];  %For Linux
+    ZoonMatrix = [1 1 1.6 1];  %For Linux
 end
 UISize = get(handles.figureConvertDPABIFormat,'Position');
 UISize = UISize.*ZoonMatrix;
@@ -320,30 +334,22 @@ handles.Cfg.OutputDir = get(handles.editOutputDir,'String');
 guidata(hObject,handles);
 
 
-function editFunOtherNumber_Callback(hObject, eventdata, handles)
-% hObject    handle to editFunOtherNumber (see GCBO)
+function editFunSessionNum_Callback(hObject, eventdata, handles)
+% hObject    handle to editFunSessionNum (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Cfg.FunOtherNumber = str2num(get(handles.editFunOtherNumber,'String'));
-ResetCfg(hObject, handles, 2);
+handles.Cfg.FunSessionNumber = str2num(get(handles.editFunSessionNum,'String'));
+ResetCfg(hObject, handles, 2); 
 handles = guidata(hObject);
-for iSession = 1:handles.Cfg.FunOtherNumber
-        handles.Cfg.SxFunRawList{iSession} = ['S',num2str(iSession+1),'_FunRaw'];
-end
-handles.Cfg.SeriesIndex.FunOther = ones(handles.Cfg.FunOtherNumber,1);
-handles.Cfg.SeriesFileNumber.List.FunOther = cell(1,handles.Cfg.FunOtherNumber);
-handles.Cfg.SeriesFileNumber.List.FunOther(:) = {[0]};
-handles.Cfg.SeriesFileNumber.Flag.FunOther = ones(handles.Cfg.FunOtherNumber,1);
-handles.Cfg.SxFunRawFlag = 1;
 UpdateDisplay(handles);
 guidata(hObject,handles);
-% Hints: get(hObject,'String') returns contents of editFunOtherNumber as text
-%        str2double(get(hObject,'String')) returns contents of editFunOtherNumber as a double
+% Hints: get(hObject,'String') returns contents of editFunSessionNum as text
+%        str2double(get(hObject,'String')) returns contents of editFunSessionNum as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function editFunOtherNumber_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to editFunOtherNumber (see GCBO)
+function editFunSessionNum_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editFunSessionNum (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -354,19 +360,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupmenuFunOtherSession.
-function popupmenuFunOtherSession_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenuFunOtherSession (see GCBO)
+% --- Executes on selection change in popupmenuFunAll.
+function popupmenuFunAllSession_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenuFunAll (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuFunOtherSession contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenuFunOtherSession
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuFunAll contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenuFunAll
 
 
 % --- Executes during object creation, after setting all properties.
-function popupmenuFunOtherSession_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenuFunOtherSession (see GCBO)
+function popupmenuFunAllSession_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuFunAll (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -405,8 +411,8 @@ function pushbuttonRun_Callback(hObject, eventdata, handles)
 disp('Begin to convert input directory into DPARSFA/DPABISurf starting directory format!')
 disp([newline,'Checking data status ...'])
 
-% Check whether no funcitonal session is needed
-if isempty(handles.Cfg.SeriesName.Fun) && handles.Cfg.IsOtherFun == 0
+% Check whether to organize anatomical series only
+if handles.Cfg.IsOrganizeDwi == 0 && handles.Cfg.IsOrganizeFun == 0
     handles.Cfg.AnatOnly = IsAnatOnly(handles.Cfg.AnatOnly);
     if handles.Cfg.AnatOnly == 0
         return
@@ -425,7 +431,7 @@ if handles.Cfg.SameSeriesName.Flag
 end
 
 % Create final image list and copy files!
-CreateImageList(hObject, handles)
+OrganizeImages(hObject, handles)
 handles = guidata(hObject);
 
 % Do dicom to nifit if needed
@@ -438,8 +444,8 @@ end
 WriteCSV(hObject, handles);
 
 set(handles.pushbuttonRun,'Enable','off','String','Finished');   
-% set(handles.pushbuttonCallDPARSFA,'Enable','on');%,'BackgroundColor',[154/256,255/256,154/256]
-% set(handles.pushbuttonCallDPABISurf,'Enable','on');%,'BackgroundColor',[154/256,255/256,154/256]
+set(handles.pushbuttonCallDPARSFA,'Enable','on');%,'BackgroundColor',[154/256,255/256,154/256]
+set(handles.pushbuttonCallDPABISurf,'Enable','on');%,'BackgroundColor',[154/256,255/256,154/256]
 
 disp([newline, 'All the conversion is finished! You can directly call DPARSFA or DPABISurf in the pervious figure now!']);
 guidata(hObject,handles);
@@ -470,9 +476,9 @@ Cfg.CalFC.ROIDef = {[DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
 Cfg.CalFC.IsMultipleLabel = 1;
 
 Cfg.WorkingDir = handles.Cfg.OutputDir;
-Cfg.IsNeedConvertFunDCM2IMG = ~handles.Cfg.IsDCM2NII;
+Cfg.IsNeedConvertDwiDCM2IMG = ~handles.Cfg.IsDCM2NII;
 Cfg.IsNeedConvertT1DCM2IMG = ~handles.Cfg.IsDCM2NII;
-Cfg.FunctionalSessionNumber = handles.Cfg.FunOtherNumber+1;
+Cfg.FunctionalSessionNumber = handles.Cfg.FunSessionNumber;
 if handles.Cfg.IsDCM2NII
     Cfg.StartingDirName = 'FunImg';
     SubList = dir([handles.Cfg.OutputDir,filesep,'FunImg']);
@@ -520,9 +526,9 @@ Cfg.CalFC.ROIDefVolu = {[handles.Cfg.DPABIPath,filesep,'Templates',filesep,'aal.
 
 
 Cfg.WorkingDir = handles.Cfg.OutputDir;
-Cfg.IsNeedConvertFunDCM2IMG = ~handles.Cfg.IsDCM2NII;
+Cfg.IsNeedConvertDwiDCM2IMG = ~handles.Cfg.IsDCM2NII;
 Cfg.IsNeedConvertT1DCM2IMG = ~handles.Cfg.IsDCM2NII;
-Cfg.FunctionalSessionNumber = handles.Cfg.FunOtherNumber+1;
+Cfg.FunctionalSessionNumber = handles.Cfg.FunSessionNumber;
 if handles.Cfg.IsDCM2NII
     Cfg.StartingDirName = 'FunImg';
     SubList = dir([handles.Cfg.OutputDir,filesep,'FunImg']);
@@ -540,21 +546,21 @@ Cfg.SubjectID={SubList(:).name}';
 DPABISurf_Pipeline(Cfg);
 
 
-% --- Executes on selection change in popupmenuFunOtherFileNumber.
-function popupmenuFunOtherFileNumber_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenuFunOtherFileNumber (see GCBO)
+% --- Executes on selection change in popupmenuFunAllFileNumber.
+function popupmenuFunAllFileNumber_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenuFunAllFileNumber (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 SessionFlag = handles.Cfg.SxFunRawFlag;
-handles.Cfg.SeriesFileNumber.Flag.FunOther(SessionFlag) = get(handles.popupmenuFunOtherFileNumber,'Value');
+handles.Cfg.SeriesFileNumber.Flag.FunAll(SessionFlag) = get(handles.popupmenuFunAllFileNumber,'Value');
 guidata(hObject,handles);
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuFunOtherFileNumber contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenuFunOtherFileNumber
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuFunAllFileNumber contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenuFunAllFileNumber
 
 
 % --- Executes during object creation, after setting all properties.
-function popupmenuFunOtherFileNumber_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenuFunOtherFileNumber (see GCBO)
+function popupmenuFunAllFileNumber_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuFunAllFileNumber (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -565,20 +571,20 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupmenuFunFileNumber.
-function popupmenuFunFileNumber_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenuFunFileNumber (see GCBO)
+% --- Executes on selection change in popupmenuDwiFileNumber.
+function popupmenuDwiFileNumber_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenuDwiFileNumber (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Cfg.SeriesFileNumber.Flag.Fun = get(handles.popupmenuFunFileNumber,'Value');
+handles.Cfg.SeriesFileNumber.Flag.Dwi = get(handles.popupmenuDwiFileNumber,'Value');
 guidata(hObject,handles);
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuFunFileNumber contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenuFunFileNumber
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuDwiFileNumber contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenuDwiFileNumber
 
 
 % --- Executes during object creation, after setting all properties.
-function popupmenuFunFileNumber_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenuFunFileNumber (see GCBO)
+function popupmenuDwiFileNumber_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuDwiFileNumber (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -613,25 +619,15 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in checkboxIsOtherFun.
-function checkboxIsOtherFun_Callback(hObject, eventdata, handles)
-% hObject    handle to checkboxIsOtherFun (see GCBO)
+% --- Executes on button press in checkboxIsOrganizeFun.
+function checkboxIsOrganizeFun_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxIsOrganizeFun (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Cfg.IsOtherFun = get(handles.checkboxIsOtherFun,'Value');
-if handles.Cfg.IsOtherFun  
-    set(handles.popupmenuSxFunRaw,'Enable','on');
-    set(handles.popupmenuFunOther,'Enable','on');
-    set(handles.popupmenuFunOtherFileNumber,'Enable','on');
-    set(handles.editFunOtherNumber,'Enable','on');
-else
-    set(handles.popupmenuSxFunRaw,'Enable','off');
-    set(handles.popupmenuFunOther,'Enable','off');
-    set(handles.popupmenuFunOtherFileNumber,'Enable','off');
-    set(handles.editFunOtherNumber,'Enable','off');
-end
+handles.Cfg.IsOrganizeFun = get(handles.checkboxIsOrganizeFun,'Value');
+UpdateDisplay(handles);
 guidata(hObject,handles);
-% Hint: get(hObject,'Value') returns toggle state of checkboxIsOtherFun
+% Hint: get(hObject,'Value') returns toggle state of checkboxIsOrganizeFun
 
 
 % --- Executes on selection change in popupmenuSxFunRaw.
@@ -659,32 +655,33 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupmenuFunOther.
-function popupmenuFunOther_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenuFunOther (see GCBO)
+% --- Executes on selection change in popupmenuFunAll.
+function popupmenuFunAll_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenuFunAll (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 SessionFlag = handles.Cfg.SxFunRawFlag;
-handles.Cfg.SeriesIndex.FunOther(SessionFlag) = get(handles.popupmenuFunOther,'Value');
-handles.Cfg.SeriesName.FunOther{SessionFlag} = handles.Cfg.Demo.SeriesNames{handles.Cfg.SeriesIndex.FunOther(SessionFlag)};
-set(handles.popupmenuFunOtherFileNumber,'String','Computing...');
+handles.Cfg.SeriesIndex.FunAll(SessionFlag) = get(handles.popupmenuFunAll,'Value');
+handles.Cfg.SeriesName.FunAll{SessionFlag} = handles.Cfg.Demo.SeriesNames{handles.Cfg.SeriesIndex.FunAll(SessionFlag)};
+set(handles.popupmenuFunAllFileNumber,'String','Computing...');
 drawnow;
-[handles.Cfg.SeriesFileNumber.List.FunOther{SessionFlag},Percentage] = CheckFileNumber(hObject, handles,handles.Cfg.SeriesIndex.FunOther(SessionFlag));
-handles.Cfg.SeriesFileNumber.Flag.FunOther(SessionFlag) = 1;
+[handles.Cfg.SeriesFileNumber.List.FunAll{SessionFlag},Percentage] = CheckFileNumber(hObject, handles,handles.Cfg.SeriesIndex.FunAll(SessionFlag));
+handles.Cfg.SeriesFileNumber.Flag.FunAll(SessionFlag) = 1;
+handles.Cfg.SeriesFileNumber.Percent.FunAll{SessionFlag} = Percentage;
 % Added 20210722, add percentage info to reduce wrong selections
-DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),num2cell(handles.Cfg.SeriesFileNumber.List.FunOther{SessionFlag}),num2cell(Percentage),'UniformOutput',false);
-set(handles.popupmenuFunOtherFileNumber,...
+DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),num2cell(handles.Cfg.SeriesFileNumber.List.FunAll{SessionFlag}),num2cell(Percentage),'UniformOutput',false);
+set(handles.popupmenuFunAllFileNumber,...
     'String',DisplayString,...
-    'Value',handles.Cfg.SeriesFileNumber.Flag.FunOther(SessionFlag),...
+    'Value',handles.Cfg.SeriesFileNumber.Flag.FunAll(SessionFlag),...
     'Enable','on');
 guidata(hObject,handles);
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuFunOther contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenuFunOther
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuFunAll contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenuFunAll
 
 
 % --- Executes during object creation, after setting all properties.
-function popupmenuFunOther_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenuFunOther (see GCBO)
+function popupmenuFunAll_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuFunAll (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -695,31 +692,32 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupmenuFun.
-function popupmenuFun_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenuFun (see GCBO)
+% --- Executes on selection change in popupmenuDwi.
+function popupmenuDwi_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenuDwi (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Cfg.SeriesIndex.Fun = get(handles.popupmenuFun,'Value');
-set(handles.popupmenuFunFileNumber,'String','Computing...');
+handles.Cfg.SeriesIndex.Dwi = get(handles.popupmenuDwi,'Value');
+set(handles.popupmenuDwiFileNumber,'String','Computing...');
 drawnow;
-handles.Cfg.SeriesName.Fun = handles.Cfg.Demo.SeriesNames{handles.Cfg.SeriesIndex.Fun};
-[handles.Cfg.SeriesFileNumber.List.Fun,Percentage] = CheckFileNumber(hObject, handles,handles.Cfg.SeriesIndex.Fun);
-handles.Cfg.SeriesFileNumber.Flag.Fun = 1;
+handles.Cfg.SeriesName.Dwi = handles.Cfg.Demo.SeriesNames{handles.Cfg.SeriesIndex.Dwi};
+[handles.Cfg.SeriesFileNumber.List.Dwi,Percentage] = CheckFileNumber(hObject, handles,handles.Cfg.SeriesIndex.Dwi);
+handles.Cfg.SeriesFileNumber.Flag.Dwi = 1;
+handles.Cfg.SeriesFileNumber.Percent.Dwi = Percentage;
 % Added 20210722, add percentage info to reduce wrong selections
-DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),num2cell(handles.Cfg.SeriesFileNumber.List.Fun),num2cell(Percentage),'UniformOutput',false);
-set(handles.popupmenuFunFileNumber,...
+DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),num2cell(handles.Cfg.SeriesFileNumber.List.Dwi),num2cell(Percentage),'UniformOutput',false);
+set(handles.popupmenuDwiFileNumber,...
     'String',DisplayString,...
-    'Value',handles.Cfg.SeriesFileNumber.Flag.Fun,...
+    'Value',handles.Cfg.SeriesFileNumber.Flag.Dwi,...
     'Enable','on');
 guidata(hObject,handles);
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuFun contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenuFun
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuDwi contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenuDwi
 
 
 % --- Executes during object creation, after setting all properties.
-function popupmenuFun_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenuFun (see GCBO)
+function popupmenuDwi_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuDwi (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -741,6 +739,7 @@ drawnow;
 handles.Cfg.SeriesName.T1 = handles.Cfg.Demo.SeriesNames{handles.Cfg.SeriesIndex.T1};
 [handles.Cfg.SeriesFileNumber.List.T1,Percentage] = CheckFileNumber(hObject, handles,handles.Cfg.SeriesIndex.T1);
 handles.Cfg.SeriesFileNumber.Flag.T1 = 1;
+handles.Cfg.SeriesFileNumber.Percent.T1 = Percentage;
 % Added 20210722, add percentage info to reduce wrong selections
 DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),num2cell(handles.Cfg.SeriesFileNumber.List.T1),num2cell(Percentage),'UniformOutput',false);
 set(handles.popupmenuT1FileNumber,...
@@ -775,19 +774,6 @@ guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of checkboxIsChangeSubID
 
 
-% --- Executes on button press in pushbutton9.
-function pushbutton9_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton9 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in pushbutton10.
-function pushbutton10_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton10 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 function ReadDataList(hObject, handles)
 if handles.Cfg.InputLayout == 1
@@ -812,6 +798,7 @@ handles.Cfg.Demo.SeriesNames = SeriesString;
 guidata(hObject,handles);
 
 
+
 function ShowDataList(hObject,handles)
 %Create by Sandy to get the Subject List
 %Edited by Bin to split display fuction and handle.Cfg assignment
@@ -819,13 +806,14 @@ SeriesString=handles.Cfg.Demo.SeriesNames;
 Flag = handles.Cfg.SxFunRawFlag ;
 if ~iscell(SeriesString) || isempty(SeriesString)
     set(handles.popupmenuT1, 'String', 'Series not found!', 'Value', 1);
-    set(handles.popupmenuFun, 'String', 'Series not found!', 'Value', 1);
-    set(handles.popupmenuFunOther, 'String', 'Series not found!', 'Value', 1);
+    set(handles.popupmenuDwi, 'String', 'Series not found!', 'Value', 1);
+    set(handles.popupmenuFunAll, 'String', 'Series not found!', 'Value', 1);
 else
     set(handles.popupmenuT1, 'String', SeriesString,'Value',handles.Cfg.SeriesIndex.T1);
-    set(handles.popupmenuFun, 'String', SeriesString,'Value',handles.Cfg.SeriesIndex.Fun);
-    set(handles.popupmenuFunOther, 'String', SeriesString,'Value',handles.Cfg.SeriesIndex.FunOther(Flag));
+    set(handles.popupmenuDwi, 'String', SeriesString,'Value',handles.Cfg.SeriesIndex.Dwi);
+    set(handles.popupmenuFunAll, 'String', SeriesString,'Value',handles.Cfg.SeriesIndex.FunAll(Flag));
 end
+
 
 
 function [nFiles,Percentage] = CheckFileNumber(hObject, handles, SeriesIndex)
@@ -839,9 +827,9 @@ if isempty(SeriesName) || strcmp(SeriesName,handles.Cfg.Demo.SeriesNamesDefault)
 else
     % For data from DPABI_DicomSorter, the index should be removed here to match more series
     Index = strfind(SeriesName,'_');
-    if (~isempty(Index) && ~isnan(str2double(SeriesName(1:Index(1)-1))) && Index(1) == 5) || ... % Is so, the working dir was derived from DPABI_DicomSorter, series number should be removed.
-        (~isempty(Index) && ~isnan(str2double(SeriesName(1:Index(1)-1)))) % Added 20210511, for output dir of xnat-like system
-    SeriesName = SeriesName(Index(1)+1:end);
+    %     if (~isempty(Index) && ~isnan(str2double(SeriesName(1:Index(1)-1))) && Index(1) == 5) || ... % Is so, the working dir was derived from DPABI_DicomSorter, series number should be removed.
+    if ~isempty(Index) && ~isnan(str2double(SeriesName(1:Index(1)-1))) % Revised 20210511, for output dir of xnat-like system
+        SeriesName = SeriesName(Index(1)+1:end);
     end
     if handles.Cfg.InputLayout==1 % Participant first
         SubList = dir(handles.Cfg.WorkingDir);
@@ -902,6 +890,7 @@ else
 end
 
 
+
 function PickDemoSubject(hObject, handles)
 %% Pick up one demo subject for demostrating MR series demo
 if handles.Cfg.InputLayout == 1 % Participant first
@@ -918,6 +907,7 @@ else % Series first
     SeriesString={SeriesList(:).name}';
     SubList = dir([handles.Cfg.WorkingDir,filesep,SeriesString{1}]);
 end
+
 if isempty(SubList)
     return
 else
@@ -933,16 +923,18 @@ else
         while strcmp(handles.Cfg.Demo.PreviousSubID,NewSubject)
             NewSubject = SubString{randi(length(SubString))};
         end
+        handles.Cfg.Demo.PreviousSubID = handles.Cfg.Demo.SubID;
         handles.Cfg.Demo.SubID = NewSubject;
     end
     guidata(hObject,handles);
 end
 
 
+
 function LayoutFlag=GuessLayout(hObject, handles)
 %% Guess the input folder layout for mininizing the error chance 
 Keywords = {'t1','t2','bold','rest','task','mprage','fspgr',...
-    'fmri','dti','dwi'};
+    'fmri','dti','dwi','diffuse','diffusion','3D'};
 nKeyword = length(Keywords);
 if handles.Cfg.InputLayoutSelected == 1
     LayoutFlag = 0;
@@ -990,55 +982,83 @@ catch
 end
 
 
+
 function ResetCfg(hObject, handles, Flag)
 %% Reset the most of the configurations for certain user activations
 % Flag - 1: Reset all settings in T1Raw, FunRaw and other functional sessions. e.g. Changing Layout, Changing Demo Subject.
-%      - 2: Reset all settings in other functional sessions e.g. Changing number of other functional series.
+%      - 2: Reset all settings in functional sessions e.g. Changing number of functional series.
 switch Flag 
     case 1
         handles.Cfg.Demo.SeriesNames = {handles.Cfg.Demo.SeriesNamesDefault};
         handles.Cfg.Demo.PreviousSubID = handles.Cfg.Demo.SubID;
         handles.Cfg.Demo.SubID = '';
-        handles.Cfg.IsOtherFun = 0;
-        handles.Cfg.FunOtherNumber = 0;
+        handles.Cfg.IsOrganizeFun = 0;
+        handles.Cfg.IsOrganizeDwi = 0;
+        handles.Cfg.FunSessionNumber = 1;
         handles.Cfg.SeriesName.T1 = '';
-        handles.Cfg.SeriesName.Fun = '';
-        handles.Cfg.SeriesName.FunOther = {};
+        handles.Cfg.SeriesName.Dwi = '';
+        handles.Cfg.SeriesName.FunAll = {};
         handles.Cfg.SeriesIndex.T1 = 1;
-        handles.Cfg.SeriesIndex.Fun = 1;
-        handles.Cfg.SeriesIndex.FunOther = [1];
+        handles.Cfg.SeriesIndex.Dwi = 1;
+        handles.Cfg.SeriesIndex.FunAll = [1];
         handles.Cfg.SeriesFileNumber.List.T1 = 0;
-        handles.Cfg.SeriesFileNumber.List.Fun = 0;
-        handles.Cfg.SeriesFileNumber.List.FunOther = {0};
+        handles.Cfg.SeriesFileNumber.List.Dwi = 0;
+        handles.Cfg.SeriesFileNumber.List.FunAll = {0};
         handles.Cfg.SeriesFileNumber.Flag.T1 = 1;
-        handles.Cfg.SeriesFileNumber.Flag.Fun = 1;
-        handles.Cfg.SeriesFileNumber.Flag.FunOther = [1];
-        handles.Cfg.SxFunRawList = {'S2_FunRaw'};
+        handles.Cfg.SeriesFileNumber.Flag.Dwi = 1;
+        handles.Cfg.SeriesFileNumber.Flag.FunAll = [1];
+        handles.Cfg.SeriesFileNumber.LowLimitMode.T1 = 0; % Add lower limit mode for setting number of files for a series, Bin Lu, 20220919
+        handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi = 0;
+        handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll = {0};
+        handles.Cfg.SeriesFileNumber.LowThreshold.T1 = 0;
+        handles.Cfg.SeriesFileNumber.LowThreshold.Dwi = 0;
+        handles.Cfg.SeriesFileNumber.LowThreshold.FunAll = {0};
+        handles.Cfg.SeriesFileNumber.Percent.T1 = 0;
+        handles.Cfg.SeriesFileNumber.Percent.Dwi = 0;
+        handles.Cfg.SeriesFileNumber.Percent.FunAll = {[0]};
+        handles.Cfg.SxFunRawList = {'FunRaw'};
         handles.Cfg.SxFunRawFlag = 1;
     case 2
-        handles.Cfg.SeriesName.FunOther = {};
-        handles.Cfg.SeriesIndex.FunOther = [1];
-        handles.Cfg.SeriesFileNumber.List.FunOther = {0};
-        handles.Cfg.SeriesFileNumber.Flag.FunOther = [1];
+        handles.Cfg.SxFunRawList = cell(1,handles.Cfg.FunSessionNumber);
+        for iSession = 1:handles.Cfg.FunSessionNumber
+            if iSession == 1
+                handles.Cfg.SxFunRawList{iSession} = 'FunRaw';
+            else
+                handles.Cfg.SxFunRawList{iSession} = ['S',num2str(iSession),'_FunRaw'];
+            end
+        end
+        handles.Cfg.SeriesName.FunAll = {};
+        handles.Cfg.SeriesIndex.FunAll = ones(handles.Cfg.FunSessionNumber,1);
+        handles.Cfg.SeriesFileNumber.List.FunAll = cell(1,handles.Cfg.FunSessionNumber);
+        handles.Cfg.SeriesFileNumber.List.FunAll(:) = {[0]};
+        handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll = cell(1,handles.Cfg.FunSessionNumber);
+        handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll(:) = {[0]};
+        handles.Cfg.SeriesFileNumber.LowThreshold.FunAll = cell(1,handles.Cfg.FunSessionNumber);
+        handles.Cfg.SeriesFileNumber.LowThreshold.FunAll(:) = {[0]};
+        handles.Cfg.SeriesFileNumber.Flag.FunAll = ones(handles.Cfg.FunSessionNumber,1);
+        handles.Cfg.SeriesFileNumber.Percent.FunAll = cell(1,handles.Cfg.FunSessionNumber);
+        handles.Cfg.SeriesFileNumber.Percent.FunAll(:) = {[0]};
         handles.Cfg.SxFunRawFlag = 1;
 end
 guidata(hObject,handles);
 
 
+
 function CheckSameSeriesName(hObject, handles)
 %% Check the selected series for different sessions with same series name (e.g. 0001_Resting_240, 0009_Resting_240)
-Series = [handles.Cfg.SeriesName.Fun; handles.Cfg.SeriesName.FunOther(:)];
+Series = handles.Cfg.SeriesName.FunAll;
 % For data from DPABI_DicomSorter, the index should be removed here to match more series
 Index = strfind(Series{1},'_');
-if ~isempty(Index) && ~isnan(str2double(Series{1}(1:Index(1)-1))) && Index(1) == 5 %% Is so, the working dir was derived from DPABI_DicomSorter, series number should be removed.
+% if ~isempty(Index) && ~isnan(str2double(Series{1}(1:Index(1)-1))) && Index(1) == 5 %% Is so, the working dir was derived from DPABI_DicomSorter, series number should be removed.
+if ~isempty(Index) && ~isnan(str2double(Series{1}(1:Index(1)-1))) %% For xnat-like output series name. Bin Lu. 20221212.
     Series = cellfun(@(Series) Series(Index(1)+1:end),Series,'UniformOutput',0);
 end
+
 Sessions = {'FunRaw'};
-if handles.Cfg.FunOtherNumber >0
-    for iSession = 1:handles.Cfg.FunOtherNumber
-        Sessions = [Sessions,{['S',num2str(iSession+1),'_FunRaw']}];
-    end
+for iSession = 2:handles.Cfg.FunSessionNumber
+    Sessions = [Sessions,{['S',num2str(iSession),'_FunRaw']}];
 end
+
 handles.Cfg.SameSeriesName.FlagMatrix = zeros(length(Series),length(Series));
 handles.Cfg.SameSeriesName.SessionMatrix = cell(length(Series));
 handles.Cfg.SameSeriesName.Flag = 0;
@@ -1061,42 +1081,49 @@ end
 guidata(hObject,handles);
 
 
-function CreateImageList(hObject, handles)
-%% Create MR image list for copying files to FunRaw, T1Raw ...
-% Confirm series for all sessions are allocated
-if ~handles.Cfg.AnatOnly
-    FunMiss = isempty(handles.Cfg.SeriesName.Fun);
+
+function OrganizeImages(hObject, handles)
+%% Create MR image list for copying files to T1Raw, FunRaw, DwiRaw ...
+% Confirm MR series for all sessions have been allocated
+AnatMiss = isempty(handles.Cfg.SeriesName.T1);
+
+if handles.Cfg.IsOrganizeDwi == 1 
+    DwiMiss = isempty(handles.Cfg.SeriesName.Dwi);
 else
-    FunMiss = 0;
+    DwiMiss = 0;
 end
 
-if handles.Cfg.IsOtherFun == 1 
-    FunOtherMiss = cellfun(@isempty,handles.Cfg.SeriesName.FunOther);
-    FunOtherMiss = sum(FunOtherMiss);
+if handles.Cfg.IsOrganizeFun == 1 
+    FunAllMiss = cellfun(@isempty,handles.Cfg.SeriesName.FunAll);
+    FunAllMiss = sum(FunAllMiss);
 else
-    FunOtherMiss = 0;
+    FunAllMiss = 0;
 end
 
-if isempty(handles.Cfg.SeriesName.T1) || FunMiss || FunOtherMiss
+if AnatMiss || DwiMiss || FunAllMiss
     uiwait(msgbox({'Some sessions have not been determined, please select MR Series before run'},'Please select MR Series before run!'));
 end
 
-%% For data from DPABI_DicomSorter, the index should be removed here to match more series
+%% For data from DPABI_DicomSorter and xnat-like system, the index should be removed here to match more series
 Index = strfind(handles.Cfg.SeriesName.T1,'_');
-if ~isempty(Index) && ~isnan(str2double(handles.Cfg.SeriesName.T1(1:Index(1)-1))) && Index(1) == 5 %% Is so, the working dir was derived from DPABI_DicomSorter, series number should be removed.
+if ~isempty(Index) && ~isnan(str2double(handles.Cfg.SeriesName.T1(1:Index(1)-1)))%% Is so, the working dir was derived from DPABI_DicomSorter or xnat-like system, series number should be removed.
     SeriesT1 = handles.Cfg.SeriesName.T1(Index(1)+1:end);
     if ~handles.Cfg.AnatOnly
-        SeriesFun = handles.Cfg.SeriesName.Fun(Index(1)+1:end);
-        if handles.Cfg.IsOtherFun
-            SeriesFunOther = cellfun(@(Series) Series(Index(1)+1:end),handles.Cfg.SeriesName.FunOther,'UniformOutput',0);
+        if handles.Cfg.IsOrganizeDwi
+            SeriesDwi = handles.Cfg.SeriesName.Dwi(Index(1)+1:end);
+        end
+        if handles.Cfg.IsOrganizeFun
+            SeriesFunAll = cellfun(@(Series) Series(Index(1)+1:end),handles.Cfg.SeriesName.FunAll,'UniformOutput',0);
         end
     end
 else
     SeriesT1 = handles.Cfg.SeriesName.T1;
     if ~handles.Cfg.AnatOnly
-        SeriesFun = handles.Cfg.SeriesName.Fun;
-        if handles.Cfg.IsOtherFun
-            SeriesFunOther = handles.Cfg.SeriesName.FunOther;
+        if handles.Cfg.IsOrganizeDwi
+            SeriesDwi = handles.Cfg.SeriesName.Dwi;
+        end
+        if handles.Cfg.IsOrganizeFun
+            SeriesFunAll = handles.Cfg.SeriesName.FunAll;
         end
     end
 end
@@ -1112,12 +1139,14 @@ if handles.Cfg.InputLayout == 1 % Participant first
     T1List = cellfun(@(Sub) dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,'*',SeriesT1]),SubString,'UniformOutput',0);
     T1String = cellfun(@(SubSeries) {SubSeries(:).name}',T1List,'UniformOutput',0);
     if ~handles.Cfg.AnatOnly
-        FunList = cellfun(@(Sub) dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,'*',SeriesFun]),SubString,'UniformOutput',0);
-        FunString = cellfun(@(SubSeries) {SubSeries(:).name}',FunList,'UniformOutput',0);
-        if handles.Cfg.IsOtherFun
-            for iSession = 1:handles.Cfg.FunOtherNumber
-                FunOtherList{iSession} = cellfun(@(Sub) dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,'*',SeriesFunOther{iSession}]),SubString,'UniformOutput',0);
-                FunOtherString{iSession}  = cellfun(@(SubSeries) {SubSeries(:).name}',FunOtherList{iSession},'UniformOutput',0);
+        if handles.Cfg.IsOrganizeDwi
+            DwiList = cellfun(@(Sub) dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,'*',SeriesDwi]),SubString,'UniformOutput',0);
+            DwiString = cellfun(@(SubSeries) {SubSeries(:).name}',DwiList,'UniformOutput',0);
+        end
+        if handles.Cfg.IsOrganizeFun
+            for iSession = 1:handles.Cfg.FunSessionNumber
+                FunAllList{iSession} = cellfun(@(Sub) dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,'*',SeriesFunAll{iSession}]),SubString,'UniformOutput',0);
+                FunAllString{iSession}  = cellfun(@(SubSeries) {SubSeries(:).name}',FunAllList{iSession},'UniformOutput',0);
             end
         end
     end
@@ -1138,19 +1167,21 @@ else % Series first
         T1String{iSub,1} = T1ListTemp(find(Index));
     end
     if ~handles.Cfg.AnatOnly
-        FunListTemp = dir([handles.Cfg.WorkingDir,filesep,'*',SeriesFun]);
-        FunListTemp={FunListTemp(:).name}';
-        for iSub = 1:length(SubString)
-            Index = cellfun(@(Series) exist([handles.Cfg.WorkingDir,filesep,Series,filesep,SubString{iSub}],'dir'),FunListTemp);
-            FunString{iSub,1} = FunListTemp(find(Index));
+        if handles.Cfg.IsOrganizeDwi
+            DwiListTemp = dir([handles.Cfg.WorkingDir,filesep,'*',SeriesDwi]);
+            DwiListTemp={DwiListTemp(:).name}';
+            for iSub = 1:length(SubString)
+                Index = cellfun(@(Series) exist([handles.Cfg.WorkingDir,filesep,Series,filesep,SubString{iSub}],'dir'),DwiListTemp);
+                DwiString{iSub,1} = DwiListTemp(find(Index));
+            end
         end
-        if handles.Cfg.IsOtherFun
-            for iSession = 1:handles.Cfg.FunOtherNumber
-                FunOtherListTemp = dir([handles.Cfg.WorkingDir,filesep,'*',SeriesFunOther{iSession}]);
-                FunOtherListTemp={FunOtherListTemp(:).name}';
+        if handles.Cfg.IsOrganizeFun
+            for iSession = 1:handles.Cfg.FunSessionNumber
+                FunAllListTemp = dir([handles.Cfg.WorkingDir,filesep,'*',SeriesFunAll{iSession}]);
+                FunAllListTemp={FunAllListTemp(:).name}';
                 for iSub = 1:length(SubString)
-                    Index = cellfun(@(Series) exist([handles.Cfg.WorkingDir,filesep,Series,filesep,SubString{iSub}],'dir'),FunOtherListTemp);
-                    FunOtherString{iSession}{iSub,1} = FunOtherListTemp(find(Index));
+                    Index = cellfun(@(Series) exist([handles.Cfg.WorkingDir,filesep,Series,filesep,SubString{iSub}],'dir'),FunAllListTemp);
+                    FunAllString{iSession}{iSub,1} = FunAllListTemp(find(Index));
                 end
             end
         end
@@ -1158,7 +1189,7 @@ else % Series first
 end
 
 %% Unnest the cell data of Session Lists
-MaxColumn = max(cellfun('length', T1String));  % in case the numbers of elements in each cell are different (in that case, cat functional will goes wrong)
+MaxColumn = max(cellfun('length', T1String));  % in case the numbers of elements in each cell are different (in that case, concatenate functional sessions will goes wrong)
 MinColumn = min(cellfun('length', T1String));
 if MaxColumn==1 && MinColumn==1
     T1String = cellfun(@(Series) Series{1},T1String, 'UniformOutput', false); %unnest the cell
@@ -1169,26 +1200,28 @@ end
 SubString_T1 = repmat(SubString,1,size(T1String,2));
 
 if ~handles.Cfg.AnatOnly
-    MaxColumn = max(cellfun('length', FunString));
-    MinColumn = min(cellfun('length', FunString));
-    if  MaxColumn==1 && MinColumn==1
-        FunString = cellfun(@(Series) Series{1},FunString, 'UniformOutput', false); %unnest the cell
-    else
-        FunString = cellfun(@(OneString) [OneString; repmat({'padding'},MaxColumn-length(OneString),1)], FunString, 'UniformOutput', false); % pad each cell.
-        FunString = cat(2,FunString{:})';
+    if handles.Cfg.IsOrganizeDwi
+        MaxColumn = max(cellfun('length', DwiString));
+        MinColumn = min(cellfun('length', DwiString));
+        if  MaxColumn==1 && MinColumn==1
+            DwiString = cellfun(@(Series) Series{1},DwiString, 'UniformOutput', false); %unnest the cell
+        else
+            DwiString = cellfun(@(OneString) [OneString; repmat({'padding'},MaxColumn-length(OneString),1)], DwiString, 'UniformOutput', false); % pad each cell.
+            DwiString = cat(2,DwiString{:})';
+        end
+        SubString_Dwi = repmat(SubString,1,size(DwiString,2));
     end
-    SubString_Fun = repmat(SubString,1,size(FunString,2));
-    if handles.Cfg.IsOtherFun
-        for iSession = 1:handles.Cfg.FunOtherNumber
-            MaxColumn = max(cellfun('length', FunOtherString{iSession} ));
-            MinColumn = min(cellfun('length', FunOtherString{iSession} ));
+    if handles.Cfg.IsOrganizeFun
+        for iSession = 1:handles.Cfg.FunSessionNumber
+            MaxColumn = max(cellfun('length', FunAllString{iSession} ));
+            MinColumn = min(cellfun('length', FunAllString{iSession} ));
             if MaxColumn == 1 && MinColumn == 1
-                FunOtherString{iSession} = cellfun(@(Series) Series{1},FunOtherString{iSession}, 'UniformOutput', false); %unnest the cell
+                FunAllString{iSession} = cellfun(@(Series) Series{1},FunAllString{iSession}, 'UniformOutput', false); %unnest the cell
             else 
-                FunOtherString{iSession}  = cellfun(@(OneString) [OneString; repmat({'padding'},MaxColumn-length(OneString),1)], FunOtherString{iSession} , 'UniformOutput', false); % pad each cell.
-                FunOtherString{iSession}  = cat(2,FunOtherString{iSession} {:})';
+                FunAllString{iSession}  = cellfun(@(OneString) [OneString; repmat({'padding'},MaxColumn-length(OneString),1)], FunAllString{iSession} , 'UniformOutput', false); % pad each cell.
+                FunAllString{iSession}  = cat(2,FunAllString{iSession} {:})';
             end
-            SubString_FunOther{iSession} = repmat(SubString,1,size(FunOtherString{iSession},2));
+            SubString_FunAll{iSession} = repmat(SubString,1,size(FunAllString{iSession},2));
         end
     end
 end
@@ -1196,66 +1229,129 @@ end
 %% Mark the series without enough dicom files - 1: number of file is correct; 0: number of file is wrong
 if handles.Cfg.InputLayout == 1 % Participant first
     % T1 series status 
-    disp([newline,'Eliminating the deficient T1-weighted series for T1Raw session ...']);
-    nFileT1 = handles.Cfg.SeriesFileNumber.List.T1(handles.Cfg.SeriesFileNumber.Flag.T1);
-    try
-        T1Status = cellfun(@(Series,Sub) ...
-            ~(length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileT1),...
-            T1String,SubString_T1,'UniformOutput', false);
-    catch
-        T1Status = cellfun(@(Series,Sub) ...
-            ~(length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileT1),...
-            T1String,SubString_T1,'UniformOutput', false);
-    end
-    if ~handles.Cfg.AnatOnly
-        % Functional series status
-        disp([newline,'Eliminating the deficient BOLD fMRI series for FunRaw session ...']);
-        nFileFun = handles.Cfg.SeriesFileNumber.List.Fun(handles.Cfg.SeriesFileNumber.Flag.Fun);
+    disp([newline,'Eliminating the deficient T1-weighted series for T1Raw sessions ...']);
+    if handles.Cfg.SeriesFileNumber.LowLimitMode.T1 % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
+        nFileT1 = handles.Cfg.SeriesFileNumber.LowThreshold.T1;
         try
-            FunStatus = cellfun(@(Series,Sub) ...
-                ~(length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileFun),...
-                FunString,SubString_Fun,'UniformOutput', false);
+            T1Status = cellfun(@(Series,Sub) ...
+                (length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileT1)>=0,...
+                T1String,SubString_T1,'UniformOutput', false);
         catch
-            FunStatus = cellfun(@(Series,Sub) ...
-                ~(length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileFun),...
-                FunString,SubString_Fun,'UniformOutput', false);
+            T1Status = cellfun(@(Series,Sub) ...
+                (length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileT1)>=0,...
+                T1String,SubString_T1,'UniformOutput', false);
         end
-        if handles.Cfg.IsOtherFun
-            % Other functional seriesun status
-            for iSession = 1:handles.Cfg.FunOtherNumber
-                disp([newline,'Eliminating the deficient BOLD fMRI series for S',num2str(iSession+1),'_FunRaw session ...']);
-                nFileFunOther = handles.Cfg.SeriesFileNumber.List.FunOther{iSession}(handles.Cfg.SeriesFileNumber.Flag.FunOther(iSession));
+    else 
+        nFileT1 = handles.Cfg.SeriesFileNumber.List.T1(handles.Cfg.SeriesFileNumber.Flag.T1);
+        try
+            T1Status = cellfun(@(Series,Sub) ...
+                ~(length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileT1),...
+                T1String,SubString_T1,'UniformOutput', false);
+        catch
+            T1Status = cellfun(@(Series,Sub) ...
+                ~(length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileT1),...
+                T1String,SubString_T1,'UniformOutput', false);
+        end
+    end   
+    if ~handles.Cfg.AnatOnly
+        if handles.Cfg.IsOrganizeDwi
+            disp([newline,'Eliminating the deficient Diffusion series for DwiRaw sessions ...']);
+            if handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
+                nFileDwi = handles.Cfg.SeriesFileNumber.LowThreshold.Dwi;
                 try
-                    FunOtherStatus{iSession} = cellfun(@(Series,Sub) ...
-                        ~(length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileFunOther),...
-                        FunOtherString{iSession},SubString_FunOther{iSession},'UniformOutput', false);
+                    DwiStatus = cellfun(@(Series,Sub) ...
+                        (length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileDwi)>=0,...
+                        DwiString,SubString_Dwi,'UniformOutput', false);
                 catch
-                    FunOtherStatus{iSession} = cellfun(@(Series,Sub) ...
-                        ~(length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileFunOther),...
-                        FunOtherString{iSession},SubString_FunOther{iSession},'UniformOutput', false);
+                    DwiStatus = cellfun(@(Series,Sub) ...
+                        (length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileDwi)>=0,...
+                        DwiString,SubString_Dwi,'UniformOutput', false);
+                end
+            else
+                nFileDwi = handles.Cfg.SeriesFileNumber.List.Dwi(handles.Cfg.SeriesFileNumber.Flag.Dwi);
+                try
+                    DwiStatus = cellfun(@(Series,Sub) ...
+                        ~(length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileDwi),...
+                        DwiString,SubString_Dwi,'UniformOutput', false);
+                catch
+                    DwiStatus = cellfun(@(Series,Sub) ...
+                        ~(length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileDwi),...
+                        DwiString,SubString_Dwi,'UniformOutput', false);
+                end
+            end
+        end
+        if handles.Cfg.IsOrganizeFun
+            for iSession = 1:handles.Cfg.FunSessionNumber
+                disp([newline,'Eliminating the deficient BOLD fMRI series for S',num2str(iSession),'_FunRaw sessions ...']);
+                if handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll{iSession} % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
+                    nFileFunAll = handles.Cfg.SeriesFileNumber.LowThreshold.Fun{iSession};
+                    try
+                        FunAllStatus{iSession} = cellfun(@(Series,Sub) ...
+                            (length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileFunAll)>=0,...
+                            FunAllString{iSession},SubString_FunAll{iSession},'UniformOutput', false);
+                    catch
+                        FunAllStatus{iSession} = cellfun(@(Series,Sub) ...
+                            (length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileFunAll)>=0,...
+                            FunAllString{iSession},SubString_FunAll{iSession},'UniformOutput', false);
+                    end
+                else
+                    nFileFunAll = handles.Cfg.SeriesFileNumber.List.FunAll{iSession}(handles.Cfg.SeriesFileNumber.Flag.FunAll(iSession));
+                    try
+                        FunAllStatus{iSession} = cellfun(@(Series,Sub) ...
+                            ~(length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileFunAll),...
+                            FunAllString{iSession},SubString_FunAll{iSession},'UniformOutput', false);
+                    catch
+                        FunAllStatus{iSession} = cellfun(@(Series,Sub) ...
+                            ~(length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileFunAll),...
+                            FunAllString{iSession},SubString_FunAll{iSession},'UniformOutput', false);
+                    end
                 end
             end
         end
     end
 else % Series first
     % T1 series status 
-    nFileT1 = handles.Cfg.SeriesFileNumber.List.T1(handles.Cfg.SeriesFileNumber.Flag.T1);
-    T1Status = cellfun(@(Series,Sub) ...
-        ~(length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileT1),...
-        T1String,SubString_T1,'UniformOutput', false);
+    if handles.Cfg.SeriesFileNumber.LowLimitMode.T1 % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
+        nFileT1 = handles.Cfg.SeriesFileNumber.LowThreshold.T1;
+        T1Status = cellfun(@(Series,Sub) ...
+            (length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileT1)>=0,...
+            T1String,SubString_T1,'UniformOutput', false);
+    else
+        nFileT1 = handles.Cfg.SeriesFileNumber.List.T1(handles.Cfg.SeriesFileNumber.Flag.T1);
+        T1Status = cellfun(@(Series,Sub) ...
+            ~(length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileT1),...
+            T1String,SubString_T1,'UniformOutput', false);
+    end
     if ~handles.Cfg.AnatOnly
-        % Functional series status
-        nFileFun = handles.Cfg.SeriesFileNumber.List.Fun(handles.Cfg.SeriesFileNumber.Flag.Fun);
-        FunStatus = cellfun(@(Series,Sub) ...
-            ~(length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileFun),...
-            FunString,SubString_Fun,'UniformOutput', false);
-        if handles.Cfg.IsOtherFun
+        if handles.Cfg.IsOrganizeDwi
+            if handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
+                nFileDwi = handles.Cfg.SeriesFileNumber.LowThreshold.Dwi;
+                DwiStatus = cellfun(@(Series,Sub) ...
+                    (length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileDwi)>=0,...
+                    DwiString,SubString_Dwi,'UniformOutput', false);
+            else
+                nFileDwi = handles.Cfg.SeriesFileNumber.List.Dwi(handles.Cfg.SeriesFileNumber.Flag.Dwi);
+                DwiStatus = cellfun(@(Series,Sub) ...
+                    ~(length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileDwi),...
+                    DwiString,SubString_Dwi,'UniformOutput', false);
+            end
+        end
+        if handles.Cfg.IsOrganizeFun
             % Other functional seriesun status
-            for iSession = 1:handles.Cfg.FunOtherNumber
-                nFileFunOther = handles.Cfg.SeriesFileNumber.List.FunOther{iSession}(handles.Cfg.SeriesFileNumber.Flag.FunOther(iSession));
-                FunOtherStatus{iSession} = cellfun(@(Series,Sub) ...
-                    ~(length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileFunOther),...
-                    FunOtherString{iSession},SubString_FunOther{iSession},'UniformOutput', false);
+            if handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll{iSession} % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
+                for iSession = 1:handles.Cfg.FunSessionNumber
+                    nFileFunAll = handles.Cfg.SeriesFileNumber.LowThreshold.FunAll{iSession};
+                    FunAllStatus{iSession} = cellfun(@(Series,Sub) ...
+                        (length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileFunAll)>=0,...
+                        FunAllString{iSession},SubString_FunAll{iSession},'UniformOutput', false);
+                end
+            else
+                for iSession = 1:handles.Cfg.FunSessionNumber
+                    nFileFunAll = handles.Cfg.SeriesFileNumber.List.FunAll{iSession}(handles.Cfg.SeriesFileNumber.Flag.FunAll(iSession));
+                    FunAllStatus{iSession} = cellfun(@(Series,Sub) ...
+                        ~(length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileFunAll),...
+                        FunAllString{iSession},SubString_FunAll{iSession},'UniformOutput', false);
+                end
             end
         end
     end
@@ -1264,12 +1360,15 @@ end
 %% Confirm each session by user if necessary
 T1InputDir = cell(length(SubString),1);
 if ~handles.Cfg.AnatOnly
-    FunInputDir = cell(length(SubString),1);
-    if handles.Cfg.IsOtherFun
-        FunOtherInputDir = cell(handles.Cfg.FunOtherNumber,1);
-        FunOtherInputDir = cellfun(@(Session) cell(length(SubString),1),FunOtherInputDir,'UniformOutput', false);
+    if handles.Cfg.IsOrganizeDwi
+        DwiInputDir = cell(length(SubString),1);
+    end
+    if handles.Cfg.IsOrganizeFun
+        FunAllInputDir = cell(handles.Cfg.FunSessionNumber,1);
+        FunAllInputDir = cellfun(@(Session) cell(length(SubString),1),FunAllInputDir,'UniformOutput', false);
     end
 end
+
 if handles.Cfg.InputLayout == 1 % Participant first
     for iSub = 1:length(SubString) 
         % T1Raw
@@ -1288,92 +1387,65 @@ if handles.Cfg.InputLayout == 1 % Participant first
             end
         end
 
-        % FunRaw
-        if handles.Cfg.AnatOnly == 0 && ~isempty(find([FunStatus{iSub,:}]))
-            Index = find([FunStatus{iSub,:}]);
-            if handles.Cfg.IsOtherFun == 0 || handles.Cfg.SameSeriesName.Flag == 0 %  Simplest situation. Only T1Raw and FunRaw; or S2_FunRaw exist, but no same-series-name problem.
-                if length(Index) > 1 && ~handles.Cfg.AlwaysLatterSeries 
-                    SeriesList = FunString(iSub,Index)';
-                    Selection = ManuallySelectSeries({'FunRaw'},SubString{iSub},SeriesList,'Template1');
+        % DwiRaw
+        if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOrganizeDwi
+            Index = find([DwiStatus{iSub,:}]);
+            if ~isempty(Index)
+                if length(Index) > 1 && ~handles.Cfg.AlwaysLatterSeries
+                    SeriesList = DwiString(iSub,Index)';
+                    Selection = ManuallySelectSeries({'DwiRaw'},SubString{iSub},SeriesList,'Template1');
                     handles.Cfg.AlwaysLatterSeries = Selection.AlwaysLatterSeries;
+                    %ManuallySelectSeries({'FunRaw';'S2_FunRaw'},'BinLu',{'Series1';'Series2';'Series3'},'Template1');
                     Index = [];
                     Index = Selection.Results(1)-1; % Minus "please select" line
-                    FunInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Index}];
+                    DwiInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Index}];
                 else
-                    FunInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,FunString{iSub,Index(end)}];
-                end
-            elseif handles.Cfg.SameSeriesName.Strategy == 2 ||... % Have S2_FunRaw, same-series-name problem exist, but all manually select
-                    (handles.Cfg.SameSeriesName.Strategy == 1 && length(Index) ~= sum(handles.Cfg.SameSeriesName.FlagMatrix(1,:))) % SameSeriesName.Strategy == 1, use series index; but number of series is not equal to number of functional sessions
-                Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(1,:));
-                SessionName = handles.Cfg.SameSeriesName.SessionMatrix(1,Flag)';
-                SeriesList = FunString(iSub,Index)';
-                if length(SeriesList)<length(SessionName) % Not enough intact series
-                    SeriesList = cat(1,SeriesList,repmat({'PseudoSeries'},1,length(SessionName)-length(SeriesList)));
-                end
-                if handles.Cfg.SameSeriesName.Strategy == 2 % All manually select
-                    Template = 'Template2';
-                else
-                    Template = 'Template3';
-                end
-                Selection = ManuallySelectSeries(SessionName,SubString{iSub},SeriesList,Template);
-                FunInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Selection.Results(1)}];
-                for i = 2:length(Flag)
-                    FunOtherInputDir{Flag(i)-1}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Selection.Results(i)}];
-                end
-            elseif length(Index) == sum(handles.Cfg.SameSeriesName.FlagMatrix(1,:))  % SameSeriesName.Strategy == 1,use index to allocate same-name-series
-                Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(1,:));
-                SeriesList = FunString(iSub,Index)';
-                [SeriesIndex,I] = sort(cellfun(@(Series) str2num(Series(1:4)),SeriesList));
-                SeriesList = SeriesList(I);
-                FunInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{1}];
-                for i = 2:length(Flag)
-                    FunOtherInputDir{Flag(i)-1}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{i}];
+                    DwiInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,DwiString{iSub,Index(end)}];
                 end
             end
         end
 
-        % S2_FunRaw or more
-        if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOtherFun ~= 0
-            for iSession = 1:handles.Cfg.FunOtherNumber
-                Index = find([FunOtherStatus{iSession}{iSub,:}]);
+        % FunRaw 
+        if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOrganizeFun
+            for iSession = 1:handles.Cfg.FunSessionNumber
+                Index = find([FunAllStatus{iSession}{iSub,:}]);
                 if ~isempty(Index)
-                    if handles.Cfg.SameSeriesName.Flag == 0 %  Simplest situation. S2_FunRaw exist, but no same-series-name problem.
+                    if handles.Cfg.SameSeriesName.Flag == 0 % The most simple situation. No same-series-name problem.
                         if length(Index) > 1 && ~handles.Cfg.AlwaysLatterSeries
-                            SeriesList = FunOtherString{iSession}(iSub,Index)';
-                            Selection = ManuallySelectSeries({['S',num2str(iSession+1),'_FunRaw']},SubString{iSub},SeriesList,'Template1');
+                            SeriesList = FunAllString{iSession}(iSub,Index)';
+                            Selection = ManuallySelectSeries({['S',num2str(iSession),'_FunRaw']},SubString{iSub},SeriesList,'Template1');
                             handles.Cfg.AlwaysLatterSeries = Selection.AlwaysLatterSeries;
                             Index = [];
                             Index = Selection.Results(1)-1; % Minus "please select" line
-                            FunOtherInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Index}];
+                            FunAllInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Index}];
                         else
-                            FunOtherInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,FunOtherString{iSession}{iSub,Index(end)}];
+                            FunAllInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,FunAllString{iSession}{iSub,Index(end)}];
                         end
-                    elseif isempty(FunOtherInputDir{iSession}{iSub}) % Otherwise, managed in FunRaw part
-                        if handles.Cfg.SameSeriesName.Strategy == 2 ||... % Have S2_FunRaw, same-series-name problem exist, but all manually select
-                                (handles.Cfg.SameSeriesName.Strategy == 1 && length(Index) ~=  sum(handles.Cfg.SameSeriesName.FlagMatrix(iSession+1,:))) % SameSeriesName.Strategy == 1; use series index, but number of series is not equal to number of functional sessions
-                            Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(iSession+1,:));
-                            SessionName = handles.Cfg.SameSeriesName.SessionMatrix(iSession+1,Flag)';
-                            SeriesList = FunOtherString{iSession}(iSub,Index)';
-                            if length(SeriesList)<length(SessionName) % Not enough intact series
-                                SeriesList = cat(1,SeriesList,repmat({'PseudoSeries'},1,length(SessionName)-length(SeriesList)));
-                            end
-                            if handles.Cfg.SameSeriesName.Strategy == 2 % All manually select
-                                Template = 'Template2';
-                            else
-                                Template = 'Template3';
-                            end
-                            Selection = ManuallySelectSeries(SessionName,SubString{iSub},SeriesList,Template);
-                            for i = 1:length(Flag)
-                                FunOtherInputDir{Flag(i)-1}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Selection.Results(i)}];
-                            end
-                        elseif length(Index) == handles.Cfg.FunOtherNumber+1 % SameSeriesName.Strategy == 1; use index to allocate same-name-series
-                            Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(iSession+1,:));
-                            SeriesList = FunOtherString{iSession}(iSub,Index)';
-                            [SeriesIndex,I] = sort(cellfun(@(Series) str2num(Series(1:4)),SeriesList));
-                            SeriesList = SeriesList(I);
-                            for i = 1:length(Flag)
-                                FunOtherInputDir{Flag(i)-1}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{i}];
-                            end
+                    elseif handles.Cfg.SameSeriesName.Strategy == 2 ||... % All manually select or ...
+                            (handles.Cfg.SameSeriesName.Strategy == 1 && length(Index) ~= sum(handles.Cfg.SameSeriesName.FlagMatrix(iSession,:))) % SameSeriesName.Strategy == 1, use series index; but number of series is not equal to number of functional sessions
+                        Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(iSession,:));
+                        SessionName = handles.Cfg.SameSeriesName.SessionMatrix(iSession,Flag)';
+                        SeriesList = FunAllString(iSub,Index)';
+                        if length(SeriesList)<length(SessionName) % No enough intact series (e.g. 2 BOLD series while three functional session - FunRaw, S2_FunRaw and S3_FunRaw were determined)
+                            SeriesList = cat(1,SeriesList,repmat({'PseudoSeries'},1,length(SessionName)-length(SeriesList)));
+                        end
+                        if handles.Cfg.SameSeriesName.Strategy == 2 % All manually select
+                            Template = 'Template2';
+                        else % nSeries ~= nFunSessions
+                            Template = 'Template3';
+                        end
+                        Selection = ManuallySelectSeries(SessionName,SubString{iSub},SeriesList,Template);
+                        for i = 1:length(Flag)
+                            FunAllInputDir{Flag(i)}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Selection.Results(i)-1}];
+                        end
+                    elseif handles.Cfg.SameSeriesName.Strategy == 1 && length(Index) == handles.Cfg.FunSessionNumber % SameSeriesName.Strategy == 1; use index to allocate same-name-series
+                        Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(iSession,:));
+                        SeriesList = FunAllString{iSession}(iSub,Index)';
+                        DashIndex = strfind(SeriesList{1},'_');
+                        [~,I] = sort(cellfun(@(Series) str2num(Series(1:DashIndex-1)),SeriesList));
+                        SeriesList = SeriesList(I);
+                        for i = 1:length(Flag)
+                            FunAllInputDir{Flag(i)}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{i}];
                         end
                     end
                 end
@@ -1398,167 +1470,149 @@ else % series first
             end
         end
 
-        % FunRaw
-        if handles.Cfg.AnatOnly == 0 && ~isempty(find([FunStatus{iSub,:}]))
-            Index = find([FunStatus{iSub,:}]);
-            if handles.Cfg.IsOtherFun == 0 || handles.Cfg.SameSeriesName.Flag == 0 %  Simplest situation. Only T1Raw and FunRaw; or S2_FunRaw exist, but no same-series-name problem.
-                if length(Index) > 1 && ~handles.Cfg.AlwaysLatterSeries 
-                    SeriesList = FunString(iSub,Index)';
-                    Selection = ManuallySelectSeries({'FunRaw'},SubString{iSub},SeriesList,'Template1');
+        % DwiRaw
+        if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOrganizeDwi
+            Index = find([DwiStatus{iSub,:}]);
+            if ~isempty(Index)
+                if length(Index) > 1 && ~handles.Cfg.AlwaysLatterSeries
+                    SeriesList = DwiString(iSub,Index)';
+                    Selection = ManuallySelectSeries({'DwiRaw'},SubString{iSub},SeriesList,'Template1');
                     handles.Cfg.AlwaysLatterSeries = Selection.AlwaysLatterSeries;
+                    %ManuallySelectSeries({'FunRaw';'S2_FunRaw'},'BinLu',{'Series1';'Series2';'Series3'},'Template1');
                     Index = [];
                     Index = Selection.Results(1)-1; % Minus "please select" line
-                    FunInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{Index},filesep,SubString{iSub}];
+                    DwiInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{Index},filesep,SubString{iSub}];
                 else
-                    FunInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,FunString{iSub,Index(end)},filesep,SubString{iSub}];
-                end
-            elseif handles.Cfg.SameSeriesName.Strategy == 2 ||... % Have S2_FunRaw, same-series-name problem exist, but all manually select
-                    (handles.Cfg.SameSeriesName.Strategy == 1 && length(Index) ~= sum(handles.Cfg.SameSeriesName.FlagMatrix(1,:))) % SameSeriesName.Strategy == 1, use series index; but number of series is not equal to number of functional sessions
-                Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(1,:));
-                SessionName = handles.Cfg.SameSeriesName.SessionMatrix(1,Flag)';
-                SeriesList = FunString(iSub,Index)';
-                if length(SeriesList)<length(SessionName) % Not enough intact series
-                    SeriesList = cat(1,SeriesList,repmat({'PseudoSeries'},1,length(SessionName)-length(SeriesList)));
-                end
-                if handles.Cfg.SameSeriesName.Strategy == 2 % All manually select
-                    Template = 'Template2';
-                else
-                    Template = 'Template3';
-                end
-                Selection = ManuallySelectSeries(SessionName,SubString{iSub},SeriesList,Template);
-                FunInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{Selection.Results(1)},filesep,SubString{iSub}];
-                for i = 2:length(Flag)
-                    FunOtherInputDir{Flag(i)-1}{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{Selection.Results(i)},filesep,SubString{iSub}];
-                end
-            elseif length(Index) == sum(handles.Cfg.SameSeriesName.FlagMatrix(1,:))  % SameSeriesName.Strategy == 1,use index to allocate same-name-series
-                Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(1,:));
-                SeriesList = FunString(iSub,Index)';
-                [SeriesIndex,I] = sort(cellfun(@(Series) str2num(Series(1:4)),SeriesList));
-                SeriesList = SeriesList(I);
-                FunInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{1},filesep,SubString{iSub}];
-                for i = 2:length(Flag)
-                    FunOtherInputDir{Flag(i)-1}{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{i},filesep,SubString{iSub}];
+                    DwiInputDir{iSub} = [handles.Cfg.WorkingDir,filesep,DwiString{iSub,Index(end)},filesep,SubString{iSub}];
                 end
             end
         end
 
-        % S2_FunRaw or more
-        if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOtherFun ~= 0
-            for iSession = 1:handles.Cfg.FunOtherNumber
-                Index = find([FunOtherStatus{iSession}{iSub,:}]);
+        % FunRaw 
+        if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOrganizeFun
+            for iSession = 1:handles.Cfg.FunSessionNumber
+                Index = find([FunAllStatus{iSession}{iSub,:}]);
                 if ~isempty(Index)
-                    if handles.Cfg.SameSeriesName.Flag == 0 %  Simplest situation. S2_FunRaw exist, but no same-series-name problem.
+                    if handles.Cfg.SameSeriesName.Flag == 0 % The most simple situation. No same-series-name problem.
                         if length(Index) > 1 && ~handles.Cfg.AlwaysLatterSeries
-                            SeriesList = FunOtherString{iSession}(iSub,Index)';
-                            Selection = ManuallySelectSeries({['S',num2str(iSession+1),'_FunRaw']},SubString{iSub},SeriesList,'Template1');
+                            SeriesList = FunAllString{iSession}(iSub,Index)';
+                            Selection = ManuallySelectSeries({['S',num2str(iSession),'_FunRaw']},SubString{iSub},SeriesList,'Template1');
                             handles.Cfg.AlwaysLatterSeries = Selection.AlwaysLatterSeries;
                             Index = [];
                             Index = Selection.Results(1)-1; % Minus "please select" line
-                            FunOtherInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{Index},filesep,SubString{iSub}];
+                            FunAllInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{Index},filesep,SubString{iSub}];
                         else
-                            FunOtherInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,FunOtherString{iSession}{iSub,Index(end)},filesep,SubString{iSub}];
+                            FunAllInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,FunAllString{iSession}{iSub,Index(end)},filesep,SubString{iSub}];
                         end
-                    elseif isempty(FunOtherInputDir{iSession}{iSub}) % Otherwise, managed in FunRaw part
-                        if handles.Cfg.SameSeriesName.Strategy == 2 ||... % Have S2_FunRaw, same-series-name problem exist, but all manually select
-                                (handles.Cfg.SameSeriesName.Strategy == 1 && length(Index) ~=  sum(handles.Cfg.SameSeriesName.FlagMatrix(iSession+1,:))) % SameSeriesName.Strategy == 1; use series index, but number of series is not equal to number of functional sessions
-                            Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(iSession+1,:));
-                            SessionName = handles.Cfg.SameSeriesName.SessionMatrix(iSession+1,Flag)';
-                            SeriesList = FunOtherString{iSession}(iSub,Index)';
-                            if length(SeriesList)<length(SessionName) % Not enough intact series
-                                SeriesList = cat(1,SeriesList,repmat({'PseudoSeries'},1,length(SessionName)-length(SeriesList)));
-                            end
-                            if handles.Cfg.SameSeriesName.Strategy == 2 % All manually select
-                                Template = 'Template2';
-                            else
-                                Template = 'Template3';
-                            end
-                            Selection = ManuallySelectSeries(SessionName,SubString{iSub},SeriesList,Template);
-                            for i = 1:length(Flag)
-                                FunOtherInputDir{Flag(i)-1}{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{Selection.Results(i)},filesep,SubString{iSub}];
-                            end
-                        elseif length(Index) == handles.Cfg.FunOtherNumber+1 % SameSeriesName.Strategy == 1; use index to allocate same-name-series
-                            Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(iSession+1,:));
-                            SeriesList = FunOtherString{iSession}(iSub,Index)';
-                            [SeriesIndex,I] = sort(cellfun(@(Series) str2num(Series(1:4)),SeriesList));
-                            SeriesList = SeriesList(I);
-                            for i = 1:length(Flag)
-                                FunOtherInputDir{Flag(i)-1}{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{i},filesep,SubString{iSub}];
-                            end
+                    elseif handles.Cfg.SameSeriesName.Strategy == 2 ||... % All manually select or ...
+                            (handles.Cfg.SameSeriesName.Strategy == 1 && length(Index) ~= sum(handles.Cfg.SameSeriesName.FlagMatrix(iSession,:))) % SameSeriesName.Strategy == 1, use series index; but number of series is not equal to number of functional sessions
+                        Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(iSession,:));
+                        SessionName = handles.Cfg.SameSeriesName.SessionMatrix(iSession,Flag)';
+                        SeriesList = FunAllString(iSub,Index)';
+                        if length(SeriesList)<length(SessionName) % No enough intact series (e.g. 2 BOLD series while three functional session - FunRaw, S2_FunRaw and S3_FunRaw were determined)
+                            SeriesList = cat(1,SeriesList,repmat({'PseudoSeries'},1,length(SessionName)-length(SeriesList)));
+                        end
+                        if handles.Cfg.SameSeriesName.Strategy == 2 % All manually select
+                            Template = 'Template2';
+                        else % nSeries ~= nFunSessions
+                            Template = 'Template3';
+                        end
+                        Selection = ManuallySelectSeries(SessionName,SubString{iSub},SeriesList,Template);
+                        for i = 1:length(Flag)
+                            FunAllInputDir{Flag(i)}{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{Selection.Results(i)-1},filesep,SubString{iSub}];
+                        end
+                    elseif handles.Cfg.SameSeriesName.Strategy == 1 && length(Index) == handles.Cfg.FunSessionNumber % SameSeriesName.Strategy == 1; use index to allocate same-name-series
+                        Flag = find(handles.Cfg.SameSeriesName.FlagMatrix(iSession,:));
+                        SeriesList = FunAllString{iSession}(iSub,Index)';
+                        DashIndex = strfind(SeriesList{1},'_');
+                        [~,I] = sort(cellfun(@(Series) str2num(Series(1:DashIndex-1)),SeriesList));
+                        SeriesList = SeriesList(I);
+                        for i = 1:length(Flag)
+                            FunAllInputDir{Flag(i)}{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{i},filesep,SubString{iSub}];
                         end
                     end
                 end
             end
         end
-    end
+    end    
 end
 
-% Find qualified series to be appointed as pseudo series if needed (handles.Cfg.IsPseudoSeries == 1),
+%% Find qualified series to be appointed as pseudo series if needed (handles.Cfg.IsPseudoSeries == 1),
 % or delete the subject without full T1 session and functional sessions from sublist (handles.Cfg.IsPseudoSeries == 0) 
-Index = ones(length(SubString),1);
+SubStatus = ones(length(SubString),1);
 if handles.Cfg.IsPseudoSeries
     handles.Cfg.T1Pseudo = '';
-    handles.Cfg.FunPseudo = '';
-    handles.Cfg.FunOtherPseudo = cell(handles.Cfg.FunOtherNumber,1);
+    handles.Cfg.DwiPseudo = '';
+    handles.Cfg.FunAllPseudo = cell(handles.Cfg.FunSessionNumber,1);
     for iSub = 1:length(SubString)
         if ~isempty(T1InputDir{iSub}) && ~strcmp(T1InputDir{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.T1Pseudo)
             handles.Cfg.T1Pseudo = T1InputDir{iSub};
         elseif isempty(T1InputDir{iSub}) || strcmp(T1InputDir{iSub}(end-11:end),'PseudoSeries')
-%             T1InputDir{iSub} = 'PseudoSeries'; % Revised 20210511, don't assign pseudo series for T1 MRI
-            Index(iSub) = 0;
+            %             T1InputDir{iSub} = 'PseudoSeries'; 
+            SubStatus(iSub) = 0; % Revised 20210511, don't assign pseudo series for T1 MRI
         end
         if ~handles.Cfg.AnatOnly
-            if  ~isempty(FunInputDir{iSub}) && ~strcmp(FunInputDir{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.FunPseudo)
-                handles.Cfg.FunPseudo = FunInputDir{iSub};
-            elseif isempty(FunInputDir{iSub}) || strcmp(FunInputDir{iSub}(end-11:end),'PseudoSeries')
-                FunInputDir{iSub} = 'PseudoSeries';
+            if handles.Cfg.IsOrganizeDwi
+                if  ~isempty(DwiInputDir{iSub}) && ~strcmp(DwiInputDir{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.DwiPseudo)
+                    handles.Cfg.DwiPseudo = DwiInputDir{iSub};
+                elseif isempty(DwiInputDir{iSub}) || strcmp(DwiInputDir{iSub}(end-11:end),'PseudoSeries')
+                    DwiInputDir{iSub} = 'PseudoSeries';
+                end
             end
-        end
-        if handles.Cfg.IsOtherFun
-            for iSession = 1:handles.Cfg.FunOtherNumber
-                if  ~isempty(FunOtherInputDir{iSession}{iSub}) && ~strcmp(FunOtherInputDir{iSession}{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.FunOtherPseudo{iSession})
-                    handles.Cfg.FunOtherPseudo{iSession} = FunOtherInputDir{iSession}{iSub};
-                elseif isempty(FunOtherInputDir{iSession}{iSub}) || strcmp(FunOtherInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
-                    FunOtherInputDir{iSession}{iSub} = 'PseudoSeries';
+            if handles.Cfg.IsOrganizeFun
+                for iSession = 1:handles.Cfg.FunSessionNumber
+                    if  ~isempty(FunAllInputDir{iSession}{iSub}) && ~strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.FunAllPseudo{iSession})
+                        handles.Cfg.FunAllPseudo{iSession} = FunAllInputDir{iSession}{iSub};
+                    elseif isempty(FunAllInputDir{iSession}{iSub}) || strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
+                        FunAllInputDir{iSession}{iSub} = 'PseudoSeries';
+                    end
                 end
             end
         end
     end
-else
+else % handles.Cfg.IsPseudoSeries == 0
     for iSub = 1:length(SubString)
         if isempty(T1InputDir{iSub}) || strcmp(T1InputDir{iSub}(end-11:end),'PseudoSeries')
-            Index(iSub) = 0;
+            SubStatus(iSub) = 0;
         end
         if ~handles.Cfg.AnatOnly
-            if isempty(FunInputDir{iSub}) || strcmp(FunInputDir{iSub}(end-11:end),'PseudoSeries')
-                Index(iSub) = 0;
+            if handles.Cfg.IsOrganizeDwi
+                if isempty(DwiInputDir{iSub}) || strcmp(DwiInputDir{iSub}(end-11:end),'PseudoSeries')
+                    SubStatus(iSub) = 0;
+                end
             end
-        end
-        if handles.Cfg.IsOtherFun
-            for iSession = 1:handles.Cfg.FunOtherNumber
-                if isempty(FunOtherInputDir{iSession}{iSub}) || strcmp(FunOtherInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
-                    Index(iSub) = 0;
+            if handles.Cfg.IsOrganizeFun
+                for iSession = 1:handles.Cfg.FunSessionNumber
+                    if isempty(FunAllInputDir{iSession}{iSub}) || strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
+                        SubStatus(iSub) = 0;
+                    end
                 end
             end
         end
+        
     end
 end
-% Copy and paste files 
+
+%% Copy and paste files 
 disp([newline,'Start to copy files to DPABI-format starting directory ...']);
-handles.Cfg.SubList = SubString(find(Index));
+handles.Cfg.SubList = SubString(find(SubStatus));
 handles.Cfg.SubListNew = cell(length(handles.Cfg.SubList),1);
-handles.Cfg.InputList.T1 = T1InputDir(find(Index));
+handles.Cfg.InputList.T1 = T1InputDir(find(SubStatus));
 if ~handles.Cfg.AnatOnly
-    handles.Cfg.InputList.Fun =FunInputDir(find(Index));
-end
-if handles.Cfg.IsOtherFun
-    for iSession = 1:handles.Cfg.FunOtherNumber
-        handles.Cfg.InputList.FunOther{iSession} = FunOtherInputDir{iSession}(find(Index));
+    if handles.Cfg.IsOrganizeDwi
+        handles.Cfg.InputList.Dwi =DwiInputDir(find(SubStatus));
+    end
+    if handles.Cfg.IsOrganizeFun
+        for iSession = 1:handles.Cfg.FunSessionNumber
+            handles.Cfg.InputList.FunAll{iSession} = FunAllInputDir{iSession}(find(SubStatus));
+        end
     end
 end
+
 MacFlag = 0;
 for iSub = 1:length(handles.Cfg.SubList)
     if handles.Cfg.IsChangeSubID
-        SubID = sprintf('Sub_%.3d', iSub);
+        SubID = sprintf('Sub%.3d', iSub);
         handles.Cfg.SubListNew{iSub} = SubID;
     else
         SubID = handles.Cfg.SubList{iSub};
@@ -1581,43 +1635,48 @@ for iSub = 1:length(handles.Cfg.SubList)
     end
     
     if ~handles.Cfg.AnatOnly
-        FunOutputDir = [handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubID];
-        mkdir(FunOutputDir);
-        try
-            if ~strcmp(handles.Cfg.InputList.Fun{iSub},'PseudoSeries')
-                copyfile(handles.Cfg.InputList.Fun{iSub},FunOutputDir);
-            else
-                copyfile(handles.Cfg.FunPseudo,FunOutputDir);
-            end
-        catch
-            if MacFlag == 0
-                disp([newline,...
-                    'Because of the system limitation of your computer, to avoid the "argument list too long" error, it would take more time to finish copy-paste procedure...'])
-                MacFlag = 1;
-            end
-            if ~strcmp(handles.Cfg.InputList.Fun{iSub},'PseudoSeries')
-                dos(['for file in "',handles.Cfg.InputList.Fun{iSub},'"/*; do cp -- "$file" "',FunOutputDir,'" ; done']);
-            else
-                dos(['for file in "',handles.Cfg.FunPseudo,'"/*; do cp -- "$file" "',FunOutputDir,'" ; done']);
-            end
-        end
-    end
-    
-    if handles.Cfg.IsOtherFun
-        for iSession = 1:handles.Cfg.FunOtherNumber
-            FunOtherOutputDir = [handles.Cfg.OutputDir,filesep,'S',num2str(iSession+1),'_FunRaw',filesep,SubID];
-            mkdir(FunOtherOutputDir);
+        if handles.Cfg.IsOrganizeDwi
+            DwiOutputDir = [handles.Cfg.OutputDir,filesep,'DwiRaw',filesep,SubID];
+            mkdir(DwiOutputDir);
             try
-                if ~strcmp(handles.Cfg.InputList.FunOther{iSession}{iSub},'PseudoSeries')
-                    copyfile(handles.Cfg.InputList.FunOther{iSession}{iSub},FunOtherOutputDir);
+                if ~strcmp(handles.Cfg.InputList.Dwi{iSub},'PseudoSeries')
+                    copyfile(handles.Cfg.InputList.Dwi{iSub},DwiOutputDir);
                 else
-                    copyfile(handles.Cfg.FunOtherPseudo{iSession},FunOtherOutputDir);
+                    copyfile(handles.Cfg.DwiPseudo,DwiOutputDir);
                 end
             catch
-                if ~strcmp(handles.Cfg.InputList.FunOther{iSession}{iSub},'PseudoSeries')
-                    dos(['for file in "',handles.Cfg.InputList.FunOther{iSession}{iSub},'"/*; do cp -- "$file" "',FunOtherOutputDir,'" ; done']);
+                if MacFlag == 0
+                    disp([newline,...
+                        'Because of the system limitation of your computer, to avoid the "argument list too long" error, it would take more time to finish copy-paste procedure...'])
+                    MacFlag = 1;
+                end
+                if ~strcmp(handles.Cfg.InputList.Dwi{iSub},'PseudoSeries')
+                    dos(['for file in "',handles.Cfg.InputList.Dwi{iSub},'"/*; do cp -- "$file" "',DwiOutputDir,'" ; done']);
                 else
-                    dos(['for file in "',handles.Cfg.FunOtherPseudo{iSession},'"/*; do cp -- "$file" "',FunOtherOutputDir,'" ; done']);
+                    dos(['for file in "',handles.Cfg.DwiPseudo,'"/*; do cp -- "$file" "',DwiOutputDir,'" ; done']);
+                end
+            end
+        end
+        if handles.Cfg.IsOrganizeFun
+            for iSession = 1:handles.Cfg.FunSessionNumber
+                if iSession == 1
+                    FunAllOutputDir = [handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubID];
+                else
+                    FunAllOutputDir = [handles.Cfg.OutputDir,filesep,'S',num2str(iSession),'_FunRaw',filesep,SubID];
+                end
+                mkdir(FunAllOutputDir);
+                try
+                    if ~strcmp(handles.Cfg.InputList.FunAll{iSession}{iSub},'PseudoSeries')
+                        copyfile(handles.Cfg.InputList.FunAll{iSession}{iSub},FunAllOutputDir);
+                    else
+                        copyfile(handles.Cfg.FunAllPseudo{iSession},FunAllOutputDir);
+                    end
+                catch
+                    if ~strcmp(handles.Cfg.InputList.FunAll{iSession}{iSub},'PseudoSeries')
+                        dos(['for file in "',handles.Cfg.InputList.FunAll{iSession}{iSub},'"/*; do cp -- "$file" "',FunAllOutputDir,'" ; done']);
+                    else
+                        dos(['for file in "',handles.Cfg.FunAllPseudo{iSession},'"/*; do cp -- "$file" "',FunAllOutputDir,'" ; done']);
+                    end
                 end
             end
         end
@@ -1627,6 +1686,7 @@ end
 
 disp([newline,'DPARSFA/DPABISurf input preparation finished!'])
 guidata(hObject,handles);
+
 
 
 function CheckFileOperatorNumber(hObject, handles)
@@ -1662,8 +1722,9 @@ end
 guidata(hObject,handles);
 
 
+
 function WriteCSV(hObject, handles)
-%% Write out the conversion information into .csv file.
+%% Write out the conversion status into .csv file.
 if handles.Cfg.IsChangeSubID == 0
     Titles = {'Subject ID','T1Raw'};
     Text = [handles.Cfg.SubList, handles.Cfg.InputList.T1];
@@ -1672,12 +1733,18 @@ else
     Text = [handles.Cfg.SubList, handles.Cfg.SubListNew, handles.Cfg.InputList.T1];
 end
 if ~handles.Cfg.AnatOnly 
-    Titles = [Titles,'FunRaw'];
-    Text = [Text,handles.Cfg.InputList.Fun];
-    if handles.Cfg.IsOtherFun
-        for iSession = 1:handles.Cfg.FunOtherNumber
-            Titles = [Titles,['S',num2str(iSession+1),'_FunRaw']];
-            Text = [Text,handles.Cfg.InputList.FunOther{iSession}];
+    if handles.Cfg.IsOrganizeDwi
+        Titles = [Titles,'DwiRaw'];
+        Text = [Text,handles.Cfg.InputList.Dwi];
+    end
+    if handles.Cfg.IsOrganizeFun
+        for iSession = 1:handles.Cfg.FunSessionNumber
+            if iSession ==1
+                Titles = [Titles,['FunRaw']];
+            else
+                Titles = [Titles,['S',num2str(iSession),'_FunRaw']];
+            end
+            Text = [Text,handles.Cfg.InputList.FunAll{iSession}];
         end
     end
 end
@@ -1686,11 +1753,15 @@ if handles.Cfg.IsDCM2NII
     Titles = [Titles,'DCM2NII T1Raw'];
     Text = [Text,handles.Cfg.DCM2NIIStatus{1}];
     if ~handles.Cfg.AnatOnly
-        Titles = [Titles,'DCM2NII FunRaw'];
+        Titles = [Titles,'DCM2NII DwiRaw'];
         Text = [Text,handles.Cfg.DCM2NIIStatus{2}];
-        if handles.Cfg.IsOtherFun
-            for iSession = 1:handles.Cfg.FunOtherNumber
-                Titles = [Titles,['DCM2NII S',num2str(iSession+1),'_FunRaw']];
+        if handles.Cfg.IsOrganizeFun
+            for iSession = 1:handles.Cfg.FunSessionNumber
+                if iSession ==1
+                    Titles = [Titles,['DCM2NII FunRaw']];
+                else
+                    Titles = [Titles,['DCM2NII S',num2str(iSession+1),'_FunRaw']];
+                end
                 Text = [Text,handles.Cfg.DCM2NIIStatus{iSession+2}];
             end
         end
@@ -1703,7 +1774,7 @@ Datetime=fix(clock); %Added by YAN Chao-Gan, 100130.
 % writetable(T,[handles.Cfg.OutputDir,filesep,'DPABI_Format_Conversion_Report_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.csv']);
 
 % YAN Chao-Gan, 211122. I don't know why for some system writetable is not working, so I try to re-write with old funcitons.
-fid = fopen([handles.Cfg.OutputDir,filesep,'DPABI_Input_Preparer_Report_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.tsv'],'w');
+fid = fopen([handles.Cfg.OutputDir,filesep,'DPABI_Input_Preparer_Report_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'_',num2str(Datetime(6)),'.tsv'],'w');
 
 for i=1:size(Titles,2)-1
     fprintf(fid,'%s\t',Titles{i});
@@ -1717,10 +1788,9 @@ for i=1:size(Text,1)
 end
 fclose(fid);
 
-
-
 disp([newline,'Write out DPABI Input Preparer report.']);
  
+
 
 function DCM2NII(hObject, handles)
 %% Run DCM2NII.
@@ -1731,63 +1801,100 @@ else
 end
 
 %Convert T1 DICOM files to NIFTI images
-for i=1:length(handles.Cfg.SubList)
-    OutputDir=[handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{i}];
+for iSub=1:length(handles.Cfg.SubList)
+    OutputDir=[handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{iSub}];
     mkdir(OutputDir);
-    DirDCM=dir([handles.Cfg.OutputDir,filesep,'T1Raw',filesep,SubjectID{i},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
-    InputFilename=[handles.Cfg.OutputDir,filesep,'T1Raw',filesep,SubjectID{i},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
+    DirDCM=dir([handles.Cfg.OutputDir,filesep,'T1Raw',filesep,SubjectID{iSub},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
+    InputFilename=[handles.Cfg.OutputDir,filesep,'T1Raw',filesep,SubjectID{iSub},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
     %YAN Chao-Gan 120817.
     y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
-    fprintf(['Converting T1 Images: ',SubjectID{i},' OK']);
+    fprintf(['Converting T1 Images: ',SubjectID{iSub},' OK']);
+end
+
+%Convert DWI DICOM files to NIFTI images
+if handles.Cfg.IsOrganizeDwi
+    for iSub=1:length(handles.Cfg.SubList)
+        OutputDir=[handles.Cfg.OutputDir,filesep,'DwiImg',filesep,SubjectID{iSub}];
+        mkdir(OutputDir);
+        DirDCM=dir([handles.Cfg.OutputDir,filesep,'DwiRaw',filesep,SubjectID{iSub},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
+        InputFilename=[handles.Cfg.OutputDir,filesep,'DwiRaw',filesep,SubjectID{iSub},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
+        %YAN Chao-Gan 120817.
+        y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
+        fprintf(['Converting DWI Images: ',SubjectID{iSub},' OK']);
+    end
 end
 
 %Convert Functional DICOM files to NIFTI images
-FunSessionPrefixSet={''}; %The first session doesn't need a prefix. From the second session, need a prefix such as 'S2_';
-if handles.Cfg.IsOtherFun
-    for iFunSession=1:handles.Cfg.FunOtherNumber
-        FunSessionPrefixSet=[FunSessionPrefixSet;{['S',num2str(iFunSession+1),'_']}];
-    end
-end    
-
-if ~handles.Cfg.AnatOnly 
-    for iFunSession=1:handles.Cfg.FunOtherNumber+1
-        for i=1:length(handles.Cfg.SubList)
-            OutputDir=[handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,SubjectID{i}];
+if handles.Cfg.IsOrganizeFun
+    for iFunSession=1:handles.Cfg.FunSessionNumber
+        if iFunSession == 1
+            Prefix = '';
+        else
+            Prefix = ['S',num2str(iFunSession),'_'];
+        end
+        for iSub=1:length(handles.Cfg.SubList)
+            OutputDir=[handles.Cfg.OutputDir,filesep,Prefix,'FunImg',filesep,SubjectID{iSub}];
             mkdir(OutputDir);
-            DirDCM=dir([handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw',filesep,SubjectID{i},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
-            InputFilename=[handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunRaw',filesep,SubjectID{i},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
+            DirDCM=dir([handles.Cfg.OutputDir,filesep,Prefix,'FunRaw',filesep,SubjectID{iSub},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
+            InputFilename=[handles.Cfg.OutputDir,filesep,Prefix,'FunRaw',filesep,SubjectID{iSub},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
             %YAN Chao-Gan 120817.
             y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
-            fprintf(['Converting Functional Images: ',SubjectID{i},' OK']);
+            fprintf(['Converting ',Prefix,'FunImg: ',SubjectID{iSub},' OK']);
         end
         fprintf('\n');
     end
 end
 
+
 % Check whether DCM2NII is successful
 Flag = zeros(length(handles.Cfg.SubList));
 for iSub = 1:length(handles.Cfg.SubList)
-    if ~isempty(dir([handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{i},filesep,'*.nii']))
+    % Check T1 DCM2NII status
+    if ~isempty(dir([handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{iSub},filesep,'*.nii']))
         handles.Cfg.DCM2NIIStatus{1}{iSub,1} = 'Success';
     else
         handles.Cfg.DCM2NIIStatus{1}{iSub,1} = 'Failure';
         Flag(iSub) = 1;
     end
-    if ~handles.Cfg.AnatOnly
-        for iSession = 1:handles.Cfg.FunOtherNumber+1
-            if ~isempty(dir([handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,SubjectID{i},filesep,'*.nii']))
-                handles.Cfg.DCM2NIIStatus{iSession+1}{iSub,1} = 'Success';
+    % Check DWI DCM2NII status
+    if handles.Cfg.IsOrganizeDwi
+        if ~isempty(dir([handles.Cfg.OutputDir,filesep,'DwiImg',filesep,SubjectID{iSub},filesep,'*.nii']))
+            handles.Cfg.DCM2NIIStatus{2}{iSub,1} = 'Success';
+        else
+            handles.Cfg.DCM2NIIStatus{2}{iSub,1} = 'Failure';
+            Flag(iSub) = 1;
+        end
+    end
+    % Check Fun DCM2NII status
+    if handles.Cfg.IsOrganizeFun
+        for iSession = 1:handles.Cfg.FunSessionNumber
+            if iSession == 1
+                Prefix = '';
             else
-                handles.Cfg.DCM2NIIStatus{iSession+1}{iSub,1} = 'Failure';
+                Prefix = ['S',num2str(iSession),'_'];
+            end
+            if ~isempty(dir([handles.Cfg.OutputDir,filesep,Prefix,'FunImg',filesep,SubjectID{iSub},filesep,'*.nii']))
+                handles.Cfg.DCM2NIIStatus{iSession+2}{iSub,1} = 'Success';
+            else
+                handles.Cfg.DCM2NIIStatus{iSession+2}{iSub,1} = 'Failure';
                 Flag(iSub) = 1;
             end
         end
     end
+    % Delete participants with DCM2NII failure
     if Flag(iSub) == 1
-        rmdir([handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{i}],'s');
-        if ~handles.Cfg.AnatOnly
-            for iSession = 1:handles.Cfg.FunOtherNumber+1
-                rmdir([handles.Cfg.OutputDir,filesep,FunSessionPrefixSet{iFunSession},'FunImg',filesep,SubjectID{i}],'s');
+        rmdir([handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{iSub}],'s');
+        if handles.Cfg.IsOrganizeDwi
+            rmdir([handles.Cfg.OutputDir,filesep,'DwiImg',filesep,SubjectID{iSub}],'s');
+        end
+        if handles.Cfg.IsOrganizeFun
+            for iSession = 1:handles.Cfg.FunSessionNumber
+                if iSession == 1
+                    Prefix = '';
+                else
+                    Prefix = ['S',num2str(iSession),'_'];
+                end
+                rmdir([handles.Cfg.OutputDir,filesep,Prefix,'FunImg',filesep,SubjectID{iSub}],'s');
             end
         end
     end
@@ -1800,46 +1907,274 @@ function UpdateDisplay(handles)
 set(handles.editInputDir,'String',handles.Cfg.WorkingDir);
 set(handles.editOutputDir,'String',handles.Cfg.OutputDir);
 set(handles.popupmenuInputLayout,'Value',handles.Cfg.InputLayout);
-set(handles.checkboxIsPseudo,'Value',handles.Cfg.IsPseudoSeries);
-set(handles.checkboxDCM2NII,'Value',handles.Cfg.IsDCM2NII);
-set(handles.checkboxIsOtherFun,'Value',handles.Cfg.IsOtherFun);
-set(handles.editFunOtherNumber,'string',num2str(handles.Cfg.FunOtherNumber));
 set(handles.checkboxIsChangeSubID,'Value',handles.Cfg.IsChangeSubID);
+set(handles.checkboxIsPseudo,'Value',handles.Cfg.IsPseudoSeries);
+set(handles.checkboxIsOrganizeFun,'Value',handles.Cfg.IsOrganizeFun);
+set(handles.editFunSessionNum,'string',num2str(handles.Cfg.FunSessionNumber));
+set(handles.checkboxIsOrganizeDwi,'Value',handles.Cfg.IsOrganizeDwi);
+set(handles.checkboxDCM2NII,'Value',handles.Cfg.IsDCM2NII);
 
-if handles.Cfg.IsOtherFun  
+%T1Raw
+set(handles.popupmenuT1,'String',handles.Cfg.Demo.SeriesNames,'Value',handles.Cfg.SeriesIndex.T1);
+Percentage = handles.Cfg.SeriesFileNumber.Percent.T1;
+DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),...
+    num2cell(handles.Cfg.SeriesFileNumber.List.T1),num2cell(Percentage),'UniformOutput',false);
+set(handles.popupmenuT1FileNumber,'String',DisplayString,'Value',handles.Cfg.SeriesFileNumber.Flag.T1);
+set(handles.editT1nFile,'String',num2str(handles.Cfg.SeriesFileNumber.LowThreshold.T1));
+if handles.Cfg.SeriesFileNumber.LowLimitMode.T1 == 0
+    set(handles.popupmenuT1FileNumber,'Enable','on');
+    set(handles.radiobuttonT1FixednFile,'Value',1);
+    set(handles.radiobuttonT1ChangeablenFile,'Value',0);
+    set(handles.textMoreThanT1,'Enable','off');
+    set(handles.editT1nFile,'Enable','off');
+    set(handles.textFilesT1,'Enable','off');
+else
+    set(handles.popupmenuT1FileNumber,'Enable','off');
+    set(handles.radiobuttonT1FixednFile,'Value',0);
+    set(handles.radiobuttonT1ChangeablenFile,'Value',1);
+    set(handles.textMoreThanT1,'Enable','on');
+    set(handles.editT1nFile,'Enable','on');
+    set(handles.textFilesT1,'Enable','on');
+end
+
+%DwiRaw
+if handles.Cfg.IsOrganizeDwi
+    set(handles.popupmenuDwi,'String',handles.Cfg.Demo.SeriesNames,'Value',handles.Cfg.SeriesIndex.Dwi);
+    Percentage = handles.Cfg.SeriesFileNumber.Percent.Dwi;
+    DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),...
+        num2cell(handles.Cfg.SeriesFileNumber.List.Dwi),num2cell(Percentage),'UniformOutput',false);
+    set(handles.popupmenuDwi,'Enable','on');
+    set(handles.popupmenuDwiFileNumber,'String',DisplayString,'Value',handles.Cfg.SeriesFileNumber.Flag.Dwi);
+    set(handles.editDwinFile,'String',num2str(handles.Cfg.SeriesFileNumber.LowThreshold.Dwi));
+    set(handles.radiobuttonDwiFixednFile,'Enable','on');
+    set(handles.radiobuttonDwiChangeablenFile,'Enable','on');
+    if handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi == 0
+        set(handles.popupmenuDwiFileNumber,'Enable','on');
+        set(handles.radiobuttonDwiFixednFile,'Value',1);
+        set(handles.radiobuttonDwiChangeablenFile,'Value',0);
+        set(handles.textMoreThanDwi,'Enable','off');
+        set(handles.editDwinFile,'Enable','off');
+        set(handles.textFilesDwi,'Enable','off');
+    else
+        set(handles.popupmenuDwiFileNumber,'Enable','off');
+        set(handles.radiobuttonDwiFixednFile,'Value',0);
+        set(handles.radiobuttonDwiChangeablenFile,'Value',1);
+        set(handles.textMoreThanDwi,'Enable','on');
+        set(handles.editDwinFile,'Enable','on');
+        set(handles.textFilesDwi,'Enable','on');
+    end
+else
+    set(handles.popupmenuDwi,'Enable','off');
+    set(handles.popupmenuDwiFileNumber,'Enable','off');
+    set(handles.editDwinFile,'Enable','off');
+    set(handles.textMoreThanDwi,'Enable','off');
+    set(handles.textFilesDwi,'Enable','off');
+    set(handles.radiobuttonDwiFixednFile,'Enable','off');
+    set(handles.radiobuttonDwiChangeablenFile,'Enable','off');
+end
+
+%FunRaw
+if handles.Cfg.IsOrganizeFun  
     set(handles.popupmenuSxFunRaw,'Enable','on');
-    set(handles.popupmenuFunOther,'Enable','on');
-    set(handles.popupmenuFunOtherFileNumber,'Enable','on');
-    set(handles.editFunOtherNumber,'Enable','on');
+    set(handles.popupmenuFunAll,'Enable','on');
+    set(handles.editFunSessionNum,'Enable','on');
+    
+    
+    %% need to deal with percentage problem !!!!!!!!
+    Percentage = handles.Cfg.SeriesFileNumber.Percent.FunAll{handles.Cfg.SxFunRawFlag};
+    DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),...
+        num2cell(handles.Cfg.SeriesFileNumber.List.FunAll{handles.Cfg.SxFunRawFlag}),num2cell(Percentage),'UniformOutput',false);
+    set(handles.popupmenuFunAllFileNumber,'String',DisplayString,...
+        'Value',handles.Cfg.SeriesFileNumber.Flag.FunAll(handles.Cfg.SxFunRawFlag));
+    set(handles.editFunAllnFile,'String',...
+        num2str(handles.Cfg.SeriesFileNumber.LowThreshold.FunAll{handles.Cfg.SxFunRawFlag}));
+    set(handles.radiobuttonFunAllFixednFile,'Enable','on');
+    set(handles.radiobuttonFunAllChangeablenFile,'Enable','on');
+    if handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll{handles.Cfg.SxFunRawFlag} ==0
+        set(handles.popupmenuFunAllFileNumber,'Enable','on');
+        set(handles.radiobuttonFunAllFixednFile,'Value',1);
+        set(handles.radiobuttonFunAllChangeablenFile,'Value',0);
+        set(handles.textMoreThanFunAll,'Enable','off');
+        set(handles.editFunAllnFile,'Enable','off');
+        set(handles.textFilesFunAll,'Enable','off');
+    else
+        set(handles.popupmenuFunAllFileNumber,'Enable','off');
+        set(handles.radiobuttonFunAllFixednFile,'Value',0);
+        set(handles.radiobuttonFunAllChangeablenFile,'Value',1);
+        set(handles.textMoreThanFunAll,'Enable','on');
+        set(handles.editFunAllnFile,'Enable','on');
+        set(handles.textFilesFunAll,'Enable','on');
+    end
 else
     set(handles.popupmenuSxFunRaw,'Enable','off');
-    set(handles.popupmenuFunOther,'Enable','off');
-    set(handles.popupmenuFunOtherFileNumber,'Enable','off');
-    set(handles.editFunOtherNumber,'Enable','off');
+    set(handles.popupmenuFunAll,'Enable','off');
+    set(handles.popupmenuFunAllFileNumber,'Enable','off');
+    set(handles.editFunSessionNum,'Enable','off');
+    set(handles.popupmenuFunAllFileNumber,'Enable','off');
+    set(handles.textMoreThanFunAll,'Enable','off');
+    set(handles.editFunAllnFile,'Enable','off');
+    set(handles.textFilesFunAll,'Enable','off');
+    set(handles.radiobuttonFunAllFixednFile,'Enable','off');
+    set(handles.radiobuttonFunAllChangeablenFile,'Enable','off');
 end
-%T1Raw
-set(handles.popupmenuT1,'String',handles.Cfg.Demo.SeriesNames);
-set(handles.popupmenuT1,'Value',handles.Cfg.SeriesIndex.T1);
-set(handles.popupmenuT1FileNumber,'String',num2cell(handles.Cfg.SeriesFileNumber.List.T1));
-set(handles.popupmenuT1FileNumber,'Value',handles.Cfg.SeriesFileNumber.Flag.T1);
-%FunRaw
-set(handles.popupmenuFun,'String',handles.Cfg.Demo.SeriesNames);
-set(handles.popupmenuFun,'Value',handles.Cfg.SeriesIndex.Fun);
-set(handles.popupmenuFunFileNumber,'String',num2cell(handles.Cfg.SeriesFileNumber.List.Fun));
-set(handles.popupmenuFunFileNumber,'Value',handles.Cfg.SeriesFileNumber.Flag.Fun);
-%Sx_FunRaw
-set(handles.popupmenuSxFunRaw,'String',handles.Cfg.SxFunRawList);
-set(handles.popupmenuSxFunRaw,'Value',handles.Cfg.SxFunRawFlag);
-set(handles.popupmenuFunOther,'String',handles.Cfg.Demo.SeriesNames);
-set(handles.popupmenuFunOther,'Value',handles.Cfg.SeriesIndex.FunOther(...
-    handles.Cfg.SxFunRawFlag));
-set(handles.popupmenuFunOtherFileNumber,'String',num2str(handles.Cfg.SeriesFileNumber.List.FunOther{...
-    handles.Cfg.SxFunRawFlag}));
-set(handles.popupmenuFunOtherFileNumber,'Value',handles.Cfg.SeriesFileNumber.Flag.FunOther(...
-    handles.Cfg.SxFunRawFlag));
+set(handles.popupmenuSxFunRaw,'String',handles.Cfg.SxFunRawList,'Value',handles.Cfg.SxFunRawFlag);
+set(handles.popupmenuFunAll,'String',handles.Cfg.Demo.SeriesNames,'Value',handles.Cfg.SeriesIndex.FunAll(handles.Cfg.SxFunRawFlag));
 drawnow
 
 
-    
-    
-    
+% --- Executes on button press in radiobuttonT1FixednFile.
+function radiobuttonT1FixednFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonT1FixednFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.T1 = ~get(handles.radiobuttonT1FixednFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonT1FixednFile
+
+
+% --- Executes on button press in radiobutton8.
+function radiobutton8_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobutton8
+
+
+% --- Executes on button press in radiobuttonT1ChangeablenFile.
+function radiobuttonT1ChangeablenFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonT1ChangeablenFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.T1 = get(handles.radiobuttonT1ChangeablenFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonT1ChangeablenFile
+
+
+
+function editT1nFile_Callback(hObject, eventdata, handles)
+% hObject    handle to editT1nFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowThreshold.T1 = str2num(get(handles.editT1nFile,'String'));
+guidata(hObject,handles);
+% Hints: get(hObject,'String') returns contents of editT1nFile as text
+%        str2double(get(hObject,'String')) returns contents of editT1nFile as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editT1nFile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editT1nFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in radiobuttonDwiFixednFile.
+function radiobuttonDwiFixednFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonDwiFixednFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi = ~get(handles.radiobuttonDwiFixednFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonDwiFixednFile
+
+
+% --- Executes on button press in radiobuttonDwiChangeablenFile.
+function radiobuttonDwiChangeablenFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonDwiChangeablenFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi = get(handles.radiobuttonDwiChangeablenFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonDwiChangeablenFile
+
+
+
+function editDwinFile_Callback(hObject, eventdata, handles)
+% hObject    handle to editDwinFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowThreshold.Dwi = str2num(get(handles.editDwinFile,'String'));
+guidata(hObject,handles);
+% Hints: get(hObject,'String') returns contents of editDwinFile as text
+%        str2double(get(hObject,'String')) returns contents of editDwinFile as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editDwinFile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editDwinFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in radiobuttonFunAllFixednFile.
+function radiobuttonFunAllFixednFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonFunAllFixednFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll{handles.Cfg.SxFunRawFlag} = ~get(handles.radiobuttonFunAllFixednFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonFunAllFixednFile
+
+
+% --- Executes on button press in radiobuttonFunAllChangeablenFile.
+function radiobuttonFunAllChangeablenFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonFunAllChangeablenFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll{handles.Cfg.SxFunRawFlag} = get(handles.radiobuttonFunAllChangeablenFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonFunAllChangeablenFile
+
+
+
+function editFunAllnFile_Callback(hObject, eventdata, handles)
+% hObject    handle to editFunAllnFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.SeriesFileNumber.LowThreshold.FunAll{handles.Cfg.SxFunRawFlag} = str2num(get(handles.editFunAllnFile,'String'));
+guidata(hObject,handles);
+% Hints: get(hObject,'String') returns contents of editFunAllnFile as text
+%        str2double(get(hObject,'String')) returns contents of editFunAllnFile as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editFunAllnFile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editFunAllnFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in checkboxIsOrganizeDwi.
+function checkboxIsOrganizeDwi_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxIsOrganizeDwi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Cfg.IsOrganizeDwi = get(handles.checkboxIsOrganizeDwi,'Value');
+UpdateDisplay(handles);
+guidata(hObject,handles);
+% Hint: get(hObject,'Value') returns toggle state of checkboxIsOrganizeDwi

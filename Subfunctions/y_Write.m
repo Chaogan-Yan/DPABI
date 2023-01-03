@@ -70,7 +70,7 @@ if isfield(Header,'cdata')  %YAN Chao-Gan 181204. Add GIfTI support.
     else
         Header = gifti(Data);
     end
-    save(Header,OutName,'Base64Binary');
+    save(Header,OutName,'Base64Binary','RowMajorOrder'); %YAN Chao-Gan, 221208. freesurfer needs 'RowMajorOrder' %save(Header,OutName,'Base64Binary'); 
 
 elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
     [Path,Name,Ext] = fileparts(OutName);

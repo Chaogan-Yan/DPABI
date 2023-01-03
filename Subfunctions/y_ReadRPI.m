@@ -43,15 +43,21 @@ end
 if sum(sum(Header.mat(1:3,1:3)-diag(diag(Header.mat(1:3,1:3)))~=0))==0 % If the image has no rotation (no non-diagnol element in affine matrix), then transform to RPI coordination.
     if Header.mat(1,1)>0 %R
         Data = flipdim(Data,1);
-        Header.mat(1,:) = -1*Header.mat(1,:);
+        Header.mat(1,1) = -1*Header.mat(1,1); %YAN Chao-Gan 221125. L to R need to revert origin X
+        Header.mat(1,4) = Header.mat(1,4) - Header.mat(1,1)*(Header.dim(1)+1); %YAN Chao-Gan 221125. L to R need to revert origin X
+        %Header.mat(1,:) = -1*Header.mat(1,:);
     end
     if Header.mat(2,2)<0 %P
         Data = flipdim(Data,2);
-        Header.mat(2,:) = -1*Header.mat(2,:);
+        Header.mat(2,2) = -1*Header.mat(2,2); %YAN Chao-Gan 221125. A to P need to revert origin Y
+        Header.mat(2,4) = Header.mat(2,4) - Header.mat(2,2)*(Header.dim(2)+1); %YAN Chao-Gan 221125. A to P need to revert origin Y
+        %Header.mat(2,:) = -1*Header.mat(2,:);
     end
     if Header.mat(3,3)<0 %I
         Data = flipdim(Data,3);
-        Header.mat(3,:) = -1*Header.mat(3,:);
+        Header.mat(3,3) = -1*Header.mat(3,3); %YAN Chao-Gan 221125. S to I need to revert origin Z
+        Header.mat(3,4) = Header.mat(3,4) - Header.mat(3,3)*(Header.dim(3)+1); %YAN Chao-Gan 221125. S to I need to revert origin Z
+        %Header.mat(3,:) = -1*Header.mat(3,:);
     end
 end
 temp = inv(Header.mat)*[0,0,0,1]';

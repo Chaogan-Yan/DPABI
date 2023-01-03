@@ -22,7 +22,9 @@ function varargout = DPABI_ROIList(varargin)
 
 % Edit the above text to modify the response to help DPABI_ROIList
 
-% Last Modified by GUIDE v2.5 05-Jan-2017 09:57:15
+% Last Modified by GUIDE v2.5 28-Dec-2022 18:35:39
+% Modified by Bin Lu, 20221226, added select ROI indices function, added
+% wildcard string ROI function, modified save-load function
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,20 +54,67 @@ function DPABI_ROIList_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DPABI_ROIList (see VARARGIN)
 if nargin > 3
-    ROICell=varargin{1};
-    StringCell=ROICell;
-    for i=1:numel(ROICell)
-        if isnumeric(ROICell{i})
-            s=ROICell{i};
+    handles.Cfg = varargin{1};
+    if ~isfield(handles.Cfg,'ROIDef') 
+        handles.Cfg.ROIDef = {};
+    end
+    if ~isfield(handles.Cfg,'ROISelectedIndex')
+        handles.Cfg.ROISelectedIndex = {};
+    end
+    
+    StringCell=handles.Cfg.ROIDef;
+    for i=1:numel(StringCell)
+        if isnumeric(StringCell{i})
+            s=StringCell{i};
             StringCell{i}=sprintf('Sphere ( X: %g -- Y: %g -- Z: %g >> Radius: %g )',...
                 s(1), s(2), s(3), s(4));
+        else
+            if ~isempty(handles.Cfg.ROISelectedIndex{i})
+                StringCell{i} = ['[Selected ROI Indices] ',StringCell{i}];
+            else
+                StringCell{i} = ['[All ROI Indices] ',StringCell{i}];
+            end
         end
     end
     set(handles.ROIListbox, 'String', StringCell);
-    handles.ROICell=ROICell;
 else
-    handles.ROICell={};
-end    
+    handles.Cfg.ROIDef = {};
+    handles.Cfg.ROISelectedIndex = {};
+end
+    
+if ~ismac
+    if ispc
+        ZoonMatrix = [1 1 1.2 1.2];  %For pc
+    else
+        ZoonMatrix = [1 1 1 1];  %For Linux
+    end
+    UISize = get(handles.figure1,'Position');
+    UISize = UISize.*ZoonMatrix;
+    set(handles.figure1,'Position',UISize);
+end
+
+
+
+% Make Display correct in Mac and linux
+if ~ispc
+    if ismac
+        ZoomFactor=1.4;  %For Mac
+    else
+        ZoomFactor=1;  %For Linux
+    end
+    ObjectNames = fieldnames(handles);
+    for i=1:length(ObjectNames);
+        eval(['IsFontSizeProp=isprop(handles.',ObjectNames{i},',''FontSize'');']);
+        if IsFontSizeProp
+            eval(['PCFontSize=get(handles.',ObjectNames{i},',''FontSize'');']);
+            FontSize=PCFontSize*ZoomFactor;
+            eval(['set(handles.',ObjectNames{i},',''FontSize'',',num2str(FontSize),');']);
+        end
+    end
+end
+
+
+movegui(handles.figure1, 'center');
 
 % Update handles structure
 guidata(hObject, handles);
@@ -85,7 +134,7 @@ function varargout = DPABI_ROIList_OutputFcn(hObject, eventdata, handles)
 if isempty(handles)
     varargout{1}=[];
 else
-    varargout{1} = handles.ROICell;
+    varargout{1} = handles.Cfg;
     delete(handles.figure1);
 end
 
@@ -122,16 +171,22 @@ SphereCell=w_AddSphere_gui;
 if isempty(SphereCell)
     return
 end
-handles.ROICell=GetROICell(SphereCell, handles.ROICell);
-StringCell=get(handles.ROIListbox, 'String');
-guidata(hObject, handles);
 
-TextCell=cellfun(@(s) sprintf('Sphere ( X: %g -- Y: %g -- Z: %g >> Radius: %g )', s(1), s(2), s(3), s(4)), SphereCell,...
-    'UniformOutput', false);
-StringCell=[StringCell;TextCell];
+[handles.Cfg.ROIDef,RepeatFlags]=GetROICell(SphereCell, handles.Cfg.ROIDef);
+SphereCell(RepeatFlags) = [];
 
-set(handles.ROIListbox, 'String', StringCell,...
-    'Value', numel(handles.ROICell));
+if ~isempty(SphereCell)
+    handles.Cfg.ROISelectedIndex = [handles.Cfg.ROISelectedIndex;cell(length(SphereCell),1)];
+    
+    StringCell=get(handles.ROIListbox, 'String');
+    TextCell=cellfun(@(s) sprintf('Sphere ( X: %g -- Y: %g -- Z: %g >> Radius: %g )', s(1), s(2), s(3), s(4)), SphereCell,...
+        'UniformOutput', false);
+    StringCell=[StringCell;TextCell];
+    set(handles.ROIListbox, 'String', StringCell,...
+        'Value', numel(StringCell));
+    guidata(hObject, handles);
+end
+
 
 % --- Executes on button press in MaskButton.
 function MaskButton_Callback(hObject, eventdata, handles)
@@ -139,7 +194,7 @@ function MaskButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [Name, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.gii','Brain Image Files (*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';},...
-    'Pick the Mask file');
+    'Pick the Mask file','MultiSelect','on');
 
 if isnumeric(Name)
     return
@@ -150,15 +205,23 @@ if ischar(Name)
 end
 Name=Name';
 PathCell=cellfun(@(name) fullfile(Path, name), Name, 'UniformOutput', false);
+[handles.Cfg.ROIDef,RepeatFlags]=GetROICell(PathCell, handles.Cfg.ROIDef);
+PathCell(RepeatFlags) = [];
 
-handles.ROICell=GetROICell(PathCell, handles.ROICell);
+handles.Cfg.ROISelectedIndex = [handles.Cfg.ROISelectedIndex;cell(length(PathCell),1)];
 
-StringCell=get(handles.ROIListbox, 'String');
-StringCell=[StringCell; PathCell];
-set(handles.ROIListbox, 'String', StringCell,...
-    'Value', numel(handles.ROICell));
+if ~isempty(PathCell)
+    StringCell=get(handles.ROIListbox, 'String');
+    AddString=cellfun(@(Path) ['[All ROI Indices] ',Path], PathCell, 'UniformOutput', false);
+    if isempty(StringCell)
+        StringCell = AddString;
+    else
+        StringCell=[StringCell; AddString];
+    end
+    set(handles.ROIListbox, 'String', StringCell,'Value', numel(StringCell));
+    guidata(hObject, handles);
+end
 
-guidata(hObject, handles);
 
 % --- Executes on button press in SeedButton.
 function SeedButton_Callback(hObject, eventdata, handles)
@@ -176,28 +239,38 @@ if ischar(Name)
 end
 Name=Name';
 PathCell=cellfun(@(name) fullfile(Path, name), Name, 'UniformOutput', false);
-handles.ROICell=GetROICell(PathCell, handles.ROICell);
+[handles.Cfg.ROIDef,RepeatFlags]=GetROICell(PathCell, handles.Cfg.ROIDef);
+PathCell(RepeatFlags) = [];
 
-StringCell=get(handles.ROIListbox, 'String');
-StringCell=[StringCell; PathCell];
-set(handles.ROIListbox, 'String', StringCell,...
-    'Value', numel(handles.ROICell));
+handles.Cfg.ROISelectedIndex = [handles.Cfg.ROISelectedIndex;cell(length(PathCell),1)];
 
-guidata(hObject, handles);
+if ~isempty(PathCell)
+    StringCell=get(handles.ROIListbox, 'String');
+    AddString=cellfun(@(Path) ['[All ROI Indices] ',Path], PathCell, 'UniformOutput', false);
+    if isempty(StringCell)
+        StringCell = AddString;
+    else
+        StringCell=[StringCell; AddString];
+    end
+    set(handles.ROIListbox, 'String', StringCell,'Value', numel(StringCell));
+    guidata(hObject, handles);
+end
 
-function ROICell=GetROICell(PathCell, ROICell)
-Index=false(size(PathCell));
+
+function [ROICell,RepeatFlags]=GetROICell(PathCell, ROICell)
+RepeatFlags=false(size(PathCell));
 for i=1:numel(PathCell)
     if isnumeric(PathCell{i})
         continue
     end
     flag=find(strcmpi(PathCell{i}, ROICell) > 0, 1);
     if ~isempty(flag)
-        Index(i)=true;
+        RepeatFlags(i)=true;
     end
 end
-PathCell(Index)=[];
+PathCell(RepeatFlags)=[];
 ROICell=[ROICell; PathCell];
+
 
 % --- Executes on button press in RemoveButton.
 function RemoveButton_Callback(hObject, eventdata, handles)
@@ -210,17 +283,17 @@ if Value==0
 end
 
 StringCell=get(handles.ROIListbox, 'String');
-handles.ROICell(Value)=[];
 StringCell(Value)=[];
+handles.Cfg.ROIDef(Value)=[];
+handles.Cfg.ROISelectedIndex(Value)=[];
 guidata(hObject, handles);
 
-if isempty(handles.ROICell)
+if isempty(handles.Cfg.ROIDef)
     Value=0;
-elseif numel(handles.ROICell) < Value
+elseif numel(handles.Cfg.ROIDef) < Value
     Value=Value-1;
 end
 set(handles.ROIListbox, 'String', StringCell, 'Value', Value);
-
 
 
 % --- Executes on button press in pushbuttonClearAll.
@@ -228,10 +301,10 @@ function pushbuttonClearAll_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonClearAll (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.ROICell=[];
+handles.Cfg.ROIDef = {};
+handles.Cfg.ROISelectedIndex = {};
 guidata(hObject, handles);
 set(handles.ROIListbox, 'String', [], 'Value', 0);
-
 
 
 % --- Executes on button press in OKButton.
@@ -240,6 +313,7 @@ function OKButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 uiresume(handles.figure1);
+
 
 % --- Executes on button press in SaveButton.
 function SaveButton_Callback(hObject, eventdata, handles)
@@ -251,8 +325,9 @@ if isnumeric(Name)
     return
 end
 Path=fullfile(Path, Name);
-ROICell=handles.ROICell;
-save(Path, 'ROICell');
+Cfg = handles.Cfg;
+save(Path, 'Cfg');
+
 
 % --- Executes on button press in LoadButton.
 function LoadButton_Callback(hObject, eventdata, handles)
@@ -267,16 +342,90 @@ end
 
 Path=fullfile(Path, Name);
 M=load(Path);
-handles.ROICell=M.ROICell;
-guidata(hObject, handles);
+handles.Cfg=M.Cfg;
 
-ROICell=M.ROICell;
-for i=1:numel(ROICell)
-    if isnumeric(ROICell{i})
-        s=ROICell{i};
-        ROICell{i}=sprintf('Sphere ( X: %g -- Y: %g -- Z: %g >> Radius: %g )', s(1), s(2), s(3), s(4));
+if ~isfield(handles.Cfg,'ROIDef')
+    handles.Cfg.ROIDef = {};
+end
+if ~isfield(handles.Cfg,'ROISelectedIndex')
+    handles.Cfg.ROISelectedIndex = {};
+end
+
+StringCell=handles.Cfg.ROIDef;
+for i=1:numel(StringCell)
+    if isnumeric(StringCell{i})
+        s=StringCell{i};
+        StringCell{i}=sprintf('Sphere ( X: %g -- Y: %g -- Z: %g >> Radius: %g )',...
+            s(1), s(2), s(3), s(4));
+    else
+        if ~isempty(handles.Cfg.ROISelectedIndex{i})
+            StringCell{i} = ['[Selected ROI Indices] ',StringCell{i}];
+        else
+            StringCell{i} = ['[All ROI Indices] ',StringCell{i}];
+        end
     end
 end
-set(handles.ROIListbox, 'String', ROICell, 'Value', numel(ROICell));
+set(handles.ROIListbox, 'String', StringCell);
+guidata(hObject, handles);
 
 
+% --- Executes on button press in pushbuttonROIIndices.
+function pushbuttonROIIndices_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonROIIndices (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+ROISelectFlag = get(handles.ROIListbox,'value');
+
+if isempty(handles.Cfg.ROISelectedIndex{ROISelectFlag}) % [All ROI Indices] now
+    try % Mask ROI
+        [MaskData,~,~,~] = y_ReadAll(handles.Cfg.ROIDef{ROISelectFlag});
+        ROIIndex = unique(MaskData)';
+        ROIIndex = setdiff(ROIIndex,0);
+        handles.Cfg.ROISelectedIndex{ROISelectFlag} = DPABI_SelectROIIndices(ROIIndex); % DPABI_SelectROIIndices is a figure (GUI)
+    catch
+        try % Seed seires ROI
+            SeedData = load(handles.Cfg.ROIDef{ROISelectFlag});
+            ROIIndex = 1:size(SeedData,2);
+            handles.Cfg.ROISelectedIndex{ROISelectFlag} = DPABI_SelectROIIndices(ROIIndex); 
+        catch % Sphere ROI or wildcard string ROI
+            handles.Cfg.ROISelectedIndex{ROISelectFlag} = DPABI_SelectROIIndices([]); 
+        end
+    end
+    if ~isempty(handles.Cfg.ROISelectedIndex{ROISelectFlag})
+        StringCell=get(handles.ROIListbox, 'String');
+        StringCell{ROISelectFlag} = strrep(StringCell{ROISelectFlag},'[All ROI Indices] ','[Selected ROI Indices] ');
+        set(handles.ROIListbox, 'String', StringCell, 'Value', ROISelectFlag);
+    end
+else
+    SelectedIndex = DPABI_SelectROIIndices(handles.Cfg.ROISelectedIndex{ROISelectFlag}); % DPABI_SelectROIIndices is a figure (GUI)
+    if ~isempty(SelectedIndex)
+        handles.Cfg.ROISelectedIndex{ROISelectFlag} = SelectedIndex;
+    end
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbuttonAddWildcardStr.
+function pushbuttonAddWildcardStr_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonAddWildcardStr (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+WildcardROI = DPABI_AddWildcardROI; % DPABI_AddWildcardROI is a figure (GUI)
+WildcardROI = {WildcardROI};
+
+[handles.Cfg.ROIDef,RepeatFlags]=GetROICell(WildcardROI, handles.Cfg.ROIDef);
+WildcardROI(RepeatFlags) = [];
+
+if ~isempty(WildcardROI)
+    handles.Cfg.ROISelectedIndex = [handles.Cfg.ROISelectedIndex;{[]}];
+    
+    StringCell=get(handles.ROIListbox, 'String');
+    if isempty(StringCell)
+        StringCell = {['[All ROI Indices] ',WildcardROI{1}]};
+    else
+        StringCell=[StringCell; ['[All ROI Indices] ',WildcardROI{1}]];
+    end
+    set(handles.ROIListbox, 'String', StringCell,...
+        'Value', numel(StringCell));
+    guidata(hObject, handles);
+end

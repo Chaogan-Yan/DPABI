@@ -22,7 +22,7 @@ function varargout = dpabi(varargin)
 
 % Edit the above text to modify the response to help dpabi
 
-% Last Modified by GUIDE v2.5 20-Apr-2021 06:47:06
+% Last Modified by GUIDE v2.5 31-Dec-2022 18:07:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,7 +65,7 @@ Datetime=fix(clock);
 fprintf('Welcome: %s, %.4d-%.2d-%.2d %.2d:%.2d \n', UserName,Datetime(1),Datetime(2),Datetime(3),Datetime(4),Datetime(5));
 fprintf('DPABI: a toolbox for Data Processing & Analysis of Brain Imaging.\nRelease = %s\n',Release);
 fprintf('Copyright(c) 2014; GNU GENERAL PUBLIC LICENSE\n');
-fprintf('Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; ');
+fprintf('The R-fMRI Lab, Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; ');
 fprintf('The Nathan Kline Institute for Psychiatric Research, 140 Old Orangeburg Road, Orangeburg, NY 10962; Department of Child and Adolescent Psychiatry / NYU Langone Medical Center Child Study Center, New York University, New York, NY 10016; ');
 fprintf('State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China\n');
 fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgrammers: YAN Chao-Gan; WANG Xin-Di; LU Bin; DENG Zhao-Yu\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
@@ -224,3 +224,23 @@ function pushbuttonDPABINet_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 DPABINet
+
+
+% --- Executes on button press in pushbuttonDPABIFiber.
+function pushbuttonDPABIFiber_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonDPABIFiber (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABIFiber
+
+
+
+% --- Executes on button press in pushbuttonDPABIProReports.
+function pushbuttonDPABIProReports_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonDPABIProReports (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if isempty(which('DPABIPro'))
+    fprintf('You need to purchase a DPABIPro server to generate DPABIPro Reports for each individual.\n');
+    uiwait(msgbox('You need to purchase a DPABIPro server to generate DPABIPro Reports for each individual.','DPABIPro'));
+end

@@ -788,6 +788,7 @@ if get(handles.checkboxPALM,'Value')
         PALMSettings.ClusterInference=0; %YAN Chao-Gan, 171022. Set to 0. PALMSettings.ClusterInference=1;
         PALMSettings.ClusterFormingThreshold=2.3;
         PALMSettings.TFCE=1;
+        PALMSettings.TFCE2D=0; %YAN Chao-Gan, 221116. Add TFCE2D
         PALMSettings.FDR=0;
         PALMSettings.TwoTailed=1; %YAN Chao-Gan, 171022. Set to 1. PALMSettings.TwoTailed=0;
         PALMSettings.SavePermutations=0; %YAN Chao-Gan, 210123. 

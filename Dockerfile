@@ -1,10 +1,10 @@
-FROM nipreps/fmriprep:20.2.5
+FROM nipreps/fmriprep:22.1.0
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
 # Update system and istall pakages
 RUN apt-get -qq update && apt-get -qq install -y \
-    x11vnc xvfb suckless-tools stterm connectome-workbench parallel wget unzip && \
+    x11vnc xvfb suckless-tools stterm parallel wget unzip time qt5-default && \
     apt-get update
 
 
@@ -14,7 +14,9 @@ RUN mkdir -p ~/.vnc && \
     chmod 0600 ~/.vnc/passwd && \
     export USER=$(whoami) && \
     export DISPLAY=$HOSTNAME:25
-    
+
+ENV XAUTHORITY /home/fmriprep/.Xauthority
+
     
 # Install MATLAB MCR
 ENV MATLAB_VERSION R2020a
@@ -27,9 +29,10 @@ RUN mkdir /opt/mcr_install && \
 
 # Configure environment
 ENV MCR_VERSION v98
-ENV LD_LIBRARY_PATH /usr/lib/fsl/5.0:/opt/mcr/${MCR_VERSION}/runtime/glnxa64:/opt/mcr/${MCR_VERSION}/bin/glnxa64:/opt/mcr/${MCR_VERSION}/sys/os/glnxa64:/opt/mcr/${MCR_VERSION}/sys/opengl/lib/glnxa64
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH/opt/mcr/${MCR_VERSION}/runtime/glnxa64:/opt/mcr/${MCR_VERSION}/bin/glnxa64:/opt/mcr/${MCR_VERSION}/sys/os/glnxa64:/opt/mcr/${MCR_VERSION}/sys/opengl/lib/glnxa64:/opt/mcr/${MCR_VERSION}/extern/bin/glnxa64
 ENV MCR_INHIBIT_CTF_LOCK 1
 ENV MCRPath /opt/mcr/${MCR_VERSION}
+
 
 # Configure DPABI
 RUN mkdir /opt/DPABI
@@ -41,16 +44,17 @@ RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPARSFA_run_StandAlone
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABISurf_run_StandAlone
 
+
 # Extract ctf for singularity support
-RUN /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
+# RUN /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 RUN /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 RUN /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 
-# For freeview
-RUN apt-get -qq install -y qt4-default libjpeg62
 
-# For processing .nii.gz in Windows docker
-RUN pip install indexed_gzip -U
+
+ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu:/opt/conda/lib:/opt/workbench/lib_linux64:/opt/fsl-6.0.5.1/lib:/opt/mcr/${MCR_VERSION}/runtime/glnxa64:/opt/mcr/${MCR_VERSION}/bin/glnxa64:/opt/mcr/${MCR_VERSION}/sys/os/glnxa64:/opt/mcr/${MCR_VERSION}/sys/opengl/lib/glnxa64:/opt/mcr/${MCR_VERSION}/extern/bin/glnxa64
+
+
 
 ENTRYPOINT []
 

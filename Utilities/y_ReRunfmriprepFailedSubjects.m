@@ -100,10 +100,22 @@ if ~isempty(FailedID)
     %Delete the intermediate files for failed subjects
     for i=1:length(FailedID)
         if exist(fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i}))
-            status = rmdir(fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i}),'s');
+            %status = rmdir(fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i}),'s');
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command=sprintf('rm -rf %s/fmriprep/%s', Cfg.WorkingDir,FailedID{i});
+            else
+                Command=sprintf('%s cgyan/dpabi rm -rf /data/fmriprep/%s', CommandInit,FailedID{i});
+            end
+            system(Command);
         end
         if exist(fullfile(Cfg.WorkingDir,'fmriprepwork',FailedID{i}))
-            status = rmdir(fullfile(Cfg.WorkingDir,'fmriprepwork',FailedID{i}),'s');
+            %status = rmdir(fullfile(Cfg.WorkingDir,'fmriprepwork',FailedID{i}),'s');
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command=sprintf('rm -rf %s/fmriprepwork/%s', Cfg.WorkingDir,FailedID{i});
+            else
+                Command=sprintf('%s cgyan/dpabi rm -rf /data/fmriprep/%s', CommandInit,FailedID{i});
+            end
+            system(Command);
         end
     end
 end
@@ -140,51 +152,60 @@ if ~isempty(NeedReRunID) %(Cfg.Isfmriprep==1)
     
 
     if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-            Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/fsl/5.0 && parallel -j %g /usr/local/miniconda/bin/fmriprep %s/BIDS %s participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
-        else
-            Command=sprintf('%s cgyan/dpabi parallel -j %g /usr/local/miniconda/bin/fmriprep /data/BIDS /data participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
-        end
-        
-        if Cfg.ParallelWorkersNumber~=0
-            Command = sprintf('%s --nthreads 1 --omp-nthreads 1', Command);
-        end
-        if Cfg.IsSliceTiming==0
-            Command = sprintf('%s --ignore slicetiming', Command);
-        end
-        if isfield(Cfg,'FieldMap') && Cfg.FieldMap.IsApplyFieldMapCorrection==0 %YAN Chao-Gan, 191124.
-            Command = sprintf('%s --ignore fieldmaps', Command);
-        end
-        if Cfg.IsICA_AROMA==1
-            %Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -250 --ignore-aroma-denoising-errors', Command); %The HCP pipeline default is 250 maximum
-            %Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200 --ignore-aroma-denoising-errors', Command); %The fMRIPrep pipeline default is 200 maximum
-            Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200', Command); %The fMRIPrep pipeline default is 200 maximum
-        end
-        
-        %Change to fmriprep's new output space command convention. YAN Chao-Gan. 20200229.
-        %Command = sprintf('%s --template-resampling-grid %s', Command, Cfg.Normalize.VoxelSize);
-        if length(Cfg.Normalize.VoxelSize)>=3 && strcmpi(Cfg.Normalize.VoxelSize(end-1:end),'mm')
-            Cfg.Normalize.VoxelSize=Cfg.Normalize.VoxelSize(1); %Change 1mm to 1; 2mm to 2.
-        end
-        Command = sprintf('%s --output-spaces fsaverage5 MNI152NLin2009cAsym:res-%s', Command, Cfg.Normalize.VoxelSize);
+        Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/fsl-6.0.5.1/lib && parallel -j %g /opt/conda/bin/fmriprep %s/BIDS %s/fmriprep participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
+    else
+        Command=sprintf('%s cgyan/dpabi parallel -j %g /opt/conda/bin/fmriprep /data/BIDS /data/fmriprep participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
+    end
 
-        if Cfg.IsLowMem==1
-            Command = sprintf('%s --low-mem', Command);
+    if Cfg.ParallelWorkersNumber~=0
+        Command = sprintf('%s --nthreads 1 --omp-nthreads 1', Command);
+    end
+    if Cfg.IsSliceTiming==0
+        Command = sprintf('%s --ignore slicetiming', Command);
+    end
+    if isfield(Cfg,'FieldMap') && Cfg.FieldMap.IsApplyFieldMapCorrection==0 %YAN Chao-Gan, 191124.
+        Command = sprintf('%s --ignore fieldmaps', Command);
+    end
+    if Cfg.IsICA_AROMA==1
+        %Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -250 --ignore-aroma-denoising-errors', Command); %The HCP pipeline default is 250 maximum
+        %Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200 --ignore-aroma-denoising-errors', Command); %The fMRIPrep pipeline default is 200 maximum
+        Command = sprintf('%s --use-aroma --aroma-melodic-dimensionality -200', Command); %The fMRIPrep pipeline default is 200 maximum
+    end
+
+    %Change to fmriprep's new output space command convention. YAN Chao-Gan. 20200229.
+    %Command = sprintf('%s --template-resampling-grid %s', Command, Cfg.Normalize.VoxelSize);
+    if length(Cfg.Normalize.VoxelSize)>=3 && strcmpi(Cfg.Normalize.VoxelSize(end-1:end),'mm')
+        Cfg.Normalize.VoxelSize=Cfg.Normalize.VoxelSize(1); %Change 1mm to 1; 2mm to 2.
+    end
+    Command = sprintf('%s --output-spaces fsaverage5 MNI152NLin2009cAsym:res-%s fsnative T1w', Command, Cfg.Normalize.VoxelSize); %YAN Chao-Gan, 221204. Also output native results. Command = sprintf('%s --output-spaces fsaverage5 MNI152NLin2009cAsym:res-%s', Command, Cfg.Normalize.VoxelSize);
+
+
+    if Cfg.IsLowMem==1
+        Command = sprintf('%s --low-mem', Command);
+    end
+
+    if Cfg.FunctionalSessionNumber==0 %YAN Chao-Gan, 210414. If no anatomical images
+        Command = sprintf('%s --anat-only', Command);
+    end
+
+    if isfield(Cfg,'AlreadyHaveFreesurferResults') && Cfg.AlreadyHaveFreesurferResults==1 %YAN Chao-Gan, 221007. If Already Have Freesurfer Results. E.g., from fastsurfer outputs
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command = sprintf('%s --fs-subjects-dir %s/freesurfer', Command,Cfg.WorkingDir);
+        else
+            Command = sprintf('%s --fs-subjects-dir /data/freesurfer', Command);
         end
-        
-        if Cfg.FunctionalSessionNumber==0 %YAN Chao-Gan, 210414. If no anatomical images
-            Command = sprintf('%s --anat-only', Command);
-        end
-        
-        Command = sprintf('%s -w /data/fmriprepwork/{1}', Command); %Specify the working dir for fmriprep
-        Command = sprintf('%s  --participant_label {1} ::: %s', Command, SubjectIDString);
-    
+    end
+
+    Command = sprintf('%s -w /data/fmriprepwork/{1}', Command); %Specify the working dir for fmriprep
+    Command = sprintf('%s  --participant_label {1} ::: %s', Command, SubjectIDString);
+
     fprintf('Re-run the failed subjects with fmriprep, this process is very time consuming, please be patient...\n');
-    
+
     system(Command);
-    
+
     %Check if there is any error during re-running fmriprep
     FailedID_Beginning = FailedID;
-    
+
     SuccessID=[];
     FailedID=[];
     WaitingID=[];
@@ -200,21 +221,21 @@ if ~isempty(NeedReRunID) %(Cfg.Isfmriprep==1)
             WaitingID=[WaitingID;Cfg.SubjectID(i)];
         end
     end
-    
+
     if ~isempty(SuccessID)
         fprintf(['\nAfter re-run fmriprep, these subjects have successfully run fmriprep:\n']);
         disp(SuccessID)
     end
-    
+
     if ~isempty(WaitingID)
         fprintf(['\nAfter re-run fmriprep, these subjects have not run fmriprep yet:\n']);
         disp(WaitingID)
     end
-    
+
     if ~isempty(FailedID)
         fprintf(['\nAfter re-run fmriprep, these subjects have failed run fmriprep:\n']);
         disp(FailedID)
-        
+
         %Check subjects failed twice
         for i=1:length(FailedID)
             for j=1:length(FailedID_Beginning)
@@ -251,11 +272,14 @@ function HasMissingFiles = CheckMissingFiles(WorkingDir,SubjectID)
 %YAN Chao-Gan 210205. Check Missing Files according for fmriprep
 HasMissingFiles = 0;
 DirFiles_surf=dir(fullfile(WorkingDir,'freesurfer',SubjectID,'surf','*'));
+if length(DirFiles_surf)==0   %YAN Chao-Gan, 221018. 
+    DirFiles_surf=dir(fullfile(WorkingDir,'fmriprep','sourcedata','freesurfer',SubjectID,'surf','*'));
+end
 DirFiles_func=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'func','*'));
 if length(DirFiles_func)<17   %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_func)~=17
     DirFiles_func=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'ses-1','func','*'));
 end
-if length(DirFiles_surf)~=84 || length(DirFiles_func)<17 %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_surf)~=84 || length(DirFiles_func)~=17
+if (length(DirFiles_surf)~=84 && length(DirFiles_surf)~=94) || length(DirFiles_func)<17 %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_surf)~=84 || length(DirFiles_func)~=17
     HasMissingFiles = 1;
 end
 

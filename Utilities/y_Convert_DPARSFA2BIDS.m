@@ -170,7 +170,34 @@ if Cfg.FunctionalSessionNumber<=1
             end
             
         end
-        
+
+
+        %Dealing with diffusion weighted data %By Zhao-Yu Deng
+        if 7==exist([Cfg.WorkingDir,filesep,'DwiImg'],'dir')
+
+            mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'dwi'])
+            DirImg=dir([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+            DirNii=dir([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            DirNiiGZ=dir([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+            if ~isempty(DirImg) || length(DirNii)>=2  || length(DirNiiGZ)>=2
+                [Data,~,~, Header] =y_ReadAll([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i}]);
+                y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.nii']) % suffix dwi
+            elseif length(DirNii)==1
+                copyfile([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.nii'])
+            elseif length(DirNiiGZ)==1
+                copyfile([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.nii.gz'])
+            end
+            DirBval=dir([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.bval']);
+            DirBvec=dir([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.bvec']);
+            copyfile([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirBval(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.bval'])
+            copyfile([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirBvec(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.bvec'])
+
+            DirJSON=dir([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+            if ~isempty(DirJSON)
+                copyfile([Cfg.WorkingDir,filesep,'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.json'])
+            end
+        end
+
     end
 end
 
@@ -235,6 +262,7 @@ if Cfg.FunctionalSessionNumber>=2
             end
         end
     end
+
     
     %Dealing with functional data
     
@@ -306,7 +334,41 @@ if Cfg.FunctionalSessionNumber>=2
             end
         end
     end
-    
+
+
+    %Dealing with diffusion weighted data %By Zhao-Yu Deng
+    if 7==exist([Cfg.WorkingDir,filesep,'DwiImg'],'dir')
+        if 7==exist([Cfg.WorkingDir,filesep,'S2_DwiImg'],'dir')
+            DwiSessionNumber = Cfg.FunctionalSessionNumber;
+        else
+            DwiSessionNumber = 1;
+        end
+
+        for iDwiSession=1:DwiSessionNumber
+            mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi']);
+            DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+            DirNii=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            DirNiiGZ=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+            if ~isempty(DirImg) || length(DirNii)>=2  || length(DirNiiGZ)>=2
+                [Data,~,~, Header] =y_ReadAll([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i}]);
+                y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.nii']) % suffix dwi
+            elseif length(DirNii)==1
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.nii'])
+            elseif length(DirNiiGZ)==1
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.nii.gz'])
+            end
+            DirBval=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.bval']);
+            DirBvec=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.bvec']);
+            copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirBval(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.bval'])
+            copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirBvec(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.bvec'])
+
+            DirJSON=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+            if ~isempty(DirJSON)
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_dwi.json'])
+            end
+        end
+    end
+   
     
 end
 

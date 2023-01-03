@@ -44,7 +44,11 @@ if Cfg.Isfmriprep
 end
 
 if Cfg.IsOrganizefmriprepResults
-    StartingDirName = 'FunSurfW';
+    if Cfg.IsBasedOnFunSurf
+        StartingDirName = 'FunSurf';
+    else
+        StartingDirName = 'FunSurfW';
+    end
     Cfg.IsOrganizefmriprepResults=0;
 end
 

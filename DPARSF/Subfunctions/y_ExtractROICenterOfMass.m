@@ -1,5 +1,5 @@
-function [ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, OutputName, IsMultipleLabel, RefFile, Header)             
-% [ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, OutputName, MaskData, IsMultipleLabel, RefFile, Header)             
+function [ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, OutputName, IsMultipleLabel, ROISelectedIndex, RefFile, Header)             
+% [ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, OutputName, IsMultipleLabel, ROISelectedIndex, RefFile, Header)             
 % Extract the ROI Center of Mass
 % Input:
 
@@ -13,6 +13,7 @@ function [ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, Outp
 %	OutputName  	-	Output filename
 %   IsMultipleLabel -   1: There are multiple labels in the ROI mask file. Will extract each of them. (e.g., for aal.nii, extract all the time series for 116 regions)
 %                       0 (default): All the non-zero values will be used to define the only ROI
+%   ROISelectedIndex -  Only extract ROIs defined by ROISelectedIndex. Empty means extract all non-zero ROIs.
 % 	RefFile		    -	Ref file. Can be 4D data matrix (DimX*DimY*DimZ*DimTimePoints) or the directory of 3D image data file or the filename of one 4D data file
 %   Header          -   If RefFile is given as a 4D Brain matrix, then Header should be designated.
 % Output:
@@ -29,6 +30,10 @@ function [ROICenter,XYZCenter,IJKCenter] = y_ExtractROICenterOfMass(ROIDef, Outp
 
 if ~exist('IsMultipleLabel','var')
     IsMultipleLabel = 0;
+end
+
+if ~exist('ROISelectedIndex','var')
+    ROISelectedIndex = [];
 end
 
 theElapsedTime =cputime;
@@ -89,9 +94,14 @@ for iROI=1:length(ROIDef)
         [I J K] = ndgrid(1:nDim1,1:nDim2,1:nDim3);
 
         if IsMultipleLabel == 1
-            Element = unique(MaskROI);
-            Element(find(isnan(Element))) = []; % ignore background if encoded as nan. Suggested by Dr. Martin Dyrba
-            Element(find(Element==0)) = []; % This is the background 0
+
+            if ~isempty(ROISelectedIndex) && ~isempty(ROISelectedIndex{iROI})
+                Element=ROISelectedIndex{iROI};
+            else
+                Element = unique(MaskROI);
+                Element(find(isnan(Element))) = []; % ignore background if encoded as nan. Suggested by Dr. Martin Dyrba
+                Element(find(Element==0)) = []; % This is the background 0
+            end
 
             for iElement=1:length(Element)
 

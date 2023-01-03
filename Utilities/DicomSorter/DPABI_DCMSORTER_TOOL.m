@@ -283,9 +283,9 @@ else
 end
 FolderIndex = handles.cfg.FolderIndex;
 w_DCMSort(DICOMCells, HierarchyValue1, HierarchyValue2, Prefix, IsAddDate, IsAddTime, FolderIndex, AnonyFlag, OutputDir);
-% set(handles.ComputeButton,'Visible','off');
-% set(handles.pushbuttonChangeImage,'Visible','off');
-% set(handles.pushbuttonConvert2DPABI,'Visible','on');
+set(handles.ComputeButton,'Visible','off');
+set(handles.pushbuttonChangeImage,'Visible','off');
+set(handles.pushbuttonConvert2DPABI,'Visible','on');
 fprintf('\n\tDICOM files sorting finished!\n');
 
 % --- Executes on selection change in HierarchyPopup1.
