@@ -82,6 +82,26 @@ if ~ismac
     UISize = UISize.*ZoonMatrix;
     set(handles.figure1,'Position',UISize);
 end
+
+
+% Make Display correct in Mac and linux
+if ~ispc
+    if ismac
+        ZoomFactor=1.3;  %For Mac
+    else
+        ZoomFactor=1;  %For Linux
+    end
+    ObjectNames = fieldnames(handles);
+    for i=1:length(ObjectNames);
+        eval(['IsFontSizeProp=isprop(handles.',ObjectNames{i},',''FontSize'');']);
+        if IsFontSizeProp
+            eval(['PCFontSize=get(handles.',ObjectNames{i},',''FontSize'');']);
+            FontSize=PCFontSize*ZoomFactor;
+            eval(['set(handles.',ObjectNames{i},',''FontSize'',',num2str(FontSize),');']);
+        end
+    end
+end
+
 movegui(handles.figure1,'center');
 
 guidata(hObject, handles);

@@ -41,7 +41,7 @@ if ~ispc
     end
     
 else
-    [ProgramPath, fileN, extn] = fileparts(which('DPARSF.m'));
+    [ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
     OldDirTemp=pwd;
     
     [InPath, InFile, InExt] = fileparts(InputFilename);

@@ -122,7 +122,7 @@ if strcmpi(button,'Yes')
     uiwait(w_Call_DPABI_VIEW([],[],[],[],[],[TemplatePath,filesep,'WisconsinRhesusMacaqueAtlases',filesep,'112RM-SL_T1.nii']));
 end
 
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
 DPARSFA([ProgramPath,filesep,'Jobmats',filesep,'Template_MonkeyProcessing.mat']);
 
 
@@ -144,7 +144,7 @@ end
 
 msgbox('If you used DPARSF Rat module, please cite: Yan, C.G., Rincon-Cortes, M., Raineki, C., Sarro, E., Colcombe, S., Guilfoyle, D.N., Yang, Z., Gerum, S., Biswal, B.B., Milham, M.P., Sullivan, R.M., Castellanos, F.X., 2016. Aberrant development of intrinsic brain activity in a rat model of caregiver maltreatment of offspring. Transl Psychiatry 6, e?. doi:10.1038/tp.2016.276');
 
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
 DPARSFA([ProgramPath,filesep,'Jobmats',filesep,'Template_RatProcessing.mat']);
 
 
@@ -153,7 +153,7 @@ function pushbutton_TfMRIPreprocessing_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_TfMRIPreprocessing (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
 DPARSFA([ProgramPath,filesep,'Jobmats',filesep,'Template_TaskfMRIPreprocessing.mat']);
 
 
@@ -162,6 +162,6 @@ function pushbutton_VBM_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_VBM (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
 DPARSFA([ProgramPath,filesep,'Jobmats',filesep,'Template_VBM_NewSegmentDARTEL.mat']);
 

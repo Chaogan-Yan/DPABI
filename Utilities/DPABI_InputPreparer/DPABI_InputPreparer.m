@@ -458,7 +458,7 @@ function pushbuttonCallDPARSFA_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonCallDPARSFA (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
 
 load([ProgramPath,filesep,'Jobmats',filesep,'Template_V4_CalculateInMNISpace_Warp_DARTEL.mat']);
 

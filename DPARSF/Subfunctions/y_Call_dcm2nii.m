@@ -18,7 +18,7 @@ function y_Call_dcm2nii(InputFilename, OutputDir, Option)
 % ycg.yan@gmail.com
 % YAN Chao-Gan, 191121. Revised for Calling dcm2niix. 
 
-[ProgramPath, fileN, extn] = fileparts(which('DPARSF.m'));
+[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
 
 OldDirTemp=pwd;
 cd([ProgramPath,filesep,'dcm2nii']);

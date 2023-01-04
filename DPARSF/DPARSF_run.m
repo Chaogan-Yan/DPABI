@@ -13,7 +13,7 @@ function [Error]=DPARSF_run(CfgBasic)
 % ycg.yan@gmail.com
 
 
-[ProgramPath, fileN, extn] = fileparts(which('DPARSF.m'));
+[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
 
 load([ProgramPath,filesep,'Jobmats',filesep,'Template_CalculateInMNISpace_TraditionalOrder.mat']);
 

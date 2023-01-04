@@ -755,7 +755,7 @@ function btnDefineROI_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     ROIDef=handles.Cfg.CalFC.ROIDef;
     if isempty(ROIDef)
-        [ProgramPath, fileN, extn] = fileparts(which('DPARSFA.m'));
+        [ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
         addpath([ProgramPath,filesep,'SubGUIs']);
         [ROIDef,IsMultipleLabel]=DPARSF_ROI_Template(ROIDef,handles.Cfg.CalFC.IsMultipleLabel);
         handles.Cfg.CalFC.IsMultipleLabel = IsMultipleLabel;
