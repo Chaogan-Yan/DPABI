@@ -223,7 +223,7 @@ if (Cfg.IsTBSS==1)
         Command=sprintf('chmod +x /DPABI/DPABIFiber/y_TBSS.sh && source /DPABI/DPABIFiber/y_TBSS.sh %s', Cfg.WorkingDir);
         system(Command);
     else
-        Command=sprintf('%s cgyan/dpabifiber bash -c ''source /DPABI/DPABIFiber/y_TBSS.sh /data''', CommandInit);
+        Command=sprintf('%s cgyan/dpabifiber bash -c "source /DPABI/DPABIFiber/y_TBSS.sh /data"', CommandInit);
         system(Command);
         Command=sprintf('%s cgyan/dpabifiber chmod -R 777 /data/Results/DwiVolu/TBSS/Working/stats/', CommandInit);
         system(Command);
@@ -512,7 +512,9 @@ if (Cfg.StructuralConnectomeMatrix.Is==1)
     elseif Cfg.StructuralConnectomeMatrix.WeightedByImage.Is
 
         ImageFile = Cfg.StructuralConnectomeMatrix.WeightedByImage.ImageFile;
+        ImageFile = replace(ImageFile,'/',filesep);
         ImageFile = replace(ImageFile,'{WorkingDir}',Cfg.WorkingDir);
+        
 
         k_SubjectID = strfind(ImageFile,'{SubjectID}');
         k_Filesep = strfind(ImageFile,filesep);
@@ -651,6 +653,7 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
             %TWFC
             if Cfg.SeedBasedStructuralConnectivity.TWFC.Is==1
                 FCFile = Cfg.SeedBasedStructuralConnectivity.TWFC.FCFile;
+                FCFile = replace(FCFile,'/',filesep);
 
                 FCFile = replace(FCFile,'{WorkingDir}',Cfg.WorkingDir);
                 FCFile = replace(FCFile,'{iROI}',num2str(iElement));
@@ -741,6 +744,7 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
         %TWFC
         if Cfg.SeedBasedStructuralConnectivity.TWFC.Is==1
             FCFile = Cfg.SeedBasedStructuralConnectivity.TWFC.FCFile;
+            FCFile = replace(FCFile,'/',filesep);
 
             FCFile = replace(FCFile,'{WorkingDir}',Cfg.WorkingDir);
 

@@ -87,7 +87,7 @@ end
 % Make Display correct in Mac and linux
 if ~ispc
     if ismac
-        ZoomFactor=1.3;  %For Mac
+        ZoomFactor=1;  %For Mac
     else
         ZoomFactor=1;  %For Linux
     end
