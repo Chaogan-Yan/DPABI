@@ -51,6 +51,20 @@ function w_AtlasSelect_OpeningFcn(hObject, eventdata, handles, varargin)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to w_AtlasSelect (see VARARGIN)
+
+
+AtlasParameters={'Select Atlas to Add'...
+    'Harvard-Oxford Cortical Structural Atlas'...
+    'Harvard-Oxford Subcortical Structural Atlas'...
+    'AAL'...
+    'AAL3'...
+    'Brodmann'...
+    'JHU ICBM-DTI-81 White-Matter Labels'...
+    'JHU White-Matter Tractography Atlas'...
+    'Custom'};
+
+set(handles.AtlasPopup,'String',AtlasParameters);
+
 global st
 
 curfig=varargin{1};
@@ -146,8 +160,16 @@ switch Value
     case 6 %Brodmann
         NiiFile=fullfile(TemplatePath, 'Brodmann_YCG.nii');
         MatFile=fullfile(TemplatePath, 'Brodmann_YCG_Labels.mat');
-        AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'Brodmann');        
-    case 7 %Cutsom
+        AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'Brodmann');    
+    case 7 %JHU ICBM-DTI-81 White-Matter Labels
+        NiiFile=fullfile(TemplatePath, 'JHU-ICBM-labels-1mm.nii');
+        MatFile=fullfile(TemplatePath, 'JHU-ICBM-labels-1mm_Labels.mat');
+        AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'JHU ICBM-DTI-81 White-Matter Labels');  
+    case 8 %JHU White-Matter Tractography Atlas
+        NiiFile=fullfile(TemplatePath, 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii');
+        MatFile=fullfile(TemplatePath, 'JHU-ICBM-tracts-maxprob-thr25-1mm_Labels.mat');
+        AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'JHU White-Matter Tractography Atlas');  
+    case 9 %Cutsom
         [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
             'Pick Custom Template' , TemplatePath);
         if ~ischar(File)

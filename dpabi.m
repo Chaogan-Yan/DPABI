@@ -55,7 +55,7 @@ function dpabi_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dpabi
 
 
-Release='V6.2_220915';
+Release='V7.0_230110';
 if ispc
     UserName =getenv('USERNAME');
 else
