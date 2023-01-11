@@ -2820,11 +2820,11 @@ if (Cfg.IsNormalize>0) && strcmpi(Cfg.Normalize.Timing,'OnResults')
                                 FileList=[FileList,' ',DirImg(j).name];
                             end
                             if strcmpi(DSpaceSet{iDSpace},'FunSurfLH')
-                                Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject %s --trgsubject %s --hemi lh --sval %s/%s/FunSurfLH/%s/{1}  --tval %s/%sW/FunSurfLH/%s/s{1} ::: %s', ...
+                                Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject %s --trgsubject %s --hemi lh --sval %s/%s/FunSurfLH/%s/{1}  --tval %s/%sW/FunSurfLH/%s/w{1} ::: %s', ...
                                     CommandInit, Cfg.ParallelWorkersNumber, Cfg.SubjectID{i}, SpaceName,WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure},FileList);
                                 system(Command);
                             elseif strcmpi(DSpaceSet{iDSpace},'FunSurfRH')
-                                Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject %s --trgsubject %s --hemi rh --sval %s/%s/FunSurfRH/%s/{1}  --tval %s/%sW/FunSurfRH/%s/s{1} ::: %s', ...
+                                Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject %s --trgsubject %s --hemi rh --sval %s/%s/FunSurfRH/%s/{1}  --tval %s/%sW/FunSurfRH/%s/w{1} ::: %s', ...
                                     CommandInit, Cfg.ParallelWorkersNumber, Cfg.SubjectID{i}, SpaceName,WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure},FileList);
                                 system(Command);
                             end
