@@ -1,4 +1,4 @@
-FROM nipreps/fmriprep:22.1.0
+FROM nipreps/fmriprep:22.1.1
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
@@ -39,15 +39,16 @@ RUN mkdir /opt/DPABI
 COPY . /opt/DPABI
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABI_StandAlone
-RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh
-RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPARSFA_run_StandAlone
+# RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh
+# RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPARSFA_run_StandAlone
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABISurf_run_StandAlone
 
+COPY ./DPABIFiber/MissingCommands/mni152.register.dat /opt/freesurfer/average/
 
 # Extract ctf for singularity support
 # RUN /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
-RUN /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
+# RUN /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 RUN /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 
 
