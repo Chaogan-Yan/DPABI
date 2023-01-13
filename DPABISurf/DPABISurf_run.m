@@ -836,7 +836,7 @@ end
 
 
 if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-    CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ');
+    CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', Cfg.WorkingDir);
     CommandParallel=sprintf('%s parallel -j %g', CommandInit, Cfg.ParallelWorkersNumber);
     WorkingDir=Cfg.WorkingDir;
 else
@@ -889,7 +889,7 @@ if (Cfg.IsSegmentSubregions==1)
     end
 
     if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-        Command=sprintf('export SUBJECTS_DIR=%s/freesurfer && parallel -j %g segment_subregions thalamus --cross {1} ::: %s', Cfg.ParallelWorkersNumber, SubjectIDString);
+        Command=sprintf('export SUBJECTS_DIR=%s/freesurfer && parallel -j %g segment_subregions thalamus --cross {1} ::: %s', Cfg.WorkingDir,Cfg.ParallelWorkersNumber, SubjectIDString);
     else
         Command=sprintf('%s -e SUBJECTS_DIR=/data/freesurfer cgyan/freesurfer parallel -j %g segment_subregions thalamus --cross {1} ::: %s', CommandTemp, Cfg.ParallelWorkersNumber,SubjectIDString);
     end
@@ -898,7 +898,7 @@ if (Cfg.IsSegmentSubregions==1)
 
 
     if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-        Command=sprintf('export SUBJECTS_DIR=%s/freesurfer && parallel -j %g segment_subregions hippo-amygdala --cross {1} ::: %s', Cfg.ParallelWorkersNumber, SubjectIDString);
+        Command=sprintf('export SUBJECTS_DIR=%s/freesurfer && parallel -j %g segment_subregions hippo-amygdala --cross {1} ::: %s', Cfg.WorkingDir,Cfg.ParallelWorkersNumber, SubjectIDString);
     else
         Command=sprintf('%s -e SUBJECTS_DIR=/data/freesurfer cgyan/freesurfer parallel -j %g segment_subregions hippo-amygdala --cross {1} ::: %s', CommandTemp, Cfg.ParallelWorkersNumber,SubjectIDString);
     end
@@ -906,7 +906,7 @@ if (Cfg.IsSegmentSubregions==1)
     system(Command);
 
     if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-        Command=sprintf('export SUBJECTS_DIR=%s/freesurfer && parallel -j %g segment_subregions brainstem --cross {1} ::: %s', Cfg.ParallelWorkersNumber, SubjectIDString);
+        Command=sprintf('export SUBJECTS_DIR=%s/freesurfer && parallel -j %g segment_subregions brainstem --cross {1} ::: %s', Cfg.WorkingDir,Cfg.ParallelWorkersNumber, SubjectIDString);
     else
         Command=sprintf('%s -e SUBJECTS_DIR=/data/freesurfer cgyan/freesurfer parallel -j %g segment_subregions brainstem --cross {1} ::: %s', CommandTemp, Cfg.ParallelWorkersNumber,SubjectIDString);
     end
