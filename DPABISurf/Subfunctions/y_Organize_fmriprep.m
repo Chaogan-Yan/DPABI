@@ -1,14 +1,32 @@
-function Cfg = y_Organize_fmriprep(Cfg)
+function Cfg = y_Organize_fmriprep(Cfg,WorkingDir,SubjectListFile)
 % function Cfg = y_Organize_fmriprep(Cfg)
 % Organize results by fmriprep.
 %   Input:
-%     Cfg - DPARSFA Cfg structure
+%   Cfg - the parameters for auto data processing. 
+%   WorkingDir - Define the working directory to replace the one defined in Cfg
+%   SubjectListFile - Define the subject list to replace the one defined in Cfg. Should be a text file
 %   Output:
 %     see Results/Anat/Thickness, Area and Curv. See FunSurfW.
 %___________________________________________________________________________
 % Written by YAN Chao-Gan 181120.
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
+
+
+if ischar(Cfg)  %If inputed a .mat file name. (Cfg inside)
+    load(Cfg);
+end
+
+if exist('WorkingDir','var') && ~isempty(WorkingDir)
+    Cfg.WorkingDir=WorkingDir;
+end
+
+if exist('SubjectListFile','var') && ~isempty(SubjectListFile)
+    fid = fopen(SubjectListFile);
+    IDCell = textscan(fid,'%s\n'); %YAN Chao-Gan. For compatiblity of MALLAB 2014b. IDCell = textscan(fid,'%s','\n');
+    fclose(fid);
+    Cfg.SubjectID=IDCell{1};
+end
 
 
 [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));

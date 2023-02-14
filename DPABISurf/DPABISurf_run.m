@@ -913,102 +913,7 @@ if (Cfg.IsSegmentSubregions==1)
     fprintf('Segment brainstem subregions with freesurfer, please be patient...\n');
     system(Command);
 
-    
-    %Write table
-    SegTable=[];
-    for i=1:Cfg.SubjectNum
-        
-        SubjectID={Cfg.SubjectID{i}};
-        OneSub=table(SubjectID);
-        
-        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','lh.hippoSfVolumes.txt'),'ReadRowNames',true);
-        SegVolume=rows2vars(SegVolume);
-        SegVolume=removevars(SegVolume,'OriginalVariableNames');
-        VarName=SegVolume.Properties.VariableNames;
-        VarName = append('Left-',VarName);
-        SegVolume=renamevars(SegVolume,1:width(SegVolume),VarName);
-        SegVolume.SubjectID={Cfg.SubjectID{i}};
-        OneSub=join(OneSub,SegVolume);
-        
-        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','rh.hippoSfVolumes.txt'),'ReadRowNames',true);
-        SegVolume=rows2vars(SegVolume);
-        SegVolume=removevars(SegVolume,'OriginalVariableNames');
-        VarName=SegVolume.Properties.VariableNames;
-        VarName = append('Right-',VarName);
-        SegVolume=renamevars(SegVolume,1:width(SegVolume),VarName);
-        SegVolume.SubjectID={Cfg.SubjectID{i}};
-        OneSub=join(OneSub,SegVolume);
-        
-        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','lh.amygNucVolumes.txt'),'ReadRowNames',true);
-        SegVolume=rows2vars(SegVolume);
-        SegVolume=removevars(SegVolume,'OriginalVariableNames');
-        VarName=SegVolume.Properties.VariableNames;
-        VarName = append('Left-',VarName);
-        SegVolume=renamevars(SegVolume,1:width(SegVolume),VarName);
-        SegVolume.SubjectID={Cfg.SubjectID{i}};
-        OneSub=join(OneSub,SegVolume);
-        
-        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','rh.amygNucVolumes.txt'),'ReadRowNames',true);
-        SegVolume=rows2vars(SegVolume);
-        SegVolume=removevars(SegVolume,'OriginalVariableNames');
-        VarName=SegVolume.Properties.VariableNames;
-        VarName = append('Right-',VarName);
-        SegVolume=renamevars(SegVolume,1:width(SegVolume),VarName);
-        SegVolume.SubjectID={Cfg.SubjectID{i}};
-        OneSub=join(OneSub,SegVolume);
-        
-        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','ThalamicNuclei.volumes.txt'),'ReadRowNames',true);
-        SegVolume=rows2vars(SegVolume);
-        SegVolume=removevars(SegVolume,'OriginalVariableNames');
-        SegVolume.SubjectID={Cfg.SubjectID{i}};
-        OneSub=join(OneSub,SegVolume);
-        
-        SegVolume=readtable(fullfile(Cfg.WorkingDir,'freesurfer',Cfg.SubjectID{i},'mri','brainstemSsLabels.volumes.txt'),'ReadRowNames',true);
-        SegVolume=rows2vars(SegVolume);
-        SegVolume=removevars(SegVolume,'OriginalVariableNames');
-        SegVolume.SubjectID={Cfg.SubjectID{i}};
-        OneSub=join(OneSub,SegVolume);
-        
-        SegTable=[SegTable;OneSub];
-    end
- 
-    writetable(SegTable,fullfile(Cfg.WorkingDir,'Results','AnatVolu','Anat_Segment_Subregions_Volume.csv'),'Delimiter','\t');
-    
-    
-     %Convert to .nii
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.CA.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.CA.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.FS60.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.FS60.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.HBT.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.HBT.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-     
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.CA.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.CA.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.FS60.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.FS60.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.HBT.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.HBT.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/ThalamicNuclei.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_ThalamicNuclei.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-     Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/brainstemSsLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_brainstemSsLabels.FSvoxelSpace.nii.gz ::: %s', ...
-         CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-     system(Command);
-
+    y_Organize_SegmentSubregions(Cfg);
 end
 
 
@@ -3014,11 +2919,11 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnResults')
                                 SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.fwhm = Cfg.Smooth.FWHMVolu;
                                 spm_jobman('run',SPMJOB.matlabbatch);
 
-                                DirTemp=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'ss*']);
+                                DirTemp=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'ss*',Cfg.SubjectID{i},'*']);
                                 if isempty(DirTemp)
-                                    movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'s*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure}]);
+                                    movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'s*',Cfg.SubjectID{i},'*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure}]);
                                 else
-                                    movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'ss*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure}]);
+                                    movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'ss*',Cfg.SubjectID{i},'*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure}]);
                                 end
                             end
                         end
@@ -3061,11 +2966,11 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnResults')
                                             SPMJOB.matlabbatch{1,1}.spm.spatial.smooth.fwhm = Cfg.Smooth.FWHMVolu;
                                             spm_jobman('run',SPMJOB.matlabbatch);
 
-                                            DirTemp=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'ss*']);
+                                            DirTemp=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'ss*',Cfg.SubjectID{i},'*']);
                                             if isempty(DirTemp)
-                                                movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'s*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name]);
+                                                movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'s*',Cfg.SubjectID{i},'*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name]);
                                             else
-                                                movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'ss*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name]);
+                                                movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name,filesep,'ss*',Cfg.SubjectID{i},'*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'S',filesep,DSpaceSet{iDSpace},filesep,DirLevel1(iDirLevel1).name,filesep,DirLevel2(iDirLevel2).name]);
                                             end
                                         end
                                     end
