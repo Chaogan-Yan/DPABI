@@ -21,10 +21,15 @@ if exist('WorkingDir','var') && ~isempty(WorkingDir)
 end
 
 if exist('SubjectListFile','var') && ~isempty(SubjectListFile)
-    fid = fopen(SubjectListFile);
-    IDCell = textscan(fid,'%s\n'); %YAN Chao-Gan. For compatiblity of MALLAB 2014b. IDCell = textscan(fid,'%s','\n');
-    fclose(fid);
-    Cfg.SubjectID=IDCell{1};
+    if exist(SubjectListFile, 'file') == 2
+        fid = fopen(SubjectListFile);
+        IDCell = textscan(fid,'%s\n'); %YAN Chao-Gan. For compatiblity of MALLAB 2014b. IDCell = textscan(fid,'%s','\n');
+        fclose(fid);
+        Cfg.SubjectID=IDCell{1};
+    else
+        Cfg.SubjectID={};
+        Cfg.SubjectID{1}=SubjectListFile;
+    end
 end
 
 

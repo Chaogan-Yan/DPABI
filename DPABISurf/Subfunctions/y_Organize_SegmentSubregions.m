@@ -8,6 +8,7 @@ function Cfg = y_Organize_SegmentSubregions(Cfg,WorkingDir,SubjectListFile)
 %   Output:
 %     see Results/AnatVolu/Anat_Segment_Subregions_Volume.csv and related files.
 %___________________________________________________________________________
+% Written by YAN Chao-Gan 230214.
 % The R-fMRI Lab, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % International Big-Data Center for Depression Research, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
