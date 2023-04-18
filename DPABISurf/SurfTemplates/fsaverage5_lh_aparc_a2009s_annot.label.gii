@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE GIFTI SYSTEM "http://gifti.projects.nitrc.org/gifti.dtd">
+<GIFTI Version="1.0"  NumberOfDataArrays="1">
+   <MetaData>
+      <MD>
+         <Name><![CDATA[UserName]]></Name>
+         <Value><![CDATA[root]]></Value>
+      </MD>
+      <MD>
+         <Name><![CDATA[Date]]></Name>
+         <Value><![CDATA[Wed Mar 29 07:58:41 2023]]></Value>
+      </MD>
+      <MD>
+         <Name><![CDATA[gifticlib-version]]></Name>
+         <Value><![CDATA[gifti library version 1.09, 28 June, 2010]]></Value>
+      </MD>
+   </MetaData>
+   <LabelTable>
+      <Label Key="0" Red="0" Green="0" Blue="0" Alpha="0"><![CDATA[Unknown]]></Label>
+      <Label Key="1" Red="0.0901961" Green="0.862745" Blue="0.235294" Alpha="1"><![CDATA[G_and_S_frontomargin]]></Label>
+      <Label Key="2" Red="0.0901961" Green="0.235294" Blue="0.705882" Alpha="1"><![CDATA[G_and_S_occipital_inf]]></Label>
+      <Label Key="3" Red="0.247059" Green="0.392157" Blue="0.235294" Alpha="1"><![CDATA[G_and_S_paracentral]]></Label>
+      <Label Key="4" Red="0.247059" Green="0.0784314" Blue="0.862745" Alpha="1"><![CDATA[G_and_S_subcentral]]></Label>
+      <Label Key="5" Red="0.0509804" Green="0" Blue="0.980392" Alpha="1"><![CDATA[G_and_S_transv_frontopol]]></Label>
+      <Label Key="6" Red="0.101961" Green="0.235294" Blue="0" Alpha="1"><![CDATA[G_and_S_cingul-Ant]]></Label>
+      <Label Key="7" Red="0.101961" Green="0.235294" Blue="0.294118" Alpha="1"><![CDATA[G_and_S_cingul-Mid-Ant]]></Label>
+      <Label Key="8" Red="0.101961" Green="0.235294" Blue="0.588235" Alpha="1"><![CDATA[G_and_S_cingul-Mid-Post]]></Label>
+      <Label Key="9" Red="0.0980392" Green="0.235294" Blue="0.980392" Alpha="1"><![CDATA[G_cingul-Post-dorsal]]></Label>
+      <Label Key="10" Red="0.235294" Green="0.0980392" Blue="0.0980392" Alpha="1"><![CDATA[G_cingul-Post-ventral]]></Label>
+      <Label Key="11" Red="0.705882" Green="0.0784314" Blue="0.0784314" Alpha="1"><![CDATA[G_cuneus]]></Label>
+      <Label Key="12" Red="0.862745" Green="0.0784314" Blue="0.392157" Alpha="1"><![CDATA[G_front_inf-Opercular]]></Label>
+      <Label Key="13" Red="0.54902" Green="0.235294" Blue="0.235294" Alpha="1"><![CDATA[G_front_inf-Orbital]]></Label>
+      <Label Key="14" Red="0.705882" Green="0.862745" Blue="0.54902" Alpha="1"><![CDATA[G_front_inf-Triangul]]></Label>
+      <Label Key="15" Red="0.54902" Green="0.392157" Blue="0.705882" Alpha="1"><![CDATA[G_front_middle]]></Label>
+      <Label Key="16" Red="0.705882" Green="0.0784314" Blue="0.54902" Alpha="1"><![CDATA[G_front_sup]]></Label>
+      <Label Key="17" Red="0.0901961" Green="0.0392157" Blue="0.0392157" Alpha="1"><![CDATA[G_Ins_lg_and_S_cent_ins]]></Label>
+      <Label Key="18" Red="0.882353" Green="0.54902" Blue="0.54902" Alpha="1"><![CDATA[G_insular_short]]></Label>
+      <Label Key="19" Red="0.705882" Green="0.235294" Blue="0.705882" Alpha="1"><![CDATA[G_occipital_middle]]></Label>
+      <Label Key="20" Red="0.0784314" Green="0.862745" Blue="0.235294" Alpha="1"><![CDATA[G_occipital_sup]]></Label>
+      <Label Key="21" Red="0.235294" Green="0.0784314" Blue="0.54902" Alpha="1"><![CDATA[G_oc-temp_lat-fusifor]]></Label>
+      <Label Key="22" Red="0.862745" Green="0.705882" Blue="0.54902" Alpha="1"><![CDATA[G_oc-temp_med-Lingual]]></Label>
+      <Label Key="23" Red="0.254902" Green="0.392157" Blue="0.0784314" Alpha="1"><![CDATA[G_oc-temp_med-Parahip]]></Label>
+      <Label Key="24" Red="0.862745" Green="0.235294" Blue="0.0784314" Alpha="1"><![CDATA[G_orbital]]></Label>
+      <Label Key="25" Red="0.0784314" Green="0.235294" Blue="0.862745" Alpha="1"><![CDATA[G_pariet_inf-Angular]]></Label>
+      <Label Key="26" Red="0.392157" Green="0.392157" Blue="0.235294" Alpha="1"><![CDATA[G_pariet_inf-Supramar]]></Label>
+      <Label Key="27" Red="0.862745" Green="0.705882" Blue="0.862745" Alpha="1"><![CDATA[G_parietal_sup]]></Label>
+      <Label Key="28" Red="0.0784314" Green="0.705882" Blue="0.54902" Alpha="1"><![CDATA[G_postcentral]]></Label>
+      <Label Key="29" Red="0.235294" Green="0.54902" Blue="0.705882" Alpha="1"><![CDATA[G_precentral]]></Label>
+      <Label Key="30" Red="0.0980392" Green="0.0784314" Blue="0.54902" Alpha="1"><![CDATA[G_precuneus]]></Label>
+      <Label Key="31" Red="0.0784314" Green="0.235294" Blue="0.392157" Alpha="1"><![CDATA[G_rectus]]></Label>
+      <Label Key="32" Red="0.235294" Green="0.862745" Blue="0.0784314" Alpha="1"><![CDATA[G_subcallosal]]></Label>
+      <Label Key="33" Red="0.235294" Green="0.235294" Blue="0.862745" Alpha="1"><![CDATA[G_temp_sup-G_T_transv]]></Label>
+      <Label Key="34" Red="0.862745" Green="0.235294" Blue="0.862745" Alpha="1"><![CDATA[G_temp_sup-Lateral]]></Label>
+      <Label Key="35" Red="0.254902" Green="0.862745" Blue="0.235294" Alpha="1"><![CDATA[G_temp_sup-Plan_polar]]></Label>
+      <Label Key="36" Red="0.0980392" Green="0.54902" Blue="0.0784314" Alpha="1"><![CDATA[G_temp_sup-Plan_tempo]]></Label>
+      <Label Key="37" Red="0.862745" Green="0.862745" Blue="0.392157" Alpha="1"><![CDATA[G_temporal_inf]]></Label>
+      <Label Key="38" Red="0.705882" Green="0.235294" Blue="0.235294" Alpha="1"><![CDATA[G_temporal_middle]]></Label>
+      <Label Key="39" Red="0.239216" Green="0.0784314" Blue="0.862745" Alpha="1"><![CDATA[Lat_Fis-ant-Horizont]]></Label>
+      <Label Key="40" Red="0.239216" Green="0.0784314" Blue="0.235294" Alpha="1"><![CDATA[Lat_Fis-ant-Vertical]]></Label>
+      <Label Key="41" Red="0.239216" Green="0.235294" Blue="0.392157" Alpha="1"><![CDATA[Lat_Fis-post]]></Label>
+      <Label Key="42" Red="0.0980392" Green="0.0980392" Blue="0.0980392" Alpha="1"><![CDATA[Medial_wall]]></Label>
+      <Label Key="43" Red="0.54902" Green="0.0784314" Blue="0.235294" Alpha="1"><![CDATA[Pole_occipital]]></Label>
+      <Label Key="44" Red="0.862745" Green="0.705882" Blue="0.0784314" Alpha="1"><![CDATA[Pole_temporal]]></Label>
+      <Label Key="45" Red="0.247059" Green="0.705882" Blue="0.705882" Alpha="1"><![CDATA[S_calcarine]]></Label>
+      <Label Key="46" Red="0.866667" Green="0.0784314" Blue="0.0392157" Alpha="1"><![CDATA[S_central]]></Label>
+      <Label Key="47" Red="0.866667" Green="0.0784314" Blue="0.392157" Alpha="1"><![CDATA[S_cingul-Marginalis]]></Label>
+      <Label Key="48" Red="0.866667" Green="0.235294" Blue="0.54902" Alpha="1"><![CDATA[S_circular_insula_ant]]></Label>
+      <Label Key="49" Red="0.866667" Green="0.0784314" Blue="0.862745" Alpha="1"><![CDATA[S_circular_insula_inf]]></Label>
+      <Label Key="50" Red="0.239216" Green="0.862745" Blue="0.862745" Alpha="1"><![CDATA[S_circular_insula_sup]]></Label>
+      <Label Key="51" Red="0.392157" Green="0.784314" Blue="0.784314" Alpha="1"><![CDATA[S_collat_transv_ant]]></Label>
+      <Label Key="52" Red="0.0392157" Green="0.784314" Blue="0.784314" Alpha="1"><![CDATA[S_collat_transv_post]]></Label>
+      <Label Key="53" Red="0.866667" Green="0.862745" Blue="0.0784314" Alpha="1"><![CDATA[S_front_inf]]></Label>
+      <Label Key="54" Red="0.552941" Green="0.0784314" Blue="0.392157" Alpha="1"><![CDATA[S_front_middle]]></Label>
+      <Label Key="55" Red="0.239216" Green="0.862745" Blue="0.392157" Alpha="1"><![CDATA[S_front_sup]]></Label>
+      <Label Key="56" Red="0.552941" Green="0.235294" Blue="0.0784314" Alpha="1"><![CDATA[S_interm_prim-Jensen]]></Label>
+      <Label Key="57" Red="0.560784" Green="0.0784314" Blue="0.862745" Alpha="1"><![CDATA[S_intrapariet_and_P_trans]]></Label>
+      <Label Key="58" Red="0.396078" Green="0.235294" Blue="0.862745" Alpha="1"><![CDATA[S_oc_middle_and_Lunatus]]></Label>
+      <Label Key="59" Red="0.0823529" Green="0.0784314" Blue="0.54902" Alpha="1"><![CDATA[S_oc_sup_and_transversal]]></Label>
+      <Label Key="60" Red="0.239216" Green="0.0784314" Blue="0.705882" Alpha="1"><![CDATA[S_occipital_ant]]></Label>
+      <Label Key="61" Red="0.866667" Green="0.54902" Blue="0.0784314" Alpha="1"><![CDATA[S_oc-temp_lat]]></Label>
+      <Label Key="62" Red="0.552941" Green="0.392157" Blue="0.862745" Alpha="1"><![CDATA[S_oc-temp_med_and_Lingual]]></Label>
+      <Label Key="63" Red="0.866667" Green="0.392157" Blue="0.0784314" Alpha="1"><![CDATA[S_orbital_lateral]]></Label>
+      <Label Key="64" Red="0.709804" Green="0.784314" Blue="0.0784314" Alpha="1"><![CDATA[S_orbital_med-olfact]]></Label>
+      <Label Key="65" Red="0.396078" Green="0.0784314" Blue="0.0784314" Alpha="1"><![CDATA[S_orbital-H_Shaped]]></Label>
+      <Label Key="66" Red="0.396078" Green="0.392157" Blue="0.705882" Alpha="1"><![CDATA[S_parieto_occipital]]></Label>
+      <Label Key="67" Red="0.709804" Green="0.862745" Blue="0.0784314" Alpha="1"><![CDATA[S_pericallosal]]></Label>
+      <Label Key="68" Red="0.0823529" Green="0.54902" Blue="0.784314" Alpha="1"><![CDATA[S_postcentral]]></Label>
+      <Label Key="69" Red="0.0823529" Green="0.0784314" Blue="0.941176" Alpha="1"><![CDATA[S_precentral-inf-part]]></Label>
+      <Label Key="70" Red="0.0823529" Green="0.0784314" Blue="0.784314" Alpha="1"><![CDATA[S_precentral-sup-part]]></Label>
+      <Label Key="71" Red="0.0823529" Green="0.0784314" Blue="0.235294" Alpha="1"><![CDATA[S_suborbital]]></Label>
+      <Label Key="72" Red="0.396078" Green="0.235294" Blue="0.235294" Alpha="1"><![CDATA[S_subparietal]]></Label>
+      <Label Key="73" Red="0.0823529" Green="0.705882" Blue="0.705882" Alpha="1"><![CDATA[S_temporal_inf]]></Label>
+      <Label Key="74" Red="0.87451" Green="0.862745" Blue="0.235294" Alpha="1"><![CDATA[S_temporal_sup]]></Label>
+      <Label Key="75" Red="0.866667" Green="0.235294" Blue="0.235294" Alpha="1"><![CDATA[S_temporal_transverse]]></Label>
+   </LabelTable>
+   <DataArray Intent="NIFTI_INTENT_LABEL"
+              DataType="NIFTI_TYPE_INT32"
+              ArrayIndexingOrder="RowMajorOrder"
+              Dimensionality="1"
+              Dim0="10242"
+              Encoding="GZipBase64Binary"
+              Endian="LittleEndian"
+              ExternalFileName=""
+              ExternalFileOffset="">
+      <MetaData>
+         <MD>
+            <Name><![CDATA[Name]]></Name>
+            <Value><![CDATA[node label]]></Value>
+         </MD>
+      </MetaData>
+      <Data>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</Data>
+   </DataArray>
+</GIFTI>

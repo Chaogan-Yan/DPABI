@@ -98,8 +98,13 @@ else
         Index = findstr(Header.descrip,'}');
         Header.descrip = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.descrip(Index(1)+1:end));
     elseif isfield(Header,'cdata')
-        Index = findstr(Header.private.metadata(4).value,'}');
-        Header.private.metadata(4).value = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.private.metadata(4).value(Index(1)+1:end));
+        try
+            Index = findstr(Header.private.metadata(4).value,'}');
+            Header.private.metadata(4).value = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.private.metadata(4).value(Index(1)+1:end));
+        catch
+            Index = findstr(Header.private.metadata.value,'}');
+            Header.private.metadata.value = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.private.metadata.value(Index(1)+1:end));
+        end
     elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
         Header.OtherInfo.StatOpt.TestFlag='R';
         Header.OtherInfo.StatOpt.Df=Df_E;

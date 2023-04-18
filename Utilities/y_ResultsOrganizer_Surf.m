@@ -12,6 +12,15 @@ function y_ResultsOrganizer_Surf(WorkingDir,SubjectID,OutputDir)
 % ycg.yan@gmail.com
 % Revised by YAN Chao-Gan, 161004. Change parfor for gzipping each .nii file to parfor for each subject.
 
+if exist('SubjectID','var') && ~isempty(SubjectID)
+    if ischar(SubjectID) && (exist(SubjectID, 'file') == 2)
+        fid = fopen(SubjectID);
+        IDCell = textscan(fid,'%s\n'); %YAN Chao-Gan. For compatiblity of MALLAB 2014b. IDCell = textscan(fid,'%s','\n');
+        fclose(fid);
+        SubjectID=IDCell{1};
+    end
+end
+
 %Organize Results
 Spaces={'FunSurfLH','FunSurfRH','FunVolu'};
 MeasureList = {'ALFF';'fALFF';'ReHo';'DegreeCentrality';'ROISignals'};
@@ -127,7 +136,10 @@ for iSub=1:length(SubjectID)
 end
 
 %Back up DPABISurf .mat files
-copyfile([WorkingDir,filesep,'*.mat'],[OutputDir]);
+DirMat=dir([WorkingDir,filesep,'*.mat']);
+if ~isempty(DirMat)
+    copyfile([WorkingDir,filesep,'*.mat'],[OutputDir]);
+end
 
 fprintf('\n\tResults Organizing Finished.\n')
 
