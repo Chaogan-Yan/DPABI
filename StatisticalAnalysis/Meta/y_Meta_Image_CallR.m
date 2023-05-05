@@ -94,6 +94,10 @@ if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 2204
     PBrain(1,MaskIndex)=P;
     PBrain=reshape(PBrain,nDim1, nDim2, nDim3);
 
+    DBrain=zeros(size(MaskDataOneDim));
+    DBrain(1,MaskIndex)=D;
+    DBrain=reshape(DBrain,nDim1, nDim2, nDim3);
+
     ResidualBrain = zeros(nDimTimePoints, nDim1*nDim2*nDim3);
     ResidualBrain(:,MaskIndex) = Residual;
     ResidualBrain=reshape(ResidualBrain',[nDim1, nDim2, nDim3, nDimTimePoints]);
@@ -108,6 +112,10 @@ else
     PBrain = zeros(1, nDimVertex);
     PBrain(1,MaskIndex) = P;
     PBrain = PBrain';
+
+    DBrain = zeros(1, nDimVertex);
+    DBrain(1,MaskIndex) = D;
+    DBrain = DBrain';
 
     ResidualBrain = zeros(nDimTimePoints,nDimVertex);
     ResidualBrain(:,MaskIndex) = Residual;
@@ -133,5 +141,6 @@ end
 
 y_Write(ZBrain,HeaderTWithDOF,OutputName);
 y_Write(PBrain,HeaderTWithDOF,fullfile(Path,[fileN,'_P']));
+y_Write(DBrain,HeaderTWithDOF,fullfile(Path,[fileN,'_D']));
 
 fprintf('\n\tMeta calculation finished\n');

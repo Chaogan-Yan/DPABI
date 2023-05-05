@@ -34,6 +34,7 @@ Regressor <- mat[["Regressor"]]
 # initial setup
 Z = matrix(0, nTests, 1)
 P = matrix(0, nTests, 1)
+D = matrix(0, nTests, 1)
 EffectSize = matrix(0, nrow(TVal), nTests)
 
 for (n in 1:nTests){
@@ -53,10 +54,11 @@ for (n in 1:nTests){
   
   Z[n] = m[['hypothesis']][['z']]
   P[n] = m[['hypothesis']][['p.value']]
+  D[n] = m[['hypothesis']][['coef']]
   EffectSize[,n] = x[['y']]
 }
 
-writeMat(OutputName, Z = Z, P = P, EffectSize = EffectSize)
+writeMat(OutputName, Z = Z, P = P, D = D, EffectSize = EffectSize)
 
 
 
