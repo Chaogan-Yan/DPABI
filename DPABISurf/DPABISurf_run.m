@@ -746,9 +746,9 @@ if (Cfg.Isfmriprep==1)
         
         
         if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-            Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/fsl-6.0.5.1/lib && parallel -j %g /opt/conda/bin/fmriprep %s/BIDS %s/fmriprep participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
+            Command=sprintf('export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/fsl-6.0.5.1/lib && parallel -j %g /opt/conda/envs/fmriprep/bin/fmriprep %s/BIDS %s/fmriprep participant --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
         else
-            Command=sprintf('%s cgyan/dpabi parallel -j %g /opt/conda/bin/fmriprep /data/BIDS /data/fmriprep participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber);
+            Command=sprintf('%s cgyan/dpabi parallel -j %g /opt/conda/envs/fmriprep/bin/fmriprep /data/BIDS /data/fmriprep participant --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber);
         end
         
         if Cfg.ParallelWorkersNumber~=0

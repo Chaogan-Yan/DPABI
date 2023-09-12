@@ -194,7 +194,7 @@ if (Cfg.IsCalGTA==1)
                 Degree_AUC(:,iNode)=(sum(DegreeSet(1,AUCRange,iNode),2) - sum(DegreeSet(1,AUCRange([1 end]),iNode),2)/2)*DeltaSparsity;
                 NodalEfficiency_AUC(:,iNode)=(sum(NodalEfficiencySet(1,AUCRange,iNode),2) - sum(NodalEfficiencySet(1,AUCRange([1 end]),iNode),2)/2)*DeltaSparsity;
                 Betweenness_AUC(:,iNode)=(sum(BetweennessSet(1,AUCRange,iNode),2) - sum(BetweennessSet(1,AUCRange([1 end]),iNode),2)/2)*DeltaSparsity;
-                ClusteringCoefficient_AUC=(sum(ClusteringCoefficientSet(1,AUCRange,iNode),2) - sum(ClusteringCoefficientSet(1,AUCRange([1 end]),iNode),2)/2)*DeltaSparsity;
+                ClusteringCoefficient_AUC(:,iNode)=(sum(ClusteringCoefficientSet(1,AUCRange,iNode),2) - sum(ClusteringCoefficientSet(1,AUCRange([1 end]),iNode),2)/2)*DeltaSparsity;
                 ParticipantCoefficient_AUC(:,iNode)=(sum(ParticipantCoefficientSet(1,AUCRange,iNode),2) - sum(ParticipantCoefficientSet(1,AUCRange([1 end]),iNode),2)/2)*DeltaSparsity;
                 SubgraphCentrality_AUC(:,iNode)=(sum(SubgraphCentralitySet(1,AUCRange,iNode),2) - sum(SubgraphCentralitySet(1,AUCRange([1 end]),iNode),2)/2)*DeltaSparsity;
                 EigenvectorCentrality_AUC(:,iNode)=(sum(EigenvectorCentralitySet(1,AUCRange,iNode),2) - sum(EigenvectorCentralitySet(1,AUCRange([1 end]),iNode),2)/2)*DeltaSparsity;

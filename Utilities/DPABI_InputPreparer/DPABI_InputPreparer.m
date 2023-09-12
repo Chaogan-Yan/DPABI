@@ -473,9 +473,11 @@ Cfg.CalFC.ROIDef = {[DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
     [DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii'];... %YAN Chao-Gan, 170104. Add Power 264.
     [DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii'];... %YAN Chao-Gan, 180824. Add Schaefer 400.
     [DPABIPath,filesep,'Templates',filesep,'Tian2020_Subcortex_Atlas',filesep,'Tian_Subcortex_S4_3T.nii']}; %YAN Chao-Gan, 210414. Add Tian2020_Subcortex_Atlas.
+Cfg.CalFC.ROISelectedIndex=cell(size(Cfg.CalFC.ROIDef));
 Cfg.CalFC.IsMultipleLabel = 1;
 
 Cfg.WorkingDir = handles.Cfg.OutputDir;
+Cfg.IsNeedConvertFunDCM2IMG = ~handles.Cfg.IsDCM2NII;
 Cfg.IsNeedConvertDwiDCM2IMG = ~handles.Cfg.IsDCM2NII;
 Cfg.IsNeedConvertT1DCM2IMG = ~handles.Cfg.IsDCM2NII;
 Cfg.FunctionalSessionNumber = handles.Cfg.FunSessionNumber;
@@ -523,9 +525,13 @@ Cfg.CalFC.ROIDefVolu = {[handles.Cfg.DPABIPath,filesep,'Templates',filesep,'aal.
     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Tian2020_Subcortex_Atlas',filesep,'Tian_Subcortex_S4_3T_2009cAsym.nii']}; %YAN Chao-Gan, 210414. Add Tian2020_Subcortex_Atlas.
 
 
+Cfg.CalFC.ROISelectedIndexVolu=cell(size(Cfg.CalFC.ROIDefVolu));
+Cfg.CalFC.ROISelectedIndexSurfLH=cell(size(Cfg.CalFC.ROIDefSurfLH));
+Cfg.CalFC.ROISelectedIndexSurfRH=cell(size(Cfg.CalFC.ROIDefSurfRH));
 
 
 Cfg.WorkingDir = handles.Cfg.OutputDir;
+Cfg.IsNeedConvertFunDCM2IMG = ~handles.Cfg.IsDCM2NII;
 Cfg.IsNeedConvertDwiDCM2IMG = ~handles.Cfg.IsDCM2NII;
 Cfg.IsNeedConvertT1DCM2IMG = ~handles.Cfg.IsDCM2NII;
 Cfg.FunctionalSessionNumber = handles.Cfg.FunSessionNumber;

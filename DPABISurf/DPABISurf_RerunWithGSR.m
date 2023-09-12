@@ -28,6 +28,7 @@ Cfg.RemoveFirstTimePoints=0; %YAN Chao-Gan, 161219. Reset to 0 after adjusting t
 
 Cfg.IsNeedConvertFunDCM2IMG=0;
 Cfg.IsNeedConvertT1DCM2IMG=0; 
+Cfg.IsNeedConvertDwiDCM2IMG=0;
 
 if isfield(Cfg,'FieldMap')
     Cfg.FieldMap.IsNeedConvertDCM2IMG=0;
@@ -43,6 +44,8 @@ if Cfg.Isfmriprep
     Cfg.Isfmriprep=0;
 end
 
+Cfg.Isfastsurfer=0;
+
 if Cfg.IsOrganizefmriprepResults
     if Cfg.IsBasedOnFunSurf
         StartingDirName = 'FunSurf';
@@ -56,6 +59,8 @@ if (Cfg.NonAgressiveRegressICAAROMANoise==1)
     StartingDirName = [StartingDirName,'I'];
     Cfg.NonAgressiveRegressICAAROMANoise=0;
 end
+
+Cfg.IsSegmentSubregions=0;
 
 StartingDirName_Volume = ['FunVolu',StartingDirName(8:end)];
 

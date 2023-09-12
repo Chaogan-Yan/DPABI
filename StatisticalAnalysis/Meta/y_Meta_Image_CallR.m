@@ -65,13 +65,31 @@ else
 end
 
 
+NeedRemoveI=[];
+for iFile=1:size(AllVolume,1)
+    if ~any(AllVolume(iFile,:))
+        NeedRemoveI=[NeedRemoveI;iFile];
+    end
+end
+AllVolume(NeedRemoveI,:)=[];
+N1(NeedRemoveI,:)=[];
+if length(N2)>2
+    N2(NeedRemoveI,:)=[];
+end
+if length(Regressor)>2
+    Regressor(NeedRemoveI,:)=[];
+end
+TFiles(NeedRemoveI,:)=[];
+nDimTimePoints=size(AllVolume,1);
+
+
 TVal=AllVolume;
 
 nTests = size(TVal,2);
 
 [Path, fileN, extn] = fileparts(OutputName);
 MatNameForR=fullfile(Path,[fileN,'_ForR.mat']);
-save(MatNameForR,'TVal','N1','N2','nTests','Regressor');
+save(MatNameForR,'TVal','N1','N2','nTests','Regressor','TFiles');
 MatNameRResults=fullfile(Path,[fileN,'_RResults.mat']);
 
 [ProgramPath] = fileparts(which('y_Meta_Image_CallR.m'));
