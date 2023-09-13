@@ -1,8 +1,9 @@
-function [Error, Cfg]=DPABISurf_run(Cfg,WorkingDir,SubjectListFile)
-% FORMAT [Error]=DPABISurf_run(Cfg,WorkingDir,SubjectListFile)
+function [Error, Cfg]=DPABISurf_run(Cfg,WorkingDir,SubjectListFile,FunctionalSessionNumber)
+% FORMAT [Error, Cfg]=DPABISurf_run(Cfg,WorkingDir,SubjectListFile,FunctionalSessionNumber)
 %   Cfg - the parameters for auto data processing. 
 %   WorkingDir - Define the working directory to replace the one defined in Cfg
 %   SubjectListFile - Define the subject list to replace the one defined in Cfg. Should be a text file
+%   FunctionalSessionNumber - Number of Functional Sessions
 % Output:
 %   The processed data that you want.
 %___________________________________________________________________________
@@ -29,6 +30,14 @@ if exist('SubjectListFile','var') && ~isempty(SubjectListFile)
     else
         Cfg.SubjectID={};
         Cfg.SubjectID{1}=SubjectListFile;
+    end
+end
+
+if exist('FunctionalSessionNumber','var') && ~isempty(FunctionalSessionNumber)
+    if ischar(FunctionalSessionNumber)
+        Cfg.FunctionalSessionNumber=str2num(FunctionalSessionNumber);
+    else
+        Cfg.FunctionalSessionNumber=FunctionalSessionNumber;
     end
 end
 
