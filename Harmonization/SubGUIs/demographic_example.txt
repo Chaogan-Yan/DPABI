@@ -1,0 +1,6 @@
+SubID,var1,var2,var3,SiteName,FileList
+sub001,0,A,3,1,/Data/sub001.nii
+sub002,1,B,F,BEIJING,/Data/sub002.nii
+sub003,0,C,Nan,s03,/Data/sub003.nii
+
+(PS: For surface images (*.gii), "FileList" should be a struct for .mat，with FileList.LH and FileList.RH; for .txt;.csv;.tsv;.xlsx, you can set them by separate column, named FileListLH and FileListRH. And if you set FileList in demographic sheet the images will be arranged by FileList rather than your original settings.)
