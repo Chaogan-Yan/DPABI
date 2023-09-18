@@ -58,6 +58,8 @@ if exist('FunctionalSessionNumber','var') && ~isempty(FunctionalSessionNumber)
     end
 end
 
+Error=[];
+
 Cfg.SubjectNum=length(Cfg.SubjectID);
 
 % Multiple Sessions Processing 
