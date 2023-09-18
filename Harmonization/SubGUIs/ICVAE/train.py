@@ -64,10 +64,10 @@ def ICVAE_harmonize(HDF5):
         #  harmonize
         if i != ceil(TrainData.shape[1]/512)-1:
             p_data = TrainData.loc[:,i*512:i*512+511]
-            x_hat = pd.DataFrame(VAE.vae_model(p_data,HarmoZ,1000,ICVAE_h5,adv_h5,state='predict'))
+            x_hat = pd.DataFrame(VAE.vae_model(p_data,HarmoZ,10000,ICVAE_h5,adv_h5,state='predict'))
         else:
             p_data = TrainData.iloc[:,-512:]
-            x_hat = pd.DataFrame(VAE.vae_model(p_data,HarmoZ,1000,ICVAE_h5,adv_h5,state='predict'))
+            x_hat = pd.DataFrame(VAE.vae_model(p_data,HarmoZ,10000,ICVAE_h5,adv_h5,state='predict'))
             
             cut = 512*i-TrainData.shape[1] 
             x_hat = x_hat.iloc[:,cut:]        
