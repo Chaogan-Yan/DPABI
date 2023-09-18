@@ -8,10 +8,10 @@ export SingularityDIR="/work1/yancg/Soft/Singularity"
 # Should have freesurfer.sif. You can get it by singularity pull freesurfer.sif docker://cgyan/freesurfer:latest
 
 export FreeSurferLicenseDIR="/work1/yancg/Soft/FreeSurferLicense"
-# Should have license.txt
+# Should have license.txt from FreeSurfer
 
-# Set up Number of time points needs to be removed
 export RemoveFirstTimePoints="5"
+# Set up Number of time points needs to be removed
 
-# Set up Number of Functional Sessions
 export FunctionalSessionNumber="1"
+# Set up Number of Functional Sessions
