@@ -5,13 +5,21 @@ slope = 0;
 intercept = 0;
 
 %% This step determines the subsample size.
-tmp = tabulate(indexsource);
-basesource = tmp(:,2)';
 tmp = tabulate(indextarget);
 basetarget = tmp(:,2)';
-subsamplesize = ceil(min(basesource,basetarget).^0.7);%
-subsamplesize = max(subsamplesize-2,0); %  
-subsamplesize = subsamplesize + 2*(subsamplesize>0);%??
+
+tmp = tabulate(indexsource);
+basesource = tmp(:,2)';
+if length(basesource)<length(basetarget)
+	basesource = zeros(size(basetarget));
+	basesource(1,1:size(tmp,1)) = tmp(:,2)';
+elseif length(basesource)<length(basetarget)
+	error('Target has less subgroups than this source, please check your setting.');
+end
+		
+subsamplesize = ceil(min(basesource,basetarget).^0.7);
+subsamplesize = max(subsamplesize-2,0); 
+subsamplesize = subsamplesize + 2*(subsamplesize>0);
 
 %% Initializing step.
 S = sum(subsamplesize);
