@@ -22,7 +22,7 @@ function varargout = dpabi(varargin)
 
 % Edit the above text to modify the response to help dpabi
 
-% Last Modified by GUIDE v2.5 31-Dec-2022 18:07:09
+% Last Modified by GUIDE v2.5 21-Sep-2023 13:29:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -235,12 +235,9 @@ DPABIFiber
 
 
 
-% --- Executes on button press in pushbuttonDPABIProReports.
-function pushbuttonDPABIProReports_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonDPABIProReports (see GCBO)
+% --- Executes on button press in pushbuttonHarmonization.
+function pushbuttonHarmonization_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonHarmonization (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isempty(which('DPABIPro'))
-    fprintf('You need to purchase a DPABIPro server to generate DPABIPro Reports for each individual.\n');
-    uiwait(msgbox('You need to purchase a DPABIPro server to generate DPABIPro Reports for each individual.','DPABIPro'));
-end
+DPABI_Harmonization
