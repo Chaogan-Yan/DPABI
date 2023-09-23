@@ -349,7 +349,7 @@ if isfield(Cfg,'TR')
                             if Cfg.FunctionalSessionNumber==1
                                 cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'func']);
                             else
-                                cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'ses-',num2str(iFunSession),filesep,'func']);
+                                cd([Cfg.WorkingDir,filesep,Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'ses-',num2str(iFunSession),filesep,'func']);
                             end
 
                             DirImg=dir('*_bold.nii.gz');  % Search .nii.gz and unzip; YAN Chao-Gan, 120806.
@@ -478,7 +478,7 @@ if (Cfg.RemoveFirstTimePoints>0)
                 if Cfg.FunctionalSessionNumber==1
                     cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'func']);
                 else
-                    cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'ses-',num2str(iFunSession),filesep,'func']);
+                    cd([Cfg.WorkingDir,filesep,Cfg.StartingDirName,filesep,Cfg.SubjectID{i},filesep,'ses-',num2str(iFunSession),filesep,'func']);
                 end
             else
                 cd([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,Cfg.SubjectID{i}]);
