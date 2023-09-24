@@ -1464,7 +1464,41 @@ end
 LabelV=V.cdata;
 LabelU=unique(LabelV);
 if isfield(V, 'labels')
-    LabelColor=V.labels.rgba(:, 1:3);
+    LabelStruct=V.labels;
+    if isfield(LabelStruct, 'key')
+        LabelKey=LabelStruct.key;
+        if size(LabelKey, 1)==1
+            LabelKey=LabelKey';
+        end
+        if all(sort(LabelU)==sort(LabelKey))
+            LabelColor=V.labels.rgba(:, 1:3);
+            LabelName=V.labels.name;
+        else
+            warndlg('Mismatched between Keys and Vertex Values');
+            NumKey=numel(LabelU);
+            OrigColor=LabelStruct.rgba(:, 1:3);
+            OrigName=LabelStruct.name;
+            LabelColor=zeros(NumKey, 3);
+            LabelName=cell(NumKey, 1);
+            for i=1:NumKey
+                KeyInd=(LabelU(i)==LabelKey);
+                if all(KeyInd==0)
+                    LabelColor(i, :)=OrigColor(1, :);
+                    LabelName{i}=OrigName{1};
+                else
+                    LabelColor(i, :)=OrigColor(KeyInd, :);
+                    LabelName(i, 1)=OrigName(KeyInd);
+                end
+            end
+        end
+    else
+        LabelColor=V.labels.rgba(:, 1:3);
+        LabelName=V.labels.name;
+    end
+    
+    if size(LabelName, 1)==1
+        LabelName=LabelName';
+    end
 else
     errordlg('Invalid Label File, No labels Structure!');
     ExitCode=1;
@@ -1487,7 +1521,10 @@ if IsShowZeros
     TmpLabelColor=LabelColor;
 else
     TmpLabelColor=LabelColor;
-    TmpLabelColor(1, :)=AxesHandle.UnderSurf.FaceColor;
+    KeyInd=LabelU<=0;
+    TmpLabelColor(KeyInd, 1)=AxesHandle.UnderSurf.FaceColor(1);
+    TmpLabelColor(KeyInd, 2)=AxesHandle.UnderSurf.FaceColor(2);
+    TmpLabelColor(KeyInd, 3)=AxesHandle.UnderSurf.FaceColor(3);
 end
 AdjustVC=squeeze(ind2rgb(LabelV, TmpLabelColor));
 Alpha=1;
@@ -1497,7 +1534,7 @@ AdjustVA=Alpha*ones(size(LabelV));
 % LabelOpt 
 LabelOpt.LabelFile=LabelFile;
 LabelOpt.LabelColor=LabelColor;
-LabelOpt.LabelName=V.labels.name;
+LabelOpt.LabelName=LabelName;
 LabelOpt.LabelV=LabelV;
 LabelOpt.LabelU=LabelU;
 LabelOpt.IsShowZeros=IsShowZeros;
@@ -1554,6 +1591,7 @@ catch
 end
 
 LabelV=LabelSurf.LabelV;
+LabelU=LabelSurf.LabelU;
 LabelColor=LabelSurf.LabelColor;
 IsShowZeros=LabelSurf.IsShowZeros;
 IsVisible=LabelSurf.IsVisible;
@@ -1564,7 +1602,10 @@ if IsShowZeros
     TmpLabelColor=LabelColor;
 else
     TmpLabelColor=LabelColor;
-    TmpLabelColor(1, :)=AxesHandle.UnderSurf.FaceColor;
+    KeyInd=LabelU<=0;
+    TmpLabelColor(KeyInd, 1)=AxesHandle.UnderSurf.FaceColor(1);
+    TmpLabelColor(KeyInd, 2)=AxesHandle.UnderSurf.FaceColor(2);
+    TmpLabelColor(KeyInd, 3)=AxesHandle.UnderSurf.FaceColor(3);
 end
 AdjustVC=squeeze(ind2rgb(LabelV, TmpLabelColor));
 AdjustVA=Alpha*ones(size(LabelV));
