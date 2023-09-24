@@ -88,6 +88,22 @@ set(handles.ImgRHlistbox, 'UIContextMenu', rhContextMenu);
 % Choose default command line output for SurfSpace
 handles.output = hObject;
 
+
+if ismac
+    zoom_factor=1;
+elseif ispc
+    zoom_factor=0.8;
+else
+    zoom_factor=0.9;
+end
+
+% Find and adjust font size for uicontrol elements
+ui_handles = findall(handles.figure1, 'Type', 'uicontrol');
+for idx = 1:length(ui_handles)
+    currentSize = get(ui_handles(idx), 'FontSize');
+    set(ui_handles(idx), 'FontSize', currentSize * zoom_factor);
+end
+
 % Update handles structure
 guidata(hObject, handles);
 try

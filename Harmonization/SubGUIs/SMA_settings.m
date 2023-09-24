@@ -86,6 +86,22 @@ handles.Cfg.FileList = [];
 handles.Cfg.Zname=[];
 handles.Cfg.Cuts =[];
 % Update handles structure
+
+if ismac
+    zoom_factor=1;
+elseif ispc
+    zoom_factor=0.75;
+else
+    zoom_factor=0.9;
+end
+
+% Find and adjust font size for uicontrol elements
+ui_handles = findall(handles.figure1, 'Type', 'uicontrol');
+for idx = 1:length(ui_handles)
+    currentSize = get(ui_handles(idx), 'FontSize');
+    set(ui_handles(idx), 'FontSize', currentSize * zoom_factor);
+end
+
 guidata(hObject, handles);
 
 try

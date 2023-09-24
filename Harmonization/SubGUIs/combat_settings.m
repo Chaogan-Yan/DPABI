@@ -80,6 +80,21 @@ h_combat = uicontextmenu;
 uimenu(h_combat, 'Label', 'Remove', 'Callback', @(src, event) combat_settings('DeleteSelectedAdjVar', src, event, guidata(src)));
 set(handles.listboxAdjVar, 'UIContextMenu', h_combat);	
 
+if ismac
+    zoom_factor=1;
+elseif ispc
+    zoom_factor=0.75;
+else
+    zoom_factor=0.9;
+end
+
+% Find and adjust font size for uicontrol elements
+ui_handles = findall(handles.figure1, 'Type', 'uicontrol');
+for idx = 1:length(ui_handles)
+    currentSize = get(ui_handles(idx), 'FontSize');
+    set(ui_handles(idx), 'FontSize', currentSize * zoom_factor);
+end
+
 % Update handles structure
 guidata(hObject, handles);
 try
