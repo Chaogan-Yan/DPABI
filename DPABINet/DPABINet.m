@@ -22,7 +22,7 @@ function varargout = DPABINet(varargin)
 
 % Edit the above text to modify the response to help DPABINet
 
-% Last Modified by GUIDE v2.5 02-Apr-2021 16:26:32
+% Last Modified by GUIDE v2.5 27-Sep-2023 11:23:51
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,7 @@ function DPABINet_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABINet
 
 
-Release='V1.2_220915';
+Release='V1.3_231001';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -172,3 +172,11 @@ function pushbutton_Utilities_Callback(hObject, eventdata, handles)
 DPABINet_Utilities
 
 
+
+
+% --- Executes on button press in pushbuttonHarmonization.
+function pushbuttonHarmonization_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonHarmonization (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABI_Harmonization

@@ -22,7 +22,7 @@ function varargout = DPABIFiber(varargin)
 
 % Edit the above text to modify the response to help DPABIFiber
 
-% Last Modified by GUIDE v2.5 31-Dec-2022 07:25:49
+% Last Modified by GUIDE v2.5 27-Sep-2023 14:25:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,7 @@ function DPABIFiber_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABIFiber
 
 
-Release='V1.0_230110';
+Release='V1.1_231001';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -171,12 +171,12 @@ fprintf('If you want to view the tracks, you can use mrview within VNC Viewer wi
 DPABI_VIEW
 
 
-% --- Executes on button press in pushbutton_Utilities.
-function pushbutton_Utilities_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_Utilities (see GCBO)
+% --- Executes on button press in pushbuttonHarmonization.
+function pushbuttonHarmonization_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonHarmonization (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-DPABISurf_Utilities
+DPABI_Harmonization
 
 
 

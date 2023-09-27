@@ -22,7 +22,7 @@ function varargout = DPABISurf(varargin)
 
 % Edit the above text to modify the response to help DPABISurf
 
-% Last Modified by GUIDE v2.5 26-Feb-2020 10:51:12
+% Last Modified by GUIDE v2.5 27-Sep-2023 11:16:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,7 @@ function DPABISurf_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABISurf
 
 
-Release='V2.0_230110';
+Release='V3.0_231001';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -234,3 +234,19 @@ function pushbuttonQC_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 DPABI_QC_Surf
+
+
+% --- Executes on button press in pushbuttonDPABISurfSlurm.
+function pushbuttonDPABISurfSlurm_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonDPABISurfSlurm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+web('http://rfmri.org/DPABISurfSlurm','-browser');
+
+
+% --- Executes on button press in pushbuttonHarmonization.
+function pushbuttonHarmonization_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonHarmonization (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+DPABI_Harmonization

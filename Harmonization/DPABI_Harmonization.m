@@ -52,7 +52,13 @@ function DPABI_Harmonization_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DPABI_Harmonization (see VARARGIN)
 
-fprintf('\nHarmonizing the brain images (.nii/.nii.gz/.gii/.mat) to remove site effects for big data in statistical analysis. \nReference: Wang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.\n\n');
+fprintf('\nHarmonizing the brain images (.nii/.nii.gz/.gii/.mat) to remove site effects for big data for statistical analysis. \n');
+fprintf('\nDPABI Harmonization module is based on our previous work, please cite it if this module is used: \n');
+fprintf('Wang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.\n');
+fprintf('\nPlease also cite the related SMA, ComBat, CovBat and ICVAE references appropriately if you used the relevant models.\n');
+
+uiwait(msgbox('If you used DPABI Harmonization module, please cite: Wang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.   Please also cite the related SMA, ComBat, CovBat and ICVAE references appropriately if you used the relevant models.'))
+
 
 [ProgramPath, fileN, extn] = fileparts(which('DPABI_Harmonization.m'));
 addpath(genpath([ProgramPath,filesep,'SubGUIs']));
@@ -97,8 +103,13 @@ end
 movegui(handles.figure1,'center');
 
 % %uimenu
-hContextMenu = uicontextmenu;
-set(handles.ImgListbox, 'UIContextMenu', hContextMenu);	%Added by YAN Chao-Gan 091110. Added popup menu to delete selected subject by right click
+% hContextMenu = uicontextmenu;
+% set(handles.ImgListbox, 'UIContextMenu', hContextMenu);	%Added by YAN Chao-Gan 091110. Added popup menu to delete selected subject by right click
+
+parentFig = ancestor(handles.ImgListbox, 'figure'); % Get the parent figure of the listbox
+hContextMenu = uicontextmenu(parentFig); % Create the context menu with the same parent figure
+set(handles.ImgListbox, 'UIContextMenu', hContextMenu);
+
 uimenu(hContextMenu, 'Label', 'Clear', 'Callback', 'DPABI_Harmonization(''RemoveAll_Callback'',gcbo,[], guidata(gcbo))');
 
 % Update handles structure
