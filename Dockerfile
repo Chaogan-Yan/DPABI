@@ -1,12 +1,16 @@
-FROM nipreps/fmriprep:22.1.1
+FROM nipreps/fmriprep:23.1.4
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
 # Update system and istall pakages
-RUN apt-get -qq update && apt-get -qq install -y \
-    x11vnc xvfb suckless-tools stterm parallel wget unzip time qt5-default && \
+RUN apt-get -qq update
+RUN apt-get -qq install -y libdbus-1-dev; exit 0
+RUN dpkg --configure dbus
+    
+RUN apt-get -qq install -y x11vnc xvfb suckless-tools stterm parallel wget unzip time && \
     apt-get update
 
+# apt-get -qq install -y x11vnc xvfb suckless-tools stterm parallel wget unzip time qt5-default && \
 
 # Setup x11vnc
 RUN mkdir -p ~/.vnc && \
@@ -41,15 +45,15 @@ RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh
 RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABI_StandAlone
 # RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh
 # RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPARSFA_run_StandAlone
-RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh
-RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABISurf_run_StandAlone
+# RUN chmod +x /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh
+# RUN chmod +x /opt/DPABI/DPABI_StandAlone/DPABISurf_run_StandAlone
 
 COPY ./DPABIFiber/MissingCommands/mni152.register.dat /opt/freesurfer/average/
 
 # Extract ctf for singularity support
 # RUN /opt/DPABI/DPABI_StandAlone/run_DPABI_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 # RUN /opt/DPABI/DPABI_StandAlone/run_DPARSFA_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
-RUN /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
+# RUN /opt/DPABI/DPABI_StandAlone/run_DPABISurf_run_StandAlone.sh /opt/mcr/${MCR_VERSION} || true
 
 
 
