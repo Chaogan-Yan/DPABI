@@ -1,4 +1,4 @@
-FROM pennbbl/qsiprep:0.16.0RC3
+FROM pennbbl/qsiprep:0.19.0
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
