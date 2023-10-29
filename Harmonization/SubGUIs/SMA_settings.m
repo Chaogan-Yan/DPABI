@@ -190,6 +190,14 @@ else
         handles.Cfg.FileList.LH = handles.Cfg.var_struct.FileListLH;
         handles.Cfg.FileList.RH = handles.Cfg.var_struct.FileListRH;
     end
+    
+    if get(handles.popupmenuFitMode,'Value')~=1 
+        handles.Cfg.FitMode=-1;
+        handles.Cfg.Zname=[];
+        set(handles.listboxZlist,'String',[]);
+        set(handles.listboxVar,'String',[]);
+        UpdateDisplay(handles);
+    end
 end
 guidata(hObject,handles);
 
@@ -268,7 +276,10 @@ varlist=[];
 switch get(hObject,'Value')
     case 2
         warndlg('No subsampling, No Z.');
-        set(handles.listboxVar,'Value',0);
+        set(handles.listboxVar,'String',[],'Value',0);
+        set(handles.listboxZlist,'String',[])
+        handles.Cfg.Zname = [];
+        handles.Cfg.Cuts = [];
         handles.Cfg.FitMode=0;
         handles.Cfg.Subgroups =[];
     case 3
@@ -529,11 +540,15 @@ function SetLoadedData(hObject,handles,Cfg)
 function UpdateDisplay(handles)
 	set(handles.popupmenuFitMode,'Value', handles.Cfg.FitMode+2);	
     set(handles.popupmenuTargetSiteChoice,'String', handles.Cfg.UniSiteName, 'Value', handles.Cfg.TargetSiteIndex);
-    if handles.Cfg.FitMode~=0
+    if handles.Cfg.FitMode==1
         set(handles.listboxVar,'String',setdiff(handles.Cfg.vars,'SiteName'),'Value',1);
+    else
+        set(handles.listboxVar,'String',[]);
     end
     if ~isempty(handles.Cfg.Zname)
         set(handles.listboxZlist,'String',strcat(handles.Cfg.Zname,'-Cuts:',handles.Cfg.Cuts),'Value',1);
+    else
+        set(handles.listboxZlist,'String',[]);
     end
     
     drawnow;
@@ -547,7 +562,7 @@ function Save_Callback(hObject, eventdata, handles)
 if isfield(handles,'Cfg')
     Cfg=handles.Cfg; %Added by YAN Chao-Gan, 100130. Save the configuration parameters automatically.
     Datetime=fix(clock); %Added by YAN Chao-Gan, 100130.
-    save([pwd,filesep,'Harmonize_AutoSave_combatsettings_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
+    save([pwd,filesep,'Harmonize_AutoSave_SMAsettings_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
 else
     warndlg('I got nothing to save.');
 end

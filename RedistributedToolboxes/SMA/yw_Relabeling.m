@@ -1,7 +1,7 @@
 % clear;clc;
 % load('/Users/dianewang/Desktop/RfMRIHarmonization/scanner_harmonization/data_results/FCP/archived/600_subinfo.mat');
 % r = Relabeling(Age,[21,40],3,Sex,0,2);
- 
+
 function labels = yw_Relabeling(varargin)
 %% labels = Relabeling(varargin)
 %Input
@@ -34,11 +34,10 @@ for i_cut = 1:length(nar)
                 num = [0:1:length(cut)];
                 dummy = zeros(nsample,length(cut)+1);
                 for k = 1:length(cut)+1
-                    if k==1 
+                    if k==1
                         dummy(:,k) = vec<=cut(k);
                     elseif k>1 && k<length(cut)+1
                         dummy(:,k) = vec<=cut(k) & vec>=cut(k-1) ;
-                        %dummy(:,k) = dummy(:,k)-dummy(:,k-1); % wrong
                     else
                         dummy(:,k) = vec>cut(k-1);
                     end
@@ -47,49 +46,18 @@ for i_cut = 1:length(nar)
             end
         else %varargin{n+1}==0 % category variable:
             % considering change into only latter requirement
-            
+            fprintf('Checking whether variable %d is start with 1.\n',i_cut);
             category = varargin{n};
-            if iscell(category) && isnumeric(category{1})
-                category = cell2mat(category);
-            end
-            unicategory = unique(category);
-            n_category = numel(unicategory);
-            relabeled=zeros(size(category));
-            
-            if isnumeric(category)
-                for k = 1:n_category
-                    relabeled(category==unicategory(k))=k-1;
-                end
-            elseif ischar(category)
-                 for k = 1:n_category
-                     relabeled(strcmp(unicategory{k},category))=k-1;
-                 end 
-            end
+            [relabeled,n_category] = encode_data(category,0);
+
         end
     elseif n==nargin-1 & varargin{n+1}==0 % variable is categorical
         fprintf('Checking whether variable %d is start with 1.\n',i_cut);
         category = varargin{n};
-        if iscell(category) && isnumeric(category{1})
-            category = cell2mat(category);
-        end
-        unicategory = unique(category);
-        n_category = numel(unicategory);
-        relabeled = zeros(size(category));
-        %fprintf('Relabeling %s...\n',varargin{n});
-        if ischar(category) 
-            for k = 1:n_category
-                relabeled(strcmp(category,unicategory(k)))=k;
-            end
-        elseif isnumeric(category) %why negative£¿
-            if unicategory(end)~=n_category % whether variable start with 1 
-                for k = 1:n_category
-                    relabeled(category==unicategory(k))=k;
-                end  
-            else
-                relabeled = category;
-                disp('The labeling is finished.');
-            end 
-        end
+        [relabeled,n_category] = encode_data(category,1);
+
+        disp('The labeling is finished.');
+        
     elseif n==nargin-1 & varargin{n+1}~=0  %last variable is numerical
         vec = varargin{n};
         if iscell(vec)
@@ -109,7 +77,6 @@ for i_cut = 1:length(nar)
                     dummy(:,k) = vec<=cut(k);
                 elseif k>1 && k<length(cut)+1
                     dummy(:,k) = vec<=cut(k) & vec>=cut(k-1) ;
-                    %dummy(:,k) = dummy(:,k)-dummy(:,k-1);
                 else
                     dummy(:,k) = vec>cut(k-1);
                 end
@@ -133,6 +100,7 @@ for j =  1:size(t,2)
 end
 end
 
+
 function cellstring = all2cellstring(array)
 if ~iscell(array)
     if isnumeric(array)
@@ -143,10 +111,32 @@ if ~iscell(array)
 else
     cellstring = array;
     where_is_num_cell = cell2mat(cellfun(@isnumeric,cellstring,...
-    'UniformOutput',false));
+        'UniformOutput',false));
     if any(where_is_num_cell)
         num_str= num2str(cell2mat(array(find(where_is_num_cell))));
         cellstring(find(where_is_num_cell)) = cellstr(num_str);
     end
+end
+end
+
+function [encoded_data,n_category] = encode_data(input_data,current_code)
+% Check if the input data is a cell and contains numeric or character data
+if iscell(input_data) && ~isempty(input_data)
+    % Convert cell to a single array if it contains numeric data
+    input_data = cell2mat(input_data);
+end
+
+% Find unique categories in the input data
+unique_categories = unique(input_data);
+n_category = length(unique_categories);
+% Initialize the encoded data arrayss
+encoded_data = zeros(size(input_data));
+
+% Encode the data
+%current_code = 0;
+for i = 1:length(unique_categories)
+    category = unique_categories(i);
+    encoded_data(input_data == category) = current_code;
+    current_code = current_code + 1;
 end
 end
