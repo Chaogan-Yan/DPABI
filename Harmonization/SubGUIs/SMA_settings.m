@@ -192,6 +192,7 @@ else
     end
     
     if get(handles.popupmenuFitMode,'Value')~=1 
+    	set(handles.popupmenuFitMode,'Value',1);
         handles.Cfg.FitMode=-1;
         handles.Cfg.Zname=[];
         set(handles.listboxZlist,'String',[]);
