@@ -22,7 +22,7 @@ function varargout = DPABI_Harmonization(varargin)
 
 % Edit the above text to modify the response to help DPABI_Harmonization
 
-% Last Modified by GUIDE v2.5 03-Aug-2023 21:29:04
+% Last Modified by GUIDE v2.5 18-Oct-2023 12:12:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -52,13 +52,7 @@ function DPABI_Harmonization_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DPABI_Harmonization (see VARARGIN)
 
-fprintf('\nHarmonizing the brain images (.nii/.nii.gz/.gii/.mat) to remove site effects for big data for statistical analysis. \n');
-fprintf('\nDPABI Harmonization module is based on our previous work, please cite it if this module is used: \n');
-fprintf('Wang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.\n');
-fprintf('\nPlease also cite the related SMA, ComBat, CovBat and ICVAE references appropriately if you used the relevant models.\n');
-
-uiwait(msgbox('If you used DPABI Harmonization module, please cite: Wang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.   Please also cite the related SMA, ComBat, CovBat and ICVAE references appropriately if you used the relevant models.'))
-
+fprintf('\nHarmonizing the brain images (.nii/.nii.gz/.gii/.mat) to remove site effects for big data in statistical analysis. \nReference: Wang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.\n\n');
 
 [ProgramPath, fileN, extn] = fileparts(which('DPABI_Harmonization.m'));
 addpath(genpath([ProgramPath,filesep,'SubGUIs']));
@@ -103,13 +97,8 @@ end
 movegui(handles.figure1,'center');
 
 % %uimenu
-% hContextMenu = uicontextmenu;
-% set(handles.ImgListbox, 'UIContextMenu', hContextMenu);	%Added by YAN Chao-Gan 091110. Added popup menu to delete selected subject by right click
-
-parentFig = ancestor(handles.ImgListbox, 'figure'); % Get the parent figure of the listbox
-hContextMenu = uicontextmenu(parentFig); % Create the context menu with the same parent figure
-set(handles.ImgListbox, 'UIContextMenu', hContextMenu);
-
+hContextMenu = uicontextmenu;
+set(handles.ImgListbox, 'UIContextMenu', hContextMenu);	%Added by YAN Chao-Gan 091110. Added popup menu to delete selected subject by right click
 uimenu(hContextMenu, 'Label', 'Clear', 'Callback', 'DPABI_Harmonization(''RemoveAll_Callback'',gcbo,[], guidata(gcbo))');
 
 % Update handles structure
@@ -418,8 +407,8 @@ function AddImgButton_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.mat',...
-    'Brain Image Files (*.img;*.nii;*.nii.gz;*.mat)';'*.*', 'All Files (*.*)';}, ...
+[File , Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.mat;,*.xlsx',...
+    'Brain Image Files (*.img;*.nii;*.nii.gz;*.mat;*.xlsx)';'*.*', 'All Files (*.*)';}, ...
     'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
 if isnumeric(File)
     return;
@@ -618,12 +607,12 @@ end
 guidata(hObject, handles);
 
 
-% function stringarray = cell2string(cellarray)
-% stringarray = cellarray;
-% where_is_num_cell = cell2mat(cellfun(@isnumeric,cellarray,...
-%     'UniformOutput',false));
-% if all(where_is_num_cell)
-%     stringarray = string(cell2mat(cellarray));
-% elseif any(where_is_num_cell)
-%     stringarray{where_is_num_cell} = string(cellarray{where_is_num_cell});
-% end
+% --- Executes on button press in checkboxOrganizedData.
+function checkboxOrganizedData_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxOrganizedData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if get(hObject,'Value')
+    handles.Cfg.OneOrganizedFile = 1;
+end
+% Hint: get(hObject,'Value') returns toggle state of checkboxOrganizedData
