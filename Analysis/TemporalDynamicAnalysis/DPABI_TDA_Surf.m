@@ -722,12 +722,25 @@ function btnDefineROI_Callback(hObject, eventdata, handles)
 % hObject    handle to btnDefineROI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 ROIDef.Volume=handles.Cfg.CalFC.ROIDefVolu;
 ROIDef.SurfLH=handles.Cfg.CalFC.ROIDefSurfLH;
 ROIDef.SurfRH=handles.Cfg.CalFC.ROIDefSurfRH;
-
-[ProgramPath, fileN, extn] = fileparts(which('dpabi.m'));
-addpath([ProgramPath,filesep,'DPABISurf',filesep,'Subfunctions']);
+if isfield(handles.Cfg.CalFC,'ROISelectedIndexVolu')
+    ROISelectedIndex.Volume=handles.Cfg.CalFC.ROISelectedIndexVolu;
+else
+    ROISelectedIndex.Volume=cell(size(handles.Cfg.CalFC.ROIDefVolu));
+end
+if isfield(handles.Cfg.CalFC,'ROISelectedIndexSurfLH')
+    ROISelectedIndex.SurfLH=handles.Cfg.CalFC.ROISelectedIndexSurfLH;
+else
+    ROISelectedIndex.SurfLH=cell(size(handles.Cfg.CalFC.ROIDefSurfLH));
+end
+if isfield(handles.Cfg.CalFC,'ROISelectedIndexSurfRH')
+    ROISelectedIndex.SurfRH=handles.Cfg.CalFC.ROISelectedIndexSurfRH;
+else
+    ROISelectedIndex.SurfRH=cell(size(handles.Cfg.CalFC.ROIDefSurfRH));
+end
 
 if handles.Cfg.CalFC.IsMultipleLabel
     fprintf('\nIsMultipleLabel is set to 1: There are multiple labels in the ROI mask file.\n');
@@ -735,13 +748,28 @@ else
     fprintf('\nIsMultipleLabel is set to 0: All the non-zero values will be used to define the only ROI.\n');
 end
 
-[ROIDef,handles.Cfg.CalFC.IsMultipleLabel]=DPABISurf_ROIList(ROIDef,handles.Cfg.CalFC.IsMultipleLabel);
-if ~isempty(ROIDef)
-    handles.Cfg.CalFC.ROIDefVolu=ROIDef.Volume;
-    handles.Cfg.CalFC.ROIDefSurfLH=ROIDef.SurfLH;
-    handles.Cfg.CalFC.ROIDefSurfRH=ROIDef.SurfRH;
+ROIList.ROIDef=ROIDef;
+ROIList.ROISelectedIndex=ROISelectedIndex;
+ROIList.IsMultipleLabel=handles.Cfg.CalFC.IsMultipleLabel;
+
+%[ROIDef,handles.Cfg.CalFC.IsMultipleLabel]=DPABISurf_ROIList(ROIDef,handles.Cfg.CalFC.IsMultipleLabel);
+ROIList = DPABISurf_ROIList(ROIList);
+
+if ~isempty(ROIList.ROIDef)
+    handles.Cfg.CalFC.ROIDefVolu=ROIList.ROIDef.Volume;
+    handles.Cfg.CalFC.ROIDefSurfLH=ROIList.ROIDef.SurfLH;
+    handles.Cfg.CalFC.ROIDefSurfRH=ROIList.ROIDef.SurfRH;
+
+    handles.Cfg.CalFC.ROISelectedIndexVolu=ROIList.ROISelectedIndex.Volume;
+    handles.Cfg.CalFC.ROISelectedIndexSurfLH=ROIList.ROISelectedIndex.SurfLH;
+    handles.Cfg.CalFC.ROISelectedIndexSurfRH=ROIList.ROISelectedIndex.SurfRH;
+
+    handles.Cfg.CalFC.IsMultipleLabel=ROIList.IsMultipleLabel;
 end
 guidata(hObject, handles);
+
+
+
 
 
 function editParallelWorkers_Callback(hObject, eventdata, handles)

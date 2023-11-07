@@ -753,12 +753,21 @@ function btnDefineROI_Callback(hObject, eventdata, handles)
 % hObject    handle to btnDefineROI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
     ROIDef=handles.Cfg.CalFC.ROIDef;
+
+    if isfield(handles.Cfg.CalFC,'ROISelectedIndex')
+        ROISelectedIndex=handles.Cfg.CalFC.ROISelectedIndex;
+    else
+        ROISelectedIndex=cell(size(ROIDef));
+    end
+
     if isempty(ROIDef)
         [ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
         addpath([ProgramPath,filesep,'SubGUIs']);
         [ROIDef,IsMultipleLabel]=DPARSF_ROI_Template(ROIDef,handles.Cfg.CalFC.IsMultipleLabel);
         handles.Cfg.CalFC.IsMultipleLabel = IsMultipleLabel;
+        ROISelectedIndex=cell(size(ROIDef));
     end
     
     if handles.Cfg.CalFC.IsMultipleLabel
@@ -767,10 +776,18 @@ function btnDefineROI_Callback(hObject, eventdata, handles)
         fprintf('\nIsMultipleLabel is set to 0: All the non-zero values will be used to define the only ROI.\n');
     end
     
-    ROIDef=DPABI_ROIList(ROIDef);
-    handles.Cfg.CalFC.ROIDef=ROIDef;
+    ROIList.ROIDef=ROIDef;
+    ROIList.ROISelectedIndex=ROISelectedIndex;
+    ROIList.IsMultipleLabel=handles.Cfg.CalFC.IsMultipleLabel;
+
+    ROIList=DPABI_ROIList(ROIList);
+
+    handles.Cfg.CalFC.ROIDef=ROIList.ROIDef;
+    handles.Cfg.CalFC.ROISelectedIndex=ROIList.ROISelectedIndex;
+    handles.Cfg.CalFC.IsMultipleLabel=ROIList.IsMultipleLabel;
     guidata(hObject, handles);
     UpdateDisplay(handles);
+
 
 
 
