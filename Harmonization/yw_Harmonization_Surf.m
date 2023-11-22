@@ -1,6 +1,6 @@
-function [HarmonizedBrain_LH, HarmonizedBrain_RH, Header_LH, Header_RH, OutNameList_LH, OutNameList_RH] =  yw_Harmonization_Surf(ImgCells_LH, ImgCells_RH, MaskData_LH, MaskData_RH, MethodType,AdjustInfo ,OutputDir, Suffix)
+function [HarmonizedBrain_LH, HarmonizedBrain_RH, Header_LH, Header_RH, OutNameList_LH, OutNameList_RH] =  yw_Harmonization_Surf(ImgCells_LH, ImgCells_RH, MaskData_LH, MaskData_RH, MethodType,AdjustInfo, ParallelWorkersNum,OutputDir)
 % [HarmonizedBrain_LH, HarmonizedBrain_RH, Header_LH, Header_RH, OutNameList_LH, OutNameList_RH] = yw_Harmonization_Surf(ImgCells_LH, ImgCells_RH, MaskData_LH, MaskData_RH, MethodType, OutputDir, Suffix)
-% Harmonize the brains for Statistical Analysis. Ref: Yan, C.G., Craddock, R.C., Zuo, X.N., Zang, Y.F., Milham, M.P., 2013. Standardizing the intrinsic brain: towards robust measurement of inter-individual variation in 1000 functional connectomes. Neuroimage 80, 246-262.
+% Harmonize the brains for Statistical Analysis. Ref: Wang, Y. W., X. Chen and C. G. Yan (2023). "Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion." Neuroimage 274: 120089.
 % Input:
 % 	ImgCells_LH		-	Left Hemisphere, Input Data. 1 by N cells. For each cell, can be: 1. a single file; 2. N by 1 cell of filenames.
 % 	ImgCells_RH		-	Right Hemisphere, Input Data. 1 by N cells. For each cell, can be: 1. a single file; 2. N by 1 cell of filenames.
@@ -10,25 +10,84 @@ function [HarmonizedBrain_LH, HarmonizedBrain_RH, Header_LH, Header_RH, OutNameL
 %                       ComBat
 %                       SMA
 %   AdjustInfo      -   The covariates/subsampling information(Dict).can be:
-%                       1.for ComBat，if is not empty，then should include
-%                         keys as below：
-%                           batch - site label, 1 x N vector. N stands 
-%                                   for subject number.
-%                           mod   - covariates, N x M, M stands for the
-%                                   number of adjusted variates
-%                           isparametric - 1-parametric,0-nonparametric
-%                       2.for SMA， if is not empty， then use
-%                           subsampling，should include {age:21,sex}.
-%                           qq(underconstruction...)
+%                       1.for SMA, if is not empty, then should include
+%                         keys as below，
+%                         - Demographic info - support .xlsx, .tsv, .csv, .txt, .mat.
+%                                            there at least contain a column named
+%                                            "SiteName" to distinguish sites.
+%                         - Fit Type       - 1. No subsampling.
+%                                          - 2. Subsampling. Preferred where other
+%                                          factors causually influence the data.
+%                         - Z Cuts           when choose causual Z variables，use
+%                                          0 as cut label for categorical
+%                                          variables， and concrete number
+%                                          for continuous variables.
+%                         - Subgroup         After add all cuts， use the
+%                                          button to subgroup. It will provide a
+%                                          target site base on selection
+%                                          fomula in our paper.
+%                         - Target site      Choose a target site from the
+%                                          list, which presents the unique
+%                                          site names of "SiteName".
+%
+%                       2.for ComBat/CovBat, if is not empty, then should include
+%                         keys as below,
+%                         -ComBat 
+%                               Demographic info - support .xlsx, .tsv, .csv, .txt, .mat.
+%                                                  there at least contain a column named 
+%                                                  "SiteName" to distinguish sites.
+%                               Adjusted variables - AllVariables listbox will showcase
+%                                                    all varibles in Demographic info file，
+%                                                    except for "SiteName". Users can add those
+%                                                    variables need to be adjusted in the linear 
+%                                                    part of combat method into AdjustedVariables
+%                                                    listbox.                
+%                               isparametric       - 1 - parametric,2 - nonparametric
+%                               IsCovBat           - 1 - do covariance harmonization
+%                                                    0 - no CovBat
+%                         -CovBat
+%                               IsCovBatParametric - 1 - parametric 
+%                                                    2 - nonparametric
+%                                                      
+%                               PCAPercent         - Default    - 95%
+%                                                  - Percentage - user
+%                                                       defined, [0,1]
+%                                                  - PC number  - user
+%                                                       defined, >=1
+%                       3. ICVAE 
+%                          - Pull Docker File  - Automcatically pull
+%                                                docker image from ducker hub.
+%                          - Demographic info - support .xlsx, .tsv, .csv, .txt, .mat.
+%                                               there at least contain a column named
+%                                               "SiteName" to distinguish sites.
+%                          - Target site
+%  
+%                       4. Linear 
+%                          - Demographic info - support .xlsx, .tsv, .csv, .txt, .mat.
+%                                               there at least contain a column named
+%                                               "SiteName" to distinguish sites.
+%                          - Model              - General linear model
+%                                               - Linear mixed model
+%                          - Adjusted variables - AllVariables listbox will showcase
+%                                                 all varibles in Demographic info file，
+%                                                 except for "SiteName". Users can add those
+%                                                 variables need to be adjusted into 
+%                                                 AdjustedVariables listbox.
 % 	OutputDir		-   The output directory
-%   Suffix          -   The Suffix added to the folder name
 %
 % Output:
-%	HarmonizedBrain         -   the brains after standardization
-%   Header                    -   The NIfTI Header
-%   All the standardized brains will be output as where OutputDir specified.
+%   1. If you input .img/.nii/.gii/.mat files equalling to your subjects，
+%         then each subject will get a harmonized .img/.nii/.gii/.mat in the output path.	
+%      If you input .xlsx/.mat encompassing organized data and file number
+%         less than subjects，then harmonized will be separated and outputed
+%         in the same file type and data size. Of note, name them
+%         differently, otherwise the latter produced would overwrite the
+%         former one.
+%   2. If you use "AddSite" function to input the files，you will get the 
+%         the same documentation way for outputs, e.g., outputpath/site/intermediatepath/prefix_xxx.nii.
+%
 %-----------------------------------------------------------
-% Written by YAN Chao-Gan 190716.
+% Written by Wang Yu-Wei(dwong6275@gmail.com) & YAN Chao-Gan .
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
 % ycg.yan@gmail.com
 
@@ -190,11 +249,12 @@ switch MethodType
         end
     case 4 %'ICVAE'
         Datetime=fix(clock);
-        HDF5_fname = [pwd,filesep,'Harmonize_AutoSave_ICVAE_Surf_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.h5'];
+        HDF5_fname = [OutputDir,filesep,'Harmonize_AutoSave_ICVAE_Surf_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.h5'];
 
         hdf5write(HDF5_fname,'/RawData',AllVolume,...
                              '/OnehotEncoding/zTrain',AdjustInfo.zTrain,...
                              '/OnehotEncoding/zHarmonize',AdjustInfo.zHarmonize,...
+                             '/ParallelWorkersNum',ParallelWorkersNum,...
                              '/Output/Outputdir',OutputDir);
         cmd  = sprintf('docker run -ti --rm -v %s:/in -v %s:/ICVAE cgyan/icvae python3 train.py',HDF5_fname,OutputDir);
         system(cmd);

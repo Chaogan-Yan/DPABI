@@ -22,7 +22,7 @@ function varargout = ICVAE_settings(varargin)
 
 % Edit the above text to modify the response to help ICVAE_settings
 
-% Last Modified by GUIDE v2.5 15-Sep-2023 11:39:30
+% Last Modified by GUIDE v2.5 22-Nov-2023 15:20:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;

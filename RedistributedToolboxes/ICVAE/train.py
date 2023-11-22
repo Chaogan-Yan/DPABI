@@ -19,7 +19,7 @@ def ICVAE_harmonize(HDF5):
     # Hierachical level 1
     RawData = file['RawData'][:]  
     TrainData = pd.DataFrame(RawData)  
-
+	
     TrainZObj= file['OnehotEncoding']
     HarmoZObj= file['OnehotEncoding']
     #OutputdirObj = file['Output']
@@ -27,15 +27,12 @@ def ICVAE_harmonize(HDF5):
     # Hierachical level 2
     TrainZ = TrainZObj['zTrain'][()] 
     HarmoZ = HarmoZObj['zHarmonize'][()]
-    #Outputdir = OutputdirObj['Outputdir'][0].decode()
-    #print(TrainZ.shape)
-    #print(HarmoZ.shape)
-    #Outputdir = '/Users/dianewang/Documents/GitHub/Aug_hamonization/ICVAE/outputfile'
+    num_processes=np.int(file['ParallelWorkersNum'][0]) 
     file.close()
 
     Harmonized = pd.DataFrame()    
     
-    pool=multiprocessing.Pool() 
+    pool=multiprocessing.Pool(processes=num_processes) 
     # take the input data down by fixed data shape, here is 512
     for i in range(ceil(TrainData.shape[1]/512)):
         # param save path
@@ -55,7 +52,7 @@ def ICVAE_harmonize(HDF5):
             Train_data = TrainData.iloc[:,-512:]
 
         # train
-        pool.apply_async(vae_model,args=(Train_data,TrainZ,1,ICVAE_h5,adv_h5,'train'))
+        pool.apply_async(vae_model,args=(Train_data,TrainZ,10000,ICVAE_h5,adv_h5,'train'))
     
     pool.close()   
     pool.join()
@@ -64,10 +61,10 @@ def ICVAE_harmonize(HDF5):
         #  harmonize
         if i != ceil(TrainData.shape[1]/512)-1:
             p_data = TrainData.loc[:,i*512:i*512+511]
-            x_hat = pd.DataFrame(VAE.vae_model(p_data,HarmoZ,10000,ICVAE_h5,adv_h5,state='predict'))
+            x_hat = pd.DataFrame(VAE.vae_model(p_data,HarmoZ,1,ICVAE_h5,adv_h5,state='predict'))
         else:
             p_data = TrainData.iloc[:,-512:]
-            x_hat = pd.DataFrame(VAE.vae_model(p_data,HarmoZ,10000,ICVAE_h5,adv_h5,state='predict'))
+            x_hat = pd.DataFrame(VAE.vae_model(p_data,HarmoZ,1,ICVAE_h5,adv_h5,state='predict'))
             
             cut = 512*i-TrainData.shape[1] 
             x_hat = x_hat.iloc[:,cut:]        

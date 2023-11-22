@@ -22,7 +22,7 @@ function varargout = addSites(varargin)
 
 % Edit the above text to modify the response to help addSites
 
-% Last Modified by GUIDE v2.5 11-Aug-2023 17:10:17
+% Last Modified by GUIDE v2.5 22-Nov-2023 15:23:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,8 +54,8 @@ function addSites_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for addSites
 handles.output = hObject;
-handles.figure1.Resize = "on";
-movegui(handles.figure1,'center');
+handles.figureAddSites.Resize = "on";
+movegui(handles.figureAddSites,'center');
 
 % Update handles structure
 
@@ -68,7 +68,7 @@ else
 end
 
 % Find and adjust font size for uicontrol elements
-ui_handles = findall(handles.figure1, 'Type', 'uicontrol');
+ui_handles = findall(handles.figureAddSites, 'Type', 'uicontrol');
 for idx = 1:length(ui_handles)
     currentSize = get(ui_handles(idx), 'FontSize');
     set(ui_handles(idx), 'FontSize', currentSize * zoom_factor);
@@ -77,12 +77,12 @@ end
 guidata(hObject, handles);
 
 try
-    uiwait(handles.figure1);
+    uiwait(handles.figureAddSites);
 catch
-    uiresume(handles.figure1);
+    uiresume(handles.figureAddSites);
 end
 % UIWAIT makes addSites wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.figureAddSites);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -95,7 +95,7 @@ if isempty(handles)
     handles.Strings=[];
     handles.ImgCellList=[];
 else
-    delete(handles.figure1);
+    delete(handles.figureAddSites);
 end
 % Get default command line output from handles structure
 varargout{1} = handles.ImgCellList;
@@ -204,7 +204,7 @@ else
     [handles.ImgCellList, handles.Strings]=GetSubNameCell(ParentDirList,SiteName);
 end
 
-uiresume(handles.figure1);
+uiresume(handles.figureAddSites);
 guidata(hObject, handles);
 
 

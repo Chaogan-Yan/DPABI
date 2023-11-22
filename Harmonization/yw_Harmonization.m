@@ -1,6 +1,6 @@
-function [HarmonizedBrain, Header, OutNameList] = yw_Harmonization(ImgCells, MaskData, MethodType, AdjustInfo, OutputDir)
+function [HarmonizedBrain, Header, OutNameList] = yw_Harmonization(ImgCells, MaskData, MethodType, AdjustInfo, ParallelWorkersNum,OutputDir)
 % [HarmonizedBrain, Header, OutNameList] = yw_Harmonization(ImgCells, MaskData, MethodType, OutputDir, Suffix)
-% Standardize the brains for Statistical Analysis. Ref: Yan, C.G., Craddock, R.C., Zuo, X.N., Zang, Y.F., Milham, M.P., 2013. Standardizing the intrinsic brain: towards robust measurement of inter-individual variation in 1000 functional connectomes. Neuroimage 80, 246-262.
+% Standardize the brains for Statistical Analysis. Ref: Wang, Y. W., X. Chen and C. G. Yan (2023). "Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion." Neuroimage 274: 120089.
 % Input:
 % 	ImgCells		-	Input Data. 1 by N cells. For each cell, can be: 1. a single file; 2. N by 1 cell of filenames.
 %   MaskData        -   The mask file, within which the standardization is performed.
@@ -84,12 +84,12 @@ function [HarmonizedBrain, Header, OutNameList] = yw_Harmonization(ImgCells, Mas
 %         differently, otherwise the latter produced would overwrite the
 %         former one.
 %   2. If you use "AddSite" function to input the files，you will get the 
-%         the same documentation way for outputs, e.g., outputpath/site/intermediate/xxx.nii.
+%         the same documentation way for outputs, e.g., outputpath/site/intermediatepath/prefix_xxx.nii.
 %
 %-----------------------------------------------------------
-% Written in 2022. Latest Modified by Wang Yu-Wei 231016. 
+% Written in 2022. Latest Modified by Wang Yu-Wei 231122. 
 % Key Laboratory of Behavioral Science and Magnetic Resonance Imaging Research Center, Institute of Psychology, Chinese Academy of Sciences, Beijing, China
-% wangyw@psych.ac.cn
+% dwong6275@gmail.com
 % Wang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.
 
 AllVolumeSet = [];
@@ -234,11 +234,12 @@ switch MethodType
         end
     case 4 %ICVAE
         Datetime=fix(clock);
-        HDF5_fname = [pwd,filesep,'Harmonize_AutoSave_ICVAE_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.h5'];
+        HDF5_fname = [OutputDir,filesep,'Harmonize_AutoSave_ICVAE_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.h5'];
 
         hdf5write(HDF5_fname,'/RawData',AllVolume,...
                              '/OnehotEncoding/zTrain',AdjustInfo.zTrain,...
                              '/OnehotEncoding/zHarmonize',AdjustInfo.zHarmonize,...
+                             '/ParallelWorkersNum',ParallelWorkersNum,...
                              '/Output/Outputdir',OutputDir);
         cmd  = sprintf('docker run -ti --rm -v %s:/in -v %s:/ICVAE cgyan/icvae python3 train.py --ICVAE_Train_hdf5 /in',HDF5_fname,OutputDir);
         system(cmd);
