@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -J Organize_fmriprep #指定作业名称
+#SBATCH -J Organize_SegmentSubregions_Convert #指定作业名称
 #SBATCH -p normal #指定分区名称
 #SBATCH -N 1 #指定节点数量
 #SBATCH -n 1 #指定任务数
 #SBATCH --mem=10G #指定每节点申请的内存大小，最大 100GB
-#SBATCH -o Organize_fmriprep.o%j #指定正确输出文件名称
-#SBATCH -e Organize_fmriprep.e%j #指定报错信息输出文件名称
+#SBATCH -o Organize_SegmentSubregions_Convert.o%j #指定正确输出文件名称
+#SBATCH -e Organize_SegmentSubregions_Convert.e%j #指定报错信息输出文件名称
 echo "Start time: `date`"
 echo "SLURM_JOB_ID: $SLURM_JOB_ID" #显示作业号
 echo "SLURM_NNODES: $SLURM_NNODES" #显示节点数
@@ -20,22 +20,24 @@ echo "SLURM_NODELIST:$SLURM_NODELIST" #显示执行节点列表名称
 source ${SetEnvScriptDir}/SetEnv.sh
 # !!What I need to Setup
 
-
 module load singularity/3.8.0
 
-cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif /dpabi/run_y_Organize_fmriprep_StandAlone.sh /opt/mcr/R2022b /dpabi/DPABISurf_Blank.mat /data /data/subjects.txt"
+subject=$( sed -n -E "$((${SLURM_ARRAY_TASK_ID}))p" ${DATADIR}/subjects.txt | awk '{print $1}' )
+
+chmod +x /work1/yancg/Soft/MyStandAlone/y_Organize_SegmentSubregions_Convert.sh
+cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif /dpabi/y_Organize_SegmentSubregions_Convert.sh ${subject} /data"
 
 
 # Setup done, run the command
-echo Running task Organize_fmriprep
+echo Running task ${SLURM_ARRAY_TASK_ID}
 echo Commandline: $cmd
 eval $cmd
 exitcode=$?
 
 # Output results to a table
-echo "$subject   Organize_fmriprep    $exitcode" \
-      >> ${SLURM_JOB_NAME}.Organize_fmriprep.tsv
-echo Finished tasks Organize_fmriprep with exit code $exitcode
+echo "$subject   ${SLURM_ARRAY_TASK_ID}    $exitcode" \
+      >> ${SLURM_JOB_NAME}.${SLURM_ARRAY_JOB_ID}.tsv
+echo Finished tasks ${SLURM_ARRAY_TASK_ID} with exit code $exitcode
 exit $exitcode
 
 echo "End time: `date`" #显示结束时间

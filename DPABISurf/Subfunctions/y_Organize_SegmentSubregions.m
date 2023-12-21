@@ -1,10 +1,11 @@
-function Cfg = y_Organize_SegmentSubregions(Cfg,WorkingDir,SubjectListFile)
-% function Cfg = y_Organize_SegmentSubregions(Cfg,WorkingDir,SubjectListFile)
+function Cfg = y_Organize_SegmentSubregions(Cfg,WorkingDir,SubjectListFile,IsSlurmOrganizeSurf)
+% function Cfg = y_Organize_SegmentSubregions(Cfg,WorkingDir,SubjectListFile,IsSlurmOrganizeSurf)
 % Organize results by Segment Subregions.
 %   Input:
 %   Cfg - the parameters for auto data processing. 
 %   WorkingDir - Define the working directory to replace the one defined in Cfg
 %   SubjectListFile - Define the subject list to replace the one defined in Cfg. Should be a text file
+%   IsSlurmOrganizeSurf - Surf files have been organized by Slurm, thus no need to use parallel
 %   Output:
 %     see Results/AnatVolu/Anat_Segment_Subregions_Volume.csv and related files.
 %___________________________________________________________________________
@@ -29,6 +30,10 @@ if exist('SubjectListFile','var') && ~isempty(SubjectListFile)
     Cfg.SubjectID=IDCell{1};
 end
 
+IsNeedOrganizeSurfWithParallel = 1;
+if exist('IsSlurmOrganizeSurf','var') && (~isempty(IsSlurmOrganizeSurf)) && (IsSlurmOrganizeSurf ~= 0)
+    IsNeedOrganizeSurfWithParallel=0;
+end
 
 [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
 
@@ -113,39 +118,41 @@ end
 writetable(SegTable,fullfile(Cfg.WorkingDir,'Results','AnatVolu','Anat_Segment_Subregions_Volume.csv'),'Delimiter','\t');
 
 
-%Convert to .nii
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.CA.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.CA.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.FS60.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.FS60.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.HBT.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.HBT.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
+if IsNeedOrganizeSurfWithParallel
+    %Convert to .nii
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.CA.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.CA.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.FS60.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.FS60.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.HBT.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.HBT.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/lh.hippoAmygLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_lh.hippoAmygLabels.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
 
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.CA.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.CA.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.FS60.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.FS60.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.HBT.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.HBT.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.CA.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.CA.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.FS60.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.FS60.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.HBT.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.HBT.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/rh.hippoAmygLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_rh.hippoAmygLabels.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
 
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/ThalamicNuclei.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_ThalamicNuclei.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
-Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/brainstemSsLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_brainstemSsLabels.FSvoxelSpace.nii.gz ::: %s', ...
-    CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
-system(Command);
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/ThalamicNuclei.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_ThalamicNuclei.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
+    Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/brainstemSsLabels.FSvoxelSpace.mgz %s/Results/AnatVolu/T1wSpace/{1}/{1}_Subregions_brainstemSsLabels.FSvoxelSpace.nii.gz ::: %s', ...
+        CommandInit, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,SubjectIDString);
+    system(Command);
+end
 
 
 fprintf('Organize results by Segment Subregions finished!\n');

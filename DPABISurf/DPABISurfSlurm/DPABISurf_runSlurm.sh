@@ -34,21 +34,25 @@ sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Prefmriprep) --export=
 
 sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n fmriprep) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/5_Postfmriprep.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Postfmriprep) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/6_Organize_fmriprep.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Postfmriprep) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/6_Organize_fmriprep_Surf.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_fmriprep) --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/7_SegmentSubregions.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_fmriprep_Surf) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/7_Organize_fmriprep.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n SegmentSubregions) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/8_Organize_SegmentSubregions.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_fmriprep) --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/8_SegmentSubregions.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_SegmentSubregions) --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/9_DPABISurf_run.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n SegmentSubregions) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/9_Organize_SegmentSubregions_Convert.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n DPABISurf_run) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/10_MakeLnForGSR.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_SegmentSubregions_Convert) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/10_Organize_SegmentSubregions.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n MakeLnForGSR) --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/11_DPABISurf_run_GSR.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_SegmentSubregions) --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/11_DPABISurf_run.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n DPABISurf_run_GSR) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/12_ResultsOrganizer_Surf.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n DPABISurf_run) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/12_MakeLnForGSR.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n ResultsOrganizer_Surf) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/13_TarResults.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n MakeLnForGSR) --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/13_DPABISurf_run_GSR.slurm --wait
+
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n DPABISurf_run_GSR) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/14_ResultsOrganizer_Surf.slurm --wait
+
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n ResultsOrganizer_Surf) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/15_TarResults.slurm --wait
 
 echo "The sbatch of DPABISurfSlurm is done!!! :)"
 

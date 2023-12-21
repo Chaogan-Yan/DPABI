@@ -64,7 +64,6 @@ end
 Datetime=fix(clock);
 fprintf('Welcome: %s, %.4d-%.2d-%.2d %.2d:%.2d \n', UserName,Datetime(1),Datetime(2),Datetime(3),Datetime(4),Datetime(5));
 fprintf('DPABISurf: A Surface-Based Resting-State fMRI Data Analysis Toolbox.\nRelease = %s\n',Release);
-fprintf('Copyright(c) 2019; GNU GENERAL PUBLIC LICENSE\n');
 fprintf('The R-fMRI Lab, Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; \n');
 fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgrammers: YAN Chao-Gan; WANG Xin-Di; LU Bin\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
 fprintf('-----------------------------------------------------------\n');

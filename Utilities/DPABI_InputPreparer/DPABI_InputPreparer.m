@@ -2,7 +2,6 @@ function varargout = DPABI_InputPreparer(varargin)
 % DPABI_BIDS_Converter GUI by Bin Lu
 %-----------------------------------------------------------
 % Convert the output folder of DPABI_Dicomsorter or xnat-like system to DPARSFA/DPABISurf's input format.
-% Copyright(c) 2021; GNU GENERAL PUBLIC LICENSE
 % B108, CAS Key Laboratory of Behavioral Science, Institute of Psychology, Beijing, China; 
 % Department of Psychology, University of Chinese Academy of Sciences, Beijing, China;
 % Written by Bin Lu

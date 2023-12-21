@@ -64,7 +64,6 @@ end
 Datetime=fix(clock);
 fprintf('Welcome: %s, %.4d-%.2d-%.2d %.2d:%.2d \n', UserName,Datetime(1),Datetime(2),Datetime(3),Datetime(4),Datetime(5));
 fprintf('DPABIFiber: a Fiber Tractography Analysis Toolbox based on Diffusion-Weighted Imaging.\nRelease = %s\n',Release);
-fprintf('Copyright(c) 2023; GNU GENERAL PUBLIC LICENSE\n');
 fprintf('The R-fMRI Lab, Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; \n');
 fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgrammers: YAN Chao-Gan; WANG Xin-Di; LU Bin; DENG Zhao-Yu\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
 fprintf('-----------------------------------------------------------\n');

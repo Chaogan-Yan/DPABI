@@ -1,0 +1,55 @@
+
+# In some case, you may get fmriprep failed subjects. You may follow these lines to get who have been faild:
+
+# Cancel your jobs
+scancel -u your_username
+
+# Get the failed IDs
+source ${SetEnvScriptDir}/SetEnv.sh
+module load singularity/3.8.0
+singularity run --cleanenv -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif /dpabi/run_y_GetfmriprepFailedSubjects_StandAlone.sh /opt/mcr/R2022b /dpabi/DPABISurf_Blank.mat /data /data/subjects.txt
+
+# Backup the orignial ID and only re-process the failed IDs
+mv subjects.txt subjectsALL.txt
+mv subjects_NeedReRunID.txt subjects.txt
+
+export DPABISurfSlurmDIR="/work1/yancg/Scripts/DPABISurfSlurm"
+export SetEnvScriptDir="/work1/yancg/Data/MRIRC/Data/BIDS_Fun"
+export DATADIR="/work1/yancg/Data/MRIRC/Data/BIDS_Fun"
+
+sbatch --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/4_fmriprep.slurm --wait
+
+
+
+# After Re-Run fmriprep, you may check failed IDs and success IDs. Remember reset your subjects.txt to include ALL subjects.
+
+# And then process afterwards:
+mv subjects_SuccessID.txt subjects.txt
+
+# Revise DPABISurf_runSlurm.sh and now start from this line in DPABISurf_runSlurm.sh:
+# sbatch --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/5_Postfmriprep.slurm --wait
+
+# Depends on the sample size, you may need to use long pool for 15_TarResults.slurm
+
+source ../DPABISurf_runSlurm.sh
+
+
+
+
+# After SegmentSubregions with freesurfer, you may get some subjects failed again. You will need to use the below command to get who have been failed, and then use SuccessID for later processing.
+singularity run --cleanenv -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif /dpabi/run_y_GetSegmentSubregionsFailedSubjects_StandAlone.sh /opt/mcr/R2022b /dpabi/DPABISurf_Blank.mat /data /data/subjects.txt
+
+
+
+
+# Here are some useful commands:
+# Check the subjects with non zero output (processed with error) in the tsv file.
+awk '{if ($NF != "0") print}' fmriprep.6707380.tsv
+
+# Find which error file is not zero bytes, which means has error
+find . -type f -name 'DPABISurf_run_GSR.e*' -size +0c
+
+# Count the number of files.
+ls Results/FunVolu/ALFF_FunVoluWglobalC/ -1 | wc -l
+
+
