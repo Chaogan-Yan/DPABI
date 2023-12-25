@@ -658,8 +658,12 @@ end
 
 if isfield(handles,'Cfg')
     Cfg=handles.Cfg; %Added by YAN Chao-Gan, 100130. Save the configuration parameters automatically.
-    Datetime=fix(clock); %Added by YAN Chao-Gan, 100130.
-    save([pwd,filesep,'Harmonize_AutoSave_combatsettings_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
+    
+    [filename, pathname] = uiputfile({'*.mat'}, 'Save Parameters As');
+    if ischar(filename)
+        Cfg=handles.Cfg;
+        save(['',pathname,filename,''], 'Cfg');
+    end
 else
     warndlg('I got nothing to save.');
 end

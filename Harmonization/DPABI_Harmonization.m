@@ -54,9 +54,8 @@ function DPABI_Harmonization_OpeningFcn(hObject, eventdata, handles, varargin)
 
 fprintf('\nHarmonizing the brain images (.nii/.nii.gz/.gii/.mat) to remove site effects for big data in statistical analysis. \nReference: Wang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.\n\n');
 
-[ProgramPath, fileN, extn] = fileparts(which('DPABI_Harmonization.m'));
-addpath(genpath([ProgramPath,filesep,'SubGUIs']));
-addpath(genpath([ProgramPath,filesep,'HarmonizationTools']));
+% [ProgramPath, fileN, extn] = fileparts(which('DPABI_Harmonization.m'));
+% addpath(genpath([ProgramPath,filesep,'SubGUIs']));
 
 handles.ImgCells={};
 handles.CurDir=pwd;
@@ -221,6 +220,8 @@ MethodType=get(handles.MethodsPopup, 'Value');
 
 AdjustInfo = handles.AdjustInfo;
 
+ParallelWorkersNum = handles.Cfg.ParallelWorkersNumber;
+
 OutputDir=get(handles.OutputDirEntry, 'String');
 if isempty(OutputDir)
     OutputDir=handles.CurDir;
@@ -234,13 +235,13 @@ if handles.SurfSpaceStatus == 0
 
     MaskFile=get(handles.MaskEntry, 'String');
     
-    yw_Harmonization(ImgCells, MaskFile, MethodType, AdjustInfo, OutputDir);
+    yw_Harmonization(ImgCells, MaskFile, MethodType, AdjustInfo, ParallelWorkersNum, OutputDir);
 else
     LHImg = handles.LHImgCells;
     RHImg = handles.RHImgCells;
     LHMask = handles.MaskLH;
     RHMask = handles.MaskRH;
-    yw_Harmonization_Surf(LHImg, RHImg, LHMask, RHMask, MethodType, AdjustInfo,  OutputDir); 
+    yw_Harmonization_Surf(LHImg, RHImg, LHMask, RHMask, MethodType, AdjustInfo, ParallelWorkersNum, OutputDir); 
 end
 
 
