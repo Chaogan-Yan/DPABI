@@ -62,7 +62,7 @@ movegui(handles.figure1,'center');
 if ismac
     zoom_factor=1;
 elseif ispc
-    zoom_factor=0.75;
+    zoom_factor=0.71;
 else
     zoom_factor=0.9;
 end
