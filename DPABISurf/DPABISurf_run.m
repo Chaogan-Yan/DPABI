@@ -1139,7 +1139,7 @@ if (Cfg.IsBasedOnFunSurf==0) && ((Cfg.IsCalALFF==1)||(Cfg.IsCovremove==1)||(Cfg.
         fprintf('\nResample Masks (%s) to the resolution of functional images.\n',AMaskFilename);
         [pathstr, name, ext] = fileparts(AMaskFilename);
         ReslicedMaskName=[Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace',filesep,'AllResampled_',name,'.nii'];
-        if ~exist(ReslicedMaskName,'file')==2 % YAN Chao-Gan, 231129. In case for multiple writing in Slurm.
+        if ~(exist(ReslicedMaskName,'file')==2) % YAN Chao-Gan, 231129. In case for multiple writing in Slurm.
             y_Reslice(AMaskFilename,ReslicedMaskName,RefVox,0, RefFile);
         end
     end
