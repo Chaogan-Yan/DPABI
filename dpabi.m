@@ -79,11 +79,11 @@ if WebStatus
         uiwait(msgbox(sprintf('A new realease of DPABI is detected: %s, please update.',DPABILatestRelease)));
     end
     
-    DPABIMessage=urlread('http://rfmri.org/DPABIMessage.txt');
+    DPABIMessage=webread('http://rfmri.org/DPABIMessage.txt');
     if ~isempty(DPABIMessage)
         uiwait(msgbox(DPABIMessage,'DPABI Message'));
     end
-    DPABIMessageWeb=urlread('http://rfmri.org/DPABIMessageWeb.txt');
+    DPABIMessageWeb=webread('http://rfmri.org/DPABIMessageWeb.txt');
     if ~isempty(DPABIMessageWeb)
         web(DPABIMessageWeb,'-browser');
     end
