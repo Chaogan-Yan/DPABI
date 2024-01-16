@@ -69,15 +69,16 @@ fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgr
 fprintf('-----------------------------------------------------------\n');
 fprintf('Citing Information:\nDPABIFiber is a fiber tractography analysis toolbox based on diffusion-weighted imaging (DWI), evolved from DPABI/DPABISurf/DPABINet/DPARSF, as easy-to-use as DPABI/DPABISurf/DPABINet/DPARSF. DPABIFiber is based on QSIPrep (Cieslak et al., 2021), MRtrix3 (Tournier et al., 2019), AFQ (Yeatman et al., 2012), fMRIPprep (Esteban et al., 2019), FreeSurfer (Tustison et al., 2014), ANTs (Avants et al., 2009), FSL (Jenkinson et al., 2012), SPM12 (Ashburner, 2012), dcm2niix (Li et al., 2016), PALM (Winkler et al., 2014), GNU Parallel (Tange, 2011), MATLAB (The MathWorks Inc., Natick, MA, US), Docker (https://docker.com) and DPABI (Yan et al., 2016). DPABIFiber provides a user-friendly graphical user interface (GUI) for pipeline DWI preprocessing, fiber tractography reconstruction, tract-based spatial statistics (TBSS) (Smith et al., 2006), automating fiber-tract quantification (AFQ) (Yeatman et al., 2012), structural connectome matrix analyses, seed-based structural connectivity analyses, and tract-weighted functional connectivity (TW-FC) (Calamante et al., 2013), while requires no programming/scripting skills from the users.\n');
 
-[DPABIFiberMessage WebStatus]=urlread('http://rfmri.org/DPABIFiberMessage.txt');
-if WebStatus
+try
+    [DPABIFiberMessage]=webread('http://rfmri.org/DPABIFiberMessage.txt');
     if ~isempty(DPABIFiberMessage)
         uiwait(msgbox(DPABIFiberMessage,'DPABIFiber Message'));
     end
-    DPABIFiberMessageWeb=urlread('http://rfmri.org/DPABIFiberMessageWeb.txt');
+    DPABIFiberMessageWeb=webread('http://rfmri.org/DPABIFiberMessageWeb.txt');
     if ~isempty(DPABIFiberMessageWeb)
         web(DPABIFiberMessageWeb,'-browser');
     end
+catch
 end
     
 handles.output = hObject;
@@ -212,16 +213,18 @@ function pushbuttonRMPSurf_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonRMPSurf (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[DPABIMessage WebStatus]=urlread('http://rfmri.org/RfMRIMapMessage.txt');
-DPABIMessage='With this module, the results could be organized for future use, and to be accumulated for the future R-fMRI maps project.';
-if WebStatus
+
+try
+    [DPABIMessage]=webread('http://rfmri.org/RfMRIMapMessage.txt');
+    DPABIMessage='With this module, the results could be organized for future use, and to be accumulated for the future R-fMRI maps project.';
     if ~isempty(DPABIMessage)
         uiwait(msgbox(DPABIMessage,'The R-fMRI Maps Project Message'));
     end
-    DPABIMessageWeb=urlread('http://rfmri.org/RfMRIMapMessageWeb.txt');
+    DPABIMessageWeb=webread('http://rfmri.org/RfMRIMapMessageWeb.txt');
     if ~isempty(DPABIMessageWeb)
         web(DPABIMessageWeb,'-browser');
     end
+catch
 end
 
 DPABI_ResultsOrganizer(0)

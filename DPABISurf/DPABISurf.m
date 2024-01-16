@@ -70,15 +70,16 @@ fprintf('-----------------------------------------------------------\n');
 fprintf('Citing Information:\nDPABISurf is a surface-based resting-state fMRI data analysis toolbox evolved from DPABI/DPARSF, as easy-to-use as DPABI/DPARSF. DPABISurf is based on fMRIPrep (Esteban et al., 2019), FreeSurfer (Dale et al., 1999), ANTs (Avants et al., 2008), FSL (Jenkinson et al., 2002), AFNI (Cox, 1996), SPM (Ashburner, 2012), dcm2niix (Li et al., 2016), PALM (Winkler et al., 2016), GNU Parallel (Tange, 2011), MATLAB (The MathWorks Inc., Natick, MA, US), Docker (https://docker.com) and DPABI (Yan et al., 2016).\n');
 fprintf('Reference: Yan, C.-G., Wang, X.-D., Lu, B. (2021). DPABISurf: data processing & analysis for brain imaging on surface. Science Bulletin, 66(24), 2453-2455, doi:https://doi.org/10.1016/j.scib.2021.09.016.\n');
 
-[DPABISurfMessage WebStatus]=urlread('http://rfmri.org/DPABISurfMessage.txt');
-if WebStatus
+try
+    [DPABISurfMessage]=webread('http://rfmri.org/DPABISurfMessage.txt');
     if ~isempty(DPABISurfMessage)
         uiwait(msgbox(DPABISurfMessage,'DPABISurf Message'));
     end
-    DPABISurfMessageWeb=urlread('http://rfmri.org/DPABISurfMessageWeb.txt');
+    DPABISurfMessageWeb=webread('http://rfmri.org/DPABISurfMessageWeb.txt');
     if ~isempty(DPABISurfMessageWeb)
         web(DPABISurfMessageWeb,'-browser');
     end
+catch
 end
     
 handles.output = hObject;
@@ -202,16 +203,17 @@ function pushbuttonRMPSurf_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonRMPSurf (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[DPABIMessage WebStatus]=urlread('http://rfmri.org/RfMRIMapMessage.txt');
-DPABIMessage='With this module, the results could be organized for future use, and to be accumulated for the future R-fMRI maps project.';
-if WebStatus
+try
+    [DPABIMessage]=webread('http://rfmri.org/RfMRIMapMessage.txt');
+    DPABIMessage='With this module, the results could be organized for future use, and to be accumulated for the future R-fMRI maps project.';
     if ~isempty(DPABIMessage)
         uiwait(msgbox(DPABIMessage,'The R-fMRI Maps Project Message'));
     end
-    DPABIMessageWeb=urlread('http://rfmri.org/RfMRIMapMessageWeb.txt');
+    DPABIMessageWeb=webread('http://rfmri.org/RfMRIMapMessageWeb.txt');
     if ~isempty(DPABIMessageWeb)
         web(DPABIMessageWeb,'-browser');
     end
+catch
 end
 
 DPABI_ResultsOrganizer(0)

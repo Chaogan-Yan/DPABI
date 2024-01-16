@@ -73,21 +73,21 @@ fprintf('-----------------------------------------------------------\n');
 fprintf('Citing Information:\nIf you think DPABI is useful for your work, citing it in your paper would be greatly appreciated!\nReference: Yan, C.G., Wang, X.D., Zuo, X.N., Zang, Y.F., 2016. DPABI: Data Processing & Analysis for (Resting-State) Brain Imaging. Neuroinformatics 14, 339-351. doi: 10.1007/s12021-016-9299-4\n');
 
 
-[DPABILatestRelease WebStatus]=urlread('http://rfmri.org/DPABILatestRelease.txt');
-if WebStatus
+try
+    [DPABILatestRelease]=webread('http://rfmri.org/DPABILatestRelease.txt');
+    DPABILatestRelease=strtrim(DPABILatestRelease);
     if str2double(DPABILatestRelease(end-5:end)) > str2double(Release(end-5:end))
         uiwait(msgbox(sprintf('A new realease of DPABI is detected: %s, please update.',DPABILatestRelease)));
     end
-    
-    DPABIMessage=urlread('http://rfmri.org/DPABIMessage.txt');
+    DPABIMessage=webread('http://rfmri.org/DPABIMessage.txt');
     if ~isempty(DPABIMessage)
         uiwait(msgbox(DPABIMessage,'DPABI Message'));
     end
-    DPABIMessageWeb=urlread('http://rfmri.org/DPABIMessageWeb.txt');
+    DPABIMessageWeb=webread('http://rfmri.org/DPABIMessageWeb.txt');
     if ~isempty(DPABIMessageWeb)
         web(DPABIMessageWeb,'-browser');
     end
-    
+catch
 end
 
 handles.output = hObject;
@@ -187,15 +187,16 @@ function pushbutton_RfMRIMaps_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_RfMRIMaps (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[DPABIMessage WebStatus]=urlread('http://rfmri.org/RfMRIMapMessage.txt');
-if WebStatus
+try
+    [DPABIMessage]=webread('http://rfmri.org/RfMRIMapMessage.txt');
     if ~isempty(DPABIMessage)
         uiwait(msgbox(DPABIMessage,'The R-fMRI Maps Project Message'));
     end
-    DPABIMessageWeb=urlread('http://rfmri.org/RfMRIMapMessageWeb.txt');
+    DPABIMessageWeb=webread('http://rfmri.org/RfMRIMapMessageWeb.txt');
     if ~isempty(DPABIMessageWeb)
         web(DPABIMessageWeb,'-browser');
     end
+catch
 end
 
 DPABI_ResultsOrganizer(1)
