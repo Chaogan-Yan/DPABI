@@ -2055,7 +2055,8 @@ if (AutoDataProcessParameter.IsAutoMask==1)
             
             OutputFile = [AutoDataProcessParameter.DataProcessDir,filesep,'Masks',filesep,'AutoMasks',filesep,FunSessionPrefixSet{iFunSession},'AutoMask_',AutoDataProcessParameter.SubjectID{i},'.nii'];
 
-            HasDocker = system('which docker'); %Test if docker installed, I will use AFNI's 3dautomask %YAN CHao-Gan, 211011
+            HasDocker = system('docker version'); %Test if docker installed, I will use AFNI's 3dautomask %YAN CHao-Gan, 211011
+            %HasDocker = system('which docker'); %Test if docker installed, I will use AFNI's 3dautomask %YAN CHao-Gan, 211011
             if HasDocker == 0
                 CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), AutoDataProcessParameter.DataProcessDir);
                 if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version

@@ -55,11 +55,22 @@ for iFunSession=1:FunctionalSessionNumber
                 gzip([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'MNISpace',filesep,SubjectID{iSub},filesep,DirFiles(iFile).name],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'MNISpace',filesep,SubjectID{iSub}]);
             end
 
+            DirFiles=dir([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'MNISpace',filesep,SubjectID{iSub},filesep,'*.nii.gz']);
+            if length(DirFiles)>=1
+                copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'MNISpace',filesep,SubjectID{iSub},filesep,'*.nii.gz'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'MNISpace',filesep,SubjectID{iSub}]);
+            end
+
             mkdir([OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'T1wSpace',filesep,SubjectID{iSub}])
             DirFiles=dir([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'T1wSpace',filesep,SubjectID{iSub},filesep,'*.nii']);
             for iFile=1:length(DirFiles)
                 gzip([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'T1wSpace',filesep,SubjectID{iSub},filesep,DirFiles(iFile).name],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'T1wSpace',filesep,SubjectID{iSub}]);
             end
+
+            DirFiles=dir([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'T1wSpace',filesep,SubjectID{iSub},filesep,'*.nii.gz']);
+            if length(DirFiles)>=1
+                copyfile([WorkingDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'T1wSpace',filesep,SubjectID{iSub},filesep,'*.nii.gz'],[OutputDir,filesep,FunSessionPrefixSet{iFunSession},'Results',filesep,'AnatVolu',filesep,'T1wSpace',filesep,SubjectID{iSub}]);
+            end
+
         end
     end
     
