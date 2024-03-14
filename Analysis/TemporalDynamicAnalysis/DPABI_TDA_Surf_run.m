@@ -83,7 +83,7 @@ if (Cfg.IsALFF==1)
             
             % ALFF and fALFF calculation
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
@@ -107,7 +107,7 @@ if (Cfg.IsALFF==1)
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
@@ -181,7 +181,7 @@ if (Cfg.IsReHo==1)
             
             % ReHo calculation
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
@@ -198,7 +198,7 @@ if (Cfg.IsReHo==1)
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
@@ -249,9 +249,9 @@ if (Cfg.IsDegreeCentrality==1)
         end
         parfor i=1:Cfg.SubjectNum
 
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
             FileName_LH=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(1).name);
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
             FileName_RH=fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},DirName(1).name);
             
             %[DegreeCentrality_PositiveWeightedSumBrain_LH_AllWindow, DegreeCentrality_PositiveWeightedSumBrain_RH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_LH_AllWindow, DegreeCentrality_PositiveBinarizedSumBrain_RH_AllWindow, GHeader_LH, GHeader_RH] = y_DegreeCentrality_Bilateral_Surf_Window(WindowSize, WindowStep, WindowType, InFile_LH, InFile_RH, rThreshold, OutputName_LH, OutputName_RH, AMaskFilename_LH, AMaskFilename_RH, IsNeedDetrend, CUTNUMBER)
@@ -337,7 +337,7 @@ if (Cfg.IsGSCorr==1)
             IsMultipleLabel = 0;
             
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
@@ -355,7 +355,7 @@ if (Cfg.IsGSCorr==1)
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
@@ -410,7 +410,7 @@ if (Cfg.IsFC==1)
             ROISignalsVolu=[];
             % Left Hemi
             if ~isempty(Cfg.CalFC.ROIDefSurfLH)
-                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
                 for iFile=1:length(DirName)
                     FileName=DirName(iFile).name;
                     [ROISignalsSurfLH] = y_ExtractROISignal_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
@@ -423,7 +423,7 @@ if (Cfg.IsFC==1)
             
             % Right Hemi
             if ~isempty(Cfg.CalFC.ROIDefSurfRH)
-                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+                DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
                 for iFile=1:length(DirName)
                     FileName=DirName(iFile).name;
                     [ROISignalsSurfRH] = y_ExtractROISignal_Surf(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName), ...
@@ -474,7 +474,7 @@ if (Cfg.IsFC==1)
             IsMultipleLabel = 1;
             
             % Left Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-L*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-L*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
@@ -494,7 +494,7 @@ if (Cfg.IsFC==1)
             end
             
             % Right Hemi
-            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*fsaverage5_hemi-R*.func.gii'));
+            DirName=dir(fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},'*_hemi-R*.func.gii'));
             for iFile=1:length(DirName)
                 FileName=DirName(iFile).name;
                 InFiles = fullfile(Cfg.WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],Cfg.SubjectID{i},FileName);
