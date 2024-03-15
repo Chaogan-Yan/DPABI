@@ -148,7 +148,7 @@ for i=1:numel(ImgCells)
             % and the second dimension is subjects. This is different from
             % the way used in y_bandpass.
         end
-        MaskData = any(AllVolume,2) .* MaskData; % skip the voxels with all zeros
+        %MaskData = any(AllVolume,2) .* MaskData; % skip the voxels with all zeros
         
         AllVolume=reshape(AllVolume,[],nDimTimePoints);
         
