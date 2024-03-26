@@ -68,6 +68,8 @@ fprintf('The R-fMRI Lab, Institute of Psychology, Chinese Academy of Sciences, 1
 fprintf('Mail to Initiator:  <a href="ycg.yan@gmail.com">YAN Chao-Gan</a>\nProgrammers: YAN Chao-Gan; WANG Xin-Di; LU Bin; DENG Zhao-Yu\n<a href="http://rfmri.org/dpabi">http://rfmri.org/dpabi</a>\n');
 fprintf('-----------------------------------------------------------\n');
 fprintf('Citing Information:\nDPABINet is a toolbox for brain network and graph theoretical analyses, evolved from DPABI/DPABISurf/DPARSF, as easy-to-use as DPABI/DPABISurf/DPARSF. DPABINet is based on Brain Connectivity Toolbox (Rubinov and Sporns, 2010) (RRID:SCR_004841), FSLNets (http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLNets; RRID: SCR_002823), BrainNet Viewer (Xia et al., 2013) (RRID:SCR_009446), circos (Krzywinski et al., 2009) (RRID:SCR_018207), SPM (Ashburner, 2012) (RRID:SCR_007037), PALM (Winkler et al., 2016), MATLAB (The MathWorks Inc., Natick, MA, US) (RRID:SCR_001622), Docker (https://docker.com) (RRID:SCR_016445) and DPABI (Yan et al., 2016) (RRID:SCR_010501). DPABINet provides user-friendly graphical user interface (GUI) for Brain network construction, graph theoretical analyses, statistical analyses and results viewing, while requires no programming/scripting skills from the users.\n');
+fprintf('Reference: Yan, C.G., Wang, X.D., Lu, B., Deng, Z.Y., Gao, Q.L. (2024). DPABINet: A toolbox for brain network and graph theoretical analyses. Science Bulletin, doi: https://doi.org/10.1016/j.scib.2024.02.038\n');
+
 
 try
     [DPABINetMessage]=webread('http://rfmri.org/DPABINetMessage.txt');
