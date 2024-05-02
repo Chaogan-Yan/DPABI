@@ -13,13 +13,13 @@ RUN apt-get -qq update && apt-get -qq install -y \
 
 # x11vnc xvfb libqt4-opengl libqt4-scripttools libjpeg62 parallel wget unzip spyder3 && \
 
-COPY ./freesurfer_ubuntu20-7.3.2_amd64.deb /tmp/
+COPY ./freesurfer_ubuntu20-7.4.1_amd64.deb /tmp/
 
 RUN apt-get -qq update && apt-get -qq install -y \
-    /tmp/freesurfer_ubuntu20-7.3.2_amd64.deb && \
+    /tmp/freesurfer_ubuntu20-7.4.1_amd64.deb && \
     apt-get update
 
-RUN rm /tmp/freesurfer_ubuntu20-7.3.2_amd64.deb
+RUN rm /tmp/freesurfer_ubuntu20-7.4.1_amd64.deb
 
 # Setup x11vnc
 RUN mkdir -p ~/.vnc && \
@@ -33,7 +33,7 @@ ENV OS="Linux" \
     FS_OVERRIDE=0 \
     FIX_VERTEX_AREA="" \
     FSF_OUTPUT_FORMAT="nii.gz" \
-    FREESURFER_HOME="/usr/local/freesurfer/7.3.2"
+    FREESURFER_HOME="/usr/local/freesurfer/7.4.1"
 ENV SUBJECTS_DIR="$FREESURFER_HOME/subjects" \
     FUNCTIONALS_DIR="$FREESURFER_HOME/sessions" \
     MNI_DIR="$FREESURFER_HOME/mni" \

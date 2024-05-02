@@ -897,9 +897,9 @@ Cfg.StartingDirName_Volume = ['FunVolu',Cfg.StartingDirName(8:end)];
 % Segment Subregions with freesurfer 7.3+
 if (Cfg.IsSegmentSubregions==1)
     if ispc
-        CommandTemp=sprintf('docker run -i --rm -v %s:/usr/local/freesurfer/7.3.2/license.txt -v %s:/data ', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), Cfg.WorkingDir);
+        CommandTemp=sprintf('docker run -i --rm -v %s:/usr/local/freesurfer/7.4.1/license.txt -v %s:/data ', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), Cfg.WorkingDir);
     else
-        CommandTemp=sprintf('docker run -ti --rm -v %s:/usr/local/freesurfer/7.3.2/license.txt -v %s:/data ', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), Cfg.WorkingDir);
+        CommandTemp=sprintf('docker run -ti --rm -v %s:/usr/local/freesurfer/7.4.1/license.txt -v %s:/data ', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), Cfg.WorkingDir);
     end
 
     if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version

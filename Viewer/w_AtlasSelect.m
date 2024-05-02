@@ -61,6 +61,8 @@ AtlasParameters={'Select Atlas to Add'...
     'Brodmann'...
     'JHU ICBM-DTI-81 White-Matter Labels'...
     'JHU White-Matter Tractography Atlas'...
+    'Yeo 2011 7 Networks'...
+    'Yeo 2011 17 Networks'...
     'Custom'};
 
 set(handles.AtlasPopup,'String',AtlasParameters);
@@ -168,8 +170,16 @@ switch Value
     case 8 %JHU White-Matter Tractography Atlas
         NiiFile=fullfile(TemplatePath, 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii');
         MatFile=fullfile(TemplatePath, 'JHU-ICBM-tracts-maxprob-thr25-1mm_Labels.mat');
-        AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'JHU White-Matter Tractography Atlas');  
-    case 9 %Cutsom
+        AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'JHU White-Matter Tractography Atlas');
+    case 9 %Yeo 2011 7 Networks
+        NiiFile=fullfile(TemplatePath, 'Yeo2011_7Networks_MNI152_FreeSurferConformed1mm_LiberalMask.nii');
+        MatFile=fullfile(TemplatePath, 'Yeo2011_7Networks_MNI152_FreeSurferConformed1mm_LiberalMask_Labels.mat');
+        AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'Yeo 2011 7 Networks');
+    case 10 %Yeo 2011 17 Networks
+        NiiFile=fullfile(TemplatePath, 'Yeo2011_17Networks_MNI152_FreeSurferConformed1mm_LiberalMask.nii');
+        MatFile=fullfile(TemplatePath, 'Yeo2011_17Networks_MNI152_FreeSurferConformed1mm_LiberalMask_Labels.mat');
+        AtlasInfo=w_GetAtlasInfo(MatFile, NiiFile, 'Yeo 2011 17 Networks');
+    case 11 %Cutsom
         [File , Path]=uigetfile({'*.img;*.nii;*.nii.gz','Brain Image Files (*.img;*.nii;*.nii.gz)';'*.*', 'All Files (*.*)';}, ...
             'Pick Custom Template' , TemplatePath);
         if ~ischar(File)
