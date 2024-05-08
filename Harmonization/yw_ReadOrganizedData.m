@@ -1,4 +1,4 @@
-function Data = yw_ReadOrgabuzedData(InputName)
+function Data = yw_ReadOrganizedData(InputName)
 
 if iscell(InputName)
     if size(InputName,1)==1

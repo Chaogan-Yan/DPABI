@@ -114,21 +114,17 @@ for i=1:numel(ImgCells)
             MaskData=ones(nDimVertex,1);
         end
     end
-    % Convert into 2D. NOTE: here the first dimension is voxels,
-    % and the second dimension is subjects. This is different from
-    % the way used in y_bandpass.
+
 
     MaskDataOneDim=reshape(MaskData,[],1);
     MaskIndex = find(MaskDataOneDim);
-    nVoxels = length(MaskIndex);
-    %AllVolume=AllVolume(:,MaskIndex);
-    AllVolume=AllVolume(MaskIndex,:);
+    nVertex = length(MaskIndex);
+    AllVolume= AllVolume(MaskIndex,:);    
     AllVolumeSet = [AllVolumeSet,AllVolume];
-    if iscell(ImgFiles)
+    
+    if iscell(ImgFiles) 
         OutputFileNames = [OutputFileNames;ImgFiles];
     else
-        %OutputFileNames = [OutputFileNames;{ImgFiles}];
-        %OutputFileNames{end,2} = size(AllVolume,2);
         OutputFileNames = [OutputFileNames;{ImgFiles}, size(AllVolume,2)]; %Thanks to the Report by Andrew Owenson
     end
 end
@@ -150,6 +146,7 @@ for i=1:numel(ImgCells)
     ImgFiles=ImgCells{i};
     [AllVolume,VoxelSize,theImgFileList, Header] =y_ReadAll(ImgFiles);
     [nDimVertex nDimTimePoints]=size(AllVolume);
+    
     if ischar(MaskData)
         fprintf('\nLoad mask "%s".\n', MaskData);
         if ~isempty(MaskData)
@@ -163,21 +160,19 @@ for i=1:numel(ImgCells)
             MaskData=ones(nDimVertex,1);
         end
     end
-    % Convert into 2D. NOTE: here the first dimension is voxels,
-    % and the second dimension is subjects. This is different from
-    % the way used in y_bandpass.
-
-    MaskDataOneDim=reshape(MaskData,[],1);
-    MaskIndex = find(MaskDataOneDim);
-    nVoxels = length(MaskIndex);
-    %AllVolume=AllVolume(:,MaskIndex);
-    AllVolume=AllVolume(MaskIndex,:);
+    
+    if ~isempty(MaskData)
+        MaskDataOneDim=reshape(MaskData,[],1);
+        MaskIndex = find(MaskDataOneDim);
+        nVertex = length(MaskIndex);
+        AllVolume= AllVolume(MaskIndex,:);
+    end
+    
     AllVolumeSet = [AllVolumeSet,AllVolume];
+    
     if iscell(ImgFiles)
         OutputFileNames = [OutputFileNames;ImgFiles];
     else
-        %OutputFileNames = [OutputFileNames;{ImgFiles}];
-        %OutputFileNames{end,2} = size(AllVolume,2);
         OutputFileNames = [OutputFileNames;{ImgFiles}, size(AllVolume,2)]; %Thanks to the Report by Andrew Owenson
     end
 end
@@ -198,9 +193,9 @@ clear AllVolumeSet AllVolumeSet_LH AllVolumeSet_RH;
 
 fprintf('\nHarmonizing...\n');
 HarmonizedData = zeros(size(AllVolume));
-fprintf('\nHarmonizing...\n');
+
 switch MethodType
-    case 2 %'SMA' % AdjustInfo = SMA.Cfg  
+    case 'SMA' % AdjustInfo = SMA.Cfg  
         fprintf('\nSMA Harmonizing...\n');
         
         TargetIndex =AdjustInfo.SiteIndex{AdjustInfo.TargetSiteIndex};
@@ -232,58 +227,62 @@ switch MethodType
             end
              HarmonizedData(:,SourceIndex) = harmonized;
         end
-    case 3  %'ComBat/CovBat'
+    case 'ComBat/CovBat'
         fprintf('\nComBat Harmonizing...\n');
         if ~AdjustInfo.IsCovBat
             if ~isempty(AdjustInfo.batch) 
-                HarmonizedData = combat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.isparametric-2));
+                HarmonizedData = combat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.IsParametric-2));
             else
                 error('No batch information in AdjusteInfo, please check!');            
             end
         else
-            if ~isinteger(AdjustInfo.PCAPercent)
-                HarmonizedData = yw_covbat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.isparametric-2),[],AdjustInfo.IsCovBatParametric,AdjustInfo.PCAPercent,[]);
-            elseif isnumeric(AdjustInfo.PCAPercent)
-                HarmonizedData = yw_covbat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.isparametric-2),[],AdjustInfo.IsCovBatParametric,[],AdjustInfo.PCAPercent);
+            if ~isinteger(AdjustInfo.Percent)
+                HarmonizedData = yw_covbat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.IsParametric-2),[],AdjustInfo.IsCovBatParametric,AdjustInfo.Percent,[]);
+            elseif isnumeric(AdjustInfo.Percent)
+                HarmonizedData = yw_covbat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.IsParametric-2),[],AdjustInfo.IsCovBatParametric,[],AdjustInfo.Percent);
             end
         end
-    case 4 %'ICVAE'
+    case 'ICVAE'
         Datetime=fix(clock);
         HDF5_fname = [OutputDir,filesep,'Harmonize_AutoSave_ICVAE_Surf_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.h5'];
-
+        if ParallelWorkersNum==0
+            PWN =1;
+        else
+            PWN =ParallelWorkersNum;
+        end
         hdf5write(HDF5_fname,'/RawData',AllVolume,...
                              '/OnehotEncoding/zTrain',AdjustInfo.zTrain,...
                              '/OnehotEncoding/zHarmonize',AdjustInfo.zHarmonize,...
-                             '/ParallelWorkersNum',ParallelWorkersNum,...
+                             '/ParallelWorkersNum',PWN,...
                              '/Output/Outputdir',OutputDir);
         cmd  = sprintf('docker run -ti --rm -v %s:/in -v %s:/ICVAE cgyan/icvae python3 train.py',HDF5_fname,OutputDir);
         system(cmd);
         fprintf('ICVAE Harmonization finished... \n');
         HarmonizedData = importdata([OutputDir,filesep,'ICVAE_Harmonized.mat'])';
-    case 5 %Linear 
+    case Linear 
         switch AdjustInfo.LinearMode 
- case 1 %'General' 
+            case 1 %'General'
                 fprintf('Linear general model Harmonizing...\n');
                 for row = 1:size(AllVolume, 1)
                     m = mod(row,1000);
                     if m==0 && row>=1000
                         fprintf('\n Finishing %.2f percentage...\n',row/size(AllVolume,1)*100);
                     end
-                    y = AllVolume(row,:)'; 
-                    x = [AdjustInfo.SiteMatrix,AdjustInfo.Cov];
-                    lm = fitlm(x, y); 
+                    y = AllVolume(row,:)';
+                    x = [AdjustInfo.SiteMatrix,AdjustInfo.AdjCov];
+                    lm = fitlm(x, y);
                     siteeffect = AdjustInfo.SiteMatrix * lm.Coefficients.Estimate(2:size(AdjustInfo.SiteMatrix,2)+1);
-                    HarmonizedData(row,:) = y-siteeffect; 
-                end 
-            case 2 %'Mixed'  
+                    HarmonizedData(row,:) = y-siteeffect;
+                end
+            case 2 %'Mixed'
                 fprintf('Linear mixed model Harmonizing...\n');
                 tbl = table;
                 tbl.x1 = categorical(AdjustInfo.SiteName);
                 
                 formula = 'y~1';
-                if ~isempty(AdjustInfo.Cov)
-                    for i = 1:size(AdjustInfo.Cov,2)
-                        eval(['tbl.x',num2str(i+1),'=AdjustInfo.Cov(:,i);']);
+                if ~isempty(AdjustInfo.AdjCov)
+                    for i = 1:size(AdjustInfo.AdjCov,2)
+                        eval(['tbl.x',num2str(i+1),'=AdjustInfo.AdjCov(:,i);']);
                         formula = sprintf('%s+x%s',formula, num2str(i+1));
                     end
                 end
@@ -293,15 +292,15 @@ switch MethodType
                     if m==0 && row>=1000
                         fprintf('\n Finishing %.2f percentage...\n',row/size(AllVolume,1)*100);
                     end
-                    tbl.y = double(AllVolume(row,:)');      
-                    lme= fitlme(tbl,formula); 
+                    tbl.y = double(AllVolume(row,:)');
+                    lme= fitlme(tbl,formula);
                     
                     intercept  = ones(size(AdjustInfo.SiteName,1),1);
-                    designmat = [intercept,AdjustInfo.Cov];
+                    designmat = [intercept,AdjustInfo.AdjCov];
                     beta = lme.Coefficients.Estimate;
-
-                    HarmonizedData(row,:) = designmat*beta + residuals(lme); 
-                end 
+                    
+                    HarmonizedData(row,:) = designmat*beta + residuals(lme);
+                end
         end
 end
 AllVolume =  HarmonizedData;
@@ -323,6 +322,10 @@ for iFile = 1:size(OutputFileNames_LH,1)
     [Path, File, Ext]=fileparts(OutputFileNames_LH{iFile,1});
     SiteOrganized = extractAfter(Path,AdjustInfo.SiteName{iFile});
     
+    if isequal(Path,OutputDir) & size(OutputFileNames,1) ~= 1
+        error('Death Warning: the files going to be created will cover your original data, please change the output directory!!!');
+    end
+
     if isempty(SiteOrganized) && ~contains(Path,AdjustInfo.SiteName{iFile}) 
         OutName = fullfile(OutputDir,'LH',[File, Ext]);
     else
@@ -347,6 +350,10 @@ for iFile = 1:size(OutputFileNames_RH,1)
     [Path, File, Ext]=fileparts(OutputFileNames_RH{iFile,1});
     SiteOrganized = extractAfter(Path,AdjustInfo.SiteName{iFile});
     
+    if isequal(Path,OutputDir) & size(OutputFileNames,1) ~= 1
+        error('Death Warning: the files going to be created will cover your original data, please change the output directory!!!');
+    end
+
     if isempty(SiteOrganized) && ~contains(Path,AdjustInfo.SiteName{iFile})    
         OutName = fullfile(OutputDir,'RH',[File, Ext]);
     else

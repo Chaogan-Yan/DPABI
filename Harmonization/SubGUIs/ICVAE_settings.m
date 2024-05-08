@@ -57,8 +57,36 @@ handles.output = hObject;
 
 handles.Cfg.zTrain = [];
 handles.Cfg.zHarmonize = [];
-handles.Cfg.FileList = [];
-handles.Cfg.SiteName = [];
+handles.Cfg.Target=1;
+if ~isempty(varargin) 
+    if ~isstruct(varargin{1})
+        handles.Cfg.SiteName = varargin{1};
+        
+        % Site --> batch in ComBat context
+        handles.Cfg.SiteName = all2cellstring(handles.Cfg.SiteName);
+        
+        UniSiteName = unique(handles.Cfg.SiteName);
+        set(handles.popupmenuTargetSite,'String',UniSiteName);
+        
+        handles.Cfg.SiteNum = length(UniSiteName);
+        % initialize zTrain and zHarmonize
+        handles.Cfg.zTrain = zeros(length(handles.Cfg.SiteName),handles.Cfg.SiteNum);
+        handles.Cfg.zHarmonize = zeros(size(handles.Cfg.zTrain));
+        
+        for i= 1:handles.Cfg.SiteNum
+            handles.Cfg.SiteIndex{i} =  (contains(handles.Cfg.SiteName,UniSiteName{i}));
+            handles.Cfg.zTrain(strcmpi(UniSiteName{i},handles.Cfg.SiteName),i) = 1;
+        end
+    else
+        handles.Cfg = varargin{1};
+        
+        UniSiteName = unique(handles.Cfg.SiteName);
+        handles.Cfg.SiteNum = length(UniSiteName);
+        set(handles.popupmenuTargetSite,'String',UniSiteName,'Value',handles.Cfg.Target);
+    end
+else
+    error('Please go back to the main panel to set the Site Info first.')
+end
 
 if ismac
     zoom_factor=1;
@@ -98,66 +126,68 @@ function varargout = ICVAE_settings_OutputFcn(hObject, eventdata, handles)
 if isempty(handles)
      handles.Cfg.zTrain = [];
      handles.Cfg.zHarmonize = [];
+     handles.Cfg.Target=1;
      handles.Cfg.SiteName = [];
-     handles.Cfg.FileList = [];
 else
     delete(handles.figure1);
 end
 
 varargout{1} = handles.Cfg.zTrain;
 varargout{2} = handles.Cfg.zHarmonize;
-varargout{3} = handles.Cfg.SiteName;
-varargout{4} = handles.Cfg.FileList;
+varargout{3} = handles.Cfg.Target;
+varargout{4} = handles.Cfg.SiteName;
 
-% --- Executes on button press in pushbuttonSiteFile.
-function pushbuttonSiteFile_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonSiteFile (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-[file path]=uigetfile(...
-    {'*.txt;*.csv;*.tsv;*.xlsx;*.mat',...
-    'Your Demographic File (*.txt;*.csv;*.tsv,*.xlsx;*.mat)';...
-    '*.*', 'All Files (*.*)';});
-DemographicPath = [path file];
 
-if (file==0)
-    warndlg('If not, I will not do any harmonization...') ;
+% % --- Executes on button press in pushbuttonSiteFile.
+% function pushbuttonSiteFile_Callback(hObject, eventdata, handles)
+% % hObject    handle to pushbuttonSiteFile (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% [file path]=uigetfile(...
+%     {'*.txt;*.csv;*.tsv;*.xlsx;*.mat',...
+%     'Your Demographic File (*.txt;*.csv;*.tsv,*.xlsx;*.mat)';...
+%     '*.*', 'All Files (*.*)';});
+% DemographicPath = [path file];
+% 
+% if (file==0)
+%     warndlg('If not, I will not do any harmonization...') ;
+% 
+% else
+%     if strcmp('mat',file(end-2:end))
+%         handles.var_struct = load(DemographicPath);
+%     else
+%         democells = readcell(DemographicPath);
+%         handles.var_struct = splitmatrix(democells(2:end,:),democells(1,:),1);
+%     end
+%     
+%     if ~isfield(handles.var_struct,"SiteName")
+%         error('Tip: Please name the variable of SiteID as SiteName so that we can recognize it.');
+%     else
+%         handles.Cfg.SiteName = all2cellstring(handles.var_struct.SiteName);
+%     end
+% 
+%     UniSiteName = unique(handles.Cfg.SiteName);
+%     set(handles.popupmenuTargetSite,'String',UniSiteName);
+%     
+%     handles.Cfg.SiteNum = length(UniSiteName);
+%     % initialize zTrain and zHarmonize
+%     handles.Cfg.zTrain = zeros(length(handles.Cfg.SiteName),handles.Cfg.SiteNum);
+%     handles.Cfg.zHarmonize = zeros(size(handles.Cfg.zTrain));
+%     
+%     for i= 1:handles.Cfg.SiteNum
+%         handles.Cfg.SiteIndex{i} =  (contains(handles.Cfg.SiteName,UniSiteName{i}));
+%         handles.Cfg.zTrain(strcmpi(UniSiteName{i},handles.Cfg.SiteName),i) = 1;
+%     end
+%     
+%     if isfield(handles.var_struct,"FileList")
+%         handles.Cfg.FileList = handles.var_struct.FileList;
+%     elseif isfield(handles.var_struct,"FileListLH") && isfield(handles.var_struct,"FileListRH")
+%         handles.Cfg.FileList.LH = handles.var_struct.FileListLH;
+%         handles.Cfg.FileList.RH = handles.var_struct.FileListRH;
+%     end
+% end
+% guidata(hObject,handles);
 
-else
-    if strcmp('mat',file(end-2:end))
-        handles.var_struct = load(DemographicPath);
-    else
-        democells = readcell(DemographicPath);
-        handles.var_struct = splitmatrix(democells(2:end,:),democells(1,:),1);
-    end
-    
-    if ~isfield(handles.var_struct,"SiteName")
-        error('Tip: Please name the variable of SiteID as SiteName so that we can recognize it.');
-    else
-        handles.Cfg.SiteName = all2cellstring(handles.var_struct.SiteName);
-    end
-
-    UniSiteName = unique(handles.Cfg.SiteName);
-    set(handles.popupmenuTargetSite,'String',UniSiteName);
-    
-    handles.Cfg.SiteNum = length(UniSiteName);
-    % initialize zTrain and zHarmonize
-    handles.Cfg.zTrain = zeros(length(handles.Cfg.SiteName),handles.Cfg.SiteNum);
-    handles.Cfg.zHarmonize = zeros(size(handles.Cfg.zTrain));
-    
-    for i= 1:handles.Cfg.SiteNum
-        handles.Cfg.SiteIndex{i} =  (contains(handles.Cfg.SiteName,UniSiteName{i}));
-        handles.Cfg.zTrain(strcmpi(UniSiteName{i},handles.Cfg.SiteName),i) = 1;
-    end
-    
-    if isfield(handles.var_struct,"FileList")
-        handles.Cfg.FileList = handles.var_struct.FileList;
-    elseif isfield(handles.var_struct,"FileListLH") && isfield(handles.var_struct,"FileListRH")
-        handles.Cfg.FileList.LH = handles.var_struct.FileListLH;
-        handles.Cfg.FileList.RH = handles.var_struct.FileListRH;
-    end
-end
-guidata(hObject,handles);
 
 function Vars = splitmatrix(mat,heads,by_col)
 if by_col ~= 1 % split by row
@@ -197,6 +227,7 @@ function popupmenuTargetSite_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 ind =get(hObject,'Value');
+handles.Cfg.Target = ind;
 if ~isnumeric(ind) || ind > handles.Cfg.SiteNum 
     return
 end
