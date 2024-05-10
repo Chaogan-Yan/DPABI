@@ -1,4 +1,4 @@
-FROM nipreps/fmriprep:23.1.4
+FROM nipreps/fmriprep:23.2.1
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
@@ -60,6 +60,9 @@ COPY ./DPABIFiber/MissingCommands/mni152.register.dat /opt/freesurfer/average/
 ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu:/opt/conda/lib:/opt/workbench/lib_linux64:/opt/fsl-6.0.5.1/lib:/opt/mcr/${MCR_VERSION}/runtime/glnxa64:/opt/mcr/${MCR_VERSION}/bin/glnxa64:/opt/mcr/${MCR_VERSION}/sys/os/glnxa64:/opt/mcr/${MCR_VERSION}/sys/opengl/lib/glnxa64:/opt/mcr/${MCR_VERSION}/extern/bin/glnxa64
 
 
+RUN apt-get -qq update && apt-get -qq install -y \
+    libopenblas-dev && \
+    apt-get update
 
 ENTRYPOINT []
 
