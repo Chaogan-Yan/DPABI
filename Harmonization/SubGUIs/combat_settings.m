@@ -23,7 +23,7 @@ function varargout = combat_settings(varargin)
 % Edit the above text to modify the response to help combat_settings
 
 % Last Modified by GUIDE v2.5 17-Sep-2023 17:39:34
-
+ 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
@@ -53,16 +53,53 @@ function combat_settings_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to combat_settings (see VARARGIN)
 
 % Choose default command line output for combat_settings
+if ~isstruct(varargin{1}) % Site 
+    SiteName = varargin{1};
+    handles.Cfg.IsCovBat = 0 ;
+    % Initialize the output
+    handles.Cfg.mod = [];
+    handles.Cfg.AdjVar = [];
+    handles.Cfg.PCA = 0 ;
+    handles.Cfg.IsCovBatParametric = 0;
+    handles.Cfg.Percent = 0;
+else
+    handles.Cfg = varargin{1};
+    SiteName = handles.Cfg.batch;
+end 
+
+%%%% SiteName Stat %%%%
+% Get uniquue SiteNames (useful for those methods who follow the
+%   adaptioon logic, i.e. SMA and ICVAE etc.)
+% get unique site list
+UniSiteName = unique(SiteName);
+% count the site number
+SiteNum = length(UniSiteName);
+% make batch
+SiteLabel = zeros(size(SiteName));
+% label sites from 1 to SiteNum 
+if iscellstr(UniSiteName)
+    for i= 1:SiteNum
+        handles.Cfg.SiteIndex{i} = find(contains(SiteName,UniSiteName{i}));
+        SiteLabel(strcmpi(UniSiteName{i},SiteName)) = i;
+    end
+    handles.Cfg.batch = SiteLabel;
+end
+
+handles.Cfg.Cov = varargin{2};
+% save covnames in case user load the config
+handles.Cfg.covnames = fieldnames(handles.Cfg.Cov);
+% show the Covariates in the AllVariables listbox
+set(handles.listboxAllVar,'String',handles.Cfg.covnames);
+
+if isstruct(varargin{1})
+    UpdateDisplay(handles);
+end
+
 handles.output = hObject;
             
-handles.Cfg.IsCovBat = 0 ;
-handles.Cfg.IsCovBatParametric = 0;
-handles.Cfg.Percent = 0;
-handles.Cfg.mod = [];   % in case there is no adjusted variable and the user
-                        % did not create mod for this 
-handles.Cfg.FileList = []; % if the user don't give FileList for ordering, 
-                           % this should be empty 
-% % %Make UI display correct in PC and linux
+
+
+% %Make UI display correct in PC and linux
 % if ~ismac
 %     if ispc
 %         ZoonMatrix = [1 1 1.5 1.2];  %For pc
@@ -73,27 +110,30 @@ handles.Cfg.FileList = []; % if the user don't give FileList for ordering,
 %     UISize = UISize.*ZoonMatrix;
 %     set(handles.figure1,'Position',UISize);
 % end
-handles.figure1.Resize = "on";
-movegui(handles.figure1,'center');
+% 
+% handles.figure1.Resize = "on";
+% movegui(handles.figure1,'center');
+% 
+% if ismac
+%     zoom_factor=1;
+% elseif ispc
+%     zoom_factor=0.75;
+% else
+%     zoom_factor=0.9;
+% end
 
-h_combat = uicontextmenu;
-uimenu(h_combat, 'Label', 'Remove', 'Callback', @(src, event) combat_settings('DeleteSelectedAdjVar', src, event, guidata(src)));
+h_combat = uicontextmenu(handles.figure1);
 set(handles.listboxAdjVar, 'UIContextMenu', h_combat);	
 
-if ismac
-    zoom_factor=1;
-elseif ispc
-    zoom_factor=0.75;
-else
-    zoom_factor=0.9;
-end
+removeMenuItem = uimenu(h_combat, 'Label', 'Remove');
+set(removeMenuItem, 'Callback', @(src, event) DeleteSelectedAdjVar(src, event, guidata(src)));
 
 % Find and adjust font size for uicontrol elements
-ui_handles = findall(handles.figure1, 'Type', 'uicontrol');
-for idx = 1:length(ui_handles)
-    currentSize = get(ui_handles(idx), 'FontSize');
-    set(ui_handles(idx), 'FontSize', currentSize * zoom_factor);
-end
+% ui_handles = findall(handles.figure1, 'Type', 'uicontrol');
+% for idx = 1:length(ui_handles)
+%     currentSize = get(ui_handles(idx), 'FontSize');
+%     set(ui_handles(idx), 'FontSize', currentSize * zoom_factor);
+% end
 
 % Update handles structure
 guidata(hObject, handles);
@@ -117,81 +157,85 @@ function varargout = combat_settings_OutputFcn(hObject, eventdata, handles)
 if isempty(handles)
      handles.Cfg.batch = [];
      handles.Cfg.mod = [];
+     handles.Cfg.AdjVar = [];
      handles.Cfg.IsParametric = 0;
      
      handles.Cfg.IsCovBat = 0 ;
      handles.Cfg.IsCovBatParametric = 0;
+     handles.Cfg.PCA = 0 ;
      handles.Cfg.Percent = 0;
      
-     handles.Cfg.SiteName = [];
-     handles.Cfg.FileList = []; 
+%      handles.Cfg.SiteName = [];
+%      handles.Cfg.FileList = []; 
 else
     delete(handles.figure1);
 end
 varargout{1} = handles.Cfg.batch;                                                                                            
 varargout{2} = handles.Cfg.mod;
-varargout{3} = handles.Cfg.IsParametric;
-varargout{4} = handles.Cfg.IsCovBat;
-varargout{5} = handles.Cfg.IsCovBatParametric;
-varargout{6} = handles.Cfg.Percent;
-varargout{7} = handles.Cfg.SiteName; %for writing harmonized data（Must）
-varargout{8} = handles.Cfg.FileList;
+varargout{3} = handles.Cfg.AdjVar;
+varargout{4} = handles.Cfg.IsParametric;
+varargout{5} = handles.Cfg.IsCovBat;
+varargout{6} = handles.Cfg.IsCovBatParametric;
+varargout{7} = handles.Cfg.PCA;
+varargout{8} = handles.Cfg.Percent;
+% varargout{7} = handles.Cfg.SiteName; %for writing harmonized data（Must）
+% varargout{8} = handles.Cfg.FileList;
 
 
-% --- Executes on selection change in pushbuttonSiteInfo.
-function pushbuttonSiteInfo_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonSiteInfo (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-[file path]=uigetfile(...
-    {'*.txt;*.csv;*.tsv;*.xlsx;*.mat',...
-    'Your Demographic File (*.txt;*.csv;*.tsv,*.xlsx;*.mat)';...
-    '*.*', 'All Files (*.*)';});
-DemographicPath = [path file];
-handles.Cfg.DemographicPath = DemographicPath;
-
-
-if (file==0)
-    warndlg('If not, I will not do any harmonization...') ;
-
-else
-    set(handles.listboxAllVar,'String','');
-    set(handles.listboxAdjVar,'String','');
-    if strcmp('mat',file(end-2:end))
-        handles.Cfg.var_struct = load(DemographicPath);
-    else
-        democells = readcell(DemographicPath);
-        handles.Cfg.var_struct = splitmatrix(democells(2:end,:),democells(1,:),1);
-    end
-    
-    if ~isfield(handles.Cfg.var_struct,"SiteName")
-        error('Tip: Please name the variable of SiteID as SiteName so that we can recognize it.');
-    else
-        SiteName = all2cellstring(handles.Cfg.var_struct.SiteName);
-    end
-    
-    UniSiteName = unique(SiteName);
-    handles.Cfg.SiteNum = length(UniSiteName);
-    SiteLabel = zeros(size(SiteName));
-    for i= 1:handles.Cfg.SiteNum
-        handles.Cfg.SiteIndex{i} = find(contains(SiteName,UniSiteName{i}));
-        SiteLabel(strcmpi(UniSiteName{i},SiteName)) = i;
-    end
-    handles.Cfg.batch=SiteLabel;
-    
-    if isfield(handles.Cfg.var_struct,"FileList")
-        handles.Cfg.FileList = handles.Cfg.var_struct.FileList;
-    elseif isfield(handles.Cfg.var_struct ,"FileListLH") && isfield(handles.Cfg.var_struct ,"FileListRH")
-        handles.Cfg.FileList.LH = handles.Cfg.var_struct.FileListLH;
-        handles.Cfg.FileList.RH = handles.Cfg.var_struct.FileListRH;
-    end
-
-    handles.Cfg.SiteName = SiteName;
-    handles.Cfg.vars = fieldnames(handles.Cfg.var_struct);
-    set(handles.listboxAllVar,'String',cellstr(setdiff(handles.Cfg.vars,'SiteName')));
-end
-
-guidata(hObject,handles);
+% % --- Executes on selection change in pushbuttonSiteInfo.
+% function pushbuttonSiteInfo_Callback(hObject, eventdata, handles)
+% % hObject    handle to pushbuttonSiteInfo (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% [file path]=uigetfile(...
+%     {'*.txt;*.csv;*.tsv;*.xlsx;*.mat',...
+%     'Your Demographic File (*.txt;*.csv;*.tsv,*.xlsx;*.mat)';...
+%     '*.*', 'All Files (*.*)';});
+% DemographicPath = [path file];
+% handles.Cfg.DemographicPath = DemographicPath;
+% 
+% 
+% if (file==0)
+%     warndlg('If not, I will not do any harmonization...') ;
+% 
+% else
+%     set(handles.listboxAllVar,'String','');
+%     set(handles.listboxAdjVar,'String','');
+%     if strcmp('mat',file(end-2:end))
+%         handles.Cfg.var_struct = load(DemographicPath);
+%     else
+%         democells = readcell(DemographicPath);
+%         handles.Cfg.var_struct = splitmatrix(democells(2:end,:),democells(1,:),1);
+%     end
+%     
+%     if ~isfield(handles.Cfg.var_struct,"SiteName")
+%         error('Tip: Please name the variable of SiteID as SiteName so that we can recognize it.');
+%     else
+%         SiteName = all2cellstring(handles.Cfg.var_struct.SiteName);
+%     end
+%     
+%     UniSiteName = unique(SiteName);
+%     handles.Cfg.SiteNum = length(UniSiteName);
+%     SiteLabel = zeros(size(SiteName));
+%     for i= 1:handles.Cfg.SiteNum
+%         handles.Cfg.SiteIndex{i} = find(contains(SiteName,UniSiteName{i}));
+%         SiteLabel(strcmpi(UniSiteName{i},SiteName)) = i;
+%     end
+%     handles.Cfg.batch=SiteLabel;
+%     
+%     if isfield(handles.Cfg.var_struct,"FileList")
+%         handles.Cfg.FileList = handles.Cfg.var_struct.FileList;
+%     elseif isfield(handles.Cfg.var_struct ,"FileListLH") && isfield(handles.Cfg.var_struct ,"FileListRH")
+%         handles.Cfg.FileList.LH = handles.Cfg.var_struct.FileListLH;
+%         handles.Cfg.FileList.RH = handles.Cfg.var_struct.FileListRH;
+%     end
+% 
+%     handles.Cfg.SiteName = SiteName;
+%     handles.Cfg.vars = fieldnames(handles.Cfg.var_struct);
+%     set(handles.listboxAllVar,'String',cellstr(setdiff(handles.Cfg.vars,'SiteName')));
+% end
+% 
+% guidata(hObject,handles);
 % Hints: contents = cellstr(get(hObject,'String')) returns pushbuttonSiteInfo contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from pushbuttonSiteInfo
 
@@ -337,7 +381,7 @@ else
 end
 
 handles.Cfg.PCA = 'Default';
-handles.Cfg.Percent = 0.95;
+handles.Cfg.IsCovBat =1;
 guidata(hObject,handles); 
 
 
@@ -359,6 +403,7 @@ else
 end
 
 handles.Cfg.PCA = 'NPC';
+handles.Cfg.IsCovBat=1;
 guidata(hObject,handles);
 
 
@@ -380,6 +425,7 @@ else
 end
 
 handles.Cfg.PCA = 'Percentage';
+handles.Cfg.IsCovBat =1;
 guidata(hObject,handles);
 
 function editPercent_Callback(hObject, eventdata, handles)
@@ -389,13 +435,7 @@ function editPercent_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of editPercent as text
 %        str2double(get(hObject,'String')) returns contents of editPercent as a double
-p = str2num(get(hObject,'String'));
-if p <= 1 && p >= 0
-   handles.Cfg.Percent = p;
-   guidata(hObject,handles) 
-else
-   error('Input should within the scale [0,1].');
-end
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -418,13 +458,7 @@ function editNPC_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of editNPC as text
 %        str2double(get(hObject,'String')) returns contents of editNPC as a double
-p = int8(str2num(get(hObject,'String')));
-if isinteger(p) && p >= 1
-   handles.Cfg.Percent = p;
-   guidata(hObject,handles) 
-else
-   error('Input should be integer and not smaller than 1.');
-end
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -545,23 +579,41 @@ if ~isempty(handles.listboxAdjVar)
     handles.Cfg.mod = [];
     for i = 1:numel(adjvars)
         if ~isempty(adjvars{i})
-            if eval(['size(handles.Cfg.var_struct.',adjvars{i},',2)'])>1
+            if eval(['size(handles.Cfg.Cov.',adjvars{i},',2)'])>1
                 fprintf("Error Tip: The %s has more than 1 columns. \n",adjvars{i});
                 error("Notice: each variable should be N x 1 vector, N = the number of subjects.");
             end
-            if iscell(eval(['handles.Cfg.var_struct.',adjvars{i},';']))
-                eval(['handles.Cfg.mod(:,',num2str(i),')=cell2mat(handles.Cfg.var_struct.',adjvars{i},');']);
+            if iscell(eval(['handles.Cfg.Cov.',adjvars{i},';']))
+                eval(['handles.Cfg.mod(:,',num2str(i),')=cell2mat(handles.Cfg.Cov.',adjvars{i},');']);
             else
-                eval(['handles.Cfg.mod(:,',num2str(i),')=handles.Cfg.var_struct.',adjvars{i},';']);
+                eval(['handles.Cfg.mod(:,',num2str(i),')=handles.Cfg.Cov.',adjvars{i},';']);
             end
         end
     end
 end
 
-Cfg=handles.Cfg; 
+if handles.Cfg.IsCovBat == 1
+    switch handles.Cfg.PCA
+        case 'NPC'
+            p = str2num(get(handles.editNPC,'String'));
+            if isnumeric(p) & p >= 1
+                handles.Cfg.Percent = int8(p);
+            else
+                error('Input should be integer and bigger than 1.');
+            end
+        case 'Percentage'
+            p = str2num(get(handles.editPercent,'String'));
+            if p <= 1 && p >= 0
+                handles.Cfg.Percent = p;                
+            else
+                error('Input should within the scale [0,1].');
+            end
+        case 'Default'
+            handles.Cfg.Percent=0.95;
+    end
+end
 
-Datetime=fix(clock); 
-save([pwd,filesep,'Harmonize_AutoSave_combatsettings_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg');
+
 uiresume(handles.figure1);
 
 guidata(hObject,handles);
@@ -585,86 +637,87 @@ function SetLoadedData(hObject,handles,Cfg)
 
 %% Update All the uiControls' display on the GUI
 function UpdateDisplay(handles)
-	set(handles.popupmenuParametricMode,'Value', handles.Cfg.IsParametric+1);	
-    set(handles.listboxAllVar,'String',setdiff(handles.Cfg.vars,'SiteName'),'Value',1);
+	set(handles.popupmenuParametricMode,'Value', handles.Cfg.IsParametric+1);
+    set(handles.listboxAllVar,'String',handles.Cfg.covnames,'Value',1);
     if isfield(handles.Cfg,'AdjVar')
         set(handles.listboxAdjVar,'String',handles.Cfg.AdjVar,'Value',1);
     else
         set(handles.listboxAdjVar,'String','');
     end
+
+    set(handles.checkCovBat,'Value',handles.Cfg.IsCovBat);
     
-    set(handles.checkCovBat,'Value',handles.Cfg.IsCovBat);    
-    if handles.Cfg.IsCovBat 
+    if handles.Cfg.IsCovBat
         set(handles.popupmenuParametricModeforCovBat,'Enable','on','Value',handles.Cfg.IsCovBatParametric+1);
         switch handles.Cfg.PCA
             case 'Default'
-                set(handles.rbtDefault,'Enable','on','Value',1); 
-                
-                set(handles.rbtPercentage,'Enable','off','Value',0); 
+                set(handles.rbtDefault,'Enable','on','Value',1);
+
+                set(handles.rbtPercentage,'Enable','off','Value',0);
                 set(handles.rbtPCNumber,'Enable','off','Value',0);
                 set(handles.editPercent,'Enable','off','String','');
                 set(handles.editNPC,'Enable','off','String','');
             case 'Percentage'
                 set(handles.rbtPercentage,'Enable','on','Value',1);
                 set(handles.editPercent,'Enable','on','String',num2str(handles.Cfg.Percent));
-                
-                set(handles.rbtDefault,'Enable','off','Value',0); 
+
+                set(handles.rbtDefault,'Enable','off','Value',0);
                 set(handles.rbtPCNumber,'Enable','off','Value',0);
                 set(handles.editNPC,'Enable','off','String','');
-                
-            case 'NPC' 
+
+            case 'NPC'
                 set(handles.rbtPCNumber,'Enable','on','Value',1);
                 set(handles.editNPC,'Enable','on','String',int2str(handles.Cfg.Percent));
-                
-                set(handles.rbtDefault,'Enable','off','Value',0); 
-                set(handles.rbtPercentage,'Enable','off','Value',0); 
+
+                set(handles.rbtDefault,'Enable','off','Value',0);
+                set(handles.rbtPercentage,'Enable','off','Value',0);
                 set(handles.editPercent,'Enable','off','String','');
         end
     else
         set(handles.popupmenuParametricModeforCovBat,'Enable','off','Value',1);
-        set(handles.rbtDefault,'Enable','off','Value',0); 
-        set(handles.rbtPercentage,'Enable','off','Value',0); 
+        set(handles.rbtDefault,'Enable','off','Value',0);
+        set(handles.rbtPercentage,'Enable','off','Value',0);
         set(handles.rbtPCNumber,'Enable','off','Value',0);
-        
+
         set(handles.editPercent,'Enable','off','String','');
         set(handles.editNPC,'Enable','off','String','');
     end
-        
+
     drawnow;
 
 
-% --- Executes on button press in Save.
-function Save_Callback(hObject, eventdata, handles)
-% hObject    handle to Save (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if ~isempty(handles.listboxAdjVar)
-    adjvars = cellstr(get(handles.listboxAdjVar,'String'));
-    handles.Cfg.mod = [];
-    for i = 1:numel(adjvars)
-        if ~isempty(adjvars{i})
-            if eval(['size(handles.Cfg.var_struct.',adjvars{i},',2)'])>1
-                fprintf("Error Tip: The %s has more than 1 columns. \n",adjvars{i});
-                error("Notice: each variable should be N x 1 vector, N = the number of subjects.");
-            end
-            if iscell(eval(['handles.Cfg.var_struct.',adjvars{i},';']))
-                eval(['handles.Cfg.mod(:,',num2str(i),')=cell2mat(handles.Cfg.var_struct.',adjvars{i},');']);
-            else
-                eval(['handles.Cfg.mod(:,',num2str(i),')=handles.Cfg.var_struct.',adjvars{i},';']);
-            end
-        end
-    end
-end
-
-if isfield(handles,'Cfg')
-    Cfg=handles.Cfg; %Added by YAN Chao-Gan, 100130. Save the configuration parameters automatically.
-    
-    [filename, pathname] = uiputfile({'*.mat'}, 'Save Parameters As');
-    if ischar(filename)
-        Cfg=handles.Cfg;
-        save(['',pathname,filename,''], 'Cfg');
-    end
-else
-    warndlg('I got nothing to save.');
-end
-guidata(hObject,handles);
+% % % --- Executes on button press in Save.
+% % function Save_Callback(hObject, eventdata, handles)
+% % % hObject    handle to Save (see GCBO)
+% % % eventdata  reserved - to be defined in a future version of MATLAB
+% % % handles    structure with handles and user data (see GUIDATA)
+% if ~isempty(handles.listboxAdjVar)
+%     adjvars = cellstr(get(handles.listboxAdjVar,'String'));
+%     handles.Cfg.mod = [];
+%     for i = 1:numel(adjvars)
+%         if ~isempty(adjvars{i})
+%             if eval(['size(handles.Cfg.var_struct.',adjvars{i},',2)'])>1
+%                 fprintf("Error Tip: The %s has more than 1 columns. \n",adjvars{i});
+%                 error("Notice: each variable should be N x 1 vector, N = the number of subjects.");
+%             end
+%             if iscell(eval(['handles.Cfg.var_struct.',adjvars{i},';']))
+%                 eval(['handles.Cfg.mod(:,',num2str(i),')=cell2mat(handles.Cfg.var_struct.',adjvars{i},');']);
+%             else
+%                 eval(['handles.Cfg.mod(:,',num2str(i),')=handles.Cfg.var_struct.',adjvars{i},';']);
+%             end
+%         end
+%     end
+% end
+% 
+% if isfield(handles,'Cfg')
+%     Cfg=handles.Cfg; %Added by YAN Chao-Gan, 100130. Save the configuration parameters automatically.
+%     
+%     [filename, pathname] = uiputfile({'*.mat'}, 'Save Parameters As');
+%     if ischar(filename)
+%         Cfg=handles.Cfg;
+%         save(['',pathname,filename,''], 'Cfg');
+%     end
+% else
+%     warndlg('I got nothing to save.');
+% end
+% guidata(hObject,handles);

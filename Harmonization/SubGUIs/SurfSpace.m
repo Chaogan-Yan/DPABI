@@ -60,16 +60,16 @@ if nargin > 3
     handles.RHImgCells=varargin{2};
     AddString(handles.ImgRHlistbox, handles.RHImgCells);
     
-    handles.MaskLH = varargin{3};
-    set(handles.MaskLHedit,'String',handles.MaskLH);
+    handles.Mask.LH = varargin{3};
+    set(handles.MaskLHedit,'String',handles.Mask.LH);
     
-    handles.MaskRH = varargin{4};
-    set(handles.MaskRHedit,'String',handles.MaskRH);
+    handles.Mask.RH = varargin{4};
+    set(handles.MaskRHedit,'String',handles.Mask.RH);
 else
     handles.LHImgCells = {};
     handles.RHImgCells = {};
-    handles.MaskLH = [];
-    handles.MaskRH = [];
+    handles.Mask.LH = [];
+    handles.Mask.RH = [];
 end    
 
 
@@ -77,13 +77,16 @@ handles.CurDir=pwd;
 
 % %uimenu
 %handles.lhContextMenu =uicontextmenu;
-lhContextMenu = uicontextmenu;
-uimenu(lhContextMenu, 'Label', 'Clear', 'Callback', 'SurfSpace(''RemoveAll_LH_Callback'',gcbo,[], guidata(gcbo))');
-set(handles.ImgLHlistbox, 'UIContextMenu',lhContextMenu);	
+h_surfspace = uicontextmenu(handles.figure1);
+removeMenuItem = uimenu(h_surfspace,'Label','Clear');
 
-rhContextMenu = uicontextmenu;	
-uimenu(rhContextMenu, 'Label', 'Clear', 'Callback', 'SurfSpace(''RemoveAll_RH_Callback'',gcbo,[], guidata(gcbo))');
-set(handles.ImgRHlistbox, 'UIContextMenu', rhContextMenu);
+set(handles.ImgLHlistbox, 'UIContextMenu',h_surfspace);	
+set(removeMenuItem, 'Callback', @(src, event) RemoveAll_LH_Callback(src, event, guidata(src)));
+
+set(handles.ImgRHlistbox, 'UIContextMenu',h_surfspace);	
+set(removeMenuItem, 'Callback', @(src, event) RemoveAll_RH_Callback(src, event, guidata(src)));
+
+
 
 % Choose default command line output for SurfSpace
 handles.output = hObject;
@@ -126,15 +129,15 @@ function varargout = SurfSpace_OutputFcn(hObject, eventdata, handles)
 if isempty(handles)
     handles.LHImgCells = {};
     handles.RHImgCells = {};
-    handles.MaskLH = [];
-    handles.MaskRH = [];
+    handles.Mask.LH = [];
+    handles.Mask.RH = [];
 else
     delete(handles.figure1);
 end
 varargout{1} = handles.LHImgCells;
 varargout{2} = handles.RHImgCells;
-varargout{3} = handles.MaskLH ;
-varargout{4} = handles.MaskRH ;
+varargout{3} = handles.Mask.LH ;
+varargout{4} = handles.Mask.RH ;
 
 
 % --- Executes on selection change in ImgLHlistbox.
@@ -374,8 +377,8 @@ if isempty(handles.LHImgCells) || isempty(handles.RHImgCells)
     return
 end
 
-handles.MaskLH = get(handles.MaskLHedit,'String');
-handles.MaskRH = get(handles.MaskRHedit,'String');
+handles.Mask.LH = get(handles.MaskLHedit,'String');
+handles.Mask.RH = get(handles.MaskRHedit,'String');
 
 guidata(hObject, handles);
 uiresume(handles.figure1);

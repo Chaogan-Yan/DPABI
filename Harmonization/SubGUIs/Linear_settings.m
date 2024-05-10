@@ -53,16 +53,52 @@ function Linear_settings_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to Linear_settings (see VARARGIN)
 handles.Cfg.SiteMatrix = [];
 handles.Cfg.Cov = [];
-handles.Cfg.LinearMode = [];
-handles.Cfg.SiteName = [];
-handles.Cfg.FileList = [];
+handles.Cfg.LinearMode = -1;
+
+% Choose default command line output for combat_settings
+if ~isstruct(varargin{1}) && length(varargin) == 2
+    handles.Cfg.SiteName = varargin{1};
+    
+    SiteName = all2cellstring(handles.Cfg.SiteName);
+    % get unique site list
+    UniSiteName = unique(SiteName);
+    % count the site number
+    SiteNum = length(UniSiteName);
+    % Specific for Linear models
+    handles.Cfg.SiteMatrix = zeros(length(SiteName),SiteNum);
+    
+    for i= 1:SiteNum
+        handles.Cfg.SiteIndex{i} = find(contains(SiteName,UniSiteName{i}));
+        handles.Cfg.SiteMatrix(strcmpi(UniSiteName{i},SiteName),i) = 1;
+    end
+    site_base_col = find(sum(handles.Cfg.SiteMatrix)==max(sum(handles.Cfg.SiteMatrix)));
+    if length(site_base_col)>1
+        handles.Cfg.SiteMatrix(:,site_base_col(1)) = [];
+    else
+        handles.Cfg.SiteMatrix(:,site_base_col) = [];
+    end
+else
+    handles.Cfg = varargin{1};
+end
+
+handles.Cfg.Covariates = varargin{2};
+% save covnames in case user load the config
+handles.Cfg.covnames = fieldnames(handles.Cfg.Covariates);
+% show the Covariates in the AllVariables listbox
+set(handles.listboxAllVar,'String',handles.Cfg.covnames);
+
+UpdateDisplay(handles);
+
+handles.output = hObject;
 
 handles.figure1.Resize = "on";
 movegui(handles.figure1,'center');
 
-h_linear = uicontextmenu;
+h_linear = uicontextmenu(handles.figure1);
 set(handles.listboxAdjVar, 'UIContextMenu', h_linear);
-uimenu(h_linear, 'Label', 'Remove', 'Callback', @(src, event) Linear_settings('DeleteSelectedAdjVar', src, event, guidata(src)));
+
+removeMenuItem = uimenu(h_linear, 'Label', 'Remove');
+set(removeMenuItem, 'Callback', @(src, event) DeleteSelectedAdjVar(src, event, guidata(src)));
 
 % Choose default command line output for Linear_settings
 handles.output = hObject;
@@ -102,19 +138,21 @@ function varargout = Linear_settings_OutputFcn(hObject, eventdata, handles)
 
 if isempty(handles)
     handles.Cfg.SiteMatrix = [];
-    handles.Cfg.Cov = [];
-    handles.Cfg.LinearMode = [];
+    handles.Cfg.AdjCov = [];
+    handles.Cfg.AdjCname = [];
+    handles.Cfg.LinearMode = -1;
     handles.Cfg.SiteName = [];
-    handles.Cfg.FileList = [];
+%     handles.Cfg.FileList = [];
 else
     delete(handles.figure1);
 end
 
 varargout{1} = handles.Cfg.SiteMatrix;
-varargout{2} = handles.Cfg.Cov;
-varargout{3} = handles.Cfg.LinearMode;
-varargout{4} = handles.Cfg.SiteName;
-varargout{5} = handles.Cfg.FileList;
+varargout{2} = handles.Cfg.AdjCov;
+varargout{3} = handles.Cfg.AdjCname;
+varargout{4} = handles.Cfg.LinearMode;
+varargout{5} = handles.Cfg.SiteName;
+% varargout{5} = handles.Cfg.FileList;
 % Get default command line output from handles structure
 
 
@@ -235,62 +273,62 @@ if strcmp(questdlg(tmpMsg, 'Delete confirmation'), 'Yes')
     
 end
 
-% --- Executes on button press in pushbuttonDemographicInfo.
-function pushbuttonDemographicInfo_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonDemographicInfo (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-[file path]=uigetfile(...
-    {'*.txt;*.csv;*.tsv;*.xlsx;*.mat',...
-    'Your Demographic File (*.txt;*.csv;*.tsv,*.xlsx;*.mat)';...
-    '*.*', 'All Files (*.*)';});
-DemographicPath = [path file];
-
-if (file==0)
-    warndlg('If not, I will not do any harmonization...') ;
-    
-else
-    set(handles.listboxAllVar,'String','');
-    set(handles.listboxAdjVar,'String','');
-    if strcmp('mat',file(end-2:end))
-        handles.Cfg.var_struct = load(DemographicPath);
-    else
-        democells = readcell(DemographicPath);
-        handles.Cfg.var_struct = splitmatrix(democells(2:end,:),democells(1,:),1);
-    end
-    
-    if ~isfield(handles.Cfg.var_struct,"SiteName")
-        error('Tip: Please name the variable of SiteID as SiteName so that we can recognize it.');
-    else
-        handles.Cfg.SiteName = all2cellstring(handles.Cfg.var_struct.SiteName);
-    end
-    
-    handles.Cfg.vars = fieldnames(handles.Cfg.var_struct);
-    set(handles.listboxAllVar,'String',cellstr(setdiff(handles.Cfg.vars,'SiteName')));
-    
-    UniSiteName = unique(handles.Cfg.SiteName);
-    
-    handles.Cfg.SiteNum = length(UniSiteName);
-    handles.Cfg.SiteMatrix = zeros(length(handles.Cfg.SiteName),handles.Cfg.SiteNum);
-    
-    for i= 1:handles.Cfg.SiteNum
-        handles.Cfg.SiteIndex{i} = find(contains(handles.Cfg.SiteName,UniSiteName{i}));
-        handles.Cfg.SiteMatrix(strcmpi(UniSiteName{i},handles.Cfg.SiteName),i) = 1;
-    end
-    site_base_col = find(sum(handles.Cfg.SiteMatrix)==max(sum(handles.Cfg.SiteMatrix)));
-    if length(site_base_col)>1
-        handles.Cfg.SiteMatrix(:,site_base_col(1)) = [];
-    else
-        handles.Cfg.SiteMatrix(:,site_base_col) = [];
-    end
-    if isfield(handles.Cfg.var_struct,"FileList")
-        handles.Cfg.FileList = handles.Cfg.var_struct.FileList;
-    elseif isfield(handles.Cfg.var_struct,"FileListLH") && isfield(handles.Cfg.var_struct,"FileListRH")
-        handles.Cfg.FileList.LH = handles.Cfg.var_struct.FileListLH;
-        handles.Cfg.FileList.RH = handles.Cfg.var_struct.FileListRH;
-    end
-end
-guidata(hObject,handles);
+% % --- Executes on button press in pushbuttonDemographicInfo.
+% function pushbuttonDemographicInfo_Callback(hObject, eventdata, handles)
+% % hObject    handle to pushbuttonDemographicInfo (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% [file path]=uigetfile(...
+%     {'*.txt;*.csv;*.tsv;*.xlsx;*.mat',...
+%     'Your Demographic File (*.txt;*.csv;*.tsv,*.xlsx;*.mat)';...
+%     '*.*', 'All Files (*.*)';});
+% DemographicPath = [path file];
+% 
+% if (file==0)
+%     warndlg('If not, I will not do any harmonization...') ;
+%     
+% else
+%     set(handles.listboxAllVar,'String','');
+%     set(handles.listboxAdjVar,'String','');
+%     if strcmp('mat',file(end-2:end))
+%         handles.Cfg.var_struct = load(DemographicPath);
+%     else
+%         democells = readcell(DemographicPath);
+%         handles.Cfg.var_struct = splitmatrix(democells(2:end,:),democells(1,:),1);
+%     end
+%     
+%     if ~isfield(handles.Cfg.var_struct,"SiteName")
+%         error('Tip: Please name the variable of SiteID as SiteName so that we can recognize it.');
+%     else
+%         handles.Cfg.SiteName = all2cellstring(handles.Cfg.var_struct.SiteName);
+%     end
+%     
+%     handles.Cfg.vars = fieldnames(handles.Cfg.var_struct);
+%     set(handles.listboxAllVar,'String',cellstr(setdiff(handles.Cfg.vars,'SiteName')));
+%     
+%     UniSiteName = unique(handles.Cfg.SiteName);
+%     
+%     handles.Cfg.SiteNum = length(UniSiteName);
+%     handles.Cfg.SiteMatrix = zeros(length(handles.Cfg.SiteName),handles.Cfg.SiteNum);
+%     
+%     for i= 1:handles.Cfg.SiteNum
+%         handles.Cfg.SiteIndex{i} = find(contains(handles.Cfg.SiteName,UniSiteName{i}));
+%         handles.Cfg.SiteMatrix(strcmpi(UniSiteName{i},handles.Cfg.SiteName),i) = 1;
+%     end
+%     site_base_col = find(sum(handles.Cfg.SiteMatrix)==max(sum(handles.Cfg.SiteMatrix)));
+%     if length(site_base_col)>1
+%         handles.Cfg.SiteMatrix(:,site_base_col(1)) = [];
+%     else
+%         handles.Cfg.SiteMatrix(:,site_base_col) = [];
+%     end
+%     if isfield(handles.Cfg.var_struct,"FileList")
+%         handles.Cfg.FileList = handles.Cfg.var_struct.FileList;
+%     elseif isfield(handles.Cfg.var_struct,"FileListLH") && isfield(handles.Cfg.var_struct,"FileListRH")
+%         handles.Cfg.FileList.LH = handles.Cfg.var_struct.FileListLH;
+%         handles.Cfg.FileList.RH = handles.Cfg.var_struct.FileListRH;
+%     end
+% end
+% guidata(hObject,handles);
 
 function Vars = splitmatrix(mat,heads,by_col)
 if by_col ~= 1 % split by row
@@ -330,92 +368,89 @@ function pushbuttonFinish_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if ~isempty(handles.listboxAdjVar)
-    adjvars = cellstr(get(handles.listboxAdjVar,'String'));
-    handles.Cfg.Cov = [];
-    for i = 1:numel(adjvars)
-        if ~isempty(adjvars{i})
-            if eval(['size(handles.Cfg.var_struct.',adjvars{i},',2)'])>1
-                fprintf("Error Tip: The %s has more than 1 columns. \n",adjvars{i});
+    handles.Cfg.AdjCname = cellstr(get(handles.listboxAdjVar,'String'));
+    handles.Cfg.AdjCov = [];
+    for i = 1:numel(handles.Cfg.AdjCname)
+        if ~isempty(handles.Cfg.AdjCname{i})
+            if eval(['size(handles.Cfg.Covariates.',handles.Cfg.AdjCname{i},',2)'])>1
+                fprintf("Error Tip: The %s has more than 1 columns. \n",handles.Cfg.AdjCname{i});
                 error("Notice: each variable should be N x 1 vector, N = the number of subjects.");
             end
-            if iscell(eval(['handles.Cfg.var_struct.',adjvars{i},';']))
-                eval(['handles.Cfg.mod(:,',num2str(i),')=cell2mat(handles.Cfg.var_struct.',adjvars{i},');']);
+            if iscell(eval(['handles.Cfg.Covariates.',handles.Cfg.AdjCname{i},';']))
+                eval(['handles.Cfg.AdjCov(:,',num2str(i),')=cell2mat(handles.Cfg.Covariates.',handles.Cfg.AdjCname{i},');']);
             else
-                eval(['handles.Cfg.mod(:,',num2str(i),')=handles.Cfg.var_struct.',adjvars{i},';']);
+                eval(['handles.Cfg.AdjCov(:,',num2str(i),')=handles.Cfg.Covariates.',handles.Cfg.AdjCname{i},';']);
             end
         end
     end
 end
-if isfield(handles,'Cfg')
-    Cfg=handles.Cfg; %Added by YAN Chao-Gan, 100130. Save the configuration parameters automatically.
-    Datetime=fix(clock); %Added by YAN Chao-Gan, 100130.
-    save([pwd,filesep,'Harmonize_AutoSave_Linearsettings_',num2str(Datetime(1)),'_',num2str(Datetime(2)),'_',num2str(Datetime(3)),'_',num2str(Datetime(4)),'_',num2str(Datetime(5)),'.mat'], 'Cfg'); %Added by YAN Chao-Gan, 100130.
-else
-    warndlg('I got nothing to save.');
-end
+
 uiresume(handles.figure1);
 guidata(hObject,handles);
 
 
-% --- Executes on button press in pushbuttonLoad.
-function pushbuttonLoad_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonLoad (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-[filename, pathname] = uigetfile({'*.mat'}, 'Load Parameters From');
-if ischar(filename)
-    load([pathname,filename]);
-    SetLoadedData(hObject,handles, Cfg);
-end
+% % --- Executes on button press in pushbuttonLoad.
+% function pushbuttonLoad_Callback(hObject, eventdata, handles)
+% % hObject    handle to pushbuttonLoad (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% [filename, pathname] = uigetfile({'*.mat'}, 'Load Parameters From');
+% if ischar(filename)
+%     load([pathname,filename]);
+%     SetLoadedData(hObject,handles, Cfg);
+% end
 
 
-% --- Executes on button press in pushbuttonSave.
-function pushbuttonSave_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonSave (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if ~isempty(handles.listboxAdjVar)
-    adjvars = cellstr(get(handles.listboxAdjVar,'String'));
-    handles.Cfg.Cov = [];
-    for i = 1:numel(adjvars)
-        if ~isempty(adjvars{i})
-            if eval(['size(handles.Cfg.var_struct.',adjvars{i},',2)'])>1
-                fprintf("Error Tip: The %s has more than 1 columns. \n",adjvars{i});
-                error("Notice: each variable should be N x 1 vector, N = the number of subjects.");
-            end
-            if iscell(eval(['handles.Cfg.var_struct.',adjvars{i},';']))
-                eval(['handles.Cfg.mod(:,',num2str(i),')=cell2mat(handles.Cfg.var_struct.',adjvars{i},');']);
-            else
-                eval(['handles.Cfg.mod(:,',num2str(i),')=handles.Cfg.var_struct.',adjvars{i},';']);
-            end
-        end
-    end
-end
-if isfield(handles,'Cfg')
-    Cfg=handles.Cfg; %Added by YAN Chao-Gan, 100130. Save the configuration parameters automatically.
-    
-    [filename, pathname] = uiputfile({'*.mat'}, 'Save Parameters As');
-    if ischar(filename)
-        Cfg=handles.Cfg;
-        save(['',pathname,filename,''], 'Cfg');
-    end
-else
-    warndlg('I got nothing to save.');
-end
-guidata(hObject,handles);
-
-function SetLoadedData(hObject,handles,Cfg)
-handles.Cfg=Cfg;
-
-guidata(hObject,handles);
-UpdateDisplay(handles);
+% % --- Executes on button press in pushbuttonSave.
+% function pushbuttonSave_Callback(hObject, eventdata, handles)
+% % hObject    handle to pushbuttonSave (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% if ~isempty(handles.listboxAdjVar)
+%     adjvars = cellstr(get(handles.listboxAdjVar,'String'));
+%     handles.Cfg.AdjCov = [];
+%     for i = 1:numel(adjvars)
+%         if ~isempty(adjvars{i})
+%             if eval(['size(handles.Cfg.AdjCov.',adjvars{i},',2)'])>1
+%                 fprintf("Error Tip: The %s has more than 1 columns. \n",adjvars{i});
+%                 error("Notice: each variable should be N x 1 vector, N = the number of subjects.");
+%             end
+%             if iscell(eval(['handles.Cfg.AdjCov.',adjvars{i},';']))
+%                 eval(['handles.Cfg.mod(:,',num2str(i),')=cell2mat(handles.Cfg.AdjCov.',adjvars{i},');']);
+%             else
+%                 eval(['handles.Cfg.mod(:,',num2str(i),')=handles.Cfg.AdjCov.',adjvars{i},';']);
+%             end
+%         end
+%     end
+% end
+% if isfield(handles,'Cfg')
+%     Cfg=handles.Cfg; %Added by YAN Chao-Gan, 100130. Save the configuration parameters automatically.
+%     
+%     [filename, pathname] = uiputfile({'*.mat'}, 'Save Parameters As');
+%     if ischar(filename)
+%         Cfg=handles.Cfg;
+%         save(['',pathname,filename,''], 'Cfg');
+%     end
+% else
+%     warndlg('I got nothing to save.');
+% end
+% guidata(hObject,handles);
+% 
+% function SetLoadedData(hObject,handles,Cfg)
+% handles.Cfg=Cfg;
+% 
+% guidata(hObject,handles);
+% UpdateDisplay(handles);
 
 %% Update All the uiControls' display on the GUI
 function UpdateDisplay(handles)
-set(handles.popupmenuLinearFamily,'Value', handles.Cfg.LinearMode+1);
-set(handles.listboxAllVar,'String',setdiff(handles.Cfg.vars,'SiteName'),'Value',1);
-if isfield(handles.Cfg,'AdjVar')
-    set(handles.listboxAdjVar,'String',handles.Cfg.AdjVar,'Value',1);
+if handles.Cfg.LinearMode~=-1
+    set(handles.popupmenuLinearFamily,'Value', handles.Cfg.LinearMode+1);
+end
+
+set(handles.listboxAllVar,'String',handles.Cfg.covnames,'Value',1);
+if isfield(handles.Cfg,'AdjCov')
+    set(handles.listboxAdjVar,'String',handles.Cfg.AdjCname,'Value',1);
 else
     set(handles.listboxAdjVar,'String','');
 end
