@@ -30,6 +30,10 @@ eval $cmd
 cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif cp -rf /opt/freesurfer/subjects/fsaverage5 /data/fmriprep/sourcedata/freesurfer/fsaverage5"
 eval $cmd
 
+cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif cp -rf /dpabi/templates /data/templates"
+eval $cmd
+
+
 # Setup done, run the command
 echo Running task Prefmriprep
 

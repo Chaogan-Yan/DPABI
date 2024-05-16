@@ -24,7 +24,7 @@ module load singularity/3.8.0
 
 subject=$( sed -n -E "$((${SLURM_ARRAY_TASK_ID}))p" ${DATADIR}/subjects.txt | awk '{print $1}' )
 
-cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/usr/local/freesurfer/7.3.2/license.txt -B ${DATADIR}:/data --env SUBJECTS_DIR=/data/freesurfer ${SingularityDIR}/freesurfer.sif segment_subregions thalamus --cross ${subject}"
+cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/usr/local/freesurfer/7.4.1/license.txt -B ${DATADIR}:/data --env SUBJECTS_DIR=/data/freesurfer ${SingularityDIR}/freesurfer.sif segment_subregions thalamus --cross ${subject}"
 
 # Setup done, run the command
 echo Running task ${SLURM_ARRAY_TASK_ID}
@@ -32,14 +32,14 @@ echo Commandline: $cmd
 eval $cmd
 
 
-cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/usr/local/freesurfer/7.3.2/license.txt -B ${DATADIR}:/data --env SUBJECTS_DIR=/data/freesurfer ${SingularityDIR}/freesurfer.sif segment_subregions hippo-amygdala --cross ${subject}"
+cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/usr/local/freesurfer/7.4.1/license.txt -B ${DATADIR}:/data --env SUBJECTS_DIR=/data/freesurfer ${SingularityDIR}/freesurfer.sif segment_subregions hippo-amygdala --cross ${subject}"
 
 # Setup done, run the command
 echo Running task ${SLURM_ARRAY_TASK_ID}
 echo Commandline: $cmd
 eval $cmd
 
-cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/usr/local/freesurfer/7.3.2/license.txt -B ${DATADIR}:/data --env SUBJECTS_DIR=/data/freesurfer ${SingularityDIR}/freesurfer.sif segment_subregions brainstem --cross ${subject}"
+cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/usr/local/freesurfer/7.4.1/license.txt -B ${DATADIR}:/data --env SUBJECTS_DIR=/data/freesurfer ${SingularityDIR}/freesurfer.sif segment_subregions brainstem --cross ${subject}"
 
 # Setup done, run the command
 echo Running task ${SLURM_ARRAY_TASK_ID}

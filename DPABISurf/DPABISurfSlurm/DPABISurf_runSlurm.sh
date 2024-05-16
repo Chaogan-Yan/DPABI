@@ -34,7 +34,7 @@ sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Prefmriprep) --export=
 
 sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n fmriprep) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/5_Postfmriprep.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Postfmriprep) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/6_Organize_fmriprep_Surf.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Postfmriprep) --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/6_Organize_fmriprep_Surf.slurm --wait
 
 sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_fmriprep_Surf) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/7_Organize_fmriprep.slurm --wait
 

@@ -24,7 +24,7 @@ source ${SetEnvScriptDir}/SetEnv.sh
 FMRIPREP_HOST_CACHE=$HOME/.cache/fmriprep
 mkdir -p ${FMRIPREP_HOST_CACHE}
 
-export SINGULARITYENV_TEMPLATEFLOW_HOME="/dpabi/templates"
+export SINGULARITYENV_TEMPLATEFLOW_HOME="/data/templates"
 
 module load singularity/3.8.0
 
