@@ -23,7 +23,7 @@ source ${SetEnvScriptDir}/SetEnv.sh
 
 module load singularity/3.8.0
 
-cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif /dpabi/run_y_Organize_SegmentSubregions_StandAlone.sh /opt/mcr/R2022b /dpabi/DPABISurf_Blank.mat /data /data/subjects.txt"
+cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif /dpabi/run_y_Organize_SegmentSubregions_StandAlone.sh /opt/mcr/R2022b /dpabi/DPABISurf_Blank.mat /data /data/subjects.txt 1"
 
 
 # Setup done, run the command

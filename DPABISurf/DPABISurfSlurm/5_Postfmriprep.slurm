@@ -25,7 +25,7 @@ module load singularity/3.8.0
 cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif mv /data/fmriprep/sourcedata/freesurfer /data/freesurfer"
 eval $cmd
 
-cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpdpabisurfslurmbi.sif rm -rf /data/fmriprep/sourcedata"
+cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif rm -rf /data/fmriprep/sourcedata"
 eval $cmd
 
 cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif chmod -R 777 /data/fmriprep/"

@@ -66,7 +66,6 @@ module load singularity/3.8.0
 
 subject=$( sed -n -E "$((${SLURM_ARRAY_TASK_ID}))p" ${DATADIR}/subjects.txt | awk '{print $1}' )
 
-chmod +x /work1/yancg/Soft/MyStandAlone/y_Organize_fmriprep_Surf.sh
 cmd="singularity run --cleanenv -B ${FreeSurferLicenseDIR}/license.txt:/opt/freesurfer/license.txt -B ${DATADIR}:/data ${SingularityDIR}/dpabisurfslurm.sif /dpabi/y_Organize_fmriprep_Surf.sh ${subject} /data"
 
 

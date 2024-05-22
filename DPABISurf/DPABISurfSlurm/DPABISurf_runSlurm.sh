@@ -15,12 +15,12 @@
 # ycg.yan@gmail.com
 
 # !!!DEFINE YOURS BELOW!!!
-export DPABISurfSlurmDIR="/work1/yancg/Scripts/DPABISurfSlurm"
+export DPABISurfSlurmDIR="/public/home/yancg/YANWork/Scripts/DPABISurfSlurm"
 # Should have the DPABISurfSlurm files
-export SetEnvScriptDir="/work1/yancg/Data/Test/Test"
+export SetEnvScriptDir="/public/home/yancg/YANWork/Data/Test"
 # Should have SetEnv.sh
 # You should also go into SetEnv.sh to define your parameters!!!
-export DATADIR="/work1/yancg/Data/Test/Test"
+export DATADIR="/public/home/yancg/YANWork/Data/Test"
 # Should have BIDS and subjects.txt
 # !!!DEFINE YOURS ABOVE!!!
 
@@ -40,7 +40,7 @@ sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_fmriprep_Surf
 
 sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_fmriprep) --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/8_SegmentSubregions.slurm --wait
 
-sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n SegmentSubregions) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/9_Organize_SegmentSubregions_Convert.slurm --wait
+sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n SegmentSubregions) --export=SetEnvScriptDir=${SetEnvScriptDir} --array=1-$(( $( wc -l < ${DATADIR}/subjects.txt ) )) ${DPABISurfSlurmDIR}/9_Organize_SegmentSubregions_Convert.slurm --wait
 
 sbatch --dependency=afterok:$(squeue -u $USER -h -o %i -n Organize_SegmentSubregions_Convert) --export=SetEnvScriptDir=${SetEnvScriptDir} ${DPABISurfSlurmDIR}/10_Organize_SegmentSubregions.slurm --wait
 
