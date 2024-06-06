@@ -96,37 +96,18 @@ AllVolumeSet = [];
 OutputFileNames = [];
 fprintf('\nReading Data...\n');
 
-for i=1:numel(ImgCells)
+for i=1:numel(ImgCells) 
     ImgFiles=ImgCells{i};
     % if want to reorder the file list by sublist of demographic
     % information, then try to strcmpi(filename,subjuct) and then
     % rearrange
     if numel(ImgCells) == numel(AdjustInfo.SiteName)
         % ------------------------ R e a d D a t a --------------------------
-        [AllVolume,VoxelSize,theImgFileList, Header] =y_ReadAll(ImgFiles);
+        [AllVolume,VoxelSize,theImgFileList, Header] =yw_ReadAll(ImgFiles); % extend to xlsx,csv,tsv,txt files
         
-        if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
-            [nDim1 nDim2 nDim3 nDimTimePoints]=size(AllVolume);
-            BrainSize = [nDim1 nDim2 nDim3];
-            VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));
-            
-            if ischar(MaskData)
-                fprintf('\nLoad mask "%s".\n', MaskData);
-                if ~isempty(MaskData)
-                    [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskData);
-                    if ~all(size(MaskData)==[nDim1 nDim2 nDim3])
-                        error('The size of Mask (%dx%dx%d) doesn''t match the required size (%dx%dx%d).\n',size(MaskData), [nDim1 nDim2 nDim3]);
-                    end
-                    MaskData = double(logical(MaskData));
-                else
-                    MaskData=ones(nDim1,nDim2,nDim3);
-                end
-            end    
-                  
-            AllVolume=reshape(AllVolume,[],nDimTimePoints);
-        else
+        if isfield(Header,'cdata')            
             [nDimVertex nDimTimePoints]=size(AllVolume);
-            if ischar(MaskData)
+            if ischar(MaskData) || isempty(MaskData)
                 fprintf('\nLoad mask "%s".\n', MaskData);
                 if ~isempty(MaskData)
                     MaskData=gifti(MaskData);
@@ -137,9 +118,60 @@ for i=1:numel(ImgCells)
                     MaskData = double(logical(MaskData));
                 else
                     MaskData=ones(nDimVertex,1);
+                end            
+            end            
+        elseif isfield(Header,'MatrixSize')
+            [nDimEdges nDimTimePoints]=size(AllVolume);
+            NetworkShape = Header.MatrixSize{1};
+            if NetworkShape(1)~= NetworkShape(2)
+                error('Input is not a square matrix.');
+            end
+            if ischar(MaskData) || isempty(MaskData)
+                fprintf('\nLoad mask "%s".\n', MaskData);
+                if ~isempty(MaskData)
+                    fprintf('\nLoad mask "%s".\n', MaskData);
+                    [MaskData,Header]=y_ReadMat(MaskData);
+                    MaskData = double(logical(MaskData));
+                else
+                    % create upper triangle mask
+                    MaskData=zeros(NetworkShape);
+                    triu_index = triu(true(size(MaskData)),1);
+                    MaskData(triu_index)=1;
                 end
             end
-        end                      
+        elseif isfield(Header,'mat') %.nii %Wang Yu-Wei 240603.
+            [nDim1 nDim2 nDim3 nDimTimePoints]=size(AllVolume);
+            BrainSize = [nDim1 nDim2 nDim3];
+            VoxelSize = sqrt(sum(Header.mat(1:3,1:3).^2));
+            
+            if ischar(MaskData) || isempty(MaskData)
+                fprintf('\nLoad mask "%s".\n', MaskData);
+                if ~isempty(MaskData)
+                    [MaskData,MaskVox,MaskHead]=y_ReadRPI(MaskData);
+                    if ~all(size(MaskData)==[nDim1 nDim2 nDim3])
+                        error('The size of Mask (%dx%dx%d) doesn''t match the required size (%dx%dx%d).\n',size(MaskData), [nDim1 nDim2 nDim3]);
+                    end
+                    MaskData = double(logical(MaskData));
+                else
+                    MaskData=ones(nDim1,nDim2,nDim3);
+                end
+            end
+            
+        else
+            [nDim1 nDimTimePoints]=size(AllVolume);
+            
+            if ischar(MaskData) || isempty(MaskData)
+                fprintf('\nLoad mask "%s".\n', MaskData);
+                if ~isempty(MaskData)
+                    fprintf('\nLoad mask "%s".\n', MaskData);
+                    [MaskData,Header]=yw_ReadAll(MaskData);
+                    MaskData = double(logical(MaskData));
+                else
+                    MaskData=ones(nDim1,nDimTimePoints);
+                end
+            end
+        end            
+        AllVolume=reshape(AllVolume,[],nDimTimePoints);
         % ------------------- M a s k O u t D a t a ( 2 D ）-------------------
         MaskDataOneDim = reshape(MaskData,[],1);
         MaskIndex = find(MaskDataOneDim);
@@ -157,7 +189,7 @@ for i=1:numel(ImgCells)
     % ------------------- O u t p u t F i l e s ----------------------
     if iscell(ImgFiles)
         OutputFileNames = [OutputFileNames;ImgFiles];
-    elseif numel(ImgCells) < numel(AdjustInfo.SiteName) % single file
+    elseif numel(ImgCells)==1  % single file
         OutputFileNames = [OutputFileNames;{ImgFiles},size(organized_data,1)]; % the number of subjects && rows of organized data
     else
         %OutputFileNames = [OutputFileNames;{ImgFiles}];
@@ -172,15 +204,6 @@ clear AllVolumeSet
 
 
 % -----------------------H A M O N I Z A T I O N --------------------------
-poolobj = gcp('nocreate');
-if ~isempty(poolobj) & poolobj.NumWorkers ~= ParallelWorkersNum
-    if ParallelWorkersNum ~= 0
-       delete(gcp);
-       parpool(ParallelWorkersNum);
-    else
-       delete(gcp);
-    end
-end
         
 HarmonizedData = zeros(size(AllVolume));
 fprintf('\nHarmonizing...\n\n');
@@ -200,28 +223,61 @@ switch MethodType
             SourceData = AllVolume(:,SourceIndex);
             harmonized = zeros(size(SourceData));
             if isempty(AdjustInfo.Subgroups) %no subsampling
-                fprintf('\nfitting Site %s to TargetSite %s \n', uniqueSites{SourceSiteIndex(i_source)},uniqueSites{AdjustInfo.TargetSiteIndex});                
-                parfor i_feature = 1:size(SourceData,1)
-                    [slope,intercept] = fitMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',0);
-                    harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
-                end                  
-            else        
+                fprintf('\nfitting Site %s to TargetSite %s \n', uniqueSites{SourceSiteIndex(i_source)},uniqueSites{AdjustInfo.TargetSiteIndex});
+                spmd 
+                    if labindex < ParallelWorkersNum
+                        for i_feature = labindex:numlabs:size(SourceData,1)
+                %parfor i_feature = 1:size(SourceData,1)
+                           [slope,intercept] = fitMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',0);
+                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
+                        end
+                    else
+                        for i_feature = 1:size(SourceData,1)
+                %parfor i_feature = 1:size(SourceData,1)
+                           [slope,intercept] = fitMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',0);
+                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;       
+                        end
+                    end
+                end
+             else 
                 fprintf('\nfitting Site %s to TargetSite %s with Subsampling \n', uniqueSites{SourceSiteIndex(i_source)},uniqueSites{AdjustInfo.TargetSiteIndex});
                 
                 IndexSource = AdjustInfo.Subgroups(SourceIndex);
                 IndexTarget = AdjustInfo.Subgroups(TargetIndex);
-                parfor i_feature = 1:size(SourceData,1)
-                    [slope,intercept] = subsamplingMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',IndexSource,IndexTarget,100);
-                    harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
+                spmd(ParallelWorkersNum)
+                    if labindex < ParallelWorkersNum
+                        for i_feature = labindex:numlabs:size(SourceData,1)
+                %parfor i_feature = 1:size(SourceData,1)
+                            [slope,intercept] = subsamplingMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',IndexSource,IndexTarget,100);
+                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
+                        end
+                    else
+                        for i_feature = 1:size(SourceData,1)
+                            [slope,intercept] = subsamplingMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',IndexSource,IndexTarget,100);
+                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
+                        end
+                    end
                 end
-            end
-             HarmonizedData(:,SourceIndex) = harmonized;
+            end        
+            HarmonizedData(:,SourceIndex) = harmonized;
         end
     case 'ComBat/CovBat' %combat/covbat
         fprintf('\nComBat Harmonizing...\n');
+        % combat can't deal with all-zero rows        
+        if any(~any(AllVolume,2)) %if exists all-zero row
+            TmpVolume = zeros(size(AllVolume));
+            
+            nonZeroRowInd = find(any(AllVolume,2));
+            if isempty(nonZeroRowInd)
+                error('Data are all zero.');
+            end
+            
+            AllVolume = AllVolume(nonZeroRowInd,:);
+        end
+        
         if ~AdjustInfo.IsCovBat
             if ~isempty(AdjustInfo.batch) 
-                HarmonizedData = combat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.IsParametric-2));
+                HarmonizedData = combat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.IsParametric-2)); % if error happened here, it means same value exist in the same voxel/edge/others, considering use a mask
             else
                 error('No batch information in AdjusteInfo, please check!');            
             end
@@ -231,6 +287,11 @@ switch MethodType
             elseif isnumeric(AdjustInfo.Percent)
                 HarmonizedData = yw_covbat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.IsParametric-2),[],AdjustInfo.IsCovBatParametric,[],AdjustInfo.Percent);
             end
+        end
+        
+        if exist('TmpVolume','var')
+            TmpVolume(nonZeroRowInd,:) = HarmonizedData;
+            HarmonizedData = TmpVolume;
         end
     case 'ICVAE'
         Datetime=fix(clock);
@@ -253,16 +314,33 @@ switch MethodType
         switch AdjustInfo.LinearMode 
             case 1 %'General' 
                 fprintf('Linear general model Harmonizing...\n');
-                for row = 1:size(AllVolume, 1)
-                    m = mod(row,1000);
-                    if m==0 && row>=1000
-                        fprintf('\n Finishing %.2f percentage...\n',row/size(AllVolume,1)*100);
+                spmd 
+                    if labindex < ParallelWorkersNum
+                        for row = labindex:numlabs:size(AllVolume, 1)
+                %parfor row = 1:size(AllVolume, 1)
+                            m = mod(row,1000);
+                            if m==0 && row>=1000
+                                fprintf('\n Finishing %.2f percentage...\n',row/size(AllVolume,1)*100);
+                            end
+                            y = AllVolume(row,:)';
+                            x = [AdjustInfo.SiteMatrix,AdjustInfo.AdjCov];
+                            lm = fitlm(x, y);
+                            siteeffect = AdjustInfo.SiteMatrix * lm.Coefficients.Estimate(2:size(AdjustInfo.SiteMatrix,2)+1);
+                            HarmonizedData(row,:) = y-siteeffect;
+                        end
+                    else
+                        for row = 1:size(AllVolume, 1)
+                            m = mod(row,1000);
+                            if m==0 && row>=1000
+                                fprintf('\n Finishing %.2f percentage...\n',row/size(AllVolume,1)*100);
+                            end
+                            y = AllVolume(row,:)';
+                            x = [AdjustInfo.SiteMatrix,AdjustInfo.AdjCov];
+                            lm = fitlm(x, y);
+                            siteeffect = AdjustInfo.SiteMatrix * lm.Coefficients.Estimate(2:size(AdjustInfo.SiteMatrix,2)+1);
+                            HarmonizedData(row,:) = y-siteeffect;
+                        end
                     end
-                    y = AllVolume(row,:)'; 
-                    x = [AdjustInfo.SiteMatrix,AdjustInfo.AdjCov];
-                    lm = fitlm(x, y); 
-                    siteeffect = AdjustInfo.SiteMatrix * lm.Coefficients.Estimate(2:size(AdjustInfo.SiteMatrix,2)+1);
-                    HarmonizedData(row,:) = y-siteeffect; 
                 end 
             case 2 %'Mixed'  
                 fprintf('Linear mixed model Harmonizing...\n');
@@ -299,15 +377,22 @@ delete(gcp('nocreate'));
 % ----------------------------- W r i t e D a t a -------------------------
 
 if numel(ImgCells)==numel(AdjustInfo.SiteName)
-    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames')  %YAN Chao-Gan 181204. If NIfTI data
+    if isfield(Header,'cdata') 
+        HarmonizedBrain = (zeros(nDimVertex, size(AllVolume,2)));
+        HarmonizedBrain(MaskIndex,:) = AllVolume;
+    elseif isfield(Header,'MatrixNames')
+        HarmonizedBrain = (zeros(nDimEdges, size(AllVolume,2)));
+        HarmonizedBrain(MaskIndex,:) = AllVolume;
+    elseif isfield(Header,'mat')
         HarmonizedBrain = (zeros(nDim1*nDim2*nDim3, size(AllVolume,2)));
         HarmonizedBrain(MaskIndex,:) = AllVolume;
         HarmonizedBrain=reshape(HarmonizedBrain,[nDim1, nDim2, nDim3, size(AllVolume,2)]);
         Header.pinfo = [1;0;0];
         Header.dt    =[16,0];
     else
-        HarmonizedBrain = (zeros(nDimVertex, size(AllVolume,2)));
+        HarmonizedBrain = (zeros(nDim1, size(AllVolume,2)));
         HarmonizedBrain(MaskIndex,:) = AllVolume;
+        HarmonizedBrain = reshape(HarmonizedBrain,[Header.tablesize,size(AllVolume,2)]);
     end
 elseif numel(ImgCells) < numel(AdjustInfo.SiteName)
     HarmonizedBrain = AllVolume;
@@ -323,7 +408,7 @@ for iFile = 1:size(OutputFileNames,1)
     SiteOrganized = extractAfter(Path,AdjustInfo.SiteName{iFile});
     
     if isequal(Path,OutputDir) & size(OutputFileNames,1) ~= 1
-        error('Death Warning: the files going to be created will cover your original data, please change the output directory!!!');
+        error('Death Warning(╬ ಠ益ಠ): the files going to be created will cover your original data, please change the output directory!!!');
     end
     
     if size(OutputFileNames,1) ~= 1       
@@ -338,19 +423,34 @@ for iFile = 1:size(OutputFileNames,1)
     end
     
     if numel(ImgCells)==numel(AdjustInfo.SiteName)
-        if size(OutputFileNames,2)>=2 && (~isempty(OutputFileNames{iFile,2}))
-            if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames')  %YAN Chao-Gan 181204. If NIfTI data
+        if size(OutputFileNames,2)>=2 && (~isempty(OutputFileNames{iFile,2})) % 
+            if isfield(Header,'mat')
                 y_Write(squeeze(HarmonizedBrain(:,:,:,iPoint+1:iPoint+OutputFileNames{iFile,2})),Header,OutName);
-            else
+            elseif isfield(Header,'cdata') || isfield(Header,'MatrixNames')  
                 y_Write(squeeze(HarmonizedBrain(:,iPoint+1:iPoint+OutputFileNames{iFile,2})),Header,OutName);
+            elseif isfield(Header,'tablesize')
+                if Header.tablesize(2) == 1
+                    T = array2table(HarmonizedBrain(:,iPoint+1:iPoint+OutputFileNames{iFile,2}),'VariableNames',Header.name);
+                else
+                    T = array2table(HarmonizedBrain(:,:,iPoint+1:iPoint+OutputFileNames{iFile,2}),'VariableNames',Header.name);
+                end
+                writetable(T,OutName);
             end
             iPoint=iPoint+OutputFileNames{iFile,2};
         else
-            if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
+            if isfield(Header,'mat')
                 y_Write(squeeze(HarmonizedBrain(:,:,:,iPoint+1)),Header,OutName);
-            else
+            elseif isfield(Header,'cdata') || isfield(Header,'MatrixNames')
                 y_Write(squeeze(HarmonizedBrain(:,iPoint+1)),Header,OutName);
+            elseif isfield(Header,'tablesize')
+                if Header.tablesize(2) == 1
+                    T = array2table(HarmonizedBrain(:,iPoint+1),'VariableNames',Header.name);
+                else
+                    T = array2table(HarmonizedBrain(:,:,iPoint+1),'VariableNames',Header.name);
+                end
+                writetable(T,OutName);
             end
+
             iPoint=iPoint+1;
         end
     elseif numel(ImgCells) < numel(AdjustInfo.SiteName)

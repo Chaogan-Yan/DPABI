@@ -101,7 +101,7 @@ for i=1:numel(ImgCells)
     ImgFiles=ImgCells{i};
     [AllVolume,VoxelSize,theImgFileList, Header] =y_ReadAll(ImgFiles);
     [nDimVertex nDimTimePoints]=size(AllVolume);
-    if ischar(MaskData)
+    if ischar(MaskData) || isempty(MaskData)
         fprintf('\nLoad mask "%s".\n', MaskData);
         if ~isempty(MaskData)
             MaskData=gifti(MaskData);
@@ -147,7 +147,7 @@ for i=1:numel(ImgCells)
     [AllVolume,VoxelSize,theImgFileList, Header] =y_ReadAll(ImgFiles);
     [nDimVertex nDimTimePoints]=size(AllVolume);
     
-    if ischar(MaskData)
+    if ischar(MaskData) || isempty(MaskData)
         fprintf('\nLoad mask "%s".\n', MaskData);
         if ~isempty(MaskData)
             MaskData=gifti(MaskData);
@@ -161,12 +161,12 @@ for i=1:numel(ImgCells)
         end
     end
     
-    if ~isempty(MaskData)
-        MaskDataOneDim=reshape(MaskData,[],1);
-        MaskIndex = find(MaskDataOneDim);
-        nVertex = length(MaskIndex);
-        AllVolume= AllVolume(MaskIndex,:);
-    end
+    
+    MaskDataOneDim=reshape(MaskData,[],1);
+    MaskIndex = find(MaskDataOneDim);
+    nVertex = length(MaskIndex);
+    AllVolume= AllVolume(MaskIndex,:);
+
     
     AllVolumeSet = [AllVolumeSet,AllVolume];
     
@@ -189,7 +189,9 @@ Header_RH=Header;
 AllVolume = [AllVolumeSet_LH;AllVolumeSet_RH];
 clear AllVolumeSet AllVolumeSet_LH AllVolumeSet_RH;
 
-
+if ParallelWorkersNum == 0
+    ParallelWorkersNum = 1;
+end
 
 fprintf('\nHarmonizing...\n');
 HarmonizedData = zeros(size(AllVolume));
@@ -205,6 +207,49 @@ switch MethodType
         SourceSiteIndex = setdiff(1:SiteNum,AdjustInfo.TargetSiteIndex);
         
         uniqueSites = unique(AdjustInfo.SiteName);
+         for i_source = 1:length(SourceSiteIndex)
+            SourceIndex = AdjustInfo.SiteIndex{SourceSiteIndex(i_source)};
+            SourceData = AllVolume(:,SourceIndex);
+            harmonized = zeros(size(SourceData));
+            if isempty(AdjustInfo.Subgroups) %no subsampling
+                fprintf('\nfitting Site %s to TargetSite %s \n', uniqueSites{SourceSiteIndex(i_source)},uniqueSites{AdjustInfo.TargetSiteIndex});
+                spmd 
+                    if labindex < ParallelWorkersNum
+                        for i_feature = labindex:numlabs:size(SourceData,1)
+                %parfor i_feature = 1:size(SourceData,1)
+                           [slope,intercept] = fitMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',0);
+                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
+                        end
+                    else
+                        for i_feature = 1:size(SourceData,1)
+                %parfor i_feature = 1:size(SourceData,1)
+                           [slope,intercept] = fitMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',0);
+                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;       
+                        end
+                    end
+                end
+             else 
+                fprintf('\nfitting Site %s to TargetSite %s with Subsampling \n', uniqueSites{SourceSiteIndex(i_source)},uniqueSites{AdjustInfo.TargetSiteIndex});
+                
+                IndexSource = AdjustInfo.Subgroups(SourceIndex);
+                IndexTarget = AdjustInfo.Subgroups(TargetIndex);
+                spmd
+                    if labindex < ParallelWorkersNum
+                        for i_feature = labindex:numlabs:size(SourceData,1)
+                %parfor i_feature = 1:size(SourceData,1)
+                            [slope,intercept] = subsamplingMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',IndexSource,IndexTarget,10);
+                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
+                        end
+                    else
+                        for i_feature = 1:size(SourceData,1)
+                            [slope,intercept] = subsamplingMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',IndexSource,IndexTarget,10);
+                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
+                        end
+                    end
+                end
+            end        
+            HarmonizedData(:,SourceIndex) = harmonized;
+        end
         for i_source = 1:length(SourceSiteIndex)
             SourceIndex = AdjustInfo.SiteIndex{SourceSiteIndex(i_source)};
             SourceData = AllVolume(:,SourceIndex);
@@ -221,7 +266,7 @@ switch MethodType
                 IndexSource = AdjustInfo.Subgroups(SourceIndex);
                 IndexTarget = AdjustInfo.Subgroups(TargetIndex);
                 parfor i_feature = 1:size(SourceData,1)
-                    [slope,intercept] = subsamplingMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',IndexSource,IndexTarget,100);
+                    [slope,intercept] = subsamplingMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',IndexSource,IndexTarget,10);
                     harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
                 end
             end
@@ -229,6 +274,17 @@ switch MethodType
         end
     case 'ComBat/CovBat'
         fprintf('\nComBat Harmonizing...\n');
+         % combat can't deal with all-zero rows   2024.5.26    
+        if any(~any(AllVolume,2)) %if exists all-zero row
+            TmpVolume = zeros(size(AllVolume));
+            
+            nonZeroRowInd = find(any(AllVolume,2));
+            if isempty(nonZeroRowInd)
+                error('Data are all zero.');
+            end
+            
+            AllVolume = AllVolume(nonZeroRowInd,:);
+        end
         if ~AdjustInfo.IsCovBat
             if ~isempty(AdjustInfo.batch) 
                 HarmonizedData = combat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.IsParametric-2));
@@ -241,6 +297,11 @@ switch MethodType
             elseif isnumeric(AdjustInfo.Percent)
                 HarmonizedData = yw_covbat(AllVolume,AdjustInfo.batch,AdjustInfo.mod,abs(AdjustInfo.IsParametric-2),[],AdjustInfo.IsCovBatParametric,[],AdjustInfo.Percent);
             end
+        end
+        
+        if exist('TmpVolume','var')
+        	TmpVolume(nonZeroRowInd,:) = HarmonizedData;
+            HarmonizedData = TmpVolume;
         end
     case 'ICVAE'
         Datetime=fix(clock);
