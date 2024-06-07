@@ -22,7 +22,7 @@ function varargout = SurfSpace(varargin)
 
 % Edit the above text to modify the response to help SurfSpace
 
-% Last Modified by GUIDE v2.5 04-Aug-2023 21:22:57
+% Last Modified by GUIDE v2.5 28-May-2024 21:15:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -77,13 +77,16 @@ handles.CurDir=pwd;
 
 % %uimenu
 %handles.lhContextMenu =uicontextmenu;
-h_surfspace = uicontextmenu(handles.figure1);
-removeMenuItem = uimenu(h_surfspace,'Label','Clear');
+h_lhsurfspace = uicontextmenu(handles.figure1);
+removeMenuItem = uimenu(h_lhsurfspace,'Label','Clear');
 
-set(handles.ImgLHlistbox, 'UIContextMenu',h_surfspace);	
+set(handles.ImgLHlistbox, 'UIContextMenu',h_lhsurfspace);	
 set(removeMenuItem, 'Callback', @(src, event) RemoveAll_LH_Callback(src, event, guidata(src)));
 
-set(handles.ImgRHlistbox, 'UIContextMenu',h_surfspace);	
+h_rhsurfspace = uicontextmenu(handles.figure1);
+removeMenuItem = uimenu(h_rhsurfspace,'Label','Clear');
+
+set(handles.ImgRHlistbox, 'UIContextMenu',h_rhsurfspace);	
 set(removeMenuItem, 'Callback', @(src, event) RemoveAll_RH_Callback(src, event, guidata(src)));
 
 
@@ -372,10 +375,9 @@ function Finishpushbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to Finishpushbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isempty(handles.LHImgCells) || isempty(handles.RHImgCells)
-    warndlg('At least give me the .giis of both left and right hemi，or you can click the window''s top-right X button. Notice, this will clear all contents of this window.');
-    return
-end
+% if isempty(handles.LHImgCells) || isempty(handles.RHImgCells)
+%     warndlg('At least give me the .giis of both left and right hemi，or you can click the window''s top X button. Notice, this will clear all contents of this window.');
+% end
 
 handles.Mask.LH = get(handles.MaskLHedit,'String');
 handles.Mask.RH = get(handles.MaskRHedit,'String');
@@ -424,3 +426,19 @@ set(handles.ImgRHlistbox, 'String', '');
 handles.RHImgCells={};
 
 guidata(hObject, handles);
+
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.ImgLHlistbox, 'String', '');
+set(handles.ImgRHlistbox, 'String', '');
+set(handles.MaskLHedit, 'String', '');
+set(handles.MaskRHedit, 'String', '');
+handles=[];
+guidata(hObject, handles);
+% Hint: delete(hObject) closes the figure
+delete(hObject)

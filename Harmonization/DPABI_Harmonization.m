@@ -57,9 +57,10 @@ fprintf('\nHarmonizing the brain images (.nii/.nii.gz/.gii/.mat) to remove site 
 % [ProgramPath, fileN, extn] = fileparts(which('DPABI_Harmonization.m'));
 % addpath(genpath([ProgramPath,filesep,'SubGUIs']));
 
+handles.ImgCells = []; %to display data list, no longer in Cfg
 % Initialize Cfg
 handles.Cfg.FileList = []; %to create filelist
-handles.Cfg.ImgCells = []; %to display data list
+%handles.Cfg.ImgCells = []; %to display data list
 handles.Cfg.Mask = [];
 
 handles.Cfg.DemographicPath =[]; % get from site ino
@@ -78,7 +79,7 @@ handles.Cfg.ParallelWorkersNumber=0;
 handles.Cfg.OutputDir = []; 
 
 handles.CurDir=pwd;
-handles.SurfSpaceStatus=0;
+handles.Cfg.SurfSpaceStatus=0;
 %set(handles.OutputDirEntry, 'String', pwd);
 
 % Choose default command line output for DPABI_Harmonization
@@ -176,31 +177,38 @@ function AddImgButton_Callback(hObject, eventdata, handles)
 % hObject    handle to AddImgButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[File, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.mat;*.xlsx;*.csv',...
-    'Brain Image Files (*.img;*.nii;*.nii.gz;*.mat;*.xlsx;*.csv)';'*.*', 'All Files (*.*)';}, ...
-    'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
+if handles.Cfg.SurfSpaceStatus == 0
+    [File, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.mat;*.xlsx;*.csv',...
+        'Brain Image Files (*.img;*.nii;*.nii.gz;*.mat;*.xlsx;*.csv)';'*.*', 'All Files (*.*)';}, ...
+        'Pick Underlay File' , handles.CurDir, 'MultiSelect', 'On');
 
-% If File is empty, return
-if isnumeric(File)
-    return;
-end
-
-if iscell(File)
-    N=numel(File);
-    ImgCell=cell(1, N);
-    StringCell=cell(N, 1);
-    for i=1:N
-        ImgFile=fullfile(Path, File{i});
-        ImgCell{1, i}=ImgFile;
-        StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+    % If File is empty, return
+    if isnumeric(File)
+        return;
     end
-    handles.Cfg.ImgCells=[handles.Cfg.ImgCells; ImgCell'];
-    AddString(handles.ImgListbox, StringCell);
+
+    if iscell(File)
+        N=numel(File);
+        ImgCell=cell(1, N);
+        StringCell=cell(N, 1);
+        for i=1:N
+            ImgFile=fullfile(Path, File{i});
+            ImgCell{1, i}=ImgFile;
+            StringCell{i, 1}=sprintf('IMG: (%s) %s', File{i}, ImgFile);
+        end
+
+        handles.ImgCells=[handles.ImgCells; ImgCell'];
+        handles.Cfg.FileList = handles.ImgCells;    
+        AddString(handles.ImgListbox, StringCell);
+    else
+        ImgFile=fullfile(Path, File);
+        handles.ImgCells{numel(handles.ImgCells)+1,1}=ImgFile;
+        handles.Cfg.FileList =  handles.ImgCells; 
+        StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
+        AddString(handles.ImgListbox, StringOne);
+    end
 else
-    ImgFile=fullfile(Path, File);
-    handles.Cfg.ImgCells{numel(handles.Cfg.ImgCells)+1}=ImgFile;
-    StringOne={sprintf('IMG: (%s) %s', File, ImgFile)};
-    AddString(handles.ImgListbox, StringOne);
+    error('Clear surface space first (click ''X'' of its window), then you can use general space.');
 end
 guidata(hObject, handles);
 
@@ -267,9 +275,9 @@ else
         handles.Cfg.FileList = handles.Cfg.AllVars.FileList;
         
         % List them in the box ... 
-        handles.Cfg.ImgCells = handles.Cfg.AllVars.FileList;
+        handles.ImgCells = handles.Cfg.AllVars.FileList;
         set(handles.ImgListbox, 'String', []);
-        AddString(handles.ImgListbox,handles.Cfg.ImgCells);
+        AddString(handles.ImgListbox,handles.ImgCells);
         
         
         % Remove FileList from covariate list
@@ -280,7 +288,7 @@ else
         handles.Cfg.FileList.RH = handles.Cfg.AllVars.FileListRH;
 
         
-        [handles.Cfg.ImgCells.LH,handles.Cfg.ImgCells.RH,handles.Cfg.Mask.LH, handles.Cfg.Mask.RH] = SurfSpace(handles.Cfg.FileList.LH,handles.Cfg.FileList.RH,[],[]);
+        [handles.ImgCells.LH,handles.ImgCells.RH,handles.Cfg.Mask.LH, handles.Cfg.Mask.RH] = SurfSpace(handles.Cfg.FileList.LH,handles.Cfg.FileList.RH,[],[]);
         set(handles.ImgListbox, 'String', '');
         Stringcell = cellstr('Your images are located in surface space, modify and check there！');
         AddString(handles.ImgListbox,Stringcell);
@@ -310,10 +318,15 @@ function AddSiteButton_Callback(hObject, eventdata, handles)
 % hObject    handle to AddSiteButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if handles.Cfg.SurfSpaceStatus == 0
 [ImgCells,Strings] = addSites;
-handles.Cfg.ImgCells = [handles.Cfg.ImgCells;ImgCells];
+handles.ImgCells = [handles.ImgCells;ImgCells];
+handles.Cfg.FileList = handles.ImgCells;
 
 AddString(handles.ImgListbox, Strings);
+else
+    error('Clear surface space first (click ''X'' of its window), then you can use general space.');
+end
 guidata(hObject, handles);
 
 % --- Executes on button press in RemoveButton.
@@ -321,12 +334,18 @@ function RemoveButton_Callback(hObject, eventdata, handles)
 % hObject    handle to RemoveButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if handles.Cfg.SurfSpaceStatus == 0
 Value=get(handles.ImgListbox, 'Value');
 if Value==0
     return
 end
-handles.Cfg.ImgCells(Value)=[];
+handles.ImgCells(Value)=[];
+handles.Cfg.FileList =  handles.ImgCells; 
+
 RemoveString(handles.ImgListbox, Value);
+else
+    error('Clear surface space first (click ''X'' of its window), then you can use general space.');
+end
 guidata(hObject, handles);
 
 
@@ -336,26 +355,41 @@ function SurfSpace_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Cfg=handles.Cfg;
-
-if ~isfield(Cfg.ImgCells,'LH') || ~isfield(Cfg.ImgCells,'RH')
-    [Cfg.ImgCells.LH,Cfg.ImgCells.RH,Cfg.Mask.LH,Cfg.Mask.RH] = SurfSpace;
-elseif ~isfield(Cfg.Mask,'LH') || ~isfield(Cfg.Mask,'RH')
-    [Cfg.ImgCells.LH,Cfg.ImgCells.RH,Cfg.Mask.LH,Cfg.Mask.RH] = SurfSpace(Cfg.ImgCells.LH,Cfg.ImgCells.RH,[],[]);
+handles.ImgCells = [];
+handles.Mask = []; 
+if Cfg.SurfSpaceStatus == 0
+    [handles.ImgCells.LH,handles.ImgCells.RH,handles.Mask.LH,handles.Mask.RH] = SurfSpace;
 else
-    [Cfg.ImgCells.LH,Cfg.ImgCells.RH,Cfg.Mask.LH,Cfg.Mask.RH] = SurfSpace(Cfg.ImgCells.LH,Cfg.ImgCells.RH,Cfg.Mask.LH,Cfg.Mask.RH);
+    [handles.ImgCells.LH,handles.ImgCells.RH,handles.Mask.LH,handles.Mask.RH] = SurfSpace(Cfg.FileList.LH,Cfg.FileList.RH,Cfg.Mask.LH,Cfg.Mask.RH);
 end
+
+% if ~isfield(Cfg.FileList,'LH') || ~isfield(Cfg.FileList,'RH')
+%     [handles.ImgCells.LH,handles.ImgCells.RH,handles.Mask.LH,handles.Mask.RH] = SurfSpace;
+% elseif ~isfield(Cfg.Mask,'LH') || ~isfield(Cfg.Mask,'RH')
+%     [handles.ImgCells.LH,handles.ImgCells.RH,handles.Mask.LH,handles.Mask.RH] = SurfSpace(Cfg.FileList.LH,Cfg.FileList.RH,[],[]);
+% else
+%     [handles.ImgCells.LH,handles.ImgCells.RH,handles.Mask.LH,handles.Mask.RH] = SurfSpace(Cfg.FileList.LH,Cfg.FileList.RH,Cfg.Mask.LH,Cfg.Mask.RH);
+% end
     
-if ~isempty(Cfg.ImgCells.LH) || ~isempty(Cfg.ImgCells.RH)...
-        || ~isempty(Cfg.Mask.LH) || ~isempty(Cfg.Mask.RH)
-    handles.SurfSpaceStatus = 1;
+if ~isempty(handles.ImgCells.LH) || ~isempty(handles.ImgCells.RH)...
+        || ~isempty(handles.Mask.LH) || ~isempty(handles.Mask.RH)
+    Cfg.SurfSpaceStatus = 1;
     set(handles.ImgListbox, 'String', '');
     Stringcell = cellstr('Your images are located in surface space, modify and check there！');
+    Cfg.FileList = handles.ImgCells;
+    Cfg.Mask = handles.Mask;
+    handles.ImgCells = Stringcell; 
     AddString(handles.ImgListbox,Stringcell);
     
     set(handles.ImgListbox,'String',Stringcell,'Value',1);
     drawnow;
 else
-    handles.SurfSpaceStatus = 0;
+    Cfg.SurfSpaceStatus = 0;
+    set(handles.ImgListbox,'String','');
+    Cfg.FileList = []; 
+    Cfg.Mask = [];
+    handles.ImgCells = [];
+    handles.Mask = []; 
 end
 
 handles.Cfg=Cfg;
@@ -366,12 +400,17 @@ function RemoveTable_Callback(hObject, eventdata, handles)
 % hObject    handle to RemoveTable (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if handles.Cfg.SurfSpaceStatus == 0
 Value=get(handles.ImgListbox, 'Value');
 if Value==0
     return
 end
-handles.Cfg.ImgCells(Value)=[];
+handles.ImgCells(Value)=[];
 RemoveString(handles.ImgListbox, Value);
+else
+    error('Clear surface space first (click ''X'' of its window), then you can use general space.');
+end
+
 guidata(hObject, handles);
 
 function RemoveAll_Callback(hObject, eventdata, handles)
@@ -379,7 +418,8 @@ function RemoveAll_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.ImgListbox, 'String', '');
-handles.Cfg.ImgCells={};
+handles.ImgCells={};
+handles.Cfg.FileList = handles.ImgCells;
 
 guidata(hObject, handles);
 
@@ -400,9 +440,9 @@ if isempty(D)
     D=dir(fullfile(Path, ['*', '.nii.gz']));
 end
 
-% if isempty(D)
-%     D=dir(fullfile(Path, ['*', '.gii']));
-% end
+if isempty(D)
+    D=dir(fullfile(Path, ['*', '.gii']));
+end
 
 if isempty(D)
     D=dir(fullfile(Path, ['*', '.mat']));
@@ -507,7 +547,7 @@ function ComputeButton_Callback(hObject, eventdata, handles)
 % 
 % handles.Cfg.MethodName = ValueString{2}{ValueString{1}};
 
-set(handles.ComputeButton,'Enable', 'off','BackgroundColor', 'red','ForegroundColor','green');
+set(handles.ComputeButton,'Enable', 'off','BackgroundColor','#A2142F','ForegroundColor','green');
    
 handles.Cfg.OutputDir = get(handles.OutputDirEntry, 'String');
 if isempty(handles.Cfg.OutputDir)
@@ -519,19 +559,19 @@ if ~isfield(handles.Cfg.AdjustInfo,'SiteName')
     handles.Cfg.AdjustInfo.SiteName = handles.Cfg.SiteName;
 end
 
-if handles.SurfSpaceStatus == 0 & ~isstruct(handles.Cfg.FileList)
-    if isempty(handles.Cfg.ImgCells)
+if handles.Cfg.SurfSpaceStatus == 0 & ~isstruct(handles.Cfg.FileList)
+    if isempty(handles.ImgCells)
         return          
     end
     
-    ImgCells=handles.Cfg.ImgCells;
+    ImgCells=handles.Cfg.FileList;
 
     MaskFile=handles.Cfg.Mask;
     
     yw_Harmonization(ImgCells, MaskFile, handles.Cfg.MethodName, handles.Cfg.AdjustInfo, handles.Cfg.ParallelWorkersNumber, handles.Cfg.OutputDir);
 else
-    LHImg = handles.Cfg.ImgCells.LH;
-    RHImg = handles.Cfg.ImgCells.RH;
+    LHImg = handles.Cfg.FileList.LH;
+    RHImg = handles.Cfg.FileList.RH;
     LHMask = handles.Cfg.Mask.LH;
     RHMask = handles.Cfg.Mask.RH;
     yw_Harmonization_Surf(LHImg, RHImg, LHMask, RHMask, handles.Cfg.MethodName, handles.Cfg.AdjustInfo, handles.Cfg.ParallelWorkersNumber, handles.Cfg.OutputDir); 
@@ -583,39 +623,6 @@ function editParallelWorkersNumber_Callback(hObject, eventdata, handles)
     end
     guidata(hObject, handles);
     
-    
-function editMask_Callback(hObject, eventdata, handles)
-% hObject    handle to editMask (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of editMask as text
-%        str2double(get(hObject,'String')) returns contents of editMask as
-%        a double 
-
-
-% --- Executes during object creation, after setting all properties.
-function editMask_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to editMask (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-function MaskEntry_Callback(hObject, eventdata, handles)
-% hObject    handle to MaskEntry (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of MaskEntry as text
-%        str2double(get(hObject,'String')) returns contents of MaskEntry as a double
-
-
 
 % --- Executes on selection change in MethodsPopup.
 function MethodsPopup_Callback(hObject, eventdata, handles)
@@ -696,8 +703,8 @@ function Maskpushbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to Maskpushbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA
-[Name, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.mat',...
-    'Brain Image Files (*.img;*.nii;*.nii.gz;*.mat)';...
+[Name, Path]=uigetfile({'*.img;*.nii;*.nii.gz;*.mat;*.csv;*.xlsx;*.txt',...
+    'Brain Image Files (*.img;*.nii;*.nii.gz;*.mat;*.csv;*.xlsx;*.txt)';...
     '*.*', 'All Files (*.*)';},...
     'Pick the Mask Image');
 if isnumeric(Name)
@@ -734,16 +741,16 @@ function CreateFileListpushbutton_Callback(hObject, eventdata, handles)
 Cfg = handles.Cfg;
 
 % make sure FileList or FileList.LH/RH
-if handles.SurfSpaceStatus==1 % FileList.LH/RH
-    FL = struct2table(Cfg.ImgCells);
+if handles.Cfg.SurfSpaceStatus==1 % FileList.LH/RH
+    FL = struct2table(Cfg.FileList);
     FL = renamevars(FL,{'LH','RH'},{'FileListLH','FileListRH'});
 else
-    FL = cell2table(Cfg.ImgCells,'VariableNames',{'FileList'});
+    FL = cell2table(Cfg.FileList,'VariableNames',{'FileList'});
 end
 
 if ~isfield(Cfg,'DemographicPath')
     warndlg('Feed me the file through Site Info button first. ');
-elseif isempty(handles.Cfg.ImgCells)
+elseif isempty(handles.Cfg.FileList)
     error('There is no images in Volume/General spave or Surface space. Add it first please.');
 else  
    % output path
@@ -820,23 +827,25 @@ function SetLoadedData(hObject,handles,Cfg)
 %% Update All the uiControls' display on the GUI
 function UpdateDisplay(hObject,handles)
 
-if isempty(handles.Cfg.FileList) & numel(handles.Cfg.ImgCells)==1 
-   handles.Cfg.FileList = handles.Cfg.ImgCells; %for organized data
-end
+% if isempty(handles.Cfg.FileList) % AddImage --> empty filelist
+%    handles.Cfg.FileList = handles.Cfg.ImgCells; %for organized data
+% end
 
 Cfg = handles.Cfg;
 % 1. Data and its display
+handles.ImgCells = Cfg.FileList; % when add and remove img, changes happened on ImgCells --> FileList
 
 if isstruct(Cfg.FileList)
-    [Cfg.ImgCells.LH,Cfg.ImgCells.RH,Cfg.Mask.LH,Cfg.Mask.RH] = SurfSpace(Cfg.ImgCells.LH,Cfg.ImgCells.RH,Cfg.Mask.LH,Cfg.Mask.RH);
+    [Cfg.FileList.LH,Cfg.FileList.RH,Cfg.Mask.LH,Cfg.Mask.RH] = SurfSpace(Cfg.FileList.LH,Cfg.FileList.RH,Cfg.Mask.LH,Cfg.Mask.RH);
     
-    handles.SurfSpaceStatus = 1;
+    
+    handles.Cfg.SurfSpaceStatus = 1;
     set(handles.ImgListbox, 'String', '');
     Stringcell = cellstr('Your images are located in surface space, modify and check there！');
     AddString(handles.ImgListbox,Stringcell);
     
     set(handles.ImgListbox,'String',Stringcell,'Value',1);
-    
+     
 else
     set(handles.ImgListbox,'String',Cfg.FileList,'Value',1);
 end
@@ -859,8 +868,9 @@ else
             set(handles.MethodsPopup,'Value', 5);
             [AdjustInfo.SiteMatrix,AdjustInfo.AdjCov,AdjustInfo.AdjCname,AdjustInfo.LinearMode,AdjustInfo.SiteName] = Linear_settings(Cfg.AdjustInfo,Cfg.Cov);
     end
+    Cfg.AdjustInfo = AdjustInfo;
 end
-Cfg.AdjustInfo = AdjustInfo;
+
 
 handles.Cfg = Cfg;
 guidata(hObject,handles);

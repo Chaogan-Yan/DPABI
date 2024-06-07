@@ -145,8 +145,8 @@ function RefButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 ParentDir = get(handles.editParentDirectory,'String');
 if ~isempty(ParentDir)
-    [RefFile,RefPath]=uigetfile({'*.mat;*.img;*.nii;*.nii.gz;*.gii',...
-        'Brain Image Files (*.mat;*.img;*.nii;*.nii.gz;*.gii)';'*.*', 'All Files (*.*)';}, ...
+    [RefFile,RefPath]=uigetfile({'*.mat;*.img;*.nii;*.nii.gz;*.gii;*.csv;*.txt;*.xlsx',...
+        'Brain Image Files (*.mat;*.img;*.nii;*.nii.gz;*.gii;*.csv;*.txt;*.xlsx)';'*.*', 'All Files (*.*)';}, ...
         'Please show me the way to the wanted file.',ParentDir);
 end
 if isnumeric(RefFile)
@@ -228,6 +228,16 @@ if optargin == 1
     if isempty(D)
         D=dir(fullfile(Path, ['*', '.mat']));
     end
+    if isempty(D)
+        D=dir(fullfile(Path,'/*.csv'));
+    end
+    if isempty(D)
+        D=dir(fullfile(Path, '/*.xlsx'));
+    end
+    if isempty(D)
+        D=dir(fullfile(Path, '/*.txt'));
+    end
+    
     NameCell={D.name}';
     
     Num=numel(NameCell);
