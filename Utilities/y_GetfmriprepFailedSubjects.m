@@ -109,7 +109,17 @@ if ~isempty(FailedID)
             if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
                 Command=sprintf('rm -rf %s/fmriprepwork/%s', Cfg.WorkingDir,FailedID{i});
             else
-                Command=sprintf('%s cgyan/dpabi rm -rf /data/fmriprep/%s', CommandInit,FailedID{i});
+                Command=sprintf('%s cgyan/dpabi rm -rf /data/fmriprepwork/%s', CommandInit,FailedID{i});
+            end
+            system(Command);
+        end
+
+        if exist(fullfile(Cfg.WorkingDir,'fmriprep','sourcedata','freesurfer',FailedID{i}))
+            %status = rmdir(fullfile(Cfg.WorkingDir,'fmriprep',FailedID{i}),'s');
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command=sprintf('rm -rf %s/fmriprep/sourcedata/freesurfer/%s', Cfg.WorkingDir,FailedID{i});
+            else
+                Command=sprintf('%s cgyan/dpabi rm -rf /data/fmriprep/sourcedata/freesurfer/%s', CommandInit,FailedID{i});
             end
             system(Command);
         end

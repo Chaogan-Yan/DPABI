@@ -2302,7 +2302,7 @@ end
 
 
 %If don't need to Warp into original space, then resample the ROI masks
-if (Cfg.IsBasedOnFunSurf==0) && ( (~isempty(Cfg.CalFC.ROIDefVolu)) ) && ((Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1))
+if (Cfg.IsBasedOnFunSurf==0) && ( (~isempty(Cfg.CalFC.ROIDefVolu)) || (~isempty(Cfg.CalFC.ROIDefSurfLH)) || (~isempty(Cfg.CalFC.ROIDefSurfRH)) ) && ((Cfg.IsExtractROISignals==1) || (Cfg.IsCalFC==1))
     if ~isempty(Cfg.CalFC.ROIDefVolu)
         if ~(7==exist([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace'],'dir'))
             mkdir([Cfg.WorkingDir,filesep,'Masks',filesep,'MasksForFun',filesep,'Masks_MNIFunSpace']);
