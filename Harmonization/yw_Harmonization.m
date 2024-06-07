@@ -224,18 +224,18 @@ switch MethodType
             harmonized = zeros(size(SourceData));
             if isempty(AdjustInfo.Subgroups) %no subsampling
                 fprintf('\nfitting Site %s to TargetSite %s \n', uniqueSites{SourceSiteIndex(i_source)},uniqueSites{AdjustInfo.TargetSiteIndex});
-                spmd 
+                spmd(ParallelWorkersNum) 
                     if labindex < ParallelWorkersNum
                         for i_feature = labindex:numlabs:size(SourceData,1)
                 %parfor i_feature = 1:size(SourceData,1)
                            [slope,intercept] = fitMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',0);
-                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
+                           harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
                         end
                     else
                         for i_feature = 1:size(SourceData,1)
                 %parfor i_feature = 1:size(SourceData,1)
                            [slope,intercept] = fitMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',0);
-                            harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;       
+                           harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;       
                         end
                     end
                 end

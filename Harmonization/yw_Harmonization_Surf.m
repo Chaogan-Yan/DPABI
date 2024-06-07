@@ -189,10 +189,6 @@ Header_RH=Header;
 AllVolume = [AllVolumeSet_LH;AllVolumeSet_RH];
 clear AllVolumeSet AllVolumeSet_LH AllVolumeSet_RH;
 
-if ParallelWorkersNum == 0
-    ParallelWorkersNum = 1;
-end
-
 fprintf('\nHarmonizing...\n');
 HarmonizedData = zeros(size(AllVolume));
 
@@ -213,7 +209,7 @@ switch MethodType
             harmonized = zeros(size(SourceData));
             if isempty(AdjustInfo.Subgroups) %no subsampling
                 fprintf('\nfitting Site %s to TargetSite %s \n', uniqueSites{SourceSiteIndex(i_source)},uniqueSites{AdjustInfo.TargetSiteIndex});
-                spmd 
+                spmd(ParallelWorkersNum)
                     if labindex < ParallelWorkersNum
                         for i_feature = labindex:numlabs:size(SourceData,1)
                 %parfor i_feature = 1:size(SourceData,1)
@@ -233,7 +229,7 @@ switch MethodType
                 
                 IndexSource = AdjustInfo.Subgroups(SourceIndex);
                 IndexTarget = AdjustInfo.Subgroups(TargetIndex);
-                spmd
+                spmd(ParallelWorkersNum)
                     if labindex < ParallelWorkersNum
                         for i_feature = labindex:numlabs:size(SourceData,1)
                 %parfor i_feature = 1:size(SourceData,1)
@@ -249,29 +245,7 @@ switch MethodType
                 end
             end        
             HarmonizedData(:,SourceIndex) = harmonized;
-        end
-        for i_source = 1:length(SourceSiteIndex)
-            SourceIndex = AdjustInfo.SiteIndex{SourceSiteIndex(i_source)};
-            SourceData = AllVolume(:,SourceIndex);
-            harmonized = zeros(size(SourceData));
-            if isempty(AdjustInfo.Subgroups) %no subsampling
-                fprintf('\nfitting Site %s to TargetSite %s \n', uniqueSites{SourceSiteIndex(i_source)},uniqueSites{AdjustInfo.TargetSiteIndex});                
-                parfor i_feature = 1:size(SourceData,1)
-                    [slope,intercept] = fitMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',0);
-                    harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
-                end                  
-            else        
-                fprintf('\n fitting Site %s to TargetSite %s with subsampling \n', uniqueSites{SourceSiteIndex(i_source)},uniqueSites{AdjustInfo.TargetSiteIndex});                
-
-                IndexSource = AdjustInfo.Subgroups(SourceIndex);
-                IndexTarget = AdjustInfo.Subgroups(TargetIndex);
-                parfor i_feature = 1:size(SourceData,1)
-                    [slope,intercept] = subsamplingMMD(SourceData(i_feature,:)',TargetData(i_feature,:)',IndexSource,IndexTarget,10);
-                    harmonized(i_feature,:) = SourceData(i_feature,:).*slope+intercept;
-                end
-            end
-             HarmonizedData(:,SourceIndex) = harmonized;
-        end
+         end
     case 'ComBat/CovBat'
         fprintf('\nComBat Harmonizing...\n');
          % combat can't deal with all-zero rows   2024.5.26    
