@@ -2058,15 +2058,25 @@ if (AutoDataProcessParameter.IsAutoMask==1)
             HasDocker = system('docker version'); % Switch to docker version to test if docker installed for windows, I will use AFNI's 3dautomask %YAN Chao-Gan, 240123
             %HasDocker = system('which docker'); %Test if docker installed, I will use AFNI's 3dautomask %YAN Chao-Gan, 211011
             if HasDocker == 0
-                CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), AutoDataProcessParameter.DataProcessDir);
+                if ispc
+                    CommandInit=sprintf('docker run -i --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), AutoDataProcessParameter.DataProcessDir);
+                else
+
+                    CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data -e SUBJECTS_DIR=/data/freesurfer cgyan/dpabi', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), AutoDataProcessParameter.DataProcessDir);
+                end
+
                 if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
                     CommandInit=sprintf('export SUBJECTS_DIR=%s/freesurfer && ', WorkingDir);
                 end
                 DirFile=dir([InputDir,filesep,'*.nii']);
                 InputFilename=[InputDir,filesep,DirFile(1).name];
-                
+
                 InputFilename = strrep(InputFilename,AutoDataProcessParameter.DataProcessDir,'/data'); %Replace the path for docker
                 OutputFile = strrep(OutputFile,AutoDataProcessParameter.DataProcessDir,'/data');
+
+                InputFilename=strrep(InputFilename,'\','/');
+                OutputFile=strrep(OutputFile,'\','/');
+
                 Command = [CommandInit, ' 3dAutomask -prefix ',OutputFile,' ',InputFilename];
                 system(Command);
             else
