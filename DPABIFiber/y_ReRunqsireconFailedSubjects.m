@@ -16,7 +16,7 @@ function [FailedID WaitingID SuccessID]=y_ReRunqsireconFailedSubjects(Cfg,Workin
 
 
 if ~exist('Cfg','var') 
-    [file,path] = uigetfile('*.mat','Please select the previous Cfg .mat for DPABISurf...');
+    [file,path] = uigetfile('*.mat','Please select the previous Cfg .mat for DPABIFiber...');
     Cfg=fullfile(path,file);
 end
 

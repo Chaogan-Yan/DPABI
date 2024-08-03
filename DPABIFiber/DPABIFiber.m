@@ -22,7 +22,7 @@ function varargout = DPABIFiber(varargin)
 
 % Edit the above text to modify the response to help DPABIFiber
 
-% Last Modified by GUIDE v2.5 27-Sep-2023 14:25:58
+% Last Modified by GUIDE v2.5 03-Aug-2024 17:45:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -208,26 +208,13 @@ uiwait(msgbox('Please open a VNC viewer and connect to localhost:5925. The passw
     
 
 
-% --- Executes on button press in pushbuttonRMPSurf.
-function pushbuttonRMPSurf_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbuttonRMPSurf (see GCBO)
+% --- Executes on button press in pushbuttonUtilities.
+function pushbuttonUtilities_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonUtilities (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+DPABIFiber_Utilities
 
-try
-    [DPABIMessage]=webread('http://rfmri.org/RfMRIMapMessage.txt');
-    DPABIMessage='With this module, the results could be organized for future use, and to be accumulated for the future R-fMRI maps project.';
-    if ~isempty(DPABIMessage)
-        uiwait(msgbox(DPABIMessage,'The R-fMRI Maps Project Message'));
-    end
-    DPABIMessageWeb=webread('http://rfmri.org/RfMRIMapMessageWeb.txt');
-    if ~isempty(DPABIMessageWeb)
-        web(DPABIMessageWeb,'-browser');
-    end
-catch
-end
-
-DPABI_ResultsOrganizer(0)
 
 
 
