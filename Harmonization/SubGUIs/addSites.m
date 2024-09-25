@@ -22,7 +22,7 @@ function varargout = addSites(varargin)
 
 % Edit the above text to modify the response to help addSites
 
-% Last Modified by GUIDE v2.5 22-Nov-2023 15:23:18
+% Last Modified by GUIDE v2.5 29-Aug-2024 10:06:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -178,32 +178,66 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+function editIdentifier_Callback(hObject, eventdata, handles)
+% hObject    handle to editIdentifier (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editIdentifier as text
+%        str2double(get(hObject,'String')) returns contents of editIdentifier as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editIdentifier_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editIdentifier (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
 
 % --- Executes on button press in FinishButton.
 function FinishButton_Callback(hObject, eventdata, handles)
 % hObject    handle to FinishButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 ParentPath =get(handles.editParentDirectory,'String');
 [ParentDir,DName] = fileparts(ParentPath);
-RefFile = get(handles.editRefFile,'String');
-handles.ImgCellList=[];
-if isempty(RefFile)
-    [handles.ImgCellList, handles.Strings]=GetSubNameCell(ParentPath);
-else
-    [RefPath,suffix,ext] = fileparts(RefFile);
-     
-    suffix = extractBefore(suffix,'_');
-    route = extractAfter(RefPath,DName); %handles.Name is the last directory name of ParentDir.
-    SiteDirs = dir(ParentDir);
-    
-    for d = 3:length(SiteDirs)
-        ParentDirList{d-2,1} = strcat(ParentDir,filesep,SiteDirs(d).name,route,filesep,suffix,'*',ext);
-    end
-    SiteName = {SiteDirs(3:end).name}';
-    [handles.ImgCellList, handles.Strings]=GetSubNameCell(ParentDirList,SiteName);
-end
 
+RefFile = get(handles.editRefFile,'String');
+
+Identifier = get(handles.editIdentifier,'String');
+
+handles.ImgCellList=[];
+
+if isempty(RefFile) % all files are stored in Parent Directory 
+    [handles.ImgCellList, handles.Strings]=GetSubNameCell(ParentPath);
+else % files are organized by sites
+    if isfile(RefFile) % make sure the file path is valid
+        [RefPath,~,ext] = fileparts(RefFile);
+        route = extractAfter(RefPath,DName);  % extract the route 
+
+        if isempty(Identifier) 
+            Targets = fullfile(route,['*',ext]); % if no identifier, then use .ext as a identifier
+        else
+            Targets = fullfile(route,Identifier);
+        end
+        
+        SiteDirs = dir(ParentDir);  %get sites
+        SiteDirs = SiteDirs([SiteDirs.isdir] & ~ismember({SiteDirs.name}, {'.', '..'}));
+
+        for d = 1:length(SiteDirs)
+            ParentDirList{d,1} = strcat(ParentDir,filesep,SiteDirs(d).name,filesep,Targets);
+        end
+        SiteName = {SiteDirs(1:end).name}';
+        [handles.ImgCellList, handles.Strings]=GetSubNameCell(ParentDirList,SiteName);
+    end
+end
 uiresume(handles.figureAddSites);
 guidata(hObject, handles);
 
@@ -287,3 +321,6 @@ elseif optargin == 2
         String = [String;tmpString];
     end
 end
+
+
+

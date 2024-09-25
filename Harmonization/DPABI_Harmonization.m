@@ -1,4 +1,4 @@
-function varargout = DPABI_Harmonization(varargin)
+ function varargout = DPABI_Harmonization(varargin)
 % DPABI_Harmonization MATLAB code for DPABI_Harmonization.fig
 %      DPABI_Harmonization, by itself, creates a new DPABI_Harmonization or raises the existing
 %      singleton*.
@@ -22,7 +22,7 @@ function varargout = DPABI_Harmonization(varargin)
 
 % Edit the above text to modify the response to help DPABI_Harmonization
 
-% Last Modified by GUIDE v2.5 07-Apr-2024 10:22:10
+% Last Modified by GUIDE v2.5 11-Jun-2024 23:50:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -86,22 +86,22 @@ handles.Cfg.SurfSpaceStatus=0;
 handles.output = hObject;
 %%%%
 % Check number of matlab workers. To start the matlabpool if Parallel Computation Toolbox is detected.
-PCTVer = ver('distcomp');
-if ~isempty(PCTVer)
-    FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
-    if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
-        CurrentSize_MatlabPool = parpool('size');
-        handles.ParallelWorkersNumber = CurrentSize_MatlabPool;
-    else
-        poolobj = gcp('nocreate'); % If no pool, do not create new one.
-        if isempty(poolobj)
-            CurrentSize_MatlabPool = 0;
-        else
-            CurrentSize_MatlabPool = poolobj.NumWorkers;
-        end
-        handles.ParallelWorkersNumber = CurrentSize_MatlabPool;
-    end
-end
+% PCTVer = ver('distcomp');
+% if ~isempty(PCTVer)
+%     FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
+%     if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
+%         CurrentSize_MatlabPool = parpool('size');
+%         CurrentSize_MatlabPool = CurrentSize_MatlabPool;
+%     else
+%         poolobj = gcp('nocreate'); % If no pool, do not create new one.
+%         if isempty(poolobj)
+%             CurrentSize_MatlabPool = 0;
+%         else
+%             CurrentSize_MatlabPool = poolobj.NumWorkers;
+%         end
+%         CurrentSize_MatlabPool = CurrentSize_MatlabPool;
+%     end
+% end
 
 % Make UI display correct in PC and linux
 if ~ismac
@@ -233,7 +233,7 @@ DemographicPath = [SiteInfoPath SiteInfoFile];
 handles.Cfg.DemographicPath = DemographicPath; 
 
 if (SiteInfoFile==0)
-    warndlg('If not, I will not do any harmonization...') ;
+    warning('If not, I will not do any harmonization...') ;
 else
     % Read .mat 
     if strcmp('mat',SiteInfoFile(end-2:end))
@@ -247,7 +247,7 @@ else
     
     % Check -- Identify if it contains "SiteName"
     if ~isfield(handles.Cfg.AllVars,"SiteName")
-        error('Tip: Please name the variable of SiteID as SiteName so that we can recognize it.');
+        error('Tip: Please name the variable of SiteID as SiteName so that we can recognize it.','Config Error');
     else
         % to handle the different data type of SiteNames, use all2cellstring 
         % [1,2,3] --> {'1','2','3'}
@@ -363,13 +363,6 @@ else
     [handles.ImgCells.LH,handles.ImgCells.RH,handles.Mask.LH,handles.Mask.RH] = SurfSpace(Cfg.FileList.LH,Cfg.FileList.RH,Cfg.Mask.LH,Cfg.Mask.RH);
 end
 
-% if ~isfield(Cfg.FileList,'LH') || ~isfield(Cfg.FileList,'RH')
-%     [handles.ImgCells.LH,handles.ImgCells.RH,handles.Mask.LH,handles.Mask.RH] = SurfSpace;
-% elseif ~isfield(Cfg.Mask,'LH') || ~isfield(Cfg.Mask,'RH')
-%     [handles.ImgCells.LH,handles.ImgCells.RH,handles.Mask.LH,handles.Mask.RH] = SurfSpace(Cfg.FileList.LH,Cfg.FileList.RH,[],[]);
-% else
-%     [handles.ImgCells.LH,handles.ImgCells.RH,handles.Mask.LH,handles.Mask.RH] = SurfSpace(Cfg.FileList.LH,Cfg.FileList.RH,Cfg.Mask.LH,Cfg.Mask.RH);
-% end
     
 if ~isempty(handles.ImgCells.LH) || ~isempty(handles.ImgCells.RH)...
         || ~isempty(handles.Mask.LH) || ~isempty(handles.Mask.RH)
@@ -489,8 +482,8 @@ function pushbuttonAdjust_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonAdjust (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if ~isfield(handles.Cfg,'DemographicPath')
-    error('Please give me the Site Info first.');
+if isempty(handles.Cfg.DemographicPath) || isequal(handles.Cfg.DemographicPath,[0 0])
+    errordlg('Please give me the Site Info first.');
     return;
 end
 
@@ -568,14 +561,32 @@ if handles.Cfg.SurfSpaceStatus == 0 & ~isstruct(handles.Cfg.FileList)
 
     MaskFile=handles.Cfg.Mask;
     
-    yw_Harmonization(ImgCells, MaskFile, handles.Cfg.MethodName, handles.Cfg.AdjustInfo, handles.Cfg.ParallelWorkersNumber, handles.Cfg.OutputDir);
+    [RawData,HarmonizedBrain]=yw_Harmonization(ImgCells, MaskFile, handles.Cfg.MethodName, handles.Cfg.AdjustInfo, handles.Cfg.ParallelWorkersNumber, handles.Cfg.OutputDir);
+    
+    if isfield(handles,'WriteOrganized')
+        if handles.WriteOrganized
+            writematrix(HarmonizedBrain,fullfile(handles.Cfg.OutputDir,'HarmonizedResults.csv'));
+        end
+    end
 else
     LHImg = handles.Cfg.FileList.LH;
-    RHImg = handles.Cfg.FileList.RH;
+    RHImg = handles.Cfg.FileList.RH; 
     LHMask = handles.Cfg.Mask.LH;
     RHMask = handles.Cfg.Mask.RH;
-    yw_Harmonization_Surf(LHImg, RHImg, LHMask, RHMask, handles.Cfg.MethodName, handles.Cfg.AdjustInfo, handles.Cfg.ParallelWorkersNumber, handles.Cfg.OutputDir); 
+    [RawData,HarmonizedBrain, HarmonizedBrain_LH,HarmonizedBrain_RH,~,~,~,~] = yw_Harmonization_Surf(LHImg, RHImg, LHMask, RHMask, handles.Cfg.MethodName, handles.Cfg.AdjustInfo, handles.Cfg.ParallelWorkersNumber, handles.Cfg.OutputDir); 
+    if isfield(handles,'WriteOrganized')
+        if handles.WriteOrganized
+            writematrix(HarmonizedBrain_LH,fullfile(handles.Cfg.OutputDir,'HarmonizedResults_LH.csv'));
+            writematrix(HarmonizedBrain_LH,fullfile(handles.Cfg.OutputDir,'HarmonizedResults_RH.csv'));
+        end
+    end 
 end
+ReportHarmonization(handles.Cfg.SiteName,handles.Cfg.MethodName,handles.Cfg.OutputDir,RawData,HarmonizedBrain);
+
+
+
+
+
 
 %-------------------------------------------------------------------
 function editParallelWorkersNumber_Callback(hObject, eventdata, handles)
@@ -592,8 +603,10 @@ function editParallelWorkersNumber_Callback(hObject, eventdata, handles)
     if ~isempty(PCTVer)
         FullMatlabVersion = sscanf(version,'%d.%d.%d.%d%s');
         if FullMatlabVersion(1)*1000+FullMatlabVersion(2)<8*1000+3    %YAN Chao-Gan, 151117. If it's lower than MATLAB 2014a.  %FullMatlabVersion(1)*1000+FullMatlabVersion(2)>=7*1000+8    %YAN Chao-Gan, 120903. If it's higher than MATLAB 2008.
-            if Size_MatlabPool ~= handles.Cfg.ParallelWorkersNumber;
-                if handles.ParallelWorkersNumber~=0
+            CurrentSize_MatlabPool = parpool('size');
+            CurrentSize_MatlabPool = CurrentSize_MatlabPool;
+            if Size_MatlabPool ~= CurrentSize_MatlabPool
+                if CurrentSize_MatlabPool~=0
                     parpool close
                 end
                 if Size_MatlabPool~=0
@@ -601,10 +614,16 @@ function editParallelWorkersNumber_Callback(hObject, eventdata, handles)
                 end
             end
             CurrentSize_MatlabPool = parpool('size');
-            handles.ParallelWorkersNumber = CurrentSize_MatlabPool;
+            handles.Cfg.ParallelWorkersNumber = CurrentSize_MatlabPool;
         else
-            if Size_MatlabPool ~= handles.ParallelWorkersNumber;
-                if handles.ParallelWorkersNumber~=0
+            poolobj = gcp('nocreate'); % If no pool, do not create new one.
+            if isempty(poolobj)
+                CurrentSize_MatlabPool = 0;
+            else
+                CurrentSize_MatlabPool = poolobj.NumWorkers;
+            end
+            if Size_MatlabPool ~= CurrentSize_MatlabPool
+                if CurrentSize_MatlabPool~=0
                     poolobj = gcp('nocreate'); % If no pool, do not create new one.
                     delete(poolobj);
                 end
@@ -749,7 +768,7 @@ else
 end
 
 if ~isfield(Cfg,'DemographicPath')
-    warndlg('Feed me the file through Site Info button first. ');
+    warndlg('Feed me the file through Site Info button first. ','Config Warning');
 elseif isempty(handles.Cfg.FileList)
     error('There is no images in Volume/General spave or Surface space. Add it first please.');
 else  
@@ -766,7 +785,7 @@ else
    subnum = height(oldsheet);   
    
    if isfield(Cfg,'FileList')
-       warndlg('If the original demographic file already has FileList colomn，this will replace it.');
+       warndlg('If the original demographic file already has FileList colomn，this will replace it.','Output Warning');
        
        if height(FL) == subnum
            if isfield(Cfg,'Cov')
@@ -833,6 +852,8 @@ function UpdateDisplay(hObject,handles)
 
 Cfg = handles.Cfg;
 % 1. Data and its display
+fprintf('Config Loading: Data...\n');
+
 handles.ImgCells = Cfg.FileList; % when add and remove img, changes happened on ImgCells --> FileList
 
 if isstruct(Cfg.FileList)
@@ -851,6 +872,8 @@ else
 end
 
 % 2. Method 
+fprintf('Config Loading: Method setting...\n');
+
 if isempty(Cfg.MethodName)
     set(handles.MethodsPopup,'Value', 1);
 else   
@@ -877,9 +900,25 @@ guidata(hObject,handles);
 
 % 3. parallel
 set(handles.editParallelWorkersNumber,'String',int2str(Cfg.ParallelWorkersNumber));
+fprintf('Config Loading: %d Parallel workers...\n',Cfg.ParallelWorkersNumber);
+editParallelWorkersNumber_Callback(handles.editParallelWorkersNumber, [], handles);
 
 % 4. output
 set(handles.OutputDirEntry,'String', Cfg.OutputDir);
+fprintf('Config Loading: Output directory is %s ...\n',Cfg.OutputDir);
 
+disp("Config Load Complete.");
     
-    drawnow;
+drawnow;
+
+
+
+
+% --- Executes on button press in WriteOrganizedData_checkbox.
+function WriteOrganizedData_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to WriteOrganizedData_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.WriteOrganized = get(hObject,'Value');
+guidata(hObject,handles);
+% Hint: get(hObject,'Value') returns toggle state of WriteOrganizedData_checkbox

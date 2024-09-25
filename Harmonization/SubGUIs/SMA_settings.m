@@ -297,9 +297,9 @@ for i = 1:numel(handles.Cfg.Cuts) %transfer chars to double and counts the class
     elseif cuts ~= 0
         cutnum{i} = 2;
         cut{i} = handles.Cfg.Cuts{i};
-        fprintf('\nContinuous variable: %s is going to be divided into 2 subgroups. \n',handles.Cfg.Zname{i});
+        fprintf('\nContinuous variable: %s is going to be divided into 2 subgroups.',handles.Cfg.Zname{i});
     elseif cuts == 0
-        fprintf('\nCategorical variable: %s is going to be divided into subgroups. \n',handles.Cfg.Zname{i});
+        fprintf('\nCategorical variable: %s is going to be divided into subgroups.',handles.Cfg.Zname{i});
         cut{i} = '0';
     end
     if i~=numel(handles.Cfg.Cuts)                                            
@@ -337,7 +337,7 @@ for isite = 1:handles.Cfg.SiteNum
     TargetIndex(isite) = mean(KL_Dis(ind,isite))/length(handles.Cfg.SiteIndex{isite});
 end
 [~,TargetsiteInd] = min(TargetIndex);
-msgbox(sprintf('We recommend %s as the target site.',handles.Cfg.UniSiteName{TargetsiteInd}),'A Tip');
+fprintf(sprintf('\nWe recommend %s as the target site.\n',handles.Cfg.UniSiteName{TargetsiteInd}));
 
 subfigure.title = handles.Cfg.UniSiteName;
 subfigure.num = length(subfigure.title);
@@ -455,6 +455,10 @@ end
 
 % --- Executes on button press in pushbuttonFinish.
 function pushbuttonFinish_Callback(hObject, eventdata, handles)
+% if ~isempty(handles.Cfg.TargetSiteIndex)
+%     print(handles.figure1, 'MethodScreenShot.png', '-dpng');
+%     %disp('Screenshot saved as MethodScreenShot.png');
+% end
     uiresume(handles.figure1);
 
 

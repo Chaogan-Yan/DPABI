@@ -1,7 +1,21 @@
 function [Data, VoxelSize, FileList, Header] = yw_ReadAll(InputName)
-%function [Data, VoxelSize, FileList, Header] = y_ReadAll(InputName)
-% This is a function modified based on y_ReadAll
-% Only incorporate more types of files, .xlsx, .csv, .tsv, .txt 
+%% yw_ReadAll - Read various types of data files
+%
+% This function reads data from multiple file formats including .nii, .nii.gz, 
+% .gii, .mat, .xlsx, .csv, and .txt. It can handle single files or multiple 
+% files in a directory.
+%
+% Inputs:
+%   InputName - Can be a cell array of file paths, a directory path, or a single file path
+%
+% Outputs:
+%   Data      - The read data, format depends on input file type
+%   VoxelSize - Voxel size (empty for non-image files)
+%   FileList  - List of files read
+%   Header    - Header information (varies by file type)
+%
+% Note: For multiple .xlsx/.csv/.txt files, data is arranged into vectors
+% regardless of original structure.
 %__________________________________________________________________________
 % Written by YAN Chao-Gan 130624.
 % The Nathan Kline Institute for Psychiatric Research, 140 Old Orangeburg Road, Orangeburg, NY 10962, USA
@@ -69,10 +83,10 @@ elseif length(FileList) == 1
     elseif strcmpi(Ext,'.nii') || strcmpi(Ext,'.nii.gz') %Wang Yu-Wei 240603.
         [Data, VoxelSize, Header] = y_ReadRPI(FileList{1});
     else %Wang Yu-Wei 240603
-        Data = readtable(FileList{1},'ReadVariableNames', true);
+        Data = readtable(FileList{1});
         Header.name = Data.Properties.VariableNames;
         Header.tablesize = size(Data);
-        if isempty(Header)
+        if isempty(Header.name)
             disp('Your .xlsx/.csv/.txt file does not have variable names.');
         else
             disp('Your .xlsx/.csv/.txt file has variable names.');
@@ -115,20 +129,25 @@ elseif length(FileList) > 1 % A set of 3D images
             end
         end
     else %.xlsx/.csv/.txt 06032024 wangyw
-        Data = readtable(FileList{1},'ReadVariableNames', true);
-        Header.name = Data.Properties.VariableNames;
-        Header.tablesize = size(Data);
-        
-        Data = table2array(Data); % if error, check your data, they should all be numeric across columns
-        Data = Data(:);
-        
-        Data = zeros([size(Data),length(FileList)]); % notice, when theere are multiple files, we arrange them into vectors no matter what they were originally
-        for j=1:length(FileList)
-             DataTemp = readtable(FileList{1},'ReadVariableNames', true);             
-             %Header = Data.Properties.VariableNames;
-             
-             Data = [Data,DataTemp(:)];% if error, check your data, they should all be numeric across columns
+        Data = cell(1, length(FileList));
+        Header = struct('name', {}, 'tablesize', {});
+
+        for j = 1:length(FileList)
+            DataTemp = readtable(FileList{j}, 'ReadVariableNames', 'auto');
+            Header(j).name = DataTemp.Properties.VariableNames;
+            Header(j).tablesize = size(DataTemp);
+            
+            if isempty(Header(j).name)
+                disp(['File ' num2str(j) ' does not have variable names.']);
+            else
+                disp(['File ' num2str(j) ' has variable names.']);
+            end
+            
+            Data{j} = table2array(DataTemp);
+            Data{j} = Data{j}(:);
         end
+
+        Data = cell2mat(Data);
     end
 end
 
