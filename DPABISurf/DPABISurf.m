@@ -180,7 +180,15 @@ WorkingDir = uigetdir('','Please select the working directory. It will be /data 
 
 [DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
 
-CommandInit=sprintf('docker run -d --rm -v %s:/DPABI:ro -v %s:/opt/freesurfer/license.txt -v %s:/data -p 5925:5925 cgyan/dpabi', DPABIPath, fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
+% Give option to Call freesurfer docker. YAN Chao-Gan, 241010.
+button = questdlg('Do you want to use DPABI Stand Alone version or use Full Freesurfer?','Docker Selection','DPABI Stand Alone','Full Freesurfer','Full Freesurfer');
+
+if strcmpi(button,'DPABI Stand Alone')
+    CommandInit=sprintf('docker run -d --rm -v %s:/DPABI:ro -v %s:/opt/freesurfer/license.txt -v %s:/data -p 5925:5925 cgyan/dpabi', DPABIPath, fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
+else
+    CommandInit=sprintf('docker run -d --rm -v %s:/DPABI:ro -v %s:/usr/local/freesurfer/7.4.1/license.txt -v %s:/data -p 5925:5925 cgyan/freesurfer', DPABIPath, fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), WorkingDir);
+end
+
 
 Command=sprintf('%s x11vnc -forever -shared -usepw -create -rfbport 5925 &',CommandInit);
 
