@@ -21,6 +21,11 @@ if strcmpi(StartingDirName,'FunRaw')
     StartingDirName = 'FunImg';
 end
 
+if strcmpi(StartingDirName,'BIDS') %YAN Chao-Gan, 241115. Take care of Re-run with GSR if starts with BIDS. Thanks to Xu Boyan's suggestion.
+    StartingDirName = 'FunImg';
+    Cfg.IsBIDStoDPARSF = 0;
+end
+
 Cfg.IsNeedConvertFunDCM2IMG=0;
 
 if isfield(Cfg,'FieldMap')
