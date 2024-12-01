@@ -44,7 +44,7 @@ SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.bb=[mn;mx];
 SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.vox=voxsize;
 SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.interp=Interp;
 
-if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
     oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
     SPMJOB=[];
     SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;

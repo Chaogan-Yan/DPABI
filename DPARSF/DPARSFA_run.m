@@ -2262,7 +2262,7 @@ if (AutoDataProcessParameter.IsSegment>=1)
 
             fprintf('\n');
 
-            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+            if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldseg = SPMJOB.matlabbatch{1,1}.spm.spatial.preproc;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
                     oldseg.opts.tpm={[SPMFilePath,filesep,'toolbox',filesep,'OldSeg',filesep,'grey.nii'];[SPMFilePath,filesep,'toolbox',filesep,'OldSeg',filesep,'white.nii'];[SPMFilePath,filesep,'toolbox',filesep,'OldSeg',filesep,'csf.nii']};
@@ -2310,7 +2310,7 @@ if (AutoDataProcessParameter.IsSegment>=1)
             fprintf(['Segment Setup:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
             
             
-            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, New Segment (in SPM8) has turned to normal Segment.
+            if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, New Segment (in SPM8) has turned to normal Segment.
                 preproc = SPMJOB.matlabbatch{1,1}.spm.tools.preproc8;
                 %Set the TPMs
                 for T1ImgSegmentDirectoryNameue=1:6
@@ -3075,7 +3075,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             
             fprintf(['Normalize:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
             
-            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+            if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
                     oldnorm.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']};
@@ -3101,7 +3101,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
             fprintf(['Normalize-Write:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
             
-            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+            if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 SPMJOB=[];
                 SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
@@ -3180,7 +3180,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             
             fprintf(['Normalize:',AutoDataProcessParameter.SubjectID{i},' OK\n']);
             
-            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+            if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
                     oldnorm.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']};
@@ -4547,7 +4547,7 @@ if AutoDataProcessParameter.IsNormalizeToSymmetricGroupT1Mean==1
         
         SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.prefix = 'sym_';
         
-        if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+        if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
             oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
             SPMJOB=[];
             SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
@@ -4560,7 +4560,7 @@ if AutoDataProcessParameter.IsNormalizeToSymmetricGroupT1Mean==1
         if SPMversion==8
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.subj(1,1).resample=SubwT1File(i);
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.roptions.vox=T1VoxSize;
-        elseif SPMversion==12
+        elseif SPMversion>=12
             SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm.estwrite.subj(1,1).resample=SubwT1File(i);
             SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm.estwrite.roptions.vox=T1VoxSize;
         end
@@ -4776,7 +4776,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             end
             
             
-            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+            if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
                     oldnorm.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'EPI.nii,1']};
@@ -4800,7 +4800,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.bb=AutoDataProcessParameter.Normalize.BoundingBox;
             SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.write.roptions.vox=AutoDataProcessParameter.Normalize.VoxSize;
             
-            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+            if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 SPMJOB=[];
                 SPMJOB.matlabbatch{1,1}.spm.tools.oldnorm = oldnorm;
@@ -4876,7 +4876,7 @@ if (AutoDataProcessParameter.IsNormalize>0) && strcmpi(AutoDataProcessParameter.
                 SPMJOB.matlabbatch{1,1}.spm.spatial.normalise.estwrite.eoptions.template={[TemplatePath,filesep,'SchwarzRatTemplates',filesep,'ratT1Template_YCG.nii,1']};
             end
              
-            if SPMversion==12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
+            if SPMversion>=12    % YAN Chao-Gan, 150703. In SPM 12, Segment (in SPM8) has turned to Old Segment.
                 oldnorm = SPMJOB.matlabbatch{1,1}.spm.spatial.normalise;
                 if (~isfield(AutoDataProcessParameter,'SpecialMode')) || (isfield(AutoDataProcessParameter,'SpecialMode') && (AutoDataProcessParameter.SpecialMode == 1))
                     oldnorm.estwrite.eoptions.template={[SPMFilePath,filesep,'toolbox',filesep,'OldNorm',filesep,'T1.nii,1']};

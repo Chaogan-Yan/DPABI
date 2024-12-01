@@ -53,7 +53,7 @@ if SPMversion==8
     %SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.times = [1,0]; % Backward.  If want forward, then put [0,1];
     SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.times = [0,1]; % Forward.  If want backward, then put [1,0];
     SPMJOB.matlabbatch{1,1}.spm.util.defs.comp{1,1}.dartel.flowfield{1,1}=FlowFieldFilename;
-elseif SPMversion==12
+elseif SPMversion>=12
     SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'Deformation_Blank_SPM12.mat']);
     SPMJOB.matlabbatch{1,1}.spm.util.defs.out{1,1}.pull.fnames=OutFile; %fnames could be n*1 cell
     SPMJOB.matlabbatch{1,1}.spm.util.defs.out{1,1}.pull.interp=Interp;

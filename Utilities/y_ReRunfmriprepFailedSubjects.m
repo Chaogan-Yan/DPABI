@@ -222,7 +222,7 @@ if ~isempty(NeedReRunID) %(Cfg.Isfmriprep==1)
     for i=1:Cfg.SubjectNum
         if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i}))
             %if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs')) || exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'log'))
-            if CheckFailedLogs(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i})) %YAN Chao-Gan, 200904. Use new logic according to fmriprep's change
+            if CheckFailedLogs(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i})) || CheckMissingFiles(Cfg.WorkingDir,Cfg.SubjectID{i},Cfg.FunctionalSessionNumber) %YAN Chao-Gan, 200904. Use new logic according to fmriprep's change
                 FailedID=[FailedID;Cfg.SubjectID(i)];
             else
                 SuccessID=[SuccessID;Cfg.SubjectID(i)];
