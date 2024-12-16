@@ -1132,6 +1132,9 @@ else
         case 3 % Apply FDR Correction
             StatOpt=Fcn.GetOverlayStatOption(OverlayInd);
             FDROpt=w_ApplyFDR;
+            if isempty(FDROpt)
+                return
+            end
             OverlayFiles=Fcn.GetOverlayFiles();
             [CorrectedData, Header, PThres]=y_FDR_Image(...
                 OverlayFiles{OverlayInd},...
@@ -1146,6 +1149,15 @@ else
                 fprintf('There is no vertex left after FDR correction!\n');
             else
                 Fcn.SetOverlayPThres(OverlayInd, PThres);
+
+                VMsk=y_ReadAll(FDROpt.VMskFile);
+                GuiData=Fcn.GetOverlayGuiData(OverlayInd);
+                GuiData.VMskFile=FDROpt.VMskFile;
+                GuiData.VMskThres=PThres;
+                GuiData.VMskSignFlag='<';
+                
+                Fcn.SetOverlayGuiData(OverlayInd, GuiData);
+                Fcn.SetOverlayVertexMask(OverlayInd, VMsk);
             end
         case 4 % Apply FWE (Monte Carlo Simulation) Correction
             StatOpt=Fcn.GetOverlayStatOption(OverlayInd);
