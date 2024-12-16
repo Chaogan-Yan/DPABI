@@ -83,34 +83,33 @@ Contrast(1) = 1;
 if exist('PALMSettings','var') && (~isempty(PALMSettings)) %YAN Chao-Gan, 161116. Add permutation test.
     PALMSettings.Pearson=1;
     y_GroupAnalysis_PermutationTest_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header,PALMSettings);
-    rCorr=[];
-else
-    
-    [b_OLS_brain, t_OLS_brain, TTest1_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header);
-    %[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
-    
-    Df_E = size(Regressors,1) - size(Contrast,2);
-    
-    rCorr = TTest1_T./(sqrt(Df_E+TTest1_T.*TTest1_T));
-    %r = t./(sqrt(Df_E+t.*t))
-    
-    if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
-        Index = findstr(Header.descrip,'}');
-        Header.descrip = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.descrip(Index(1)+1:end));
-    elseif isfield(Header,'cdata')
-        try
-            Index = findstr(Header.private.metadata(4).value,'}');
-            Header.private.metadata(4).value = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.private.metadata(4).value(Index(1)+1:end));
-        catch
-            Index = findstr(Header.private.metadata.value,'}');
-            Header.private.metadata.value = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.private.metadata.value(Index(1)+1:end));
-        end
-    elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
-        Header.OtherInfo.StatOpt.TestFlag='R';
-        Header.OtherInfo.StatOpt.Df=Df_E;
-    end
-
-    y_Write(rCorr,Header,OutputName);
-    
 end
+
+[b_OLS_brain, t_OLS_brain, TTest1_T, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Regressors,OutputName,MaskFile,CovariateVolume,Contrast,'T',0,Header);
+%[b_OLS_brain, t_OLS_brain, TF_ForContrast_brain, r_OLS_brain, Header] = y_GroupAnalysis_Image(DependentVolume,Predictor,OutputName,MaskFile,CovVolume,Contrast,TF_Flag,IsOutputResidual,Header)
+
+Df_E = size(Regressors,1) - size(Contrast,2);
+
+rCorr = TTest1_T./(sqrt(Df_E+TTest1_T.*TTest1_T));
+%r = t./(sqrt(Df_E+t.*t))
+
+if ~isfield(Header,'cdata') && ~isfield(Header,'MatrixNames') %YAN Chao-Gan 181204. If NIfTI data
+    Index = findstr(Header.descrip,'}');
+    Header.descrip = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.descrip(Index(1)+1:end));
+elseif isfield(Header,'cdata')
+    try
+        Index = findstr(Header.private.metadata(4).value,'}');
+        Header.private.metadata(4).value = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.private.metadata(4).value(Index(1)+1:end));
+    catch
+        Index = findstr(Header.private.metadata.value,'}');
+        Header.private.metadata.value = sprintf('DPABI{R_[%.1f]}%s',Df_E,Header.private.metadata.value(Index(1)+1:end));
+    end
+elseif isfield(Header,'MatrixNames') %YAN Chao-Gan 210122. Add DPABINet Matrix support.
+    Header.OtherInfo.StatOpt.TestFlag='R';
+    Header.OtherInfo.StatOpt.Df=Df_E;
+end
+
+y_Write(rCorr,Header,OutputName);
+    
+
 fprintf('\n\tCorrelation Calculation finished.\n');
