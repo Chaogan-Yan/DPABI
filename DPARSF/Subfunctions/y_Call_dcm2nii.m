@@ -31,6 +31,7 @@ if ispc
     %eval(['!dcm2nii.exe ',Option,' -o ',OutputDir,' ',InputFilename]);
     eval(['!dcm2niix.exe ',Option,' -o ',OutputDir,' ',InputFilename]); % YAN Chao-Gan, 191121. Revised for Calling dcm2niix. 
 elseif ismac
+    eval(['!chmod +x dcm2niix_mac']);
     %eval(['!./dcm2nii_mac ',Option,' -o ',OutputDir,' ',InputFilename]);
     eval(['!./dcm2niix_mac ',Option,' -o ',OutputDir,' ',InputFilename]); % YAN Chao-Gan, 191121. Revised for Calling dcm2niix. 
 else

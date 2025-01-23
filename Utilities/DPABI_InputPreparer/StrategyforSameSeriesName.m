@@ -83,16 +83,16 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Make UI display correct in PC and linux
-if ~ismac
-    if ispc
-        ZoonMatrix = [1 1 1.6 1.2];  %For pc
-    else
-        ZoonMatrix = [1 1 1.6 1.2];  %For Linux
-    end
-    UISize = get(handles.figureStrategyforSameSeriesStrategy,'Position');
-    UISize = UISize.*ZoonMatrix;
-    set(handles.figureStrategyforSameSeriesStrategy,'Position',UISize);
+if ismac
+    ZoonMatrix = [1 1 1.3 1.1]; 
+elseif ispc
+    ZoonMatrix = [1 1 1.6 0.9];  
+else
+    ZoonMatrix = [1 1 1.6 1];  
 end
+UISize = get(handles.figureStrategyforSameSeriesStrategy,'Position');
+UISize = UISize.*ZoonMatrix;
+set(handles.figureStrategyforSameSeriesStrategy,'Position',UISize);
 movegui(handles.figureStrategyforSameSeriesStrategy, 'center');
 
 % UIWAIT makes StrategyforSameSeriesStrategy wait for user response (see UIRESUME)

@@ -53,7 +53,7 @@ function DPARSF_FieldMap_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to DPARSF_FieldMap (see VARARGIN)
 
 if nargin<4
-    FieldMap.IsNeedConvertDCM2IMG=1;
+    FieldMap.IsNeedConvertDCM2IMG=0;
     FieldMap.IsCalculateVDM=1;
     FieldMap.EPIBasedFieldMap=0;
     FieldMap.IsFieldMapCorrectionUnwarpRealign=1;

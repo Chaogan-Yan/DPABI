@@ -53,7 +53,7 @@ function DPABISurf_FieldMap_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to DPABISurf_FieldMap (see VARARGIN)
 
 if nargin<4
-    FieldMap.IsNeedConvertDCM2IMG=1;
+    FieldMap.IsNeedConvertDCM2IMG=0;
     FieldMap.IsApplyFieldMapCorrection=1;
     FieldMap.TE1=0;
     FieldMap.TE2=0;
@@ -62,6 +62,7 @@ else
 end
 
 set(handles.DICOM2NIFTI,'Value',FieldMap.IsNeedConvertDCM2IMG);
+set(handles.DICOM2NIFTI, 'Visible', 'off');
 set(handles.If_ApplyCorrection,'Value',FieldMap.IsApplyFieldMapCorrection);
 set(handles.ShortTimeInput,'String',num2str(FieldMap.TE1));
 set(handles.LongTimeInput,'String',num2str(FieldMap.TE2));

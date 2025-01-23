@@ -63,7 +63,7 @@ else
     Selection.Template=varargin{4};
 end
 Selection.Results=ones(length(Selection.SessionName),1);
-Selection.AlwaysLatterSeries = 0;
+% Selection.AlwaysLatterSeries = 0;
 set(handles.popupmenuSessionList,'String',Selection.SessionName,'Value',1);
 set(handles.popupmenuSeriesList,'String',[{'Please select: ...'};Selection.SeriesList],'Value',1);        
 SessionList = '';
@@ -97,16 +97,16 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Make UI display correct in PC and linux
-if ~ismac
-    if ispc
-        ZoonMatrix = [1 1 1.6 1.2];  %For pc
-    else
-        ZoonMatrix = [1 1 1.6 1.2];  %For Linux
-    end
-    UISize = get(handles.figureSelectSeries,'Position');
-    UISize = UISize.*ZoonMatrix;
-    set(handles.figureSelectSeries,'Position',UISize);
+if ismac
+    ZoonMatrix = [1 1 1.3 1.1]; 
+elseif ispc
+    ZoonMatrix = [1 1 1.6 0.9];  
+else
+    ZoonMatrix = [1 1 1.6 1];  
 end
+UISize = get(handles.figureSelectSeries,'Position');
+UISize = UISize.*ZoonMatrix;
+set(handles.figureSelectSeries,'Position',UISize);
 movegui(handles.figureSelectSeries, 'center');
 
 % UIWAIT makes ManuallySelectSeries wait for user response (see UIRESUME)
@@ -196,6 +196,8 @@ function checkboxAlwaysLatter_Callback(hObject, eventdata, handles)
 % hObject    handle to checkboxAlwaysLatter (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Selection.AlwaysLatterSeries  = get(handles.checkboxAlwaysLatter,'Value');
-guidata(hObject,handles);
+
+% handles.Selection.AlwaysLatterSeries  = get(handles.checkboxAlwaysLatter,'Value');
+% guidata(hObject,handles);
+
 % Hint: get(hObject,'Value') returns toggle state of checkboxAlwaysLatter

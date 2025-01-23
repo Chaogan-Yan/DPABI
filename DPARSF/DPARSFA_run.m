@@ -829,41 +829,64 @@ if isfield(AutoDataProcessParameter,'FieldMap')
             SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'FieldMapCalculateVDM.mat']);
             SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data=[];
             if strcmpi(AutoDataProcessParameter.FieldMap.DataFormat,'PhaseDiffMagnitude')
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'PhaseDiffImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
-                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'PhaseDiffImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data.presubphasemag.phase={File};
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
-                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data.presubphasemag.magnitude={File};
-            else 
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Phase1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
-                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Phase1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
+
+
+                if AutoDataProcessParameter.FieldMap.TE1==0
+                    DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
+                    JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
+                    TE1 = JSON.EchoTime1*1000;
+                else
+                    TE1 = AutoDataProcessParameter.FieldMap.TE1;
+                end
+                if AutoDataProcessParameter.FieldMap.TE2==0
+                    DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
+                    JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
+                    TE2 = JSON.EchoTime2*1000;
+                else
+                    TE2 = AutoDataProcessParameter.FieldMap.TE2;
+                end
+
+
+            else
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data.phasemag.shortphase={File};
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Phase2Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
-                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Phase2Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Phase2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Phase2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data.phasemag.longphase={File};
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
-                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data.phasemag.shortmag={File};
-                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
-                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
+                DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
+                File=[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data.phasemag.longmag={File};
+
+
+                if AutoDataProcessParameter.FieldMap.TE1==0
+                    DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
+                    JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
+                    TE1 = JSON.EchoTime*1000;
+                else
+                    TE1 = AutoDataProcessParameter.FieldMap.TE1;
+                end
+                if AutoDataProcessParameter.FieldMap.TE2==0
+                    DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
+                    JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
+                    TE2 = JSON.EchoTime*1000;
+                else
+                    TE2 = AutoDataProcessParameter.FieldMap.TE2;
+                end
+
+
             end
             
-            if AutoDataProcessParameter.FieldMap.TE1==0
-                DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
-                JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
-                TE1 = JSON.EchoTime*1000;
-            else
-                TE1 = AutoDataProcessParameter.FieldMap.TE1;
-            end
-            if AutoDataProcessParameter.FieldMap.TE2==0
-                DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
-                JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Magnitude2Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
-                TE2 = JSON.EchoTime*1000;
-            else
-                TE2 = AutoDataProcessParameter.FieldMap.TE2;
-            end
+
             SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.defaults.defaultsval.et=[TE1,TE2];
             SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.defaults.defaultsval.maskbrain=0;
             DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
@@ -897,11 +920,11 @@ if isfield(AutoDataProcessParameter,'FieldMap')
         
         %Move the VDM files
         for i=1:AutoDataProcessParameter.SubjectNum
-            mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i}])
+            mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i}])
             if strcmpi(AutoDataProcessParameter.FieldMap.DataFormat,'PhaseDiffMagnitude')
-                movefile([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'PhaseDiffImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'vdm*'],[AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i}])
+                movefile([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'vdm*'],[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i}])
             else
-               movefile([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'Phase1Img',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'vdm*'],[AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i}])
+               movefile([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'vdm*'],[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i}])
             end
         end
     end
@@ -952,8 +975,8 @@ if (AutoDataProcessParameter.IsRealign==1)
 
             if isfield(AutoDataProcessParameter,'FieldMap') && AutoDataProcessParameter.FieldMap.IsFieldMapCorrectionUnwarpRealign %YAN Chao-Gan, 191122. Field Map Correction.
                 SPMJOB.matlabbatch{1, 1}.spm.spatial.realignunwarp.data(iFunSession).scans=FileList;
-                VDMFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'vdm*']);
-                VDMFile=[AutoDataProcessParameter.DataProcessDir,filesep,'FieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,VDMFile(1).name];
+                VDMFile=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'vdm*']);
+                VDMFile=[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i},filesep,VDMFile(1).name];
                 SPMJOB.matlabbatch{1, 1}.spm.spatial.realignunwarp.data(iFunSession).pmscan={VDMFile};
             else
                 SPMJOB.matlabbatch{1,1}.spm.spatial.realign.estwrite.data{1,iFunSession}=FileList;
