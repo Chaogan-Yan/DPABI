@@ -13,7 +13,7 @@ function varargout = DPABI_InputPreparer(varargin)
 %-----------------------------------------------------------
 % Mail to Author:  <a href="larslu@foxmail.com">Bin Lu</a> 
 
-% Last Modified by GUIDE v2.5 16-Jan-2025 21:51:02
+% Last Modified by GUIDE v2.5 24-Jan-2025 15:53:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -3846,3 +3846,99 @@ function checkboxDeleteSub_Callback(hObject, eventdata, handles)
 handles.Cfg.IsDeleteSub = get(handles.checkboxDeleteSub,'Value');
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of checkboxDeleteSub
+
+
+% --- Executes on button press in checkboxIsOrganizeT2.
+function checkboxIsOrganizeT2_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxIsOrganizeT2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkboxIsOrganizeT2
+
+
+% --- Executes on selection change in popupmenuT2.
+function popupmenuT2_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenuT2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuT2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenuT2
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenuT2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuT2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in popupmenuT2FileNumber.
+function popupmenuT2FileNumber_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenuT2FileNumber (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenuT2FileNumber contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenuT2FileNumber
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenuT2FileNumber_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenuT2FileNumber (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in radiobuttonT2FixednFile.
+function radiobuttonT2FixednFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonT2FixednFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonT2FixednFile
+
+
+% --- Executes on button press in radiobuttonT2ChangeablenFile.
+function radiobuttonT2ChangeablenFile_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobuttonT2ChangeablenFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobuttonT2ChangeablenFile
+
+
+
+function editT2nFile_Callback(hObject, eventdata, handles)
+% hObject    handle to editT2nFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editT2nFile as text
+%        str2double(get(hObject,'String')) returns contents of editT2nFile as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editT2nFile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editT2nFile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
