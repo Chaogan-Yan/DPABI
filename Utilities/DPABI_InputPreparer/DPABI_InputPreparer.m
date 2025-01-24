@@ -460,7 +460,8 @@ disp([newline,'Checking data status ...'])
 
 % Check whether to organize anatomical series only
 if handles.Cfg.IsOrganizeDwi == 0 && handles.Cfg.IsOrganizeFun == 0 && ...
-        handles.Cfg.IsOrganizeFieldFun == 0 && handles.Cfg.IsOrganizeFieldDwi == 0
+        handles.Cfg.IsOrganizeFieldFun == 0 && handles.Cfg.IsOrganizeFieldDwi == 0 && ...
+        handles.Cfg.IsOrganizeT2 == 0
     handles.Cfg.AnatOnly = IsAnatOnly(handles.Cfg.AnatOnly);
     if handles.Cfg.AnatOnly == 0
         return
@@ -1258,6 +1259,7 @@ switch Flag
         handles.Cfg.Demo.SeriesNames = {handles.Cfg.Demo.SeriesNamesDefault};
         handles.Cfg.Demo.PreviousSubID = handles.Cfg.Demo.SubID;
         handles.Cfg.Demo.SubID = '';
+        handles.Cfg.IsOrganizeT2 = 0;
         handles.Cfg.IsOrganizeFun = 0;
         handles.Cfg.IsOrganizeDwi = 0;
         handles.Cfg.IsOrganizeFieldFun = 0;
@@ -1266,36 +1268,43 @@ switch Flag
         handles.Cfg.FieldFunFolderNumber = 1;
         handles.Cfg.FieldDwiFolderNumber = 1;
         handles.Cfg.SeriesName.T1 = '';
+        handles.Cfg.SeriesName.T2 = '';
         handles.Cfg.SeriesName.Dwi = '';
         handles.Cfg.SeriesName.FunAll = {};
         handles.Cfg.SeriesName.FieldFun = {};
         handles.Cfg.SeriesName.FieldDwi = {};
         handles.Cfg.SeriesIndex.T1 = 1;
+        handles.Cfg.SeriesIndex.T2 = 1;
         handles.Cfg.SeriesIndex.Dwi = 1;
         handles.Cfg.SeriesIndex.FunAll = [1];
         handles.Cfg.SeriesIndex.FieldFun = [1];
         handles.Cfg.SeriesIndex.FieldDwi = [1];
         handles.Cfg.SeriesFileNumber.List.T1 = 0;
+        handles.Cfg.SeriesFileNumber.List.T2 = 0;
         handles.Cfg.SeriesFileNumber.List.Dwi = 0;
         handles.Cfg.SeriesFileNumber.List.FunAll = {0};
         handles.Cfg.SeriesFileNumber.List.FieldFun = {0};
         handles.Cfg.SeriesFileNumber.List.FieldDwi = {0};
         handles.Cfg.SeriesFileNumber.Flag.T1 = 1;
+        handles.Cfg.SeriesFileNumber.Flag.T2 = 1;
         handles.Cfg.SeriesFileNumber.Flag.Dwi = 1;
         handles.Cfg.SeriesFileNumber.Flag.FunAll = [1];
         handles.Cfg.SeriesFileNumber.Flag.FieldFun = [1];
         handles.Cfg.SeriesFileNumber.Flag.FieldDwi = [1];
         handles.Cfg.SeriesFileNumber.LowLimitMode.T1 = 0; % Add lower limit mode for setting number of files for a series, Bin Lu, 20220919
+        handles.Cfg.SeriesFileNumber.LowLimitMode.T2 = 0;
         handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi = 0;
         handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll = {0};
         handles.Cfg.SeriesFileNumber.LowLimitMode.FieldFun = {0};
         handles.Cfg.SeriesFileNumber.LowLimitMode.FieldDwi = {0};
         handles.Cfg.SeriesFileNumber.LowThreshold.T1 = 0;
+        handles.Cfg.SeriesFileNumber.LowThreshold.T2 = 0;
         handles.Cfg.SeriesFileNumber.LowThreshold.Dwi = 0;
         handles.Cfg.SeriesFileNumber.LowThreshold.FunAll = {0};
         handles.Cfg.SeriesFileNumber.LowThreshold.FieldFun = {0};
         handles.Cfg.SeriesFileNumber.LowThreshold.FieldDwi = {0};
         handles.Cfg.SeriesFileNumber.Percent.T1 = 0;
+        handles.Cfg.SeriesFileNumber.Percent.T2 = 0;
         handles.Cfg.SeriesFileNumber.Percent.Dwi = 0;
         handles.Cfg.SeriesFileNumber.Percent.FunAll = {[0]};
         handles.Cfg.SeriesFileNumber.Percent.FieldFun = {[0]};
@@ -1536,6 +1545,12 @@ else
     FieldDwiMiss = 0;
 end
 
+if handles.Cfg.IsOrganizeT2 == 1 
+    T2Miss = isempty(handles.Cfg.SeriesName.T2);
+else
+    T2Miss = 0;
+end
+
 if handles.Cfg.IsOrganizeDwi == 1 
     DwiMiss = isempty(handles.Cfg.SeriesName.Dwi);
 else
@@ -1549,7 +1564,7 @@ else
     FunAllMiss = 0;
 end
 
-if AnatMiss || DwiMiss || FunAllMiss || FieldFunMiss || FieldDwiMiss
+if AnatMiss || DwiMiss || FunAllMiss || FieldFunMiss || FieldDwiMiss || T2Miss
     uiwait(msgbox({'Some sessions have not been determined, please select MR Series before run'},'Please select MR Series before run!'));
 end
 
@@ -1558,6 +1573,9 @@ Index = strfind(handles.Cfg.SeriesName.T1,'_');
 if ~isempty(Index) && ~isnan(str2double(handles.Cfg.SeriesName.T1(1:Index(1)-1)))%% Is so, the working dir was derived from DPABI_DicomSorter or xnat-like system, series number should be removed.
     SeriesT1 = handles.Cfg.SeriesName.T1(Index(1)+1:end);
     if ~handles.Cfg.AnatOnly
+        if handles.Cfg.IsOrganizeT2
+            SeriesT2 = handles.Cfg.SeriesName.T2(Index(1)+1:end);
+        end
         if handles.Cfg.IsOrganizeDwi
             SeriesDwi = handles.Cfg.SeriesName.Dwi(Index(1)+1:end);
         end
@@ -1574,6 +1592,9 @@ if ~isempty(Index) && ~isnan(str2double(handles.Cfg.SeriesName.T1(1:Index(1)-1))
 else
     SeriesT1 = handles.Cfg.SeriesName.T1;
     if ~handles.Cfg.AnatOnly
+        if handles.Cfg.IsOrganizeT2
+            SeriesT2 = handles.Cfg.SeriesName.T2;
+        end
         if handles.Cfg.IsOrganizeDwi
             SeriesDwi = handles.Cfg.SeriesName.Dwi;
         end
@@ -1600,6 +1621,10 @@ if handles.Cfg.InputLayout == 1 % Participant first
     T1List = cellfun(@(Sub) dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,'*',SeriesT1]),SubString,'UniformOutput',0);
     T1String = cellfun(@(SubSeries) {SubSeries(:).name}',T1List,'UniformOutput',0);
     if ~handles.Cfg.AnatOnly
+        if handles.Cfg.IsOrganizeT2
+            T2List = cellfun(@(Sub) dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,'*',SeriesT2]),SubString,'UniformOutput',0);
+            T2String = cellfun(@(SubSeries) {SubSeries(:).name}',T2List,'UniformOutput',0);
+        end
         if handles.Cfg.IsOrganizeDwi
             DwiList = cellfun(@(Sub) dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,'*',SeriesDwi]),SubString,'UniformOutput',0);
             DwiString = cellfun(@(SubSeries) {SubSeries(:).name}',DwiList,'UniformOutput',0);
@@ -1640,6 +1665,14 @@ else % Series first
         T1String{iSub,1} = T1ListTemp(find(Index));
     end
     if ~handles.Cfg.AnatOnly
+        if handles.Cfg.IsOrganizeT2
+            T2ListTemp = dir([handles.Cfg.WorkingDir,filesep,'*',SeriesT2]);
+            T2ListTemp={T2ListTemp(:).name}';
+            for iSub = 1:length(SubString)
+                Index = cellfun(@(Series) exist([handles.Cfg.WorkingDir,filesep,Series,filesep,SubString{iSub}],'dir'),T2ListTemp);
+                T2String{iSub,1} = T2ListTemp(find(Index));
+            end
+        end
         if handles.Cfg.IsOrganizeDwi
             DwiListTemp = dir([handles.Cfg.WorkingDir,filesep,'*',SeriesDwi]);
             DwiListTemp={DwiListTemp(:).name}';
@@ -1693,6 +1726,17 @@ end
 SubString_T1 = repmat(SubString,1,size(T1String,2));
 
 if ~handles.Cfg.AnatOnly
+    if handles.Cfg.IsOrganizeT2
+        MaxColumn = max(cellfun('length', T2String));
+        MinColumn = min(cellfun('length', T2String));
+        if  MaxColumn==1 && MinColumn==1
+            T2String = cellfun(@(Series) Series{1},T2String, 'UniformOutput', false); %unnest the cell
+        else
+            T2String = cellfun(@(OneString) [OneString; repmat({'padding'},MaxColumn-length(OneString),1)], T2String, 'UniformOutput', false); % pad each cell.
+            T2String = cat(2,T2String{:})';
+        end
+        SubString_T2 = repmat(SubString,1,size(T2String,2));
+    end
     if handles.Cfg.IsOrganizeDwi
         MaxColumn = max(cellfun('length', DwiString));
         MinColumn = min(cellfun('length', DwiString));
@@ -1773,6 +1817,32 @@ if handles.Cfg.InputLayout == 1 % Participant first
         end
     end   
     if ~handles.Cfg.AnatOnly
+        if handles.Cfg.IsOrganizeT2
+            disp([newline,'Eliminating the deficient T2-weighted series for T2Raw sessions ...']);
+            if handles.Cfg.SeriesFileNumber.LowLimitMode.T2 % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
+                nFileT2 = handles.Cfg.SeriesFileNumber.LowThreshold.T2;
+                try
+                    T2Status = cellfun(@(Series,Sub) ...
+                        (length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileT2)>=0,...
+                        T2String,SubString_T2,'UniformOutput', false);
+                catch
+                    T2Status = cellfun(@(Series,Sub) ...
+                        (length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileT2)>=0,...
+                        T2String,SubString_T2,'UniformOutput', false);
+                end
+            else
+                nFileT2 = handles.Cfg.SeriesFileNumber.List.T2(handles.Cfg.SeriesFileNumber.Flag.T2);
+                try
+                    T2Status = cellfun(@(Series,Sub) ...
+                        ~(length(java.io.File([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]).listFiles)-nFileT2),...
+                        T2String,SubString_T2,'UniformOutput', false);
+                catch
+                    T2Status = cellfun(@(Series,Sub) ...
+                        ~(length(dir([handles.Cfg.WorkingDir,filesep,Sub,filesep,Series]))-handles.Cfg.nFileOperator-nFileT2),...
+                        T2String,SubString_T2,'UniformOutput', false);
+                end
+            end
+        end
         if handles.Cfg.IsOrganizeDwi
             disp([newline,'Eliminating the deficient Diffusion series for DwiRaw sessions ...']);
             if handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
@@ -1898,6 +1968,19 @@ else % Series first
             T1String,SubString_T1,'UniformOutput', false);
     end
     if ~handles.Cfg.AnatOnly
+        if handles.Cfg.IsOrganizeT2
+            if handles.Cfg.SeriesFileNumber.LowLimitMode.T2 % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
+                nFileT2 = handles.Cfg.SeriesFileNumber.LowThreshold.T2;
+                T2Status = cellfun(@(Series,Sub) ...
+                    (length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileT2)>=0,...
+                    T2String,SubString_T2,'UniformOutput', false);
+            else
+                nFileT2 = handles.Cfg.SeriesFileNumber.List.T2(handles.Cfg.SeriesFileNumber.Flag.T2);
+                T2Status = cellfun(@(Series,Sub) ...
+                    ~(length(dir([handles.Cfg.WorkingDir,filesep,Series,filesep,Sub]))-handles.Cfg.nFileOperator-nFileT2),...
+                    T2String,SubString_T2,'UniformOutput', false);
+            end
+        end
         if handles.Cfg.IsOrganizeDwi
             if handles.Cfg.SeriesFileNumber.LowLimitMode.Dwi % Do not fix the number of dicom files, setting a lower threshold for the number. Bin Lu, 20220921.
                 nFileDwi = handles.Cfg.SeriesFileNumber.LowThreshold.Dwi;
@@ -2004,6 +2087,9 @@ end
 %% Confirm each session by user if necessary
 T1InputDir = cell(length(SubString),1);
 if ~handles.Cfg.AnatOnly
+    if handles.Cfg.IsOrganizeT2
+        T2InputDir = cell(length(SubString),1);
+    end
     if handles.Cfg.IsOrganizeDwi
         DwiInputDir = cell(length(SubString),1);
     end
@@ -2039,6 +2125,24 @@ if handles.Cfg.InputLayout == 1 % Participant first
             end
         end
 
+        % T2Raw
+        if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOrganizeT2
+            Index = find([T2Status{iSub,:}]);
+            if ~isempty(Index)
+                if length(Index) > 1 % && ~handles.Cfg.AlwaysLatterSeries
+                    SeriesList = T2String(iSub,Index)';
+                    Selection = ManuallySelectSeries({'T2Raw'},SubString{iSub},SeriesList,'Template1');
+%                     handles.Cfg.AlwaysLatterSeries = Selection.AlwaysLatterSeries;
+                    %ManuallySelectSeries({'FunRaw';'S2_FunRaw'},'BinLu',{'Series1';'Series2';'Series3'},'Template1');
+                    Index = [];
+                    Index = Selection.Results(1)-1; % Minus "please select" line
+                    T2InputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Index}];
+                else
+                    T2InputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,T2String{iSub,Index(end)}];
+                end
+            end
+        end        
+        
         % DwiRaw
         if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOrganizeDwi
             Index = find([DwiStatus{iSub,:}]);
@@ -2270,6 +2374,24 @@ else % series first
             end
         end
 
+        % T2Raw
+        if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOrganizeT2
+            Index = find([T2Status{iSub,:}]);
+            if ~isempty(Index)
+                if length(Index) > 1 % && ~handles.Cfg.AlwaysLatterSeries
+                    SeriesList = T2String(iSub,Index)';
+                    Selection = ManuallySelectSeries({'T2Raw'},SubString{iSub},SeriesList,'Template1');
+                    %                     handles.Cfg.AlwaysLatterSeries = Selection.AlwaysLatterSeries;
+                    %ManuallySelectSeries({'FunRaw';'S2_FunRaw'},'BinLu',{'Series1';'Series2';'Series3'},'Template1');
+                    Index = [];
+                    Index = Selection.Results(1)-1; % Minus "please select" line
+                    T2InputDir{iSub} = [handles.Cfg.WorkingDir,filesep,SeriesList{Index},filesep,SubString{iSub}];
+                else
+                    T2InputDir{iSub} = [handles.Cfg.WorkingDir,filesep,T2String{iSub,Index(end)},filesep,SubString{iSub}];
+                end
+            end
+        end
+        
         % DwiRaw
         if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOrganizeDwi
             Index = find([DwiStatus{iSub,:}]);
@@ -2490,6 +2612,7 @@ end
 SubStatus = ones(length(SubString),1);
 if handles.Cfg.IsPseudoSeries
     handles.Cfg.T1Pseudo = '';
+    handles.Cfg.T2Pseudo = '';
     handles.Cfg.DwiPseudo = '';
     handles.Cfg.FieldFunPseudo = cell(handles.Cfg.FieldFunFolderNumber,1);
     handles.Cfg.FieldDwiPseudo =cell(handles.Cfg.FieldDwiFolderNumber,1);
@@ -2502,6 +2625,13 @@ if handles.Cfg.IsPseudoSeries
             SubStatus(iSub) = 0; % Revised 20210511, don't assign pseudo series for T1 MRI
         end
         if ~handles.Cfg.AnatOnly
+            if handles.Cfg.IsOrganizeT2
+                if  ~isempty(T2InputDir{iSub}) && ~strcmp(T2InputDir{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.T2Pseudo)
+                    handles.Cfg.T2Pseudo = T2InputDir{iSub};
+                elseif isempty(T2InputDir{iSub}) || strcmp(T2InputDir{iSub}(end-11:end),'PseudoSeries')
+                    T2InputDir{iSub} = 'PseudoSeries';
+                end
+            end
             if handles.Cfg.IsOrganizeDwi
                 if  ~isempty(DwiInputDir{iSub}) && ~strcmp(DwiInputDir{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.DwiPseudo)
                     handles.Cfg.DwiPseudo = DwiInputDir{iSub};
@@ -2544,6 +2674,11 @@ else % handles.Cfg.IsPseudoSeries == 0
             SubStatus(iSub) = 0;
         end
         if ~handles.Cfg.AnatOnly
+            if handles.Cfg.IsOrganizeT2
+                if isempty(T2InputDir{iSub}) || strcmp(T2InputDir{iSub}(end-11:end),'PseudoSeries')
+                    SubStatus(iSub) = 0;
+                end
+            end
             if handles.Cfg.IsOrganizeDwi
                 if isempty(DwiInputDir{iSub}) || strcmp(DwiInputDir{iSub}(end-11:end),'PseudoSeries')
                     SubStatus(iSub) = 0;
@@ -2576,6 +2711,9 @@ handles.Cfg.SubList = SubString(find(SubStatus));
 handles.Cfg.SubListNew = cell(length(handles.Cfg.SubList),1);
 handles.Cfg.InputList.T1 = T1InputDir(find(SubStatus));
 if ~handles.Cfg.AnatOnly
+    if handles.Cfg.IsOrganizeT2
+        handles.Cfg.InputList.T2 =T2InputDir(find(SubStatus));
+    end
     if handles.Cfg.IsOrganizeDwi
         handles.Cfg.InputList.Dwi =DwiInputDir(find(SubStatus));
     end
@@ -2622,6 +2760,28 @@ for iSub = 1:length(handles.Cfg.SubList)
     end
     
     if ~handles.Cfg.AnatOnly
+        if handles.Cfg.IsOrganizeT2
+            T2OutputDir = [handles.Cfg.OutputDir,filesep,'T2Raw',filesep,SubID];
+            mkdir(T2OutputDir);
+            try
+                if ~strcmp(handles.Cfg.InputList.T2{iSub},'PseudoSeries')
+                    copyfile(handles.Cfg.InputList.T2{iSub},T2OutputDir);
+                else
+                    copyfile(handles.Cfg.T2Pseudo,T2OutputDir);
+                end
+            catch
+                if MacFlag == 0
+                    disp([newline,...
+                        'Because of the system limitation of your computer, to avoid the "argument list too long" error, it would take more time to finish copy-paste procedure...'])
+                    MacFlag = 1;
+                end
+                if ~strcmp(handles.Cfg.InputList.T2{iSub},'PseudoSeries')
+                    dos(['for file in "',handles.Cfg.InputList.T2{iSub},'"/*; do cp -- "$file" "',T2OutputDir,'" ; done']);
+                else
+                    dos(['for file in "',handles.Cfg.T2Pseudo,'"/*; do cp -- "$file" "',T2OutputDir,'" ; done']);
+                end
+            end
+        end
         if handles.Cfg.IsOrganizeDwi
             DwiOutputDir = [handles.Cfg.OutputDir,filesep,'DwiRaw',filesep,SubID];
             mkdir(DwiOutputDir);
@@ -2767,6 +2927,19 @@ for iSub=1:length(handles.Cfg.SubList)
     fprintf(['Converting T1 Images: ',SubjectID{iSub},' OK']);
 end
 
+%Convert T2 DICOM files to NIFTI images
+if handles.Cfg.IsOrganizeT2
+    for iSub=1:length(handles.Cfg.SubList)
+        OutputDir=[handles.Cfg.OutputDir,filesep,'T2Img',filesep,SubjectID{iSub}];
+        mkdir(OutputDir);
+        DirDCM=dir([handles.Cfg.OutputDir,filesep,'T2Raw',filesep,SubjectID{iSub},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
+        InputFilename=[handles.Cfg.OutputDir,filesep,'T2Raw',filesep,SubjectID{iSub},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
+        %YAN Chao-Gan 120817.
+        y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
+        fprintf(['Converting DWI Images: ',SubjectID{iSub},' OK']);
+    end
+end
+
 %Convert DWI DICOM files to NIFTI images
 if handles.Cfg.IsOrganizeDwi
     for iSub=1:length(handles.Cfg.SubList)
@@ -2851,6 +3024,16 @@ for iSub = 1:length(SubjectID)
     else
         handles.Cfg.DCM2NIIStatus.T1{1}{iSub,1} = 'Failure';
         Flag(iSub) = 1;
+    end
+    
+    % Check T2 DCM2NII status
+    if handles.Cfg.IsOrganizeT2
+        if ~isempty(dir([handles.Cfg.OutputDir,filesep,'T2Img',filesep,SubjectID{iSub},filesep,'*.nii']))
+            handles.Cfg.DCM2NIIStatus.T2{iSub,1} = 'Success';
+        else
+            handles.Cfg.DCM2NIIStatus.T2{iSub,1} = 'Failure';
+            Flag(iSub) = 1;
+        end
     end
     
     % Check DWI DCM2NII status
@@ -2964,6 +3147,9 @@ for iSub = 1:length(SubjectID)
     if handles.Cfg.IsDeleteSub
         if Flag(iSub) == 1
             rmdir([handles.Cfg.OutputDir,filesep,'T1Img',filesep,SubjectID{iSub}],'s');
+            if handles.Cfg.IsOrganizeT2
+                rmdir([handles.Cfg.OutputDir,filesep,'T2Img',filesep,SubjectID{iSub}],'s');
+            end
             if handles.Cfg.IsOrganizeDwi
                 rmdir([handles.Cfg.OutputDir,filesep,'DwiImg',filesep,SubjectID{iSub}],'s');
             end
@@ -3030,6 +3216,10 @@ else
     Text = [handles.Cfg.SubList, handles.Cfg.SubListNew, handles.Cfg.InputList.T1];
 end
 if ~handles.Cfg.AnatOnly 
+    if handles.Cfg.IsOrganizeT2
+        Titles = [Titles,'T2Raw'];
+        Text = [Text,handles.Cfg.InputList.T2];
+    end
     if handles.Cfg.IsOrganizeDwi
         Titles = [Titles,'DwiRaw'];
         Text = [Text,handles.Cfg.InputList.Dwi];
@@ -3062,6 +3252,10 @@ if handles.Cfg.IsDCM2NII
     Titles = [Titles,'DCM2NII T1Raw'];
     Text = [Text,handles.Cfg.DCM2NIIStatus.T1];
     if ~handles.Cfg.AnatOnly
+        if handles.Cfg.IsOrganizeT2
+            Titles = [Titles,'DCM2NII T2Raw'];
+            Text = [Text,handles.Cfg.DCM2NIIStatus.T2];
+        end
         if handles.Cfg.IsOrganizeDwi
             Titles = [Titles,'DCM2NII DwiRaw'];
             Text = [Text,handles.Cfg.DCM2NIIStatus.Dwi];
@@ -3528,6 +3722,7 @@ set(handles.editFunSessionNum,'string',num2str(handles.Cfg.FunSessionNumber));
 set(handles.editFieldFunFolderNum,'string',num2str(handles.Cfg.FieldFunFolderNumber));
 set(handles.editFieldDwiFolderNum,'string',num2str(handles.Cfg.FieldDwiFolderNumber));
 set(handles.checkboxDCM2NII,'Value',handles.Cfg.IsDCM2NII);
+set(handles.checkboxIsOrganizeT2,'Value',handles.Cfg.IsOrganizeT2);
 set(handles.checkboxIsOrganizeFun,'Value',handles.Cfg.IsOrganizeFun);
 set(handles.checkboxIsOrganizeDwi,'Value',handles.Cfg.IsOrganizeDwi);
 set(handles.checkboxIsOrganizeFieldFun,'Value',handles.Cfg.IsOrganizeFieldFun);
@@ -3562,6 +3757,41 @@ else
     set(handles.textFilesT1,'Enable','on');
 end
 
+% T2Raw
+if handles.Cfg.IsOrganizeT2
+    set(handles.popupmenuT2,'String',handles.Cfg.Demo.SeriesNames,'Value',handles.Cfg.SeriesIndex.T2);
+    Percentage = handles.Cfg.SeriesFileNumber.Percent.T2;
+    DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),...
+        num2cell(handles.Cfg.SeriesFileNumber.List.T2),num2cell(Percentage),'UniformOutput',false);
+    set(handles.popupmenuT2,'Enable','on');
+    set(handles.popupmenuT2FileNumber,'String',DisplayString,'Value',handles.Cfg.SeriesFileNumber.Flag.T2);
+    set(handles.editT2nFile,'String',num2str(handles.Cfg.SeriesFileNumber.LowThreshold.T2));
+    set(handles.radiobuttonT2FixednFile,'Enable','on');
+    set(handles.radiobuttonT2ChangeablenFile,'Enable','on');
+    if handles.Cfg.SeriesFileNumber.LowLimitMode.T2 == 0
+        set(handles.popupmenuT2FileNumber,'Enable','on');
+        set(handles.radiobuttonT2FixednFile,'Value',1);
+        set(handles.radiobuttonT2ChangeablenFile,'Value',0);
+        set(handles.textMoreThanT2,'Enable','off');
+        set(handles.editT2nFile,'Enable','off');
+        set(handles.textFilesT2,'Enable','off');
+    else
+        set(handles.popupmenuT2FileNumber,'Enable','off');
+        set(handles.radiobuttonT2FixednFile,'Value',0);
+        set(handles.radiobuttonT2ChangeablenFile,'Value',1);
+        set(handles.textMoreThanT2,'Enable','on');
+        set(handles.editT2nFile,'Enable','on');
+        set(handles.textFilesT2,'Enable','on');
+    end
+else
+    set(handles.popupmenuT2,'Enable','off');
+    set(handles.popupmenuT2FileNumber,'Enable','off');
+    set(handles.editT2nFile,'Enable','off');
+    set(handles.textMoreThanT2,'Enable','off');
+    set(handles.textFilesT2,'Enable','off');
+    set(handles.radiobuttonT2FixednFile,'Enable','off');
+    set(handles.radiobuttonT2ChangeablenFile,'Enable','off');
+end
 
 % DwiRaw
 if handles.Cfg.IsOrganizeDwi
@@ -3862,7 +4092,9 @@ function checkboxIsOrganizeT2_Callback(hObject, eventdata, handles)
 % hObject    handle to checkboxIsOrganizeT2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.Cfg.IsOrganizeT2 = get(handles.checkboxIsOrganizeT2,'Value');
+UpdateDisplay(handles);
+guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of checkboxIsOrganizeT2
 
 
@@ -3871,7 +4103,20 @@ function popupmenuT2_Callback(hObject, eventdata, handles)
 % hObject    handle to popupmenuT2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.Cfg.SeriesIndex.T2 = get(handles.popupmenuT2,'Value');
+set(handles.popupmenuT2FileNumber,'String','Computing...'); 
+drawnow;
+handles.Cfg.SeriesName.T2 = handles.Cfg.Demo.SeriesNames{handles.Cfg.SeriesIndex.T2};
+[handles.Cfg.SeriesFileNumber.List.T2,Percentage] = CheckFileNumber(hObject, handles,handles.Cfg.SeriesIndex.T2);
+handles.Cfg.SeriesFileNumber.Flag.T2 = 1;
+handles.Cfg.SeriesFileNumber.Percent.T2 = Percentage;
+% Added 20210722, add percentage info to reduce wrong selections
+DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),num2cell(handles.Cfg.SeriesFileNumber.List.T2),num2cell(Percentage),'UniformOutput',false);
+set(handles.popupmenuT2FileNumber,...
+    'String',DisplayString,...
+    'Value',handles.Cfg.SeriesFileNumber.Flag.T2,...
+    'Enable','on');
+guidata(hObject,handles);
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenuT2 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenuT2
 
@@ -3894,7 +4139,8 @@ function popupmenuT2FileNumber_Callback(hObject, eventdata, handles)
 % hObject    handle to popupmenuT2FileNumber (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.Cfg.SeriesFileNumber.Flag.T2 = get(handles.popupmenuT2FileNumber,'Value');
+guidata(hObject,handles);
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenuT2FileNumber contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenuT2FileNumber
 
@@ -3917,7 +4163,9 @@ function radiobuttonT2FixednFile_Callback(hObject, eventdata, handles)
 % hObject    handle to radiobuttonT2FixednFile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.Cfg.SeriesFileNumber.LowLimitMode.T2 = ~get(handles.radiobuttonT2FixednFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
 % Hint: get(hObject,'Value') returns toggle state of radiobuttonT2FixednFile
 
 
@@ -3926,7 +4174,9 @@ function radiobuttonT2ChangeablenFile_Callback(hObject, eventdata, handles)
 % hObject    handle to radiobuttonT2ChangeablenFile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.Cfg.SeriesFileNumber.LowLimitMode.T2 = get(handles.radiobuttonT2ChangeablenFile,'Value');
+guidata(hObject,handles);
+UpdateDisplay(handles)
 % Hint: get(hObject,'Value') returns toggle state of radiobuttonT2ChangeablenFile
 
 
@@ -3935,7 +4185,8 @@ function editT2nFile_Callback(hObject, eventdata, handles)
 % hObject    handle to editT2nFile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+handles.Cfg.SeriesFileNumber.LowThreshold.T2 = str2num(get(handles.editT2nFile,'String'));
+guidata(hObject,handles);
 % Hints: get(hObject,'String') returns contents of editT2nFile as text
 %        str2double(get(hObject,'String')) returns contents of editT2nFile as a double
 
