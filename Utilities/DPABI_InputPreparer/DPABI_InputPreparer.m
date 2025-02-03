@@ -153,7 +153,7 @@ handles.Cfg.ImageList.FieldDwi = {};
 handles.Cfg.ImageList.FunAll = {};
 handles.Cfg.ManuallySelect.SubName = {};
 handles.Cfg.ManuallySelect.Series = {}; 
-handles.Cfg.IsDeleteSub = 0;
+handles.Cfg.IsDeleteSub = 1;
 
 if isempty(varargin)
     handles.Cfg.WorkingDir = pwd;
@@ -525,8 +525,8 @@ handles = guidata(hObject);
 WriteCSV(hObject, handles);
 
 set(handles.pushbuttonRun,'Enable','off','String','Finished');   
-% set(handles.pushbuttonCallDPARSFA,'Enable','on');%,'BackgroundColor',[154/256,255/256,154/256]
-% set(handles.pushbuttonCallDPABISurf,'Enable','on');%,'BackgroundColor',[154/256,255/256,154/256]
+set(handles.pushbuttonCallDPARSFA,'Enable','on');%,'BackgroundColor',[154/256,255/256,154/256]
+set(handles.pushbuttonCallDPABISurf,'Enable','on');%,'BackgroundColor',[154/256,255/256,154/256]
 
 disp([newline, 'All conversion is finished. Enjoy it!']);
 % disp([newline, 'All the conversion is finished! You can directly call DPARSFA or DPABISurf in the pervious figure now!']);
@@ -702,46 +702,97 @@ function pushbuttonCallDPARSFA_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonCallDPARSFA (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%{
-%%% Update needed to adapt to the latest version %%% Bin 20241213
-% [ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
-% 
-% load([ProgramPath,filesep,'Jobmats',filesep,'Template_V4_CalculateInMNISpace_Warp_DARTEL.mat']);
-% 
-% DPABIPath = fileparts(which('dpabi.m')); %YAN Chao-Gan, 151229. For set up ROIs, for the R-fMRI Project
-% Cfg.CalFC.ROIDef = {[DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
-%     [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
-%     [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
-%     [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
-%     [DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
-%     [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
-%     [DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
-%     [DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii'];... %YAN Chao-Gan, 170104. Add Power 264.
-%     [DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii'];... %YAN Chao-Gan, 180824. Add Schaefer 400.
-%     [DPABIPath,filesep,'Templates',filesep,'Tian2020_Subcortex_Atlas',filesep,'Tian_Subcortex_S4_3T.nii']}; %YAN Chao-Gan, 210414. Add Tian2020_Subcortex_Atlas.
-% Cfg.CalFC.ROISelectedIndex=cell(size(Cfg.CalFC.ROIDef));
-% Cfg.CalFC.IsMultipleLabel = 1;
-% 
-% Cfg.WorkingDir = handles.Cfg.OutputDir;
-% Cfg.IsNeedConvertFunDCM2IMG = ~handles.Cfg.IsDCM2NII;
-% Cfg.IsNeedConvertDwiDCM2IMG = ~handles.Cfg.IsDCM2NII;
-% Cfg.IsNeedConvertT1DCM2IMG = ~handles.Cfg.IsDCM2NII;
-% Cfg.FunctionalSessionNumber = handles.Cfg.FunSessionNumber;
-% if handles.Cfg.IsDCM2NII
-%     Cfg.StartingDirName = 'FunImg';
-%     SubList = dir([handles.Cfg.OutputDir,filesep,'FunImg']);
-% else
-%     Cfg.StartingDirName = 'FunRaw';
-%     SubList = dir([handles.Cfg.OutputDir,filesep,'FunRaw']);
-% end
-% 
-% Index=cellfun(...
-%     @(IsDir, NotDot) IsDir && (~strcmpi(NotDot, '.') && ~strcmpi(NotDot, '..') && ~strcmpi(NotDot, '.DS_Store')), ...
-%     {SubList.isdir}, {SubList.name});
-% SubList=SubList(Index);
-% Cfg.SubjectID={SubList(:).name}';
-% DPARSFA(Cfg)
-%}
+
+%%% Updated to the latest version %%% Bin 20250203
+[ProgramPath, fileN, extn] = fileparts(which('DPARSFA_run.m'));
+
+load([ProgramPath,filesep,'Jobmats',filesep,'Template_V4_CalculateInMNISpace_Warp_DARTEL.mat']);
+
+DPABIPath = fileparts(which('dpabi.m')); %YAN Chao-Gan, 151229. For set up ROIs, for the R-fMRI Project
+Cfg.CalFC.ROIDef = {[DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
+    [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
+    [DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
+    [DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
+    [DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
+    [DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
+    [DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
+    [DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii'];... %YAN Chao-Gan, 170104. Add Power 264.
+    [DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii'];... %YAN Chao-Gan, 180824. Add Schaefer 400.
+    [DPABIPath,filesep,'Templates',filesep,'Tian2020_Subcortex_Atlas',filesep,'Tian_Subcortex_S4_3T.nii']}; %YAN Chao-Gan, 210414. Add Tian2020_Subcortex_Atlas.
+Cfg.CalFC.ROISelectedIndex=cell(size(Cfg.CalFC.ROIDef));
+Cfg.CalFC.IsMultipleLabel = 1;
+
+Cfg.WorkingDir = handles.Cfg.OutputDir;
+Cfg.IsNeedConvertFunDCM2IMG = ~handles.Cfg.IsDCM2NII;
+Cfg.IsNeedConvertT1DCM2IMG = ~handles.Cfg.IsDCM2NII;
+Cfg.FunctionalSessionNumber = handles.Cfg.FunSessionNumber;
+if handles.Cfg.IsDCM2NII
+    Cfg.StartingDirName = 'FunImg';
+    SubList = dir([handles.Cfg.OutputDir,filesep,'FunImg']);
+else
+    Cfg.StartingDirName = 'FunRaw';
+    SubList = dir([handles.Cfg.OutputDir,filesep,'FunRaw']);
+end
+
+Index=cellfun(...
+    @(IsDir, NotDot) IsDir && (~strcmpi(NotDot, '.') && ~strcmpi(NotDot, '..') && ~strcmpi(NotDot, '.DS_Store')), ...
+    {SubList.isdir}, {SubList.name});
+SubList=SubList(Index);
+Cfg.SubjectID={SubList(:).name}';
+
+if handles.Cfg.IsOrganizeFieldFun && ~strcmp(handles.Cfg.OutLayout.FieldFun.Format,'Topup')
+    Cfg.FieldMap.IsNeedConvertDCM2IMG = 0;
+    Cfg.FieldMap.IsCalculateVDM =1;
+    Cfg.FieldMap.EPIBasedFieldMap = 0;
+    Cfg.FieldMap.IsFieldMapCorrectionUnwarpRealign = 1;
+    Cfg.FieldMap.DataFormat = handles.Cfg.OutLayout.FieldFun.Format;
+    Cfg.FieldMap.TE1 = [];
+    Cfg.FieldMap.TE2 = [];
+    switch handles.Cfg.OutLayout.FieldFun.Format
+        case 'PhaseDiff'
+            for iSub = 1:length(SubList)
+                if ~isempty(Cfg.FieldMap.TE1)
+                    break;
+                else
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+                end
+            end
+        case 'Phase12'
+            for iSub = 1:length(SubList)
+                if ~isempty(Cfg.FieldMap.TE1)
+                    break;
+                else
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime;
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase2',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime;
+                end
+            end            
+        case 'B0Map'
+            for iSub = 1:length(SubList)
+                if ~isempty(Cfg.FieldMap.TE1)
+                    break;
+                else
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+                end
+            end
+    end
+end
+
+DPARSFA(Cfg)
+
 
 
 % --- Executes on button press in pushbuttonCallDPABISurf.
@@ -749,58 +800,104 @@ function pushbuttonCallDPABISurf_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonCallDPABISurf (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%{
-% %%% Update needed to adapt to the latest version %%% Bin 20241213
-% handles.Cfg.DPABIPath = fileparts(which('dpabi.m')); 
-% 
-% load(fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'Jobmats','Template_Default.mat'))
-% Cfg.MaskFileSurfLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_cortex.label.gii');
-% Cfg.MaskFileSurfRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_cortex.label.gii');
-% Cfg.MaskFileVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_91x109x91.img');
-% Cfg.SurfFileLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_white.surf.gii');
-% Cfg.SurfFileRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_white.surf.gii');
-% Cfg.CalFC.ROIDefSurfLH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_HCP-MMP1.label.gii');...
-%     fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
-% Cfg.CalFC.ROIDefSurfRH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_HCP-MMP1.label.gii');...
-%     fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
-% Cfg.CalFC.ROIDefVolu = {[handles.Cfg.DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
-%     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
-%     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
-%     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
-%     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
-%     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
-%     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
-%     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii'];... %YAN Chao-Gan, 170104. Add Power 264.
-%     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii'];... %YAN Chao-Gan, 180824. Add Schaefer 400.
-%     [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Tian2020_Subcortex_Atlas',filesep,'Tian_Subcortex_S4_3T_2009cAsym.nii']}; %YAN Chao-Gan, 210414. Add Tian2020_Subcortex_Atlas.
-% 
-% 
-% Cfg.CalFC.ROISelectedIndexVolu=cell(size(Cfg.CalFC.ROIDefVolu));
-% Cfg.CalFC.ROISelectedIndexSurfLH=cell(size(Cfg.CalFC.ROIDefSurfLH));
-% Cfg.CalFC.ROISelectedIndexSurfRH=cell(size(Cfg.CalFC.ROIDefSurfRH));
-% 
-% 
-% Cfg.WorkingDir = handles.Cfg.OutputDir;
-% Cfg.IsNeedConvertFunDCM2IMG = ~handles.Cfg.IsDCM2NII;
-% Cfg.IsNeedConvertDwiDCM2IMG = ~handles.Cfg.IsDCM2NII;
-% Cfg.IsNeedConvertT1DCM2IMG = ~handles.Cfg.IsDCM2NII;
-% Cfg.FunctionalSessionNumber = handles.Cfg.FunSessionNumber;
-% if handles.Cfg.IsDCM2NII
-%     Cfg.StartingDirName = 'FunImg';
-%     SubList = dir([handles.Cfg.OutputDir,filesep,'FunImg']);
-% else
-%     Cfg.StartingDirName = 'FunRaw';
-%     SubList = dir([handles.Cfg.OutputDir,filesep,'FunRaw']);
-% end
-% 
-% Index=cellfun(...
-%     @(IsDir, NotDot) IsDir && (~strcmpi(NotDot, '.') && ~strcmpi(NotDot, '..') && ~strcmpi(NotDot, '.DS_Store')), ...
-%     {SubList.isdir}, {SubList.name});
-% SubList=SubList(Index);
-% Cfg.SubjectID={SubList(:).name}';
-% 
-% DPABISurf_Pipeline(Cfg);
-%}
+
+%%% Updated to the latest version %%% Bin 20250203
+handles.Cfg.DPABIPath = fileparts(which('dpabi.m')); 
+
+load(fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'Jobmats','Template_Default.mat'))
+Cfg.MaskFileSurfLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_cortex.label.gii');
+Cfg.MaskFileSurfRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_cortex.label.gii');
+Cfg.MaskFileVolu = fullfile(handles.Cfg.DPABIPath, 'Templates','BrainMask_05_91x109x91.img');
+Cfg.SurfFileLH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_white.surf.gii');
+Cfg.SurfFileRH = fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_white.surf.gii');
+Cfg.CalFC.ROIDefSurfLH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_HCP-MMP1.label.gii');...
+    fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_lh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
+Cfg.CalFC.ROIDefSurfRH = {fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_HCP-MMP1.label.gii');...
+    fullfile(handles.Cfg.DPABIPath, 'DPABISurf', 'SurfTemplates','fsaverage5_rh_Schaefer2018_400Parcels_7Networks_order.label.gii')};
+Cfg.CalFC.ROIDefVolu = {[handles.Cfg.DPABIPath,filesep,'Templates',filesep,'aal.nii'];...
+    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'HarvardOxford-cort-maxprob-thr25-2mm_YCG.nii'];...
+    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'HarvardOxford-sub-maxprob-thr25-2mm_YCG.nii'];...
+    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'CC200ROI_tcorr05_2level_all.nii'];...
+    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Zalesky_980_parcellated_compact.nii'];...
+    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Dosenbach_Science_160ROIs_Radius5_Mask.nii'];...
+    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'BrainMask_05_91x109x91.img'];... %YAN Chao-Gan, 161201. Add global signal.
+    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Power_Neuron_264ROIs_Radius5_Mask.nii'];... %YAN Chao-Gan, 170104. Add Power 264.
+    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii'];... %YAN Chao-Gan, 180824. Add Schaefer 400.
+    [handles.Cfg.DPABIPath,filesep,'Templates',filesep,'Tian2020_Subcortex_Atlas',filesep,'Tian_Subcortex_S4_3T_2009cAsym.nii']}; %YAN Chao-Gan, 210414. Add Tian2020_Subcortex_Atlas.
+
+Cfg.CalFC.ROISelectedIndexVolu=cell(size(Cfg.CalFC.ROIDefVolu));
+Cfg.CalFC.ROISelectedIndexSurfLH=cell(size(Cfg.CalFC.ROIDefSurfLH));
+Cfg.CalFC.ROISelectedIndexSurfRH=cell(size(Cfg.CalFC.ROIDefSurfRH));
+
+Cfg.WorkingDir = handles.Cfg.OutputDir;
+Cfg.IsNeedConvertFunDCM2IMG = ~handles.Cfg.IsDCM2NII;
+Cfg.IsNeedConvertT1DCM2IMG = ~handles.Cfg.IsDCM2NII;
+Cfg.FunctionalSessionNumber = handles.Cfg.FunSessionNumber;
+if handles.Cfg.IsDCM2NII
+    Cfg.StartingDirName = 'FunImg';
+    SubList = dir([handles.Cfg.OutputDir,filesep,'FunImg']);
+else
+    Cfg.StartingDirName = 'FunRaw';
+    SubList = dir([handles.Cfg.OutputDir,filesep,'FunRaw']);
+end
+
+Index=cellfun(...
+    @(IsDir, NotDot) IsDir && (~strcmpi(NotDot, '.') && ~strcmpi(NotDot, '..') && ~strcmpi(NotDot, '.DS_Store')), ...
+    {SubList.isdir}, {SubList.name});
+SubList=SubList(Index);
+Cfg.SubjectID={SubList(:).name}';
+
+if handles.Cfg.IsOrganizeFieldFun && ~strcmp(handles.Cfg.OutLayout.FieldFun.Format,'Topup')
+    Cfg.FieldMap.IsNeedConvertDCM2IMG = 0;
+    Cfg.FieldMap.IsApplyFieldMapCorrection=1;
+    Cfg.FieldMap.DataFormat = handles.Cfg.OutLayout.FieldFun.Format;
+    Cfg.FieldMap.TE1 = [];
+    Cfg.FieldMap.TE2 = [];
+    switch handles.Cfg.OutLayout.FieldFun.Format
+        case 'PhaseDiff'
+            for iSub = 1:length(SubList)
+                if ~isempty(Cfg.FieldMap.TE1)
+                    break;
+                else
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+                end
+            end
+        case 'Phase12'
+            for iSub = 1:length(SubList)
+                if ~isempty(Cfg.FieldMap.TE1)
+                    break;
+                else
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime;
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase2',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime;
+                end
+            end            
+        case 'B0Map'
+            for iSub = 1:length(SubList)
+                if ~isempty(Cfg.FieldMap.TE1)
+                    break;
+                else
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+                end
+            end
+    end
+end
+
+DPABISurf_Pipeline(Cfg);
+
 
 
 % --- Executes on button press in pushbuttonCallDPABIFiber.
