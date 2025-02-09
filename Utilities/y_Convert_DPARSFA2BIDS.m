@@ -146,14 +146,14 @@ if Cfg.FunctionalSessionNumber<=1
                             JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
                             TE1 = JSON.EchoTime;
                         else
-                            TE1 = Cfg.FieldMap.TE1/1000;
+                            TE1 = Cfg.FieldMap.TE1;
                         end
                         if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE2==0
                             DirJSON=dir([Cfg.WorkingDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,'*.json']);
                             JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
                             TE2 = JSON.EchoTime;
                         else
-                            TE2 = Cfg.FieldMap.TE2/1000;
+                            TE2 = Cfg.FieldMap.TE2;
                         end
                         
                         JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
@@ -236,69 +236,39 @@ if Cfg.FunctionalSessionNumber<=1
             end
 
 
-% 
-%             %Dealing with Dwi Topup data
-% 
-%             DirNii=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
-%             if ~isempty(DirNii)
-%                 mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap']);
-% 
-% 
-% 
-%                 DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-% 
-%                 JSON=spm_jsonread([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
-%                 if strcmpi(JSON.PhaseEncodingDirection,'j')
-%                     topupdir='ap';
-% 
-% 
-%                 elseif strcmpi(JSON.PhaseEncodingDirection,'j-')
-%                     topupdir='pa';
-% 
-%                 end
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-%                 copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_',lower('Topup'),'.json'])
-% 
-% 
-% 
-% 
-% 
-% 
-%                 copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_',lower('Topup'),'.nii'])
-%                 
-%                 %Filling IntendedFor information
-%                 if iFieldMapMeasure==1
-% 
-%                     DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude1',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-%                     JSON=spm_jsonread([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude1',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
-%                     TE1 = JSON.EchoTime;
-% 
-%                     DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-%                     JSON=spm_jsonread([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
-%                     TE2 = JSON.EchoTime;
-% 
-%                     JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_',lower('Topup'),'.json']);
-%                     JSON.EchoTime1=TE1;
-%                     JSON.EchoTime2=TE2;
-%                     JSON.IntendedFor=DwiFile_IntendedFor;
-%                     spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_',lower('Topup'),'.json'],JSON);
-%                 elseif (iFieldMapMeasure==4) || (iFieldMapMeasure==5)
-%                     JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_',lower('Topup'),'.json']);
-%                     JSON.IntendedFor=DwiFile_IntendedFor;
-%                     spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_',lower('Topup'),'.json'],JSON);
-%                 end
-%             end
-% 
+            %Dealing with Dwi Topup data
+            DirNii=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            if ~isempty(DirNii)
+                mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap']);
 
+                DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.json']);
 
+                JSON=spm_jsonread([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                if strcmpi(JSON.PhaseEncodingDirection,'j')
+                    topupdir='pa';
+                elseif strcmpi(JSON.PhaseEncodingDirection,'j-')
+                    topupdir='ap';
+                end
 
+                copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_dir-',topupdir,'_epi','.json'])
 
+                copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_dir-',topupdir,'_epi','.nii'])
+                
+                DirBval=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.bval']);
+                if ~isempty(DirBval)
+                    copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirBval(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_dir-',topupdir,'_epi','.bval'])
+                end
+
+                DirBvec=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.bvec']);
+                if ~isempty(DirBval)
+                    copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirBvec(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_dir-',topupdir,'_epi','.bvec'])
+                end
+
+                %Filling IntendedFor information
+                JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_dir-',topupdir,'_epi','.json']);
+                JSON.IntendedFor=DwiFile_IntendedFor;
+                spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_dir-',topupdir,'_epi','.json'],JSON);
+            end
 
         end
 
@@ -415,14 +385,14 @@ if Cfg.FunctionalSessionNumber>=2
                         JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
                         TE1 = JSON.EchoTime;
                     else
-                        TE1 = Cfg.FieldMap.TE1/1000;
+                        TE1 = Cfg.FieldMap.TE1;
                     end
                     if isfield(Cfg,'FieldMap') && Cfg.FieldMap.TE2==0
                         DirJSON=dir([Cfg.WorkingDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,'*.json']);
                         JSON=spm_jsonread([Cfg.WorkingDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
                         TE2 = JSON.EchoTime;
                     else
-                        TE2 = Cfg.FieldMap.TE2/1000;
+                        TE2 = Cfg.FieldMap.TE2;
                     end
                     
                     JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
@@ -450,67 +420,109 @@ if Cfg.FunctionalSessionNumber>=2
 
         DwiFile_IntendedFor=[];
         for iDwiSession=1:DwiSessionNumber
-            mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi']);
-            DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
-            DirNii=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
-            DirNiiGZ=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
-            if ~isempty(DirImg) || length(DirNii)>=2  || length(DirNiiGZ)>=2
-                [Data,~,~, Header] =y_ReadAll([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i}]);
-                y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii']) % suffix dwi
-                DwiFile_IntendedFor=[DwiFile_IntendedFor,{['ses-',num2str(iDwiSession),'/dwi/',SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii']}];
-            elseif length(DirNii)==1
-                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii'])
-                DwiFile_IntendedFor=[DwiFile_IntendedFor,{['ses-',num2str(iDwiSession),'/dwi/',SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii']}];
-            elseif length(DirNiiGZ)==1
-                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii.gz'])
-                DwiFile_IntendedFor=[DwiFile_IntendedFor,{['ses-',num2str(iDwiSession),'/dwi/',SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii.gz']}];
-            end
-            DirBval=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.bval']);
-            DirBvec=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.bvec']);
-            copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirBval(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.bval'])
-            copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirBvec(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.bvec'])
+            for i=1:length(SubjectID_BIDS)
+                mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi']);
+                DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+                DirNii=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+                DirNiiGZ=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+                if ~isempty(DirImg) || length(DirNii)>=2  || length(DirNiiGZ)>=2
+                    [Data,~,~, Header] =y_ReadAll([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i}]);
+                    y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii']) % suffix dwi
+                    DwiFile_IntendedFor=[DwiFile_IntendedFor,{['ses-',num2str(iDwiSession),'/dwi/',SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii']}];
+                elseif length(DirNii)==1
+                    copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii'])
+                    DwiFile_IntendedFor=[DwiFile_IntendedFor,{['ses-',num2str(iDwiSession),'/dwi/',SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii']}];
+                elseif length(DirNiiGZ)==1
+                    copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirNiiGZ(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii.gz'])
+                    DwiFile_IntendedFor=[DwiFile_IntendedFor,{['ses-',num2str(iDwiSession),'/dwi/',SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.nii.gz']}];
+                end
+                DirBval=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.bval']);
+                DirBvec=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.bvec']);
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirBval(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.bval'])
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirBvec(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.bvec'])
 
-            DirJSON=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
-            if ~isempty(DirJSON)
-                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.json'])
+                DirJSON=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+                if ~isempty(DirJSON)
+                    copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iDwiSession},'DwiImg',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iDwiSession),filesep,'dwi',filesep,SubjectID_BIDS{i},'_ses-',num2str(iDwiSession),'_dwi.json'])
+                end
             end
         end
 
 
-        %Dealing with FieldMap data
-        iFieldMapSession=1;
-        FieldMapMeasures={'PhaseDiff','Magnitude1','Magnitude2','Phase1','Phase2'};
-        for iFieldMapMeasure=1:length(FieldMapMeasures)
+        %Dealing with Dwi FieldMap data
+        for i=1:length(SubjectID_BIDS)
+            iFieldMapSession=1;
+            FieldMapMeasures={'PhaseDiff','Magnitude1','Magnitude2','Phase1','Phase2'};
+            for iFieldMapMeasure=1:length(FieldMapMeasures)
 
-            DirNii=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},filesep,Cfg.SubjectID{i},filesep,'*.nii']);
-            if ~isempty(DirNii)
-                mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap']);
-                copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.nii'])
-                DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},filesep,Cfg.SubjectID{i},filesep,'*.json']);
-                copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'])
+                DirNii=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+                if ~isempty(DirNii)
+                    mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap']);
+                    copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.nii'])
+                    DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                    copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,FieldMapMeasures{iFieldMapMeasure},filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'])
 
-                %Filling IntendedFor information
-                if iFieldMapMeasure==1
+                    %Filling IntendedFor information
+                    if iFieldMapMeasure==1
 
-                    DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude1',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-                    JSON=spm_jsonread([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude1',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
-                    TE1 = JSON.EchoTime;
+                        DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude1',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                        JSON=spm_jsonread([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude1',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                        TE1 = JSON.EchoTime;
 
-                    DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,'*.json']);
-                    JSON=spm_jsonread([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
-                    TE2 = JSON.EchoTime;
+                        DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+                        JSON=spm_jsonread([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                        TE2 = JSON.EchoTime;
 
-                    JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
-                    JSON.EchoTime1=TE1;
-                    JSON.EchoTime2=TE2;
-                    JSON.IntendedFor=DwiFile_IntendedFor;
-                    spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
-                elseif (iFieldMapMeasure==4) || (iFieldMapMeasure==5)
-                    JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
-                    JSON.IntendedFor=DwiFile_IntendedFor;
-                    spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                        JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                        JSON.EchoTime1=TE1;
+                        JSON.EchoTime2=TE2;
+                        JSON.IntendedFor=DwiFile_IntendedFor;
+                        spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                    elseif (iFieldMapMeasure==4) || (iFieldMapMeasure==5)
+                        JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json']);
+                        JSON.IntendedFor=DwiFile_IntendedFor;
+                        spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_',lower(FieldMapMeasures{iFieldMapMeasure}),'.json'],JSON);
+                    end
                 end
             end
+        end
+
+
+        %Dealing with Dwi Topup data
+        for i=1:length(SubjectID_BIDS)
+            DirNii=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+            if ~isempty(DirNii)
+                mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap']);
+
+                DirJSON=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.json']);
+
+                JSON=spm_jsonread([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name]);
+                if strcmpi(JSON.PhaseEncodingDirection,'j')
+                    topupdir='pa';
+                elseif strcmpi(JSON.PhaseEncodingDirection,'j-')
+                    topupdir='ap';
+                end
+
+                copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_dir-',topupdir,'_epi','.json'])
+
+                copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_dir-',topupdir,'_epi','.nii'])
+
+                DirBval=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.bval']);
+                if ~isempty(DirBval)
+                    copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirBval(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_dir-',topupdir,'_epi','.bval'])
+                end
+
+                DirBvec=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.bvec']);
+                if ~isempty(DirBval)
+                    copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirBvec(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_dir-',topupdir,'_epi','.bvec'])
+                end
+
+                %Filling IntendedFor information
+                JSON = spm_jsonread([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_dir-',topupdir,'_epi','.json']);
+                JSON.IntendedFor=DwiFile_IntendedFor;
+                spm_jsonwrite([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iFieldMapSession),filesep,'fmap',filesep,SubjectID_BIDS{i},'_ses-',num2str(iFieldMapSession),'_acq-dwi_dir-',topupdir,'_epi','.json'],JSON);
+            end
+
         end
 
     end

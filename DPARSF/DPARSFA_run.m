@@ -828,7 +828,7 @@ if isfield(AutoDataProcessParameter,'FieldMap')
         parfor i=1:AutoDataProcessParameter.SubjectNum
             SPMJOB = load([ProgramPath,filesep,'Jobmats',filesep,'FieldMapCalculateVDM.mat']);
             SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data=[];
-            if strcmpi(AutoDataProcessParameter.FieldMap.DataFormat,'PhaseDiffMagnitude')
+            if strcmpi(AutoDataProcessParameter.FieldMap.DataFormat,'PhaseDiff') % YAN Chao-Gan, 250209. To be compatibe with new input preparer: strcmpi(AutoDataProcessParameter.FieldMap.DataFormat,'PhaseDiffMagnitude')
                 DirImg=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.nii']);
                 File=[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirImg(1).name];
                 SPMJOB.matlabbatch{1,1}.spm.tools.fieldmap.calculatevdm.subj.data.presubphasemag.phase={File};
@@ -842,14 +842,14 @@ if isfield(AutoDataProcessParameter,'FieldMap')
                     JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
                     TE1 = JSON.EchoTime1*1000;
                 else
-                    TE1 = AutoDataProcessParameter.FieldMap.TE1;
+                    TE1 = AutoDataProcessParameter.FieldMap.TE1*1000; %YAN Chao-Gan 250209. GUI Changed the unit to s, here need to convert to ms. TE1 = AutoDataProcessParameter.FieldMap.TE1;
                 end
                 if AutoDataProcessParameter.FieldMap.TE2==0
                     DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
                     JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
                     TE2 = JSON.EchoTime2*1000;
                 else
-                    TE2 = AutoDataProcessParameter.FieldMap.TE2;
+                    TE2 = AutoDataProcessParameter.FieldMap.TE2*1000; %YAN Chao-Gan 250209. GUI Changed the unit to s, here need to convert to ms. TE2 = AutoDataProcessParameter.FieldMap.TE2*1000;
                 end
 
 
@@ -873,14 +873,14 @@ if isfield(AutoDataProcessParameter,'FieldMap')
                     JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
                     TE1 = JSON.EchoTime*1000;
                 else
-                    TE1 = AutoDataProcessParameter.FieldMap.TE1;
+                    TE1 = AutoDataProcessParameter.FieldMap.TE1*1000; %YAN Chao-Gan 250209. GUI Changed the unit to s, here need to convert to ms. TE1 = AutoDataProcessParameter.FieldMap.TE1;
                 end
                 if AutoDataProcessParameter.FieldMap.TE2==0
                     DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
                     JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
                     TE2 = JSON.EchoTime*1000;
                 else
-                    TE2 = AutoDataProcessParameter.FieldMap.TE2;
+                    TE2 = AutoDataProcessParameter.FieldMap.TE2*1000; %YAN Chao-Gan 250209. GUI Changed the unit to s, here need to convert to ms. TE2 = AutoDataProcessParameter.FieldMap.TE2*1000;
                 end
 
 
@@ -921,7 +921,7 @@ if isfield(AutoDataProcessParameter,'FieldMap')
         %Move the VDM files
         for i=1:AutoDataProcessParameter.SubjectNum
             mkdir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i}])
-            if strcmpi(AutoDataProcessParameter.FieldMap.DataFormat,'PhaseDiffMagnitude')
+            if strcmpi(AutoDataProcessParameter.FieldMap.DataFormat,'PhaseDiff') % YAN Chao-Gan, 250209. To be compatibe with new input preparer: strcmpi(AutoDataProcessParameter.FieldMap.DataFormat,'PhaseDiffMagnitude')
                 movefile([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'vdm*'],[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i}])
             else
                movefile([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'vdm*'],[AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'VDMImg',filesep,AutoDataProcessParameter.SubjectID{i}])

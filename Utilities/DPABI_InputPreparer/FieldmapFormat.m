@@ -97,9 +97,9 @@ guidata(hObject, handles);
 if ismac
     ZoonMatrix = [1 1 1.3 1.1];  %For mac % [1 1 1.7 1.1]
 elseif ispc
-    ZoonMatrix = [1 1 1.6 0.9];  %For pc % [1 1 1.6 0.9]
+    ZoonMatrix = [1 1 1.3 0.9];  %For pc % [1 1 1.6 0.9]
 else
-    ZoonMatrix = [1 1 1.6 1];  %For Linux % [1 1 1.6 1]
+    ZoonMatrix = [1 1 1.3 1];  %For Linux % [1 1 1.6 1]
 end
 UISize = get(handles.figureFieldmapFormat,'Position');
 UISize = UISize.*ZoonMatrix;

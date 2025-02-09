@@ -187,9 +187,9 @@ handles.output = hObject;
 if ismac
     ZoonMatrix = [1 1 1.1 1.1];  %For mac % [1 1 1.7 1.1]
 elseif ispc
-    ZoonMatrix = [1 1 1.6 0.9];  %For pc % [1 1 1.6 0.9]
+    ZoonMatrix = [1 1 0.9 0.9];  %For pc % [1 1 1.6 0.9]
 else
-    ZoonMatrix = [1 1 1.6 1];  %For Linux % [1 1 1.6 1]
+    ZoonMatrix = [1 1 0.9 0.9];  %For Linux % [1 1 1.6 1]
 end
 UISize = get(handles.figureConvertDPABIFormat,'Position');
 UISize = UISize.*ZoonMatrix;

@@ -59,7 +59,7 @@ if nargin<4
     FieldMap.IsFieldMapCorrectionUnwarpRealign=1;
     FieldMap.TE1=0;
     FieldMap.TE2=0;
-    FieldMap.DataFormat='PhaseDiffMagnitude';
+    FieldMap.DataFormat='PhaseDiff'; % YAN Chao-Gan, 250209. To be compatibe with new input preparer: strcmpi(AutoDataProcessParameter.FieldMap.DataFormat,'PhaseDiffMagnitude')
 else
     FieldMap=varargin{1};
 end
@@ -70,10 +70,10 @@ set(handles.If_EPIBased,'Value',FieldMap.EPIBasedFieldMap);
 set(handles.If_ApplyCorrection,'Value',FieldMap.IsFieldMapCorrectionUnwarpRealign);
 set(handles.ShortTimeInput,'String',num2str(FieldMap.TE1));
 set(handles.LongTimeInput,'String',num2str(FieldMap.TE2));
-if strcmpi(FieldMap.DataFormat,'PhaseDiffMagnitude')
+if strcmpi(FieldMap.DataFormat,'PhaseDiff') % YAN Chao-Gan, 250209. To be compatibe with new input preparer: strcmpi(FieldMap.DataFormat,'PhaseDiff')
     set(handles.Data1,'Value',1);
     set(handles.Data2,'Value',0);
-elseif strcmpi(FieldMap.DataFormat,'TwoPhaseMagnitude')
+elseif strcmpi(FieldMap.DataFormat,'Phase12')     % YAN Chao-Gan, 250209. To be compatibe with new input preparer: strcmpi(FieldMap.DataFormat,'TwoPhaseMagnitude')
     set(handles.Data1,'Value',0);
     set(handles.Data2,'Value',1);
 else
@@ -241,9 +241,9 @@ longT=str2num(longT);
 FieldMap.TE1=shortT;
 FieldMap.TE2=longT;
 if get(handles.Data1,'Value')==1
-    FieldMap.DataFormat='PhaseDiffMagnitude';
+    FieldMap.DataFormat='PhaseDiff'; % YAN Chao-Gan, 250209. To be compatibe with new input preparer: FieldMap.DataFormat='PhaseDiffMagnitude';
 elseif get(handles.Data2,'Value')==1
-    FieldMap.DataFormat='TwoPhaseMagnitude';
+    FieldMap.DataFormat='Phase12'; % YAN Chao-Gan, 250209. To be compatibe with new input preparer: FieldMap.DataFormat='TwoPhaseMagnitude';
 else
     FieldMap.DataFormat='Unknown';
 end
