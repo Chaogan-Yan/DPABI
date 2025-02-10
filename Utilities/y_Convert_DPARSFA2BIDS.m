@@ -105,6 +105,29 @@ if Cfg.FunctionalSessionNumber<=1
         end
         
         
+        %Dealing with T2 data
+        mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'anat']);
+        DirImg=dir([Cfg.WorkingDir,filesep,'T2Img',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+        if ~isempty(DirImg)
+            [Data Header]=y_Read([Cfg.WorkingDir,filesep,'T2Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
+            y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T2w.nii'])
+        else
+            DirImg=dir([Cfg.WorkingDir,filesep,'T2Img',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+            if ~isempty(DirImg)
+                copyfile([Cfg.WorkingDir,filesep,'T2Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T2w.nii.gz'])
+            else
+                DirImg=dir([Cfg.WorkingDir,filesep,'T2Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+                if ~isempty(DirImg)
+                    copyfile([Cfg.WorkingDir,filesep,'T2Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T2w.nii'])
+                end
+            end
+        end
+        DirJSON=dir([Cfg.WorkingDir,filesep,'T2Img',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+        if ~isempty(DirJSON)
+            copyfile([Cfg.WorkingDir,filesep,'T2Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'anat',filesep,SubjectID_BIDS{i},'_T2w.json'])
+        end
+
+
         %Dealing with functional data
         if Cfg.FunctionalSessionNumber==1
             mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'func'])
@@ -337,7 +360,40 @@ if Cfg.FunctionalSessionNumber>=2
         end
     end
 
-    
+
+    %Dealing with T2 data
+    %Check if exist S2_T2Img, that means mutiple run of T2 image exist
+    if 7==exist([Cfg.WorkingDir,filesep,'S2_T2Img'],'dir')
+        T2SessionNumber = Cfg.FunctionalSessionNumber;
+    else
+        T2SessionNumber = 1;
+    end
+    for iT2Session=1:T2SessionNumber
+        for i=1:length(SubjectID_BIDS)
+            mkdir([OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT2Session),filesep,'anat']);
+            DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT2Session},'T2Img',filesep,Cfg.SubjectID{i},filesep,'*.img']);
+            if ~isempty(DirImg)
+                [Data Header]=y_Read([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT2Session},'T2Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name]);
+                y_Write(Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT2Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT2Session),'_T2w.nii'])
+            else
+                DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT2Session},'T2Img',filesep,Cfg.SubjectID{i},filesep,'*.nii.gz']);
+                if ~isempty(DirImg)
+                    copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT2Session},'T2Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT2Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT2Session),'_T2w.nii.gz'])
+                else
+                    DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT2Session},'T2Img',filesep,Cfg.SubjectID{i},filesep,'*.nii']);
+                    if ~isempty(DirImg)
+                        copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT2Session},'T2Img',filesep,Cfg.SubjectID{i},filesep,DirImg(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT2Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT2Session),'_T2w.nii'])
+                    end
+                end
+            end
+
+            DirJSON=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT2Session},'T2Img',filesep,Cfg.SubjectID{i},filesep,'*.json']); %YAN Chao-Gan, 191121. For BIDS format. Copy JSON
+            if ~isempty(DirJSON)
+                copyfile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iT2Session},'T2Img',filesep,Cfg.SubjectID{i},filesep,DirJSON(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'ses-',num2str(iT2Session),filesep,'anat',filesep,SubjectID_BIDS{i},'_ses-',num2str(iT2Session),'_T2w.json'])
+            end
+        end
+    end
+
     %Dealing with functional data
     
     for i=1:length(SubjectID_BIDS)

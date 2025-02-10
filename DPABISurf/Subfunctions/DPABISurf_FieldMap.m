@@ -74,9 +74,9 @@ handles.FieldMap=FieldMap;
 if ismac
     ZoonMatrix = [1 1 2 1.6];  %For mac
 elseif ispc
-    ZoonMatrix = [1 1 1.8 1.5];  %For pc
+    ZoonMatrix = [1 1 3 3];  %For pc
 else
-    ZoonMatrix = [1 1 1.5 1.5];  %For Linux
+    ZoonMatrix = [1 1 3 3];  %For Linux
 end
 UISize = get(handles.DPABISurf_FieldMap,'Position');
 UISize = UISize.*ZoonMatrix;
