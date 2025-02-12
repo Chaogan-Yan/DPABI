@@ -286,11 +286,14 @@ if length(DirFiles_surf)==0   %YAN Chao-Gan, 221018.
     DirFiles_surf=dir(fullfile(WorkingDir,'fmriprep','sourcedata','freesurfer',SubjectID,'surf','*'));
 end
 DirFiles_func=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'func','*'));
-if length(DirFiles_func)<17   %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_func)~=17
+if length(DirFiles_func)<30   %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_func)~=31
     DirFiles_func=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'ses-1','func','*'));
 end
-if (length(DirFiles_surf)~=84 && length(DirFiles_surf)~=94) || (FunctionalSessionNumber>0 && length(DirFiles_func)<17) %YAN Chao-Gan, 241111. If Anat only, don't need to check Func files.
-%if (length(DirFiles_surf)~=84 && length(DirFiles_surf)~=94) || length(DirFiles_func)<17 %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_surf)~=84 || length(DirFiles_func)~=17
+DirFiles_anat=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'anat','*'));
+if length(DirFiles_anat)<42  
+    DirFiles_anat=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'ses-1','anat','*'));
+end
+if (length(DirFiles_surf)~=84 && length(DirFiles_surf)~=94 && length(DirFiles_surf)~=96) || (FunctionalSessionNumber>0 && length(DirFiles_func)<30) || length(DirFiles_anat)<42 %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_surf)~=84 || length(DirFiles_func)~=31
     HasMissingFiles = 1;
 end
 

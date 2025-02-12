@@ -69,7 +69,7 @@ WaitingID=[];
 for i=1:Cfg.SubjectNum
     if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i}))
         %if exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'logs')) || exist(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i},'log'))
-        if CheckFailedLogs(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i})) || CheckMissingFiles(Cfg.WorkingDir,Cfg.SubjectID{i}) %YAN Chao-Gan, 200904. Use new logic according to fmriprep's change
+        if CheckFailedLogs(fullfile(Cfg.WorkingDir,'fmriprep',Cfg.SubjectID{i})) || CheckMissingFiles(Cfg.WorkingDir,Cfg.SubjectID{i},Cfg.FunctionalSessionNumber) %YAN Chao-Gan, 200904. Use new logic according to fmriprep's change
             FailedID=[FailedID;Cfg.SubjectID(i)];
         else
             SuccessID=[SuccessID;Cfg.SubjectID(i)];
@@ -175,7 +175,7 @@ if exist(fullfile(SubDir,'log'))
 end
 
 
-function HasMissingFiles = CheckMissingFiles(WorkingDir,SubjectID)
+function HasMissingFiles = CheckMissingFiles(WorkingDir,SubjectID,FunctionalSessionNumber)
 %YAN Chao-Gan 210205. Check Missing Files according for fmriprep
 HasMissingFiles = 0;
 DirFiles_surf=dir(fullfile(WorkingDir,'freesurfer',SubjectID,'surf','*'));
@@ -190,7 +190,7 @@ DirFiles_anat=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'anat','*'));
 if length(DirFiles_anat)<42  
     DirFiles_anat=dir(fullfile(WorkingDir,'fmriprep',SubjectID,'ses-1','anat','*'));
 end
-if (length(DirFiles_surf)~=84 && length(DirFiles_surf)~=94) || length(DirFiles_func)<30 || length(DirFiles_anat)<42 %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_surf)~=84 || length(DirFiles_func)~=31
+if (length(DirFiles_surf)~=84 && length(DirFiles_surf)~=94 && length(DirFiles_surf)~=96) || (FunctionalSessionNumber>0 && length(DirFiles_func)<30) || length(DirFiles_anat)<42 %YAN Chao-Gan, 211223. ICA-AROMA will have more files. %length(DirFiles_surf)~=84 || length(DirFiles_func)~=31
     HasMissingFiles = 1;
 end
 

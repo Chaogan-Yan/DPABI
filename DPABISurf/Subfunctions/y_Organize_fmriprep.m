@@ -236,12 +236,12 @@ for i=1:Cfg.SubjectNum
 end
 
 
-% fprintf('Organize aparcaseg files...\n');
-% Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/aparc+aseg.mgz  %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-T1w_desc-aparcaseg.nii.gz ::: %s', CommandInit, Cfg.ParallelWorkersNumber, WorkingDir, WorkingDir, SubjectIDString);
-% system(Command);
-% fprintf('Organize aseg files...\n');
-% Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/aseg.mgz  %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-T1w_desc-aseg.nii.gz ::: %s', CommandInit, Cfg.ParallelWorkersNumber, WorkingDir, WorkingDir, SubjectIDString);
-% system(Command);
+fprintf('Organize aparcaseg files...\n');
+Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/aparc+aseg.mgz  %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-T1w_desc-aparcaseg.nii.gz ::: %s', CommandInit, Cfg.ParallelWorkersNumber, WorkingDir, WorkingDir, SubjectIDString);
+system(Command);
+fprintf('Organize aseg files...\n');
+Command = sprintf('%s parallel -j %g mri_convert %s/freesurfer/{1}/mri/aseg.mgz  %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-T1w_desc-aseg.nii.gz ::: %s', CommandInit, Cfg.ParallelWorkersNumber, WorkingDir, WorkingDir, SubjectIDString);
+system(Command);
 
 
 
