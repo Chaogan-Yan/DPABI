@@ -22,7 +22,7 @@ function varargout = ManuallySelectSeries(varargin)
 
 % Edit the above text to modify the response to help ManuallySelectSeries
 
-% Last Modified by GUIDE v2.5 23-Apr-2021 13:04:38
+% Last Modified by GUIDE v2.5 26-Feb-2025 14:52:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -76,17 +76,17 @@ switch Selection.Template
         Prompt{1,1} = ['Current Subject: ',Selection.SubID];
         Prompt{2,1} = ['Current Session(s): ',Selection.SessionName{1}];
         Prompt{3,1} = ['There are more than one qualified MR series for ',SessionList,', please select one.'];
-        set(handles.checkboxAlwaysLatter,'visible','on','Value',0);
+%         set(handles.checkboxAlwaysLatter,'visible','on','Value',0);
     case 'Template2'
         Prompt{1,1} = ['Current Subject: ',Selection.SubID];
         Prompt{2,1} = ['Current Session(s): ',SessionList]; 
         Prompt{3,1} = ['Please manually select MR series for session ',SessionList,'.'];
-        set(handles.checkboxAlwaysLatter,'visible','off')
+%         set(handles.checkboxAlwaysLatter,'visible','off')
     case 'Template3'
         Prompt{1,1} = ['Current Subject: ',Selection.SubID];
         Prompt{2,1} = ['Current Session(s): ',SessionList];
         Prompt{3,1} = ['The number of qualified MR series is not match the number of sessions, please select manually.'];
-        set(handles.checkboxAlwaysLatter,'visible','off')
+%         set(handles.checkboxAlwaysLatter,'visible','off')
 end
 set(handles.textprompt,'String',Prompt,'HorizontalAlignment','left');
 % Choose default command line output for ManuallySelectSeries
@@ -189,15 +189,3 @@ function popupmenuSeriesList_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-% --- Executes on button press in checkboxAlwaysLatter.
-function checkboxAlwaysLatter_Callback(hObject, eventdata, handles)
-% hObject    handle to checkboxAlwaysLatter (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% handles.Selection.AlwaysLatterSeries  = get(handles.checkboxAlwaysLatter,'Value');
-% guidata(hObject,handles);
-
-% Hint: get(hObject,'Value') returns toggle state of checkboxAlwaysLatter
