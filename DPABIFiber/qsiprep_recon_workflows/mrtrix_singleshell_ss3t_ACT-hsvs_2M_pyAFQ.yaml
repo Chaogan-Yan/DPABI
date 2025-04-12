@@ -1,0 +1,122 @@
+description: Use pyAFQ to perform the Tractometry pipeline, with tractography from
+    qsirecon
+name: mrtrix_singleshell_ss3t_ACT-hsvs_2M_pyAFQ
+nodes:
+-   action: select_gradients
+    input: qsirecon
+    name: select_single_shell
+    parameters:
+        requested_shells:
+            - 0
+            - highest
+        bval_distance_cutoff: 100
+-   action: csd
+    input: select_single_shell
+    name: ss3t_csd
+    parameters:
+        fod:
+            algorithm: ss3t
+        mtnormalize: true
+        response:
+            algorithm: dhollander
+    qsirecon_suffix: MRtrix3_fork-SS3T_act-HSVS
+    software: MRTrix3
+-   action: tractography
+    input: ss3t_csd
+    name: track_ifod2
+    parameters:
+        method_5tt: hsvs
+        sift2: {}
+        tckgen:
+            algorithm: iFOD2
+            backtrack: true
+            crop_at_gmwmi: true
+            max_length: 250
+            min_length: 30
+            power: 0.33
+            quiet: true
+            select: 2000000.0
+        use_5tt: true
+        use_sift2: true
+    qsirecon_suffix: MRtrix3_fork-SS3T_act-HSVS
+    software: MRTrix3
+-   action: pyafq_tractometry
+    input: track_ifod2
+    name: pyafq_tractometry
+    parameters:
+        b0_threshold: 50
+        brain_mask_definition: ''
+        bundle_info: null
+        clean_rounds: 5
+        clip_edges: false
+        csd_lambda_: 1
+        csd_response: ''
+        csd_sh_order: ''
+        csd_tau: 0.1
+        directions: prob
+        dist_to_atlas: 4
+        dist_to_waypoint: ''
+        distance_threshold: 3
+        export: all
+        filter_b: true
+        filter_by_endpoints: true
+        greater_than: 50
+        gtol: 0.01
+        import_tract: ''
+        length_threshold: 4
+        mapping_definition: ''
+        max_angle: 30.0
+        max_bval: ''
+        max_length: 250
+        min_bval: ''
+        min_length: 50
+        min_sl: 20
+        model_clust_thr: 1.25
+        n_points: 100
+        n_points_bundles: 40
+        n_points_indiv: 40
+        n_seeds: 1
+        nb_points: false
+        nb_streamlines: false
+        odf_model: CSD
+        parallel_segmentation: '{''n_jobs'': -1, ''engine'': ''joblib'', ''backend'':
+            ''loky''}'
+        presegment_bundle_dict: null
+        presegment_kwargs: '{}'
+        prob_threshold: 0
+        profile_weights: gauss
+        progressive: true
+        pruning_thr: 12
+        random_seeds: false
+        reduction_thr: 25
+        refine: false
+        reg_algo: ''
+        reg_subject_spec: power_map
+        reg_template_spec: mni_T1
+        return_idx: false
+        rm_small_clusters: 50
+        rng: ''
+        rng_seed: ''
+        robust_tensor_fitting: false
+        roi_dist_tie_break: false
+        save_intermediates: ''
+        sbv_lims_bundles: '[None, None]'
+        sbv_lims_indiv: '[None, None]'
+        scalars: '[''dti_fa'', ''dti_md'']'
+        seed_mask: ''
+        seed_threshold: 0
+        seg_algo: AFQ
+        sphere: ''
+        stat: mean
+        step_size: 0.5
+        stop_mask: ''
+        stop_threshold: 0
+        tracker: local
+        use_external_tracking: true
+        virtual_frame_buffer: false
+        viz_backend_spec: plotly_no_gif
+        volume_opacity_bundles: 0.3
+        volume_opacity_indiv: 0.3
+    qsirecon_suffix: PYAFQ
+    software: pyAFQ
+space: T1w

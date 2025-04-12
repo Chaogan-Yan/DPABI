@@ -52,7 +52,7 @@ function DPABI_Harmonization_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to DPABI_Harmonization (see VARARGIN)
 
-fprintf('\nHarmonizing the brain images (.nii/.nii.gz/.gii/.mat) to remove site effects for big data in statistical analysis. \nReference: Wang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.\n\n');
+fprintf('\nHarmonizing the brain images (.nii/.nii.gz/.gii/.mat) to remove site effects for big data in statistical analysis. \nReference (Please cite): \nWang, Y.W., Chen, X., Yan, C.G. (2023). Comprehensive evaluation of harmonization on functional brain imaging for multisite data-fusion. Neuroimage, 274, 120089, doi:10.1016/j.neuroimage.2023.120089.\nWang, Y.W., Wang, H.L., Yan, C.G. (2024). DPABI Harmonization: A toolbox for harmonizing multi-site brain imaging for big-data era. Imaging Neuroscience, 2, 1-17, doi:10.1162/imag_a_00388.\n\n');
 
 % [ProgramPath, fileN, extn] = fileparts(which('DPABI_Harmonization.m'));
 % addpath(genpath([ProgramPath,filesep,'SubGUIs']));

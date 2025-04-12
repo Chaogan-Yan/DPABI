@@ -22,7 +22,7 @@ function varargout = dpabi(varargin)
 
 % Edit the above text to modify the response to help dpabi
 
-% Last Modified by GUIDE v2.5 24-Sep-2023 08:32:31
+% Last Modified by GUIDE v2.5 12-Apr-2025 12:17:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,7 @@ function dpabi_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dpabi
 
 
-Release='V8.2_240510';
+Release='V9.0_250415';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -242,3 +242,13 @@ function pushbuttonHarmonization_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 DPABI_Harmonization
+
+
+% --- Executes on button press in pushbuttonDPABIDICOMSorted.
+function pushbuttonDPABIDICOMSorted_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonDPABIDICOMSorted (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+DPABI_DCMSORTER_TOOL
+

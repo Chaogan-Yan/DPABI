@@ -1,0 +1,43 @@
+anatomical:
+- mrtrix_5tt_hsvs
+name: mrtrix_singleshell_ss3_hsvst
+nodes:
+-   action: select_gradients
+    input: qsirecon
+    name: select_single_shell
+    parameters:
+        requested_shells:
+            - 0
+            - highest
+        bval_distance_cutoff: 100
+-   action: csd
+    input: select_single_shell
+    name: ss3t_csd
+    parameters:
+        fod:
+            algorithm: ss3t
+        mtnormalize: true
+        response:
+            algorithm: dhollander
+    qsirecon_suffix: MRtrix3_fork-SS3T_act-HSVS
+    software: MRTrix3
+-   action: tractography
+    input: ss3t_csd
+    name: track_ifod2
+    parameters:
+        method_5tt: hsvs
+        sift2: {}
+        tckgen:
+            algorithm: iFOD2
+            backtrack: true
+            crop_at_gmwmi: true
+            max_length: 250
+            min_length: 30
+            power: 0.33
+            quiet: true
+            select: 10000000.0
+        use_5tt: true
+        use_sift2: true
+    qsirecon_suffix: MRtrix3_fork-SS3T_act-HSVS
+    software: MRTrix3
+space: T1w

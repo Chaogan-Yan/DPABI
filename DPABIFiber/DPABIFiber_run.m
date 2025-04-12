@@ -134,14 +134,14 @@ if (Cfg.Isqsiprep==1)
         end
     end
     
-    %!docker run -ti --rm -v /mnt/Data45/RfMRILab/yan/YAN_Work/DPABIUpdating/Program/DPABI_V6.1_220101/DPABISurf/FreeSurferLicense/license.txt:/opt/freesurfer/license.txt -v /mnt/Data45/RfMRILab/yan/YAN_Work/DPABIUpdating/DPABIFiber/Data/Test/BJDataTest/Try1:/data  cgyan/qsiprep /usr/local/miniconda/bin/qsiprep /data/BIDS /data participant --nthreads 1 --omp-nthreads 1 --fs-license-file /opt/freesurfer/license.txt --recon_spec /data/mrtrix_singleshell_ss3t_ACT-hsvs.json --freesurfer-input /data/freesurfer --output-resolution 2 -w /data/qsiprepwork/sub-Sub001  --participant_label sub-Sub001
+    %!docker run -ti --rm -v /mnt/Data45/RfMRILab/yan/YAN_Work/DPABIUpdating/Program/DPABI_V6.1_220101/DPABISurf/FreeSurferLicense/license.txt:/opt/freesurfer/license.txt -v /mnt/Data45/RfMRILab/yan/YAN_Work/DPABIUpdating/DPABIFiber/Data/Test/BJDataTest/Try1:/data  cgyan/qsiprep /usr/local/miniconda/bin/qsiprep /data/BIDS /data participant --nthreads 1 --omp-nthreads 1 --fs-license-file /opt/freesurfer/license.txt --recon-spec /data/mrtrix_singleshell_ss3t_ACT-hsvs.json --freesurfer-input /data/freesurfer --output-resolution 2 -w /data/qsiprepwork/sub-Sub001  --participant_label sub-Sub001
 
     if ~exist([Cfg.WorkingDir,filesep,'qsiprep'],'dir') % If it's the first time to run qsiprep
         
         if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-            Command=sprintf('parallel -j %g /usr/local/miniconda/bin/qsiprep %s/BIDS %s participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
+            Command=sprintf('parallel -j %g qsiprep %s/BIDS %s/qsiprep participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
         else
-            Command=sprintf('%s cgyan/dpabifiber parallel -j %g /usr/local/miniconda/bin/qsiprep /data/BIDS /data participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
+            Command=sprintf('%s cgyan/qsiprep parallel -j %g qsiprep /data/BIDS /data/qsiprep participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
         end
         
         if Cfg.ParallelWorkersNumber~=0
@@ -155,7 +155,7 @@ if (Cfg.Isqsiprep==1)
         end
         
         Command = sprintf('%s -w /data/qsiprepwork/{1}', Command); %Specify the working dir for qsiprep
-        Command = sprintf('%s  --participant_label {1} ::: %s', Command, SubjectIDString);
+        Command = sprintf('%s  --participant-label {1} ::: %s', Command, SubjectIDString);
         
         fprintf('Preprocessing with qsiprep, this process is very time consuming, please be patient...\n');
         
@@ -190,26 +190,48 @@ end
 % Calculate DWI Tensor Metrics
 if (Cfg.IsCalTensorMetrics==1)
 
-    %dwi2tensor -grad /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-preproc_dwi.b -mask /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-brain_mask.nii.gz /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-preproc_dwi.nii.gz /data/Tensor/Tensor/sub-Sub001_space-T1w_desc-preproc_dwitensor.nii.gz
+    %dwi2tensor -grad /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-ACPC_desc-preproc_dwi.b -mask /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-ACPC_desc-brain_mask.nii.gz /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-ACPC_desc-preproc_dwi.nii.gz /data/Tensor/Tensor/sub-Sub001_space-ACPC_desc-preproc_dwitensor.nii.gz
     mkdir([Cfg.WorkingDir,filesep,'Results',filesep,'DwiVolu',filesep,'TensorMetrics',filesep,'Tensor']);
-    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-        Command=sprintf('parallel -j %g dwi2tensor -grad %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.b -mask %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-brain_mask.nii.gz %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz %s/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-T1w_desc-preproc_dwitensor.nii.gz', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir);
+    
+    RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
+    if (2==exist(RefFile,'file'))
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('parallel -j %g dwi2tensor -grad %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.b -mask %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-brain_mask.nii.gz %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz %s/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-ACPC_desc-preproc_dwitensor.nii.gz', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cgyan/dpabifiber parallel -j %g dwi2tensor -grad /data/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.b -mask /data/qsiprep/{1}/dwi/{1}_space-ACPC_desc-brain_mask.nii.gz /data/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz /data/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-ACPC_desc-preproc_dwitensor.nii.gz', CommandInit, Cfg.ParallelWorkersNumber);
+        end
     else
-        Command=sprintf('%s cgyan/dpabifiber parallel -j %g dwi2tensor -grad /data/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.b -mask /data/qsiprep/{1}/dwi/{1}_space-T1w_desc-brain_mask.nii.gz /data/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz /data/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-T1w_desc-preproc_dwitensor.nii.gz', CommandInit, Cfg.ParallelWorkersNumber);
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('parallel -j %g dwi2tensor -grad %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.b -mask %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-brain_mask.nii.gz %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz %s/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-ACPC_desc-preproc_dwitensor.nii.gz', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cgyan/dpabifiber parallel -j %g dwi2tensor -grad /data/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.b -mask /data/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-brain_mask.nii.gz /data/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz /data/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-ACPC_desc-preproc_dwitensor.nii.gz', CommandInit, Cfg.ParallelWorkersNumber);
+        end
     end
+    
+
     Command = sprintf('%s -force ::: %s', Command, SubjectIDString);
     system(Command);
 
-    %tensor2metric -mask /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-brain_mask.nii.gz -adc /data/Tensor/TensorMetrics/sub-Sub001_space-T1w_desc-preproc_dwitensor_adc.nii.gz -fa /data/Tensor/TensorMetrics/sub-Sub001_space-T1w_desc-preproc_dwitensor_fa.nii.gz -ad /data/Tensor/TensorMetrics/sub-Sub001_space-T1w_desc-preproc_dwitensor_ad.nii.gz -rd /data/Tensor/TensorMetrics/sub-Sub001_space-T1w_desc-preproc_dwitensor_rd.nii.gz /data/Tensor/Tensor/sub-Sub001_space-T1w_desc-preproc_dwitensor.nii.gz
-    %tensor2metric -mask /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-brain_mask.nii.gz -adc /data/Results/DwiVolu/TensorMetrics/ADC/sub-Sub001_space-T1w_desc-preproc_dwitensor_metrics.nii.gz -fa /data/Results/DwiVolu/TensorMetrics/FA/sub-Sub001_space-T1w_desc-preproc_dwitensor_metrics.nii.gz -ad /data/Results/DwiVolu/TensorMetrics/AD/sub-Sub001_space-T1w_desc-preproc_dwitensor_metrics.nii.gz -rd /data/Results/DwiVolu/TensorMetrics/RD/sub-Sub001_space-T1w_desc-preproc_dwitensor_metrics.nii.gz /data/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-T1w_desc-preproc_dwitensor.nii.gz
+    %tensor2metric -mask /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-ACPC_desc-brain_mask.nii.gz -adc /data/Tensor/TensorMetrics/sub-Sub001_space-ACPC_desc-preproc_dwitensor_adc.nii.gz -fa /data/Tensor/TensorMetrics/sub-Sub001_space-ACPC_desc-preproc_dwitensor_fa.nii.gz -ad /data/Tensor/TensorMetrics/sub-Sub001_space-ACPC_desc-preproc_dwitensor_ad.nii.gz -rd /data/Tensor/TensorMetrics/sub-Sub001_space-ACPC_desc-preproc_dwitensor_rd.nii.gz /data/Tensor/Tensor/sub-Sub001_space-ACPC_desc-preproc_dwitensor.nii.gz
+    %tensor2metric -mask /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-ACPC_desc-brain_mask.nii.gz -adc /data/Results/DwiVolu/TensorMetrics/ADC/sub-Sub001_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -fa /data/Results/DwiVolu/TensorMetrics/FA/sub-Sub001_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -ad /data/Results/DwiVolu/TensorMetrics/AD/sub-Sub001_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -rd /data/Results/DwiVolu/TensorMetrics/RD/sub-Sub001_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz /data/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-ACPC_desc-preproc_dwitensor.nii.gz
     mkdir([Cfg.WorkingDir,filesep,'Results',filesep,'DwiVolu',filesep,'TensorMetrics',filesep,'ADC']);
     mkdir([Cfg.WorkingDir,filesep,'Results',filesep,'DwiVolu',filesep,'TensorMetrics',filesep,'FA']);
     mkdir([Cfg.WorkingDir,filesep,'Results',filesep,'DwiVolu',filesep,'TensorMetrics',filesep,'AD']);
     mkdir([Cfg.WorkingDir,filesep,'Results',filesep,'DwiVolu',filesep,'TensorMetrics',filesep,'RD']);
-    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-        Command=sprintf('parallel -j %g tensor2metric -mask %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-brain_mask.nii.gz -adc %s/Results/DwiVolu/TensorMetrics/ADC/{1}_space-T1w_desc-preproc_dwitensor_metrics.nii.gz -fa %s/Results/DwiVolu/TensorMetrics/FA/{1}_space-T1w_desc-preproc_dwitensor_metrics.nii.gz -ad %s/Results/DwiVolu/TensorMetrics/AD/{1}_space-T1w_desc-preproc_dwitensor_metrics.nii.gz -rd %s/Results/DwiVolu/TensorMetrics/RD/{1}_space-T1w_desc-preproc_dwitensor_metrics.nii.gz %s/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-T1w_desc-preproc_dwitensor.nii.gz', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir);
+    
+    RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
+    if (2==exist(RefFile,'file'))
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('parallel -j %g tensor2metric -mask %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-brain_mask.nii.gz -adc %s/Results/DwiVolu/TensorMetrics/ADC/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -fa %s/Results/DwiVolu/TensorMetrics/FA/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -ad %s/Results/DwiVolu/TensorMetrics/AD/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -rd %s/Results/DwiVolu/TensorMetrics/RD/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz %s/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-ACPC_desc-preproc_dwitensor.nii.gz', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cgyan/dpabifiber parallel -j %g tensor2metric -mask /data/qsiprep/{1}/dwi/{1}_space-ACPC_desc-brain_mask.nii.gz -adc /data/Results/DwiVolu/TensorMetrics/ADC/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -fa /data/Results/DwiVolu/TensorMetrics/FA/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -ad /data/Results/DwiVolu/TensorMetrics/AD/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -rd /data/Results/DwiVolu/TensorMetrics/RD/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz /data/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-ACPC_desc-preproc_dwitensor.nii.gz', CommandInit, Cfg.ParallelWorkersNumber);
+        end
     else
-        Command=sprintf('%s cgyan/dpabifiber parallel -j %g tensor2metric -mask /data/qsiprep/{1}/dwi/{1}_space-T1w_desc-brain_mask.nii.gz -adc /data/Results/DwiVolu/TensorMetrics/ADC/{1}_space-T1w_desc-preproc_dwitensor_metrics.nii.gz -fa /data/Results/DwiVolu/TensorMetrics/FA/{1}_space-T1w_desc-preproc_dwitensor_metrics.nii.gz -ad /data/Results/DwiVolu/TensorMetrics/AD/{1}_space-T1w_desc-preproc_dwitensor_metrics.nii.gz -rd /data/Results/DwiVolu/TensorMetrics/RD/{1}_space-T1w_desc-preproc_dwitensor_metrics.nii.gz /data/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-T1w_desc-preproc_dwitensor.nii.gz', CommandInit, Cfg.ParallelWorkersNumber);
+        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+            Command=sprintf('parallel -j %g tensor2metric -mask %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-brain_mask.nii.gz -adc %s/Results/DwiVolu/TensorMetrics/ADC/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -fa %s/Results/DwiVolu/TensorMetrics/FA/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -ad %s/Results/DwiVolu/TensorMetrics/AD/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -rd %s/Results/DwiVolu/TensorMetrics/RD/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz %s/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-ACPC_desc-preproc_dwitensor.nii.gz', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir,Cfg.WorkingDir);
+        else
+            Command=sprintf('%s cgyan/dpabifiber parallel -j %g tensor2metric -mask /data/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-brain_mask.nii.gz -adc /data/Results/DwiVolu/TensorMetrics/ADC/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -fa /data/Results/DwiVolu/TensorMetrics/FA/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -ad /data/Results/DwiVolu/TensorMetrics/AD/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz -rd /data/Results/DwiVolu/TensorMetrics/RD/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz /data/Results/DwiVolu/TensorMetrics/Tensor/{1}_space-ACPC_desc-preproc_dwitensor.nii.gz', CommandInit, Cfg.ParallelWorkersNumber);
+        end
     end
     Command = sprintf('%s -force ::: %s', Command, SubjectIDString);
     system(Command);
@@ -278,12 +300,12 @@ if (Cfg.Isqsirecon==1)
     if ~exist([Cfg.WorkingDir,filesep,'qsirecon'],'dir') % If it's the first time to run qsirecon
         
         if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-            Command=sprintf('parallel -j %g /usr/local/miniconda/bin/qsiprep %s/BIDS %s participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
+            Command=sprintf('parallel -j %g qsirecon %s/qsiprep %s/qsirecon participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
         else
             if isempty(Cfg.FreesurferInput)
-                Command=sprintf('%s cgyan/dpabifiber parallel -j %g /usr/local/miniconda/bin/qsiprep /data/BIDS /data participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
+                Command=sprintf('%s cgyan/qsirecon parallel -j %g qsirecon /data/qsiprep /data/qsirecon participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
             else
-                Command=sprintf('%s -v %s:/FreesurferInput cgyan/dpabifiber parallel -j %g /usr/local/miniconda/bin/qsiprep /data/BIDS /data participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.FreesurferInput, Cfg.ParallelWorkersNumber );
+                Command=sprintf('%s -v %s:/FreesurferInput cgyan/qsirecon parallel -j %g qsirecon /data/qsiprep /data/qsirecon participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.FreesurferInput, Cfg.ParallelWorkersNumber );
             end
         end
         
@@ -294,36 +316,39 @@ if (Cfg.Isqsirecon==1)
         %Command = sprintf('%s --output-resolution %g', Command, Cfg.OutputResolution);
 
         if ~isempty(Cfg.FreesurferInput)
+
+            % First check if lh.pial exist. YAN Chao-Gan, 220219.
+            if exist([Cfg.FreesurferInput,filesep,Cfg.SubjectID{1},filesep,'surf',filesep,'lh.pial.T1'],'file') && ~exist([Cfg.FreesurferInput,filesep,Cfg.SubjectID{1},filesep,'surf',filesep,'lh.pial'],'file')
+                for i=1:Cfg.SubjectNum
+                    copyfile([Cfg.FreesurferInput,filesep,Cfg.SubjectID{i},filesep,'surf',filesep,'lh.pial.T1'],[Cfg.FreesurferInput,filesep,Cfg.SubjectID{i},filesep,'surf',filesep,'lh.pial'])
+                    copyfile([Cfg.FreesurferInput,filesep,Cfg.SubjectID{i},filesep,'surf',filesep,'rh.pial.T1'],[Cfg.FreesurferInput,filesep,Cfg.SubjectID{i},filesep,'surf',filesep,'rh.pial'])
+                end
+            end
+
             if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-                Command=sprintf('%s --freesurfer-input %s', Command, Cfg.FreesurferInput);
+                Command=sprintf('%s --fs-subjects-dir %s', Command, Cfg.FreesurferInput);
             else
-                Command=sprintf('%s --freesurfer-input /FreesurferInput', Command);
+                Command=sprintf('%s --fs-subjects-dir /FreesurferInput', Command);
             end
         end
 
         if ~isempty(Cfg.ReconSpec) || ~strcmpi(Cfg.ReconSpec,'none')
-            copyfile([DPABIPath,filesep,'DPABIFiber',filesep,'qsiprep_recon_workflows',filesep,Cfg.ReconSpec,'.json'],Cfg.WorkingDir);
+            if ~strcmpi(Cfg.ReconSpec,'Custom') % if not {WorkingDir}/Custom.yaml
+                copyfile([DPABIPath,filesep,'DPABIFiber',filesep,'qsiprep_recon_workflows',filesep,Cfg.ReconSpec,'.yaml'],Cfg.WorkingDir);
+            end
             if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-                Command=sprintf('%s --recon_spec %s/%s.json', Command, Cfg.WorkingDir, Cfg.ReconSpec);
+                Command=sprintf('%s --recon-spec %s/%s.yaml', Command, Cfg.WorkingDir, Cfg.ReconSpec);
             else
-                Command=sprintf('%s --recon_spec /data/%s.json', Command, Cfg.ReconSpec);
+                Command=sprintf('%s --recon-spec /data/%s.yaml', Command, Cfg.ReconSpec);
             end
         end
-
-        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-            Command=sprintf('%s --recon-input %s/qsiprep', Command, Cfg.WorkingDir);
-        else
-            Command=sprintf('%s --recon-input /data/qsiprep', Command);
-        end
-
-        Command = sprintf('%s --recon-only', Command); 
 
         if Cfg.IsLowMem==1
             Command = sprintf('%s --low-mem', Command);
         end
         
         Command = sprintf('%s -w /data/qsireconwork/{1}', Command); %Specify the working dir for qsiprep
-        Command = sprintf('%s  --participant_label {1} ::: %s', Command, SubjectIDString);
+        Command = sprintf('%s  --participant-label {1} ::: %s', Command, SubjectIDString);
         
         fprintf('Reconstructing with qsiprep, this process is very time consuming, please be patient...\n');
         
@@ -381,15 +406,18 @@ if ~isempty(Cfg.ROIDef)
         if 1% Cfg.IsWarpMasksIntoIndividualSpace==1
             %Need to warp masks
 
-            RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'dwi',filesep,Cfg.SubjectID{i},'_space-T1w_dwiref.nii.gz'];
+            RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'dwi',filesep,Cfg.SubjectID{i},'_space-ACPC_dwiref.nii.gz'];
+            if ~(2==exist(RefFile,'file'))
+                RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'ses-1',filesep,'dwi',filesep,Cfg.SubjectID{i},'_ses-1_space-ACPC_dwiref.nii.gz'];
+            end
             [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
-            TransformFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+            TransformFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-ACPC_mode-image_xfm.h5'];
             Interpolation='MultiLabel';
             Dimensionality=3;
             InputImageType=0;
             DefaultValue=0;
             IsFloat0=0;
-            DockerName='cgyan/dpabifiber';
+            DockerName='cgyan/qsiprep';
 
             for iROI=1:length(SubjectROI)
                 if exist(SubjectROI{iROI},'file')==2 % MNI Mask files need to be warped
@@ -474,6 +502,32 @@ if ~isempty(Cfg.ROIDef)
 end
 
 
+%Get QsireconDerivativesDirSpecific
+Dir=dir(fullfile(Cfg.WorkingDir,'qsirecon','derivatives'));
+if length(Dir)>=3
+    if Dir(3).isdir
+        QsireconDerivativesDirSpecific=Dir(3).name;
+    else
+        QsireconDerivativesDirSpecific=Dir(4).name;
+    end
+else
+    QsireconDerivativesDirSpecific='';
+end
+
+
+%Gunzip .tck.gz files
+if exist(fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck.gz']))
+    Command = sprintf('%s gunzip %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-ifod2_streamlines.tck.gz', CommandParallel,WorkingDir,QsireconDerivativesDirSpecific);
+    Command = sprintf('%s ::: %s', Command, SubjectIDString);
+    fprintf('Gunzip .tck.gz files, please wait...\n');
+    system(Command);
+elseif exist(fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'ses-1','dwi',[Cfg.SubjectID{1},'_ses-1_space-ACPC_model-ifod2_streamlines.tck.gz']))
+    Command = sprintf('%s gunzip %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-ifod2_streamlines.tck.gz', CommandParallel,WorkingDir,QsireconDerivativesDirSpecific);
+    Command = sprintf('%s ::: %s', Command, SubjectIDString);
+    fprintf('Gunzip .tck.gz files, please wait...\n');
+    system(Command);
+end
+
 
 %Get structural connectome matrix
 if (Cfg.StructuralConnectomeMatrix.Is==1)
@@ -500,7 +554,14 @@ if (Cfg.StructuralConnectomeMatrix.Is==1)
 
     if Cfg.StructuralConnectomeMatrix.WeightedByFA
         %Mean FA per Streamline
-        Command = sprintf('%s tcksample %s/qsirecon/{1}/dwi/{1}_space-T1w_desc-preproc_desc-tracks_ifod2.tck %s/Results/DwiVolu/TensorMetrics/FA/{1}_space-T1w_desc-preproc_dwitensor_metrics.nii.gz %s/Results/DwiVolu/StructuralConnectomeMatrix/MeanFAPerStreamline_{1}.csv -stat_tck mean -quiet', CommandParallel,WorkingDir,WorkingDir,WorkingDir);
+        
+        RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+        if (2==exist(RefFile,'file'))
+            Command = sprintf('%s tcksample %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-ifod2_streamlines.tck %s/Results/DwiVolu/TensorMetrics/FA/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz %s/Results/DwiVolu/StructuralConnectomeMatrix/MeanFAPerStreamline_{1}.csv -stat_tck mean -quiet', CommandParallel,WorkingDir,QsireconDerivativesDirSpecific,WorkingDir,WorkingDir);
+        else
+            Command = sprintf('%s tcksample %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-ifod2_streamlines.tck %s/Results/DwiVolu/TensorMetrics/FA/{1}_space-ACPC_desc-preproc_dwitensor_metrics.nii.gz %s/Results/DwiVolu/StructuralConnectomeMatrix/MeanFAPerStreamline_{1}.csv -stat_tck mean -quiet', CommandParallel,WorkingDir,QsireconDerivativesDirSpecific,WorkingDir,WorkingDir);
+        end
+        
         %tcksample tracks.tck FA.mif mean_FA_per_streamline.csv -stat_tck mean
         if Cfg.ParallelWorkersNumber~=0
             Command = sprintf('%s -nthreads 1', Command);
@@ -532,14 +593,28 @@ if (Cfg.StructuralConnectomeMatrix.Is==1)
 
         ImageFile = replace(ImageFile,'{SubjectID}','{1}');
 
-
-        if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-            Command=sprintf('parallel -j %g tcksample %s/qsirecon/{1}/dwi/{1}_space-T1w_desc-preproc_desc-tracks_ifod2.tck %s %s/Results/DwiVolu/StructuralConnectomeMatrix/WeightedImagePerStreamline_{1}.csv -stat_tck %s -quiet', ...
-                Cfg.ParallelWorkersNumber, WorkingDir,ImageFile,WorkingDir,Cfg.StructuralConnectomeMatrix.WeightedByImage.StatTck);
+        
+        RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+        if (2==exist(RefFile,'file'))
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command=sprintf('parallel -j %g tcksample %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-ifod2_streamlines.tck %s %s/Results/DwiVolu/StructuralConnectomeMatrix/WeightedImagePerStreamline_{1}.csv -stat_tck %s -quiet', ...
+                    Cfg.ParallelWorkersNumber, WorkingDir,QsireconDerivativesDirSpecific,ImageFile,WorkingDir,Cfg.StructuralConnectomeMatrix.WeightedByImage.StatTck);
+            else
+                Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tcksample %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-ifod2_streamlines.tck /MountPath/%s %s/Results/DwiVolu/StructuralConnectomeMatrix/WeightedImagePerStreamline_{1}.csv -stat_tck %s -quiet', ...
+                    CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,QsireconDerivativesDirSpecific,WithinFile,WorkingDir,Cfg.StructuralConnectomeMatrix.WeightedByImage.StatTck);
+            end
         else
-            Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tcksample %s/qsirecon/{1}/dwi/{1}_space-T1w_desc-preproc_desc-tracks_ifod2.tck /MountPath/%s %s/Results/DwiVolu/StructuralConnectomeMatrix/WeightedImagePerStreamline_{1}.csv -stat_tck %s -quiet', ...
-                CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,WithinFile,WorkingDir,Cfg.StructuralConnectomeMatrix.WeightedByImage.StatTck);
+            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                Command=sprintf('parallel -j %g tcksample %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-ifod2_streamlines.tck %s %s/Results/DwiVolu/StructuralConnectomeMatrix/WeightedImagePerStreamline_{1}.csv -stat_tck %s -quiet', ...
+                    Cfg.ParallelWorkersNumber, WorkingDir,QsireconDerivativesDirSpecific,ImageFile,WorkingDir,Cfg.StructuralConnectomeMatrix.WeightedByImage.StatTck);
+            else
+                Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tcksample %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-ifod2_streamlines.tck /MountPath/%s %s/Results/DwiVolu/StructuralConnectomeMatrix/WeightedImagePerStreamline_{1}.csv -stat_tck %s -quiet', ...
+                    CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,QsireconDerivativesDirSpecific,WithinFile,WorkingDir,Cfg.StructuralConnectomeMatrix.WeightedByImage.StatTck);
+            end
+            
         end
+        
+        
         if Cfg.ParallelWorkersNumber~=0
             Command = sprintf('%s -nthreads 1', Command);
         end
@@ -549,10 +624,16 @@ if (Cfg.StructuralConnectomeMatrix.Is==1)
     end
     
 
-    %tck2connectome -tck_weights_in /data/Dev/conn/conntest/sub-ASDSHIKEYU20191215_space-T1w_desc-preproc_desc-siftweights_ifod2.csv -nthreads 1 -out_assignments /data/Dev/conn/conntest/assignmentsnii.txt -quiet -assignment_radial_search 2.000000 -stat_edge sum -symmetric /data/Dev/conn/conntest/sub-ASDSHIKEYU20191215_space-T1w_desc-preproc_desc-tracks_ifod2.tck /data/Dev/conn/conntest/My400.nii /data/Dev/conn/conntest/My400nii_Connectome.csv
-
-    Command = sprintf('%s tck2connectome %s/qsirecon/{1}/dwi/{1}_space-T1w_desc-preproc_desc-tracks_ifod2.tck %s/Masks/MasksForDwi/Masks_DwiSpace_Merged/MergedMask_{1}.nii %s/Results/DwiVolu/StructuralConnectomeMatrix/CSV_StructuralConnectome_{1}.csv -out_assignments %s/Results/DwiVolu/StructuralConnectomeMatrix/Assignments_{1}.txt -quiet', CommandParallel,WorkingDir,WorkingDir,WorkingDir,WorkingDir);
-
+    %tck2connectome -tck_weights_in /data/Dev/conn/conntest/sub-ASDSHIKEYU20191215_space-ACPC_model-sift2_streamlineweights.csv -nthreads 1 -out_assignments /data/Dev/conn/conntest/assignmentsnii.txt -quiet -assignment_radial_search 2.000000 -stat_edge sum -symmetric /data/Dev/conn/conntest/sub-ASDSHIKEYU20191215_space-ACPC_model-ifod2_streamlines.tck /data/Dev/conn/conntest/My400.nii /data/Dev/conn/conntest/My400nii_Connectome.csv
+    
+    
+    RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+    if (2==exist(RefFile,'file'))
+        Command = sprintf('%s tck2connectome %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-ifod2_streamlines.tck %s/Masks/MasksForDwi/Masks_DwiSpace_Merged/MergedMask_{1}.nii %s/Results/DwiVolu/StructuralConnectomeMatrix/CSV_StructuralConnectome_{1}.csv -out_assignments %s/Results/DwiVolu/StructuralConnectomeMatrix/Assignments_{1}.txt -quiet', CommandParallel,WorkingDir,QsireconDerivativesDirSpecific,WorkingDir,WorkingDir,WorkingDir);
+    else
+        Command = sprintf('%s tck2connectome %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-ifod2_streamlines.tck %s/Masks/MasksForDwi/Masks_DwiSpace_Merged/MergedMask_{1}.nii %s/Results/DwiVolu/StructuralConnectomeMatrix/CSV_StructuralConnectome_{1}.csv -out_assignments %s/Results/DwiVolu/StructuralConnectomeMatrix/Assignments_{1}.txt -quiet', CommandParallel,WorkingDir,QsireconDerivativesDirSpecific,WorkingDir,WorkingDir,WorkingDir);
+    end
+    
     if Cfg.ParallelWorkersNumber~=0
         Command = sprintf('%s -nthreads 1', Command);
     end
@@ -564,7 +645,13 @@ if (Cfg.StructuralConnectomeMatrix.Is==1)
     end
 
     if Cfg.StructuralConnectomeMatrix.UseSiftWeights
-        Command = sprintf('%s -tck_weights_in %s/qsirecon/{1}/dwi/{1}_space-T1w_desc-preproc_desc-siftweights_ifod2.csv', Command,WorkingDir);
+        
+        RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+        if (2==exist(RefFile,'file'))
+            Command = sprintf('%s -tck_weights_in %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-sift2_streamlineweights.csv', Command,WorkingDir,QsireconDerivativesDirSpecific);
+        else
+            Command = sprintf('%s -tck_weights_in %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-sift2_streamlineweights.csv', Command,WorkingDir,QsireconDerivativesDirSpecific);
+        end
     end
 
     if Cfg.StructuralConnectomeMatrix.ScaleLength
@@ -631,18 +718,33 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
 
     if Cfg.SeedBasedStructuralConnectivity.TracksForEachROI==1
         for iElement=1:MaxElement
-            %tckedit /data/qsirecon/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-preproc_desc-tracks_ifod2.tck /data/Results/DwiVolu/Tracks/Test/RPI.tck -tck_weights_in /data/qsirecon/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-preproc_desc-siftweights_ifod2.csv  -tck_weights_out /data/Results/DwiVolu/Tracks/Test/RPI.csv -include /data/Masks/TestingMasks/MyRPI.nii
-            Command = sprintf('%s tckedit %s/qsirecon/{1}/dwi/{1}_space-T1w_desc-preproc_desc-tracks_ifod2.tck',CommandParallel,WorkingDir);
-            Command = sprintf('%s %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck -tck_weights_in %s/qsirecon/{1}/dwi/{1}_space-T1w_desc-preproc_desc-siftweights_ifod2.csv  -tck_weights_out %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.csv', Command,WorkingDir,num2str(iElement),WorkingDir,WorkingDir,num2str(iElement));
-            Command = sprintf('%s -include %s/Masks/MasksForDwi/Masks_DwiSpace_Split/SplitMask_ROI_%s_{1}.nii', Command,WorkingDir,num2str(iElement));
+            %tckedit /data/qsirecon/sub-Sub001/dwi/sub-Sub001_space-ACPC_model-ifod2_streamlines.tck /data/Results/DwiVolu/Tracks/Test/RPI.tck -tck_weights_in /data/qsirecon/sub-Sub001/dwi/sub-Sub001_space-ACPC_model-sift2_streamlineweights.csv  -tck_weights_out /data/Results/DwiVolu/Tracks/Test/RPI.csv -include /data/Masks/TestingMasks/MyRPI.nii
+            
+            RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+            if (2==exist(RefFile,'file'))
+                Command = sprintf('%s tckedit %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-ifod2_streamlines.tck',CommandParallel,WorkingDir,QsireconDerivativesDirSpecific);
+                Command = sprintf('%s %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck -tck_weights_in %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-sift2_streamlineweights.csv  -tck_weights_out %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.csv', Command,WorkingDir,num2str(iElement),WorkingDir,QsireconDerivativesDirSpecific,WorkingDir,num2str(iElement));
+                Command = sprintf('%s -include %s/Masks/MasksForDwi/Masks_DwiSpace_Split/SplitMask_ROI_%s_{1}.nii', Command,WorkingDir,num2str(iElement));
+            else
+                Command = sprintf('%s tckedit %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-ifod2_streamlines.tck',CommandParallel,WorkingDir,QsireconDerivativesDirSpecific);
+                Command = sprintf('%s %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck -tck_weights_in %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-sift2_streamlineweights.csv  -tck_weights_out %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.csv', Command,WorkingDir,num2str(iElement),WorkingDir,QsireconDerivativesDirSpecific,WorkingDir,num2str(iElement));
+                Command = sprintf('%s -include %s/Masks/MasksForDwi/Masks_DwiSpace_Split/SplitMask_ROI_%s_{1}.nii', Command,WorkingDir,num2str(iElement));
+            end
             if Cfg.ParallelWorkersNumber~=0
                 Command = sprintf('%s -nthreads 1', Command);
             end
             Command = sprintf('%s -force ::: %s', Command, SubjectIDString);
             fprintf('Seed Based Structural Connectivity: Tracks Calculating, please wait...\n');
             system(Command);
-            %tckmap /data/Results/DwiVolu/Tracks/Test/RPI.tck /data/Results/DwiVolu/Tracks/Test/RPI.nii -tck_weights_in /data/Results/DwiVolu/Tracks/Test/RPI.csv -template /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-preproc_dwi.nii.gz
-            Command = sprintf('%s tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTDIMap/ROI_%s_{1}_TDIMap.nii -tck_weights_in %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.csv -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz',CommandParallel,WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir);
+            %tckmap /data/Results/DwiVolu/Tracks/Test/RPI.tck /data/Results/DwiVolu/Tracks/Test/RPI.nii -tck_weights_in /data/Results/DwiVolu/Tracks/Test/RPI.csv -template /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-ACPC_desc-preproc_dwi.nii.gz
+            
+            RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+            if (2==exist(RefFile,'file'))
+                Command = sprintf('%s tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTDIMap/ROI_%s_{1}_TDIMap.nii -tck_weights_in %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.csv -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz',CommandParallel,WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir);
+            else
+                Command = sprintf('%s tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTDIMap/ROI_%s_{1}_TDIMap.nii -tck_weights_in %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.csv -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz',CommandParallel,WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir);
+            end
+            
             if Cfg.ParallelWorkersNumber~=0
                 Command = sprintf('%s -nthreads 1', Command);
             end
@@ -676,13 +778,28 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
                 FCFile = replace(FCFile,'{SubjectID}','{1}');
 
                 %tckmap tracks.tck temp.mif <-template / -vox options> -contrast scalar_map -image FC_map.mif -stat_vox mean -stat_tck sum
-                if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-                    Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz -contrast scalar_map -image %s -stat_vox %s -stat_tck %s', ...
-                        Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,FCFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                
+                RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+                if (2==exist(RefFile,'file'))
+                    
+                    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                        Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map -image %s -stat_vox %s -stat_tck %s', ...
+                            Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,FCFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                    else
+                        Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map -image /MountPath/%s -stat_vox %s -stat_tck %s', ...
+                            CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,WithinFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                    end
+                    
                 else
-                    Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz -contrast scalar_map -image /MountPath/%s -stat_vox %s -stat_tck %s', ...
-                        CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,WithinFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                        Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map -image %s -stat_vox %s -stat_tck %s', ...
+                            Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,FCFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                    else
+                        Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map -image /MountPath/%s -stat_vox %s -stat_tck %s', ...
+                            CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,WithinFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                    end
                 end
+                
                 if Cfg.ParallelWorkersNumber~=0
                     Command = sprintf('%s -nthreads 1', Command);
                 end
@@ -692,12 +809,25 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
 
 
                 %tckmap tracks.tck - -template temp.mif -contrast scalar_map_count -image FC_map.mif |... mrcalc - 5 -ge mask.mif -datatype bit
-                if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-                    Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image %s', ...
-                        Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,FCFile);
+                
+                
+                RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+                if (2==exist(RefFile,'file'))
+                    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                        Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image %s', ...
+                            Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,FCFile);
+                    else
+                        Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image /MountPath/%s', ...
+                            CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,WithinFile);
+                    end
                 else
-                    Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image /MountPath/%s', ...
-                        CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,WithinFile);
+                    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                        Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image %s', ...
+                            Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,FCFile);
+                    else
+                        Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/ROI_%s_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/ROI_%s_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image /MountPath/%s', ...
+                            CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,num2str(iElement),WorkingDir,num2str(iElement),WorkingDir,WithinFile);
+                    end
                 end
                 if Cfg.ParallelWorkersNumber~=0
                     Command = sprintf('%s -nthreads 1', Command);
@@ -719,20 +849,47 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
 
         end
     else
-        %tckedit /data/qsirecon/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-preproc_desc-tracks_ifod2.tck /data/Results/DwiVolu/Tracks/Test/RPI.tck -tck_weights_in /data/qsirecon/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-preproc_desc-siftweights_ifod2.csv  -tck_weights_out /data/Results/DwiVolu/Tracks/Test/RPI.csv -include /data/Masks/TestingMasks/MyRPI.nii
-        Command = sprintf('%s tckedit %s/qsirecon/{1}/dwi/{1}_space-T1w_desc-preproc_desc-tracks_ifod2.tck',CommandParallel,WorkingDir);
-        Command = sprintf('%s %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck -tck_weights_in %s/qsirecon/{1}/dwi/{1}_space-T1w_desc-preproc_desc-siftweights_ifod2.csv  -tck_weights_out %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.csv', Command,WorkingDir,WorkingDir,WorkingDir);
-        for iElement=1:MaxElement
-            Command = sprintf('%s -include %s/Masks/MasksForDwi/Masks_DwiSpace_Split/SplitMask_ROI_%s_{1}.nii', Command,WorkingDir,num2str(iElement));
-        end
-        if Cfg.ParallelWorkersNumber~=0
-            Command = sprintf('%s -nthreads 1', Command);
-        end
-        Command = sprintf('%s -force ::: %s', Command, SubjectIDString);
-        fprintf('Seed Based Structural Connectivity: Tracks Calculating, please wait...\n');
-        system(Command);
-        %tckmap /data/Results/DwiVolu/Tracks/Test/RPI.tck /data/Results/DwiVolu/Tracks/Test/RPI.nii -tck_weights_in /data/Results/DwiVolu/Tracks/Test/RPI.csv -template /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-T1w_desc-preproc_dwi.nii.gz
-        Command = sprintf('%s tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTDIMap/AllROITraverse_{1}_TDIMap.nii -tck_weights_in %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.csv -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz',CommandParallel,WorkingDir,WorkingDir,WorkingDir,WorkingDir);
+        
+        
+        %tckedit /data/qsirecon/sub-Sub001/dwi/sub-Sub001_space-ACPC_model-ifod2_streamlines.tck /data/Results/DwiVolu/Tracks/Test/RPI.tck -tck_weights_in /data/qsirecon/sub-Sub001/dwi/sub-Sub001_space-ACPC_model-sift2_streamlineweights.csv  -tck_weights_out /data/Results/DwiVolu/Tracks/Test/RPI.csv -include /data/Masks/TestingMasks/MyRPI.nii
+       
+            RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+            if (2==exist(RefFile,'file'))
+                
+                Command = sprintf('%s tckedit %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-ifod2_streamlines.tck',CommandParallel,WorkingDir,QsireconDerivativesDirSpecific);
+                Command = sprintf('%s %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck -tck_weights_in %s/qsirecon/derivatives/%s/{1}/dwi/{1}_space-ACPC_model-sift2_streamlineweights.csv  -tck_weights_out %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.csv', Command,WorkingDir,WorkingDir,QsireconDerivativesDirSpecific,WorkingDir);
+                for iElement=1:MaxElement
+                    Command = sprintf('%s -include %s/Masks/MasksForDwi/Masks_DwiSpace_Split/SplitMask_ROI_%s_{1}.nii', Command,WorkingDir,num2str(iElement));
+                end
+                if Cfg.ParallelWorkersNumber~=0
+                    Command = sprintf('%s -nthreads 1', Command);
+                end
+                Command = sprintf('%s -force ::: %s', Command, SubjectIDString);
+                fprintf('Seed Based Structural Connectivity: Tracks Calculating, please wait...\n');
+                system(Command);
+                %tckmap /data/Results/DwiVolu/Tracks/Test/RPI.tck /data/Results/DwiVolu/Tracks/Test/RPI.nii -tck_weights_in /data/Results/DwiVolu/Tracks/Test/RPI.csv -template /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-ACPC_desc-preproc_dwi.nii.gz
+                Command = sprintf('%s tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTDIMap/AllROITraverse_{1}_TDIMap.nii -tck_weights_in %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.csv -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz',CommandParallel,WorkingDir,WorkingDir,WorkingDir,WorkingDir);
+                
+                
+            else
+                Command = sprintf('%s tckedit %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-ifod2_streamlines.tck',CommandParallel,WorkingDir,QsireconDerivativesDirSpecific);
+                Command = sprintf('%s %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck -tck_weights_in %s/qsirecon/derivatives/%s/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_model-sift2_streamlineweights.csv  -tck_weights_out %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.csv', Command,WorkingDir,WorkingDir,QsireconDerivativesDirSpecific,WorkingDir);
+                for iElement=1:MaxElement
+                    Command = sprintf('%s -include %s/Masks/MasksForDwi/Masks_DwiSpace_Split/SplitMask_ROI_%s_{1}.nii', Command,WorkingDir,num2str(iElement));
+                end
+                if Cfg.ParallelWorkersNumber~=0
+                    Command = sprintf('%s -nthreads 1', Command);
+                end
+                Command = sprintf('%s -force ::: %s', Command, SubjectIDString);
+                fprintf('Seed Based Structural Connectivity: Tracks Calculating, please wait...\n');
+                system(Command);
+                %tckmap /data/Results/DwiVolu/Tracks/Test/RPI.tck /data/Results/DwiVolu/Tracks/Test/RPI.nii -tck_weights_in /data/Results/DwiVolu/Tracks/Test/RPI.csv -template /data/qsiprep/sub-Sub001/dwi/sub-Sub001_space-ACPC_desc-preproc_dwi.nii.gz
+                Command = sprintf('%s tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTDIMap/AllROITraverse_{1}_TDIMap.nii -tck_weights_in %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.csv -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz',CommandParallel,WorkingDir,WorkingDir,WorkingDir,WorkingDir);
+                
+            end
+        
+        
+        
         if Cfg.ParallelWorkersNumber~=0
             Command = sprintf('%s -nthreads 1', Command);
         end
@@ -763,31 +920,66 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
             WithinFile = replace(WithinFile,filesep,'/');
 
             FCFile = replace(FCFile,'{SubjectID}','{1}');
-
-            %tckmap tracks.tck temp.mif <-template / -vox options> -contrast scalar_map -image FC_map.mif -stat_vox mean -stat_tck sum
-            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-                Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz -contrast scalar_map -image %s -stat_vox %s -stat_tck %s', ...
-                    Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,FCFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+            
+            RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
+            if (2==exist(RefFile,'file'))
+                
+                %tckmap tracks.tck temp.mif <-template / -vox options> -contrast scalar_map -image FC_map.mif -stat_vox mean -stat_tck sum
+                if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                    Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map -image %s -stat_vox %s -stat_tck %s', ...
+                        Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,FCFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                else
+                    Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map -image /MountPath/%s -stat_vox %s -stat_tck %s', ...
+                        CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,WithinFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                end
+                if Cfg.ParallelWorkersNumber~=0
+                    Command = sprintf('%s -nthreads 1', Command);
+                end
+                Command = sprintf('%s -force ::: %s', Command, SubjectIDString);
+                fprintf('Seed Based Structural Connectivity: TWFC Map Calculating, please wait...\n');
+                system(Command);
+                
+                
+                %tckmap tracks.tck - -template temp.mif -contrast scalar_map_count -image FC_map.mif |... mrcalc - 5 -ge mask.mif -datatype bit
+                if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                    Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image %s', ...
+                        Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,FCFile);
+                else
+                    Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/dwi/{1}_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image /MountPath/%s', ...
+                        CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,WithinFile);
+                end
+                
             else
-                Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz -contrast scalar_map -image /MountPath/%s -stat_vox %s -stat_tck %s', ...
-                    CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,WithinFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                
+                %tckmap tracks.tck temp.mif <-template / -vox options> -contrast scalar_map -image FC_map.mif -stat_vox mean -stat_tck sum
+                if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                    Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map -image %s -stat_vox %s -stat_tck %s', ...
+                        Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,FCFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                else
+                    Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_Unthresholded.nii -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map -image /MountPath/%s -stat_vox %s -stat_tck %s', ...
+                        CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,WithinFile,Cfg.SeedBasedStructuralConnectivity.TWFC.StatVox,Cfg.SeedBasedStructuralConnectivity.TWFC.StatTck);
+                end
+                if Cfg.ParallelWorkersNumber~=0
+                    Command = sprintf('%s -nthreads 1', Command);
+                end
+                Command = sprintf('%s -force ::: %s', Command, SubjectIDString);
+                fprintf('Seed Based Structural Connectivity: TWFC Map Calculating, please wait...\n');
+                system(Command);
+                
+                
+                %tckmap tracks.tck - -template temp.mif -contrast scalar_map_count -image FC_map.mif |... mrcalc - 5 -ge mask.mif -datatype bit
+                if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
+                    Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image %s', ...
+                        Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,FCFile);
+                else
+                    Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/ses-1/dwi/{1}_ses-1_space-ACPC_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image /MountPath/%s', ...
+                        CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,WithinFile);
+                end
             end
-            if Cfg.ParallelWorkersNumber~=0
-                Command = sprintf('%s -nthreads 1', Command);
-            end
-            Command = sprintf('%s -force ::: %s', Command, SubjectIDString);
-            fprintf('Seed Based Structural Connectivity: TWFC Map Calculating, please wait...\n');
-            system(Command);
-
-
-            %tckmap tracks.tck - -template temp.mif -contrast scalar_map_count -image FC_map.mif |... mrcalc - 5 -ge mask.mif -datatype bit
-            if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-                Command=sprintf('parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image %s', ...
-                    Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,FCFile);
-            else
-                Command=sprintf('%s -v %s:/MountPath cgyan/dpabifiber parallel -j %g tckmap %s/Results/DwiVolu/SeedBasedStructuralConnectivityTrack/AllROITraverse_{1}.tck %s/Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/AllROITraverse_{1}_TWFCMap_StreamlineCount.nii -template %s/qsiprep/{1}/dwi/{1}_space-T1w_desc-preproc_dwi.nii.gz -contrast scalar_map_count -image /MountPath/%s', ...
-                    CommandInit, MountPath, Cfg.ParallelWorkersNumber, WorkingDir,WorkingDir,WorkingDir,WithinFile);
-            end
+            
+            
+            
+            
             if Cfg.ParallelWorkersNumber~=0
                 Command = sprintf('%s -nthreads 1', Command);
             end

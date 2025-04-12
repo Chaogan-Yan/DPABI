@@ -593,7 +593,7 @@ if handles.Cfg.IsOrganizeFieldFun
                     copyfile([DirNII(iFile).folder,filesep,DirNII(iFile).name],OutDir);
                 end
             case 'B0Map'
-                OutDir=[handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,SubjectID{iSub}];
+                OutDir=[handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub}];
                 mkdir(OutDir);
                 DirNII=dir([handles.Cfg.OutputDir,filesep,'FunFieldMapTemp',filesep,SubjectID{iSub},filesep,'*',handles.Cfg.OutLayout.FieldFun.Suffix.B0Map,'.*']);
                 for iFile = 1:length(DirNII)
@@ -669,7 +669,7 @@ if handles.Cfg.IsOrganizeFieldDwi
                     copyfile([DirNII(iFile).folder,filesep,DirNII(iFile).name],OutDir);
                 end
             case 'B0Map'
-                OutDir=[handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'B0Map',filesep,SubjectID{iSub}];
+                OutDir=[handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub}];
                 mkdir(OutDir);
                 DirNII=dir([handles.Cfg.OutputDir,filesep,'DwiFieldMapTemp',filesep,SubjectID{iSub},filesep,'*',handles.Cfg.OutLayout.FieldDwi.Suffix.B0Map,'.*']);
                 for iFile = 1:length(DirNII)
@@ -781,7 +781,7 @@ if handles.Cfg.IsOrganizeFieldFun && ~strcmp(handles.Cfg.OutLayout.FieldFun.Form
                 if ~isempty(Cfg.FieldMap.TE1)
                     break;
                 else
-                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
                     JsonStruct = jsondecode(JsonData);
                     Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
@@ -847,54 +847,55 @@ Index=cellfun(...
 SubList=SubList(Index);
 Cfg.SubjectID={SubList(:).name}';
 
-if handles.Cfg.IsOrganizeFieldFun && ~strcmp(handles.Cfg.OutLayout.FieldFun.Format,'Topup')
-    Cfg.FieldMap.IsNeedConvertDCM2IMG = 0;
-    Cfg.FieldMap.IsApplyFieldMapCorrection=1;
-    Cfg.FieldMap.DataFormat = handles.Cfg.OutLayout.FieldFun.Format;
-    Cfg.FieldMap.TE1 = [];
-    Cfg.FieldMap.TE2 = [];
-    switch handles.Cfg.OutLayout.FieldFun.Format
-        case 'PhaseDiff'
-            for iSub = 1:length(SubList)
-                if ~isempty(Cfg.FieldMap.TE1)
-                    break;
-                else
-                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
-                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
-                    JsonStruct = jsondecode(JsonData);
-                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
-                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
-                end
-            end
-        case 'Phase12'
-            for iSub = 1:length(SubList)
-                if ~isempty(Cfg.FieldMap.TE1)
-                    break;
-                else
-                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
-                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
-                    JsonStruct = jsondecode(JsonData);
-                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime;
-                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase2',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
-                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
-                    JsonStruct = jsondecode(JsonData);
-                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime;
-                end
-            end            
-        case 'B0Map'
-            for iSub = 1:length(SubList)
-                if ~isempty(Cfg.FieldMap.TE1)
-                    break;
-                else
-                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
-                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
-                    JsonStruct = jsondecode(JsonData);
-                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
-                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
-                end
-            end
-    end
-end
+% Don't need to setup FieldMap Parameter for DPABISurf. YAN Chao-Gan, 250403.
+% if handles.Cfg.IsOrganizeFieldFun && ~strcmp(handles.Cfg.OutLayout.FieldFun.Format,'Topup')
+%     Cfg.FieldMap.IsNeedConvertDCM2IMG = 0;
+%     Cfg.FieldMap.IsApplyFieldMapCorrection=1;
+%     Cfg.FieldMap.DataFormat = handles.Cfg.OutLayout.FieldFun.Format;
+%     Cfg.FieldMap.TE1 = [];
+%     Cfg.FieldMap.TE2 = [];
+%     switch handles.Cfg.OutLayout.FieldFun.Format
+%         case 'PhaseDiff'
+%             for iSub = 1:length(SubList)
+%                 if ~isempty(Cfg.FieldMap.TE1)
+%                     break;
+%                 else
+%                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
+%                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+%                     JsonStruct = jsondecode(JsonData);
+%                     Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+%                     Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+%                 end
+%             end
+%         case 'Phase12'
+%             for iSub = 1:length(SubList)
+%                 if ~isempty(Cfg.FieldMap.TE1)
+%                     break;
+%                 else
+%                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
+%                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+%                     JsonStruct = jsondecode(JsonData);
+%                     Cfg.FieldMap.TE1 = JsonStruct.EchoTime;
+%                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase2',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
+%                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+%                     JsonStruct = jsondecode(JsonData);
+%                     Cfg.FieldMap.TE2 = JsonStruct.EchoTime;
+%                 end
+%             end            
+%         case 'B0Map'
+%             for iSub = 1:length(SubList)
+%                 if ~isempty(Cfg.FieldMap.TE1)
+%                     break;
+%                 else
+%                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
+%                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+%                     JsonStruct = jsondecode(JsonData);
+%                     Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+%                     Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+%                 end
+%             end
+%     end
+% end
 
 DPABISurf_Pipeline(Cfg);
 
@@ -2781,14 +2782,19 @@ else % handles.Cfg.IsPseudoSeries == 0
                     SubStatus(iSub) = 0;
                 end
             end
+
             if handles.Cfg.IsOrganizeFieldFun
-                if isempty(FieldFunInputDir{iSub}) || strcmp(FieldFunInputDir{iSub}(end-11:end),'PseudoSeries')
-                    SubStatus(iSub) = 0;
+                for iSession = 1:handles.Cfg.FieldFunFolderNumber
+                    if isempty(FieldFunInputDir{iSession}{iSub}) || strcmp(FieldFunInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
+                        SubStatus(iSub) = 0;
+                    end
                 end
             end
             if handles.Cfg.IsOrganizeFieldDwi
-                if isempty(FieldDwiInputDir{iSub}) || strcmp(FieldDwiInputDir{iSub}(end-11:end),'PseudoSeries')
-                    SubStatus(iSub) = 0;
+                for iSession = 1:handles.Cfg.FieldDwiFolderNumber
+                    if isempty(FieldDwiInputDir{iSession}{iSub}) || strcmp(FieldDwiInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
+                        SubStatus(iSub) = 0;
+                    end
                 end
             end
             if handles.Cfg.IsOrganizeFun
@@ -3166,7 +3172,7 @@ for iSub = 1:length(SubjectID)
                     Flag(iSub) = 1;
                 end
             case 'B0Map'
-                if ~isempty(dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,SubjectID{iSub},filesep,'*.nii*'])) && ...
+                if ~isempty(dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub},filesep,'*.nii*'])) && ...
                         ~isempty(dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude',filesep,SubjectID{iSub},filesep,'*.nii*']))
                     handles.Cfg.DCM2NIIStatus.FieldFun{iSub,1} = 'Success';
                 else
@@ -3206,7 +3212,7 @@ for iSub = 1:length(SubjectID)
                     Flag(iSub) = 1;
                 end
             case 'B0Map'
-                if ~isempty(dir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'B0Map',filesep,SubjectID{iSub},filesep,'*.nii*'])) && ...
+                if ~isempty(dir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub},filesep,'*.nii*'])) && ...
                         ~isempty(dir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Magnitude',filesep,SubjectID{iSub},filesep,'*.nii*']))
                     handles.Cfg.DCM2NIIStatus.FieldDwi{iSub,1} = 'Success';
                 else
@@ -3262,7 +3268,7 @@ for iSub = 1:length(SubjectID)
                         rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,SubjectID{iSub}],'s')
                         rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,SubjectID{iSub}],'s')
                     case 'B0Map'
-                        rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,SubjectID{iSub}],'s')
+                        rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub}],'s')
                         rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude',filesep,SubjectID{iSub}],'s')
                     case 'Topup'
                         rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Topup',filesep,SubjectID{iSub}],'s')
@@ -3280,7 +3286,7 @@ for iSub = 1:length(SubjectID)
                         rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Magnitude1',filesep,SubjectID{iSub}],'s')
                         rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Magnitude2',filesep,SubjectID{iSub}],'s')
                     case 'B0Map'
-                        rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'B0Map',filesep,SubjectID{iSub}],'s')
+                        rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub}],'s')
                         rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Magnitude',filesep,SubjectID{iSub}],'s')
                     case 'Topup'
                         rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,SubjectID{iSub}],'s')

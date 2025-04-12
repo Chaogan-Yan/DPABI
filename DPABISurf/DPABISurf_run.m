@@ -968,6 +968,9 @@ if (Cfg.IsCovremove==1) && (Cfg.IsBasedOnFunSurf==1) %(strcmpi(Cfg.Covremove.Tim
         % If have not generated previously.
         parfor i=1:Cfg.SubjectNum
             RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+            if ~(2==exist(RefFile,'file'))
+                RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_ses-1_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+            end
 
             [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
 
@@ -1053,12 +1056,19 @@ if (Cfg.IsBasedOnFunSurf==1) && ((Cfg.IsCalALFF==1)||(Cfg.IsCovremove==1)||(Cfg.
     end
 
     for i=1:Cfg.SubjectNum
-
         RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+        if ~(2==exist(RefFile,'file'))
+            RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_ses-1_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+        end
 
         [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
 
         TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+        if ~(2==exist(TransformFile,'file'))
+            TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'ses-1',filesep,'anat',filesep,Cfg.SubjectID{i},'_ses-1_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+        end
+
+
         Interpolation='MultiLabel';
         Dimensionality=3;
         InputImageType=0;
@@ -1183,9 +1193,19 @@ if (Cfg.IsCovremove==1) && (Cfg.IsBasedOnFunSurf==1)
             
             % Set the reference image
             RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+            if ~(2==exist(RefFile,'file'))
+                RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_ses-1_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+            end
+
+
             [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
 
             TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+            if ~(2==exist(TransformFile,'file'))
+                TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'ses-1',filesep,'anat',filesep,Cfg.SubjectID{i},'_ses-1_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+            end
+
+
             Interpolation='MultiLabel';
             Dimensionality=3;
             InputImageType=0;
@@ -1532,7 +1552,13 @@ if (Cfg.IsCovremove==1) %&& (strcmpi(Cfg.Covremove.Timing,'AfterNormalize'))
                     if strcmpi(Cfg.Covremove.WholeBrain.Mask,'SPM')
                         SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep, 'MasksForFun',filesep,'Masks_FunSpace',filesep,'FunSpace_',Cfg.SubjectID{i},'_BrainMask_05_91x109x91.nii']}];
                     elseif strcmpi(Cfg.Covremove.WholeBrain.Mask,'AutoMask')
-                        SubjectCovariatesROI=[SubjectCovariatesROI;{[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz']}];
+
+                        RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+                        if ~(2==exist(RefFile,'file'))
+                            RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_ses-1_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+                        end
+
+                        SubjectCovariatesROI=[SubjectCovariatesROI;{RefFile}];
                     end
                 end
             else
@@ -2103,11 +2129,17 @@ if (Cfg.IsBasedOnFunSurf==1) && ( (~isempty(Cfg.CalFC.ROIDefVolu)) || (~isempty(
         for i=1:Cfg.SubjectNum
             SubjectROI=AllSubjectROI;%%!!! Change as in Fuction
             
-            % Set the reference image
             RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+            if ~(2==exist(RefFile,'file'))
+                RefFile=[Cfg.WorkingDir,filesep,'Masks',filesep,'AutoMasks',filesep,Cfg.SubjectID{i},'_ses-1_task-rest_space-T1w_desc-brain_mask.nii.gz'];
+            end
+
             [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
 
             TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+            if ~(2==exist(TransformFile,'file'))
+                TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'ses-1',filesep,'anat',filesep,Cfg.SubjectID{i},'_ses-1_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+            end
             Interpolation='MultiLabel';
             Dimensionality=3;
             InputImageType=0;
@@ -2775,8 +2807,18 @@ if (Cfg.IsNormalize>0) && strcmpi(Cfg.Normalize.Timing,'OnResults')
                             for j=1:length(DirImg)
                                 FileList=[FileList,' ',DirImg(j).name];
                             end
-                            Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/fmriprep/%s/anat/%s_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                CommandParallel, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+
+                            TransformFile=[Cfg.WorkingDir,filesep,'fmriprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-T1w_mode-image_xfm.h5'];
+                            if (2==exist(TransformFile,'file'))
+                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/fmriprep/%s/anat/%s_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
+                                    CommandParallel, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+
+                            else
+                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/fmriprep/%s/ses-1/anat/%s_ses-1_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
+                                    CommandParallel, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+                            end
+
+
                             system(Command);
 
                         end

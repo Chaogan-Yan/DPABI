@@ -72,9 +72,24 @@ end
 SuccessID=[];
 FailedID=[];
 WaitingID=[];
+
+%Get QsireconDerivativesDir
+Dir=dir(fullfile(Cfg.WorkingDir,'qsirecon','derivatives'));
+if length(Dir)>=3
+    if Dir(3).isdir
+        QsireconDerivativesDirSpecific=Dir(3).name;
+    else
+        QsireconDerivativesDirSpecific=Dir(4).name;
+    end
+    QsireconDerivativesDir=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific);
+else
+    error('No qsirecon derivatives were found! Please check.');
+end
+
+
 for i=1:Cfg.SubjectNum
-    if exist(fullfile(Cfg.WorkingDir,'qsirecon',Cfg.SubjectID{i}))
-        if CheckFailedLogs(fullfile(Cfg.WorkingDir,'qsirecon',Cfg.SubjectID{i})) || CheckMissingFiles(Cfg.WorkingDir,Cfg.SubjectID{i}) 
+    if exist(fullfile(QsireconDerivativesDir,Cfg.SubjectID{i}))
+        if CheckFailedLogs(fullfile(QsireconDerivativesDir,Cfg.SubjectID{i})) || CheckMissingFiles(QsireconDerivativesDir,Cfg.SubjectID{i}) 
             FailedID=[FailedID;Cfg.SubjectID(i)];
         else
             SuccessID=[SuccessID;Cfg.SubjectID(i)];
@@ -100,12 +115,12 @@ if ~isempty(FailedID)
     
     %Delete the intermediate files for failed subjects
     for i=1:length(FailedID)
-        if exist(fullfile(Cfg.WorkingDir,'qsirecon',FailedID{i}))
-            %status = rmdir(fullfile(Cfg.WorkingDir,'qsirecon',FailedID{i}),'s');
+        if exist(fullfile(QsireconDerivativesDir,FailedID{i}))
+            %status = rmdir(fullfile(QsireconDerivativesDir,FailedID{i}),'s');
             if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-                Command=sprintf('rm -rf %s/qsirecon/%s', Cfg.WorkingDir,FailedID{i});
+                Command=sprintf('rm -rf %s/qsirecon/derivatives/%s/%s', Cfg.WorkingDir,QsireconDerivativesDirSpecific,FailedID{i});
             else
-                Command=sprintf('%s cgyan/dpabi rm -rf /data/qsirecon/%s', CommandInit,FailedID{i});
+                Command=sprintf('%s cgyan/dpabi rm -rf /data/qsirecon/derivatives/%s/%s', CommandInit,QsireconDerivativesDirSpecific,FailedID{i});
             end
             system(Command);
         end
@@ -149,12 +164,12 @@ if ~isempty(NeedReRunID)
     end
 
     if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-        Command=sprintf('parallel -j %g /usr/local/miniconda/bin/qsiprep %s/BIDS %s participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
+        Command=sprintf('parallel -j %g qsirecon %s/qsiprep %s/qsirecon participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', Cfg.ParallelWorkersNumber, Cfg.WorkingDir, Cfg.WorkingDir);
     else
         if isempty(Cfg.FreesurferInput)
-            Command=sprintf('%s cgyan/dpabifiber parallel -j %g /usr/local/miniconda/bin/qsiprep /data/BIDS /data participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
+            Command=sprintf('%s cgyan/qsirecon parallel -j %g qsirecon /data/qsiprep /data/qsirecon participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.ParallelWorkersNumber );
         else
-            Command=sprintf('%s -v %s:/FreesurferInput cgyan/dpabifiber parallel -j %g /usr/local/miniconda/bin/qsiprep /data/BIDS /data participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.FreesurferInput, Cfg.ParallelWorkersNumber );
+            Command=sprintf('%s -v %s:/FreesurferInput cgyan/qsirecon parallel -j %g qsirecon /data/qsiprep /data/qsirecon participant --fs-license-file /DPABI/DPABISurf/FreeSurferLicense/license.txt --resource-monitor', CommandInit, Cfg.FreesurferInput, Cfg.ParallelWorkersNumber );
         end
     end
 
@@ -165,36 +180,39 @@ if ~isempty(NeedReRunID)
     %Command = sprintf('%s --output-resolution %g', Command, Cfg.OutputResolution);
 
     if ~isempty(Cfg.FreesurferInput)
+
+        % First check if lh.pial exist. YAN Chao-Gan, 220219.
+        if exist([Cfg.FreesurferInput,filesep,Cfg.SubjectID{1},filesep,'surf',filesep,'lh.pial.T1'],'file') && ~exist([Cfg.FreesurferInput,filesep,Cfg.SubjectID{1},filesep,'surf',filesep,'lh.pial'],'file')
+            for i=1:Cfg.SubjectNum
+                copyfile([Cfg.FreesurferInput,filesep,Cfg.SubjectID{i},filesep,'surf',filesep,'lh.pial.T1'],[Cfg.FreesurferInput,filesep,Cfg.SubjectID{i},filesep,'surf',filesep,'lh.pial'])
+                copyfile([Cfg.FreesurferInput,filesep,Cfg.SubjectID{i},filesep,'surf',filesep,'rh.pial.T1'],[Cfg.FreesurferInput,filesep,Cfg.SubjectID{i},filesep,'surf',filesep,'rh.pial'])
+            end
+        end
+
         if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-            Command=sprintf('%s --freesurfer-input %s', Command, Cfg.FreesurferInput);
+            Command=sprintf('%s --fs-subjects-dir %s', Command, Cfg.FreesurferInput);
         else
-            Command=sprintf('%s --freesurfer-input /FreesurferInput', Command);
+            Command=sprintf('%s --fs-subjects-dir /FreesurferInput', Command);
         end
     end
 
     if ~isempty(Cfg.ReconSpec) || ~strcmpi(Cfg.ReconSpec,'none')
-        copyfile([DPABIPath,filesep,'DPABIFiber',filesep,'qsiprep_recon_workflows',filesep,Cfg.ReconSpec,'.json'],Cfg.WorkingDir);
+        if ~strcmpi(Cfg.ReconSpec,'Custom') % if not {WorkingDir}/Custom.yaml
+            copyfile([DPABIPath,filesep,'DPABIFiber',filesep,'qsiprep_recon_workflows',filesep,Cfg.ReconSpec,'.yaml'],Cfg.WorkingDir);
+        end
         if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-            Command=sprintf('%s --recon_spec %s/%s.json', Command, Cfg.WorkingDir, Cfg.ReconSpec);
+            Command=sprintf('%s --recon-spec %s/%s.yaml', Command, Cfg.WorkingDir, Cfg.ReconSpec);
         else
-            Command=sprintf('%s --recon_spec /data/%s.json', Command, Cfg.ReconSpec);
+            Command=sprintf('%s --recon-spec /data/%s.yaml', Command, Cfg.ReconSpec);
         end
     end
-
-    if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
-        Command=sprintf('%s --recon-input %s/qsiprep', Command, Cfg.WorkingDir);
-    else
-        Command=sprintf('%s --recon-input /data/qsiprep', Command);
-    end
-
-    Command = sprintf('%s --recon-only', Command);
 
     if Cfg.IsLowMem==1
         Command = sprintf('%s --low-mem', Command);
     end
 
     Command = sprintf('%s -w /data/qsireconwork/{1}', Command); %Specify the working dir for qsiprep
-    Command = sprintf('%s  --participant_label {1} ::: %s', Command, SubjectIDString);
+    Command = sprintf('%s  --participant-label {1} ::: %s', Command, SubjectIDString);
 
     fprintf('Re-run the failed subjects for reconstructing with qsiprep, this process is very time consuming, please be patient...\n');
 
@@ -208,8 +226,8 @@ if ~isempty(NeedReRunID)
     FailedID=[];
     WaitingID=[];
     for i=1:Cfg.SubjectNum
-        if exist(fullfile(Cfg.WorkingDir,'qsirecon',Cfg.SubjectID{i}))
-            if CheckFailedLogs(fullfile(Cfg.WorkingDir,'qsirecon',Cfg.SubjectID{i}))
+        if exist(fullfile(QsireconDerivativesDir,Cfg.SubjectID{i}))
+            if CheckFailedLogs(fullfile(QsireconDerivativesDir,Cfg.SubjectID{i})) || CheckMissingFiles(QsireconDerivativesDir,Cfg.SubjectID{i}) 
                 FailedID=[FailedID;Cfg.SubjectID(i)];
             else
                 SuccessID=[SuccessID;Cfg.SubjectID(i)];
@@ -237,10 +255,15 @@ if ~isempty(NeedReRunID)
         for i=1:length(FailedID)
             for j=1:length(FailedID_Beginning)
                 if strcmpi(FailedID{i},FailedID_Beginning{j})
-                    fprintf('%s failed twice during running qsirecon, please check the data and the logs %s\n',FailedID{i},fullfile(Cfg.WorkingDir,'qsirecon',FailedID{i},'log'));
+                    fprintf('%s failed twice during running qsirecon, please check the data and the logs %s\n',FailedID{i},fullfile(QsireconDerivativesDir,FailedID{i},'log'));
                 end
             end
         end
+    end
+
+    if ~(isdeployed && (isunix && (~ismac))) % Give permission
+        Command=sprintf('%s cgyan/dpabifiber chmod -R 777 /data/qsirecon/', CommandInit);
+        system(Command);
     end
 
 end
@@ -264,11 +287,20 @@ if exist(fullfile(SubDir,'log'))
 end
 
 
-function HasMissingFiles = CheckMissingFiles(WorkingDir,SubjectID)
+function HasMissingFiles = CheckMissingFiles(QsireconDerivativesDir,SubjectID)
 HasMissingFiles = 0;
-DirFiles_tck=dir(fullfile(WorkingDir,'qsirecon',SubjectID,'dwi','*.tck'));
+DirFiles_tck=dir(fullfile(QsireconDerivativesDir,SubjectID,'dwi','*.tck.gz'));
 if length(DirFiles_tck)==0
-    HasMissingFiles = 1;
+    DirFiles_tck=dir(fullfile(QsireconDerivativesDir,SubjectID,'dwi','*.tck'));
+    if length(DirFiles_tck)==0
+        DirFiles_tck=dir(fullfile(QsireconDerivativesDir,SubjectID,'ses-1','dwi','*.tck.gz'));
+        if length(DirFiles_tck)==0
+            DirFiles_tck=dir(fullfile(QsireconDerivativesDir,SubjectID,'ses-1','dwi','*.tck'));
+            if length(DirFiles_tck)==0
+                HasMissingFiles = 1;
+            end
+        end
+    end
 end
 
 

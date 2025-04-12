@@ -1,16 +1,36 @@
-FROM pennbbl/qsiprep:0.19.1
+FROM ubuntu:22.04
+MAINTAINER Chao-Gan Yan "ycg.yan@gmail.com"
 
-MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ="America/New_York"
+# Update system and install packages
 
-# Update system and istall pakages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    x11vnc xvfb stterm parallel wget unzip \
+    curl \
+    ca-certificates \
+    bc \
+    dc \
+    libgl1 \
+    libglib2.0-0 \
+    libglu1-mesa \
+    libqt5core5a \
+    libqt5widgets5 \
+    libqt5network5 \
+    python3 \
+    python3-pip \
+    python3-numpy \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get -qq update && DEBIAN_FRONTEND="noninteractive" TZ="America/New_York" apt-get install -y tzdata && apt-get update
+RUN wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py -O /tmp/fslinstaller.py \
+    && python3 /tmp/fslinstaller.py --fslconda --dest=/opt/fsl \
+    && rm /tmp/fslinstaller.py
 
-RUN apt-get -qq update && apt-get -qq install -y \
-    x11vnc xvfb parallel && \
-    apt-get update
+ENV FSLDIR=/opt/fsl \
+    PATH=/opt/fsl/bin:$PATH \
+    FSLOUTPUTTYPE=NIFTI_GZ
 
-# x11vnc xvfb suckless-tools stterm parallel wget unzip time qt5-default && \
 
 
 # Setup x11vnc
@@ -20,22 +40,21 @@ RUN mkdir -p ~/.vnc && \
     export USER=$(whoami) && \
     export DISPLAY=$HOSTNAME:25
 
+
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
+    && bash ~/miniconda.sh -b -p /opt/conda \
+    && rm ~/miniconda.sh \
+    && /opt/conda/bin/conda clean -afy
+
+
+ENV PATH=/opt/conda/bin:$PATH
+
 RUN conda install -c mrtrix3 mrtrix3
 
-RUN /opt/fsl-6.0.5.1/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.5.1
-
-COPY ./MissingCommands/* /opt/fsl-6.0.5.1/bin/
-
-RUN mv /opt/fsl-6.0.5.1/bin/LowerCingulum_1mm.nii.gz /opt/fsl-6.0.5.1/data/standard/LowerCingulum_1mm.nii.gz
-
-# python fslinstaller.py -f /fslraw/fsl-6.0.5.1-centos7_64.tar.gz -M -D -d /opt/fsl-6.0.5.1
-
-# cp /fslraw/MissingCommands/LowerCingulum_1mm.nii.gz /opt/fsl-6.0.5.1/data/standard/
-
+RUN conda install -c conda-forge libstdcxx-ng 
 
 ENTRYPOINT []
 
 # Start VNC after launching
 # x11vnc -forever -shared -usepw -create -rfbport 5925 &
 
-    
