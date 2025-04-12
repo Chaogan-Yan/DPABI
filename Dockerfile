@@ -1,4 +1,4 @@
-FROM nipreps/fmriprep:23.2.1
+FROM nipreps/fmriprep:24.1.1
 
 MAINTAINER Chao-Gan Yan <ycg.yan@gmail.com>
 
@@ -21,21 +21,23 @@ RUN mkdir -p ~/.vnc && \
 
 ENV XAUTHORITY /home/fmriprep/.Xauthority
 
-    
+
+
 # Install MATLAB MCR
-ENV MATLAB_VERSION R2020a
+ENV MATLAB_VERSION R2022b
 RUN mkdir /opt/mcr_install && \
     mkdir /opt/mcr && \
-    wget --quiet -P /opt/mcr_install http://ssd.mathworks.com/supportfiles/downloads/R2020a/Release/0/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2020a_glnxa64.zip && \
-    unzip -q /opt/mcr_install/MATLAB_Runtime_R2020a_glnxa64.zip -d /opt/mcr_install && \
+    wget --quiet -P /opt/mcr_install http://ssd.mathworks.com/supportfiles/downloads/R2022b/Release/0/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2022b_glnxa64.zip && \
+    unzip -q /opt/mcr_install/MATLAB_Runtime_R2022b_glnxa64.zip -d /opt/mcr_install && \
     /opt/mcr_install/install -destinationFolder /opt/mcr -agreeToLicense yes -mode silent && \
     rm -rf /opt/mcr_install /tmp/*
 
 # Configure environment
-ENV MCR_VERSION v98
+ENV MCR_VERSION R2022b
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH/opt/mcr/${MCR_VERSION}/runtime/glnxa64:/opt/mcr/${MCR_VERSION}/bin/glnxa64:/opt/mcr/${MCR_VERSION}/sys/os/glnxa64:/opt/mcr/${MCR_VERSION}/sys/opengl/lib/glnxa64:/opt/mcr/${MCR_VERSION}/extern/bin/glnxa64
 ENV MCR_INHIBIT_CTF_LOCK 1
 ENV MCRPath /opt/mcr/${MCR_VERSION}
+
 
 
 # Configure DPABI

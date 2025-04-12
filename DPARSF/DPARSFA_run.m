@@ -68,7 +68,7 @@ TemplatePath=fullfile(DPABIPath, 'Templates');
 SPMFilePath=fullfile(DPABIPath, 'Templates','SPMTemplates'); %YAN Chao-Gan, 161006. Move the necessary files to DPABI. After compiling, this should be usable.
 
 if isdeployed %YAN Chao-Gan, 161006. For Compiler.
-    SPMversion=12;
+    SPMversion=25;
 else
     [SPMversionText,c]=spm('Ver');
     SPMversion=str2double(SPMversionText(end-1:end));
