@@ -102,9 +102,11 @@ end
 
 if isdeployed && (isunix && (~ismac)) % If running within docker with compiled version
     CommandParallel=sprintf('parallel -j %g', Cfg.ParallelWorkersNumber);
+    CommandParallelQsiprep=sprintf('parallel -j %g', Cfg.ParallelWorkersNumber);
     WorkingDir=Cfg.WorkingDir;
 else
     CommandParallel=sprintf('%s cgyan/dpabifiber parallel -j %g', CommandInit, Cfg.ParallelWorkersNumber );
+    CommandParallelQsiprep=sprintf('%s cgyan/qsiprep parallel -j %g', CommandInit, Cfg.ParallelWorkersNumber );
     WorkingDir='/data';
 end
 
@@ -407,11 +409,14 @@ if ~isempty(Cfg.ROIDef)
             %Need to warp masks
 
             RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'dwi',filesep,Cfg.SubjectID{i},'_space-ACPC_dwiref.nii.gz'];
-            if ~(2==exist(RefFile,'file'))
+            if (2==exist(RefFile,'file'))
+                TransformFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-ACPC_mode-image_xfm.h5'];
+            else
                 RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'ses-1',filesep,'dwi',filesep,Cfg.SubjectID{i},'_ses-1_space-ACPC_dwiref.nii.gz'];
+                TransformFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'ses-1',filesep,'anat',filesep,Cfg.SubjectID{i},'_ses-1_from-MNI152NLin2009cAsym_to-ACPC_mode-image_xfm.h5'];
             end
             [RefData,RefVox,RefHeader]=y_ReadRPI(RefFile,1);
-            TransformFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{i},filesep,'anat',filesep,Cfg.SubjectID{i},'_from-MNI152NLin2009cAsym_to-ACPC_mode-image_xfm.h5'];
+            
             Interpolation='MultiLabel';
             Dimensionality=3;
             InputImageType=0;
@@ -1068,8 +1073,15 @@ if (Cfg.Normalize.Is>0) && strcmpi(Cfg.Normalize.Timing,'OnResults')
                                     for j=1:length(DirImg)
                                         FileList=[FileList,' ',DirImg(j).name];
                                     end
-                                    Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/anat/%s_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                        CommandParallel, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+
+                                    RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
+                                    if (2==exist(RefFile,'file'))
+                                        Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/anat/%s_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
+                                            CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+                                    else
+                                        Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/ses-1/anat/%s_ses-1_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
+                                            CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+                                    end
                                     system(Command);
 
                                 case {'TensorMetrics'}
@@ -1095,13 +1107,28 @@ if (Cfg.Normalize.Is>0) && strcmpi(Cfg.Normalize.Timing,'OnResults')
                                         for j=1:length(DirImg)
                                             FileList=[FileList,' ',DirImg(j).name];
                                         end
-                                        if strcmpi(SubfolderSet{iSubfolder},'Tensor')
-                                            Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input-image-type 3 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/anat/%s_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                                CommandParallel, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+
+                                        RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
+                                        if (2==exist(RefFile,'file'))
+                                            if strcmpi(SubfolderSet{iSubfolder},'Tensor')
+                                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input-image-type 3 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/anat/%s_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
+                                                    CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+                                            else
+                                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/anat/%s_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
+                                                    CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+                                            end
+
                                         else
-                                            Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/anat/%s_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                                CommandParallel, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+                                            if strcmpi(SubfolderSet{iSubfolder},'Tensor')
+                                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input-image-type 3 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/ses-1/anat/%s_ses-1_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
+                                                    CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+                                            else
+                                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/ses-1/anat/%s_ses-1_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
+                                                    CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
+                                            end
+
                                         end
+
                                         system(Command);
                                     end
                             end
