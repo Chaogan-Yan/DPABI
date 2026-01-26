@@ -183,6 +183,38 @@ if (Cfg.Isqsiprep==1)
         system(Command);
     end
 
+
+
+    %Chao-Gan Yan, 20260125. Convert freesurfer aparcaseg files to qsiprep ACPC space
+
+    AparcasegFile=[Cfg.WorkingDir,filesep,'Results',filesep,'AnatVolu',filesep,'T1wSpace',filesep,Cfg.SubjectID{1},filesep,Cfg.SubjectID{1},'_space-ACPC_desc-aparcaseg.nii.gz'];
+    if (2==exist(AparcasegFile,'file'))
+        RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
+        if (2==exist(RefFile,'file'))
+            Command = sprintf('%s cgyan/qsiprep bash -lc ''parallel --quote -j 1 bash -lc "antsRegistrationSyNQuick.sh -d 3 -f %s/qsiprep/{1}/anat/{1}_space-ACPC_desc-preproc_T1w.nii.gz -m %s/fmriprep/{1}/anat/{1}_desc-preproc_T1w.nii.gz -t a -o %s/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_"',CommandInit,WorkingDir,WorkingDir,WorkingDir);
+            Command = sprintf('%s ::: %s''', Command, SubjectIDString);
+            fprintf('Calculate T1 -> ACPC, please wait...\n');
+            system(Command);
+
+            Command = sprintf('%s antsApplyTransforms -d 3 -i %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-T1w_desc-aparcaseg.nii.gz -r %s/qsiprep/{1}/anat/{1}_space-ACPC_desc-preproc_T1w.nii.gz -o %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-ACPC_desc-aparcaseg.nii.gz -n MultiLabel -t %s/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_0GenericAffine.mat',CommandParallelQsiprep,WorkingDir,WorkingDir,WorkingDir,WorkingDir);
+            Command = sprintf('%s ::: %s', Command, SubjectIDString);
+            fprintf('Transform space-T1w_desc-aparcaseg to _space-ACPC_desc-aparcaseg, please wait...\n');
+            system(Command);
+        else
+
+            Command = sprintf('%s cgyan/qsiprep bash -lc ''parallel --quote -j 1 bash -lc "antsRegistrationSyNQuick.sh -d 3 -f %s/qsiprep/{1}/ses-1/anat/{1}_ses-1_space-ACPC_desc-preproc_T1w.nii.gz -m %s/fmriprep/{1}/ses-1/anat/{1}_ses-1_desc-preproc_T1w.nii.gz -t a -o %s/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_"',CommandInit,WorkingDir,WorkingDir,WorkingDir);
+            Command = sprintf('%s ::: %s''', Command, SubjectIDString);
+            fprintf('Calculate T1 -> ACPC, please wait...\n');
+            system(Command);
+
+            Command = sprintf('%s antsApplyTransforms -d 3 -i %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-T1w_desc-aparcaseg.nii.gz -r %s/qsiprep/{1}/ses-1/anat/{1}_ses-1_space-ACPC_desc-preproc_T1w.nii.gz -o %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-ACPC_desc-aparcaseg.nii.gz -n MultiLabel -t %s/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_0GenericAffine.mat',CommandParallelQsiprep,WorkingDir,WorkingDir,WorkingDir,WorkingDir);
+            Command = sprintf('%s ::: %s', Command, SubjectIDString);
+            fprintf('Transform space-T1w_desc-aparcaseg to _space-ACPC_desc-aparcaseg, please wait...\n');
+            system(Command);
+        end
+    end
+
+
     Cfg.StartingDirName = 'qsiprep';
 end
 
