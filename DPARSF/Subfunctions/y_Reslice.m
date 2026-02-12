@@ -58,7 +58,7 @@ end
 
 [x1,x2,x3] = ndgrid(1:dim(1),1:dim(2),1:dim(3));
 d     = [hld*[1 1 1]' [1 1 0]'];
-C = spm_bsplinc(SourceHead, d);
+
 v = zeros(dim);
 
 M = inv(SourceHead.mat)*mat; % M = inv(mat\SourceHead.mat) in spm_reslice.m
@@ -67,7 +67,7 @@ y2   = M(2,1)*x1+M(2,2)*x2+(M(2,3)*x3+M(2,4));
 y3   = M(3,1)*x1+M(3,2)*x2+(M(3,3)*x3+M(3,4));
 
 
-OutVolume    = spm_bsplins(C, y1,y2,y3, d);
+
 
 %Revised by YAN Chao-Gan 121214. Apply a mask from the source image: don't extend values to outside brain.
 tiny = 5e-2; % From spm_vol_utils.c
@@ -76,7 +76,22 @@ Mask = Mask & (y1 >= (1-tiny) & y1 <= (SourceHead.dim(1)+tiny));
 Mask = Mask & (y2 >= (1-tiny) & y2 <= (SourceHead.dim(2)+tiny));
 Mask = Mask & (y3 >= (1-tiny) & y3 <= (SourceHead.dim(3)+tiny));
 
-OutVolume(~Mask) = 0;
+
+
+
+if ndims(SourceData)==3
+    C = spm_bsplinc(SourceHead, d);
+    OutVolume    = spm_bsplins(C, y1,y2,y3, d);
+    OutVolume(~Mask) = 0;
+elseif  ndims(SourceData)==4
+    for p=1:size(SourceData,4)
+        C1 = spm_bsplinc(SourceData(:,:,:,p), d);
+        OutVolume1    = spm_bsplins(C1, y1,y2,y3, d);
+        OutVolume1(~Mask) = 0;
+        OutVolume(:,:,:,p)=OutVolume1;
+    end
+end
+
 
 if ~isempty(OutputFile)
     OutHead=SourceHead;
