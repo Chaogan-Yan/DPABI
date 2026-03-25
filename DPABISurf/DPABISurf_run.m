@@ -2375,6 +2375,7 @@ if (Cfg.IsBasedOnFunSurf==0) && ( (~isempty(Cfg.CalFC.ROIDefVolu)) || (~isempty(
                 AMaskFilename=SubjectROI{iROI};
                 AMaskFilename = replace(AMaskFilename,'{SubjectID}',Cfg.SubjectID{i});
                 AMaskFilename = replace(AMaskFilename,'{WorkingDir}',Cfg.WorkingDir);
+                SubjectROI{iROI} = AMaskFilename;
 
                 if exist(SubjectROI{iROI},'file')==2
                     [pathstr, name, ext] = fileparts(SubjectROI{iROI});
