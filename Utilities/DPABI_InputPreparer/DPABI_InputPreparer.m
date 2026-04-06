@@ -13,7 +13,7 @@ function varargout = DPABI_InputPreparer(varargin)
 %-----------------------------------------------------------
 % Mail to Author:  <a href="larslu@foxmail.com">Bin Lu</a> 
 
-% Last Modified by GUIDE v2.5 24-Jan-2025 15:53:48
+% Last Modified by GUIDE v2.5 17-Mar-2026 17:50:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,6 +63,7 @@ handles.Cfg.IsPseudoSeries = 1; % for some participants who lack one session
 % would put a S2_FunRaw series from another subject into this subject, and
 % mark Sub001 in the report.
 handles.Cfg.IsDCM2NII = 1;
+handles.Cfg.UserIsDCM2NII = handles.Cfg.IsDCM2NII;
 handles.Cfg.Demo.SeriesNamesDefault  = 'Please select an appropriate input directory.';
 handles.Cfg.Demo.SeriesNames = {handles.Cfg.Demo.SeriesNamesDefault};
 handles.Cfg.Demo.SubID = '';
@@ -77,6 +78,7 @@ handles.Cfg.IsOrganizeDwi = 0;
 handles.Cfg.IsOrganizeFieldFun = 0;
 handles.Cfg.IsOrganizeFieldDwi = 0;
 handles.Cfg.FunSessionNumber = 1;
+handles.Cfg.IsMultiEchoFunAll = zeros(handles.Cfg.FunSessionNumber,1);
 handles.Cfg.FieldFunFolderNumber = 1;
 handles.Cfg.FieldDwiFolderNumber = 1;
 handles.Cfg.SeriesName.T1 = '';
@@ -445,8 +447,13 @@ function checkboxDCM2NII_Callback(hObject, eventdata, handles)
 % hObject    handle to checkboxDCM2NII (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Cfg.IsDCM2NII = get(handles.checkboxDCM2NII,'Value');
+
+% Record user's preference (only applied when not forced by FieldMap or MultiEcho)
+handles.Cfg.UserIsDCM2NII = get(handles.checkboxDCM2NII,'Value');
+handles = SetDCM2NII(hObject, handles);
 guidata(hObject,handles);
+UpdateDisplay(handles);
+
 % Hint: get(hObject,'Value') returns toggle state of checkboxDCM2NII
 
 
@@ -593,7 +600,7 @@ if handles.Cfg.IsOrganizeFieldFun
                     copyfile([DirNII(iFile).folder,filesep,DirNII(iFile).name],OutDir);
                 end
             case 'B0Map'
-                OutDir=[handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub}];
+                OutDir=[handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,SubjectID{iSub}];
                 mkdir(OutDir);
                 DirNII=dir([handles.Cfg.OutputDir,filesep,'FunFieldMapTemp',filesep,SubjectID{iSub},filesep,'*',handles.Cfg.OutLayout.FieldFun.Suffix.B0Map,'.*']);
                 for iFile = 1:length(DirNII)
@@ -669,7 +676,7 @@ if handles.Cfg.IsOrganizeFieldDwi
                     copyfile([DirNII(iFile).folder,filesep,DirNII(iFile).name],OutDir);
                 end
             case 'B0Map'
-                OutDir=[handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub}];
+                OutDir=[handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'B0Map',filesep,SubjectID{iSub}];
                 mkdir(OutDir);
                 DirNII=dir([handles.Cfg.OutputDir,filesep,'DwiFieldMapTemp',filesep,SubjectID{iSub},filesep,'*',handles.Cfg.OutLayout.FieldDwi.Suffix.B0Map,'.*']);
                 for iFile = 1:length(DirNII)
@@ -781,7 +788,7 @@ if handles.Cfg.IsOrganizeFieldFun && ~strcmp(handles.Cfg.OutLayout.FieldFun.Form
                 if ~isempty(Cfg.FieldMap.TE1)
                     break;
                 else
-                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
                     JsonStruct = jsondecode(JsonData);
                     Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
@@ -847,55 +854,54 @@ Index=cellfun(...
 SubList=SubList(Index);
 Cfg.SubjectID={SubList(:).name}';
 
-% Don't need to setup FieldMap Parameter for DPABISurf. YAN Chao-Gan, 250403.
-% if handles.Cfg.IsOrganizeFieldFun && ~strcmp(handles.Cfg.OutLayout.FieldFun.Format,'Topup')
-%     Cfg.FieldMap.IsNeedConvertDCM2IMG = 0;
-%     Cfg.FieldMap.IsApplyFieldMapCorrection=1;
-%     Cfg.FieldMap.DataFormat = handles.Cfg.OutLayout.FieldFun.Format;
-%     Cfg.FieldMap.TE1 = [];
-%     Cfg.FieldMap.TE2 = [];
-%     switch handles.Cfg.OutLayout.FieldFun.Format
-%         case 'PhaseDiff'
-%             for iSub = 1:length(SubList)
-%                 if ~isempty(Cfg.FieldMap.TE1)
-%                     break;
-%                 else
-%                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
-%                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
-%                     JsonStruct = jsondecode(JsonData);
-%                     Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
-%                     Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
-%                 end
-%             end
-%         case 'Phase12'
-%             for iSub = 1:length(SubList)
-%                 if ~isempty(Cfg.FieldMap.TE1)
-%                     break;
-%                 else
-%                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
-%                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
-%                     JsonStruct = jsondecode(JsonData);
-%                     Cfg.FieldMap.TE1 = JsonStruct.EchoTime;
-%                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase2',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
-%                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
-%                     JsonStruct = jsondecode(JsonData);
-%                     Cfg.FieldMap.TE2 = JsonStruct.EchoTime;
-%                 end
-%             end            
-%         case 'B0Map'
-%             for iSub = 1:length(SubList)
-%                 if ~isempty(Cfg.FieldMap.TE1)
-%                     break;
-%                 else
-%                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
-%                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
-%                     JsonStruct = jsondecode(JsonData);
-%                     Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
-%                     Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
-%                 end
-%             end
-%     end
-% end
+if handles.Cfg.IsOrganizeFieldFun && ~strcmp(handles.Cfg.OutLayout.FieldFun.Format,'Topup')
+    Cfg.FieldMap.IsNeedConvertDCM2IMG = 0;
+    Cfg.FieldMap.IsApplyFieldMapCorrection=1;
+    Cfg.FieldMap.DataFormat = handles.Cfg.OutLayout.FieldFun.Format;
+    Cfg.FieldMap.TE1 = [];
+    Cfg.FieldMap.TE2 = [];
+    switch handles.Cfg.OutLayout.FieldFun.Format
+        case 'PhaseDiff'
+            for iSub = 1:length(SubList)
+                if ~isempty(Cfg.FieldMap.TE1)
+                    break;
+                else
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+                end
+            end
+        case 'Phase12'
+            for iSub = 1:length(SubList)
+                if ~isempty(Cfg.FieldMap.TE1)
+                    break;
+                else
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase1',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime;
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Phase2',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); 
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime;
+                end
+            end            
+        case 'B0Map'
+            for iSub = 1:length(SubList)
+                if ~isempty(Cfg.FieldMap.TE1)
+                    break;
+                else
+                    JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of B0Map images
+                    JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    JsonStruct = jsondecode(JsonData);
+                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+                end
+            end
+    end
+end
 
 DPABISurf_Pipeline(Cfg);
 
@@ -1413,6 +1419,7 @@ switch Flag
         handles.Cfg.SxFieldFunRawFlag = 1;
         handles.Cfg.SxFieldDwiRawList = {'FieldMap_Folder1'};
         handles.Cfg.SxFieldDwiRawFlag = 1;
+        handles.Cfg.IsMultiEchoFunAll = zeros(handles.Cfg.FunSessionNumber,1);
     case 'Fun'
         handles.Cfg.SxFunRawList = cell(1,handles.Cfg.FunSessionNumber);
         for iSession = 1:handles.Cfg.FunSessionNumber
@@ -1434,6 +1441,7 @@ switch Flag
         handles.Cfg.SeriesFileNumber.Percent.FunAll = cell(1,handles.Cfg.FunSessionNumber);
         handles.Cfg.SeriesFileNumber.Percent.FunAll(:) = {[0]};
         handles.Cfg.SxFunRawFlag = 1;
+        handles.Cfg.IsMultiEchoFunAll = zeros(handles.Cfg.FunSessionNumber,1);
     case 'FieldFun'
         handles.Cfg.SxFieldFunList = cell(1,handles.Cfg.FieldFunFolderNumber);
         for iSession = 1:handles.Cfg.FieldFunFolderNumber
@@ -2394,18 +2402,18 @@ if handles.Cfg.InputLayout == 1 % Participant first
             AllFixedFileNumber = ~sum(cellfun(@(Flag) Flag, handles.Cfg.SeriesFileNumber.LowLimitMode.FunAll)); %% e.g. 1 = all sessions are in fix-dicom-file-number mode.
             for iSession = 1:handles.Cfg.FunSessionNumber
                 Index = find([FunAllStatus{iSession}{iSub,:}]);
-                if ~isempty(Index)
+                if ~isempty(Index) 
                     if handles.Cfg.SameSeriesName.FunAll.Flag == 0 % No same-series-name problem, one MR Series corresponds to one DPABI session
                         % The only exception is that some DPABI Sessions might correspond to multiple Series (for example, if there was big head motion during the first scan, leading to a second scan).
                         % In such cases, we have to let users manually choose which one to use (based on their experimental records or someting).
-                        if length(Index) > 1 % && ~handles.Cfg.AlwaysLatterSeries
+                        if length(Index) > 1  && ~(isfield(handles.Cfg,'IsMultiEchoFunAll') && handles.Cfg.IsMultiEchoFunAll(iSession)) % single-echo, do mannually setection later for multi-echo
                             SeriesList = FunAllString{iSession}(iSub,Index)';
                             Selection = ManuallySelectSeries({['S',num2str(iSession),'_FunRaw']},SubString{iSub},SeriesList,'Template1');
 %                             handles.Cfg.AlwaysLatterSeries = Selection.AlwaysLatterSeries;
                             Index = [];
                             Index = Selection.Results(1)-1; % Minus "please select" line
                             FunAllInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,SeriesList{Index}];
-                        else
+                        else 
                             FunAllInputDir{iSession}{iSub} = [handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,FunAllString{iSession}{iSub,Index(end)}];
                         end
                     else % Exist same-series-name problem (e.g. The series names of REST and Task sessions were all set as "YanLab_Exp1_BOLD" ...)
@@ -2647,7 +2655,7 @@ else % series first
                     if handles.Cfg.SameSeriesName.FunAll.Flag == 0 % No same-series-name problem, one MR Series corresponds to one DPABI session
                         % The only exception is that some DPABI Sessions might correspond to multiple Series (for example, if there was big head motion during the first scan, leading to a second scan).
                         % In such cases, we have to let users manually choose which one to use (based on their experimental records or someting).
-                        if length(Index) > 1 % && ~handles.Cfg.AlwaysLatterSeries
+                        if length(Index) > 1 && ~(isfield(handles.Cfg,'IsMultiEchoFunAll') && handles.Cfg.IsMultiEchoFunAll(iSession)) % single-echo, do mannually setection later for multi-echo
                             SeriesList = FunAllString{iSession}(iSub,Index)';
                             Selection = ManuallySelectSeries({['S',num2str(iSession),'_FunRaw']},SubString{iSub},SeriesList,'Template1');
 %                             handles.Cfg.AlwaysLatterSeries = Selection.AlwaysLatterSeries;
@@ -2705,6 +2713,164 @@ else % series first
     end
 end
 
+
+%% Expand multi-echo functional series (per session)
+% For sessions marked as multi-echo, we first determine the echo series folder names
+% using ONE reference subject (DICOM header ProtocolName match + same file count), then we use
+% series-folder-name matching to locate echoes for all subjects.
+FunAllInputDirME = cell(handles.Cfg.FunSessionNumber,1);
+handles.Cfg.MultiEchoSeriesNames = cell(handles.Cfg.FunSessionNumber,1);
+handles.Cfg.MultiEchoNEcho = zeros(handles.Cfg.FunSessionNumber,1);
+handles.Cfg.MultiEchoError = cell(length(SubString), handles.Cfg.FunSessionNumber);
+
+for iSession = 1:handles.Cfg.FunSessionNumber
+    FunAllInputDirME{iSession} = cell(length(SubString),1);
+end
+
+if handles.Cfg.AnatOnly == 0 && handles.Cfg.IsOrganizeFun && isfield(handles.Cfg,'IsMultiEchoFunAll') && any(handles.Cfg.IsMultiEchoFunAll)
+    for iSession = 1:handles.Cfg.FunSessionNumber
+        if handles.Cfg.IsMultiEchoFunAll(iSession)
+            % --- find a reference subject for this session ---
+            refSub = [];
+            for iSub = 1:length(SubString)
+                if ~isempty(FunAllInputDir{iSession}{iSub}) && ~strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
+                    refSub = iSub;
+                    break;
+                end
+            end
+            if isempty(refSub)
+                continue;
+            end
+
+            % Determine echo series folder names (echo1..echoN)
+            refDir = FunAllInputDir{iSession}{refSub};
+            [EchoSeries, IsOK, Msg] = GetMultiEchoDirs(hObject, handles, refDir);
+            if ~IsOK
+                for iSub = 1:length(SubString)
+                    FunAllInputDir{iSession}{iSub} = '';
+                    FunAllInputDirME{iSession}{iSub} = {};
+                    handles.Cfg.MultiEchoError{iSub,iSession} = Msg;
+                end
+                continue;
+            end
+            
+            % For data from DPABI_DicomSorter, the index should be removed here to match more series
+            Index = strfind(EchoSeries{1},'_');
+            if ~isempty(Index) && ~isnan(str2double(EchoSeries{1}(1:Index(1)-1))) %% For xnat-like output series name. Bin Lu. 20221212.
+                EchoSeries = cellfun(@(Series) Series(Index(1)+1:end),EchoSeries,'UniformOutput',0);
+            end
+            handles.Cfg.MultiEchoSeriesNames{iSession} = EchoSeries;
+            handles.Cfg.MultiEchoNEcho(iSession) = numel(EchoSeries);
+
+            % --- build per-subject echo directories by series-folder-name matching ---
+            for iSub = 1:length(SubString)
+                if isempty(FunAllInputDir{iSession}{iSub}) || strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
+                    FunAllInputDirME{iSession}{iSub} = {};
+                    continue;
+                end
+                
+                EchoDirsFull = cell(numel(EchoSeries),1);
+                EchoFullFlag = 1;
+                
+                for e = 1:numel(EchoSeries) % Find the other echos
+                    if handles.Cfg.InputLayout == 1 % Participant first
+                        tempDir = dir([handles.Cfg.WorkingDir,filesep,SubString{iSub},filesep,'*',EchoSeries{e}]); %<WorkingDir>/<SubID>/<SeriesA>
+                    else
+                        tempDir = dir([handles.Cfg.WorkingDir,filesep,'*',EchoSeries{e},filesep,SubString{iSub}]); %<WorkingDir>/<SeriesA>/<SubID>
+                    end
+                    
+                    if isempty(tempDir)
+                        EchoFullFlag = 0; break;
+                    else
+                        % Check file count for each echo
+                        tempDirFlag = ones(length(tempDir),1);
+                        for iEcho = 1:numel(tempDir) % Check echo file numbers
+                            nFile = numel(dir([tempDir(iEcho).folder,filesep,tempDir(iEcho).name,filesep,'*.dcm']));
+                            if nFile == 0
+                                tmp = dir([tempDir(iEcho).folder,filesep,tempDir(iEcho).name]); tmp = tmp(~[tmp.isdir]);
+                                tmp = tmp(~ismember({tmp.name},{'.','..','.DS_Store'}));
+                                nFile = numel(tmp);
+                            end
+                            if nFile ~= handles.Cfg.SeriesFileNumber.List.FunAll{iSession}(handles.Cfg.SeriesFileNumber.Flag.FunAll(iSession))  % ruling out the reference series for multi-echo
+                                tempDirFlag(iEcho) = 0;
+                            end
+                        end
+                        tempDir = tempDir(find(tempDirFlag));
+                        
+                        if length(tempDir)>1 % 1. deal with multiple qualified echoes and 2. fallback for totally same series-names for different echoes (what a disaster...)
+                            % Then organize all echoes at once
+                            if handles.Cfg.InputLayout == 1 % Participant first
+                                SeriesList = {tempDir.name}';
+                            else
+                                SeriesList = cell(length(tempDir),1);
+                                for k = 1:length(tempDir)
+                                    [~, SeriesTemp] = fileparts(tempDir(k).folder);
+                                    SeriesList{k} = SeriesTemp;
+                                end
+                            end
+                            if length(tempDir) ~= handles.Cfg.MultiEchoNEcho(iSession) % Use series index to allocate series; but number of series is not equal to number of echoes
+                                EchoList = cell(handles.Cfg.MultiEchoNEcho(iSession),1);
+                                for iEcho = 1:length(EchoList)
+                                    if iSession == 1
+                                        EchoList{iEcho} = ['FunRaw Echo',num2str(iEcho)];
+                                    else
+                                        EchoList{iEcho} = ['S',num2str(iSession),'_FunRaw Echo',num2str(iEcho)];
+                                    end
+                                end
+                                if length(SeriesList)<length(EchoList) % missing echos
+                                    SeriesList = cat(1,SeriesList,repmat({'PseudoSeries'},length(EchoList)-length(SeriesList),1));
+                                end
+                                Template = 'Template3'; % Extra series or missing series
+                                Selection = ManuallySelectSeries(EchoList,SubString{iSub},SeriesList,Template);
+                                Index = Selection.Results-1; % Minus "please select" line
+                                for iEcho = 1:handles.Cfg.MultiEchoNEcho(iSession)
+                                    EchoDirsFull{iEcho} = [tempDir(Index(iEcho)).folder,filesep,tempDir(Index(iEcho)).name];
+                                end
+                            else % use index to allocate same-name-series
+                                DashIndex = strfind(SeriesList{1},'_');
+                                [~,I] = sort(cellfun(@(Series) str2num(Series(1:DashIndex(1)-1)),SeriesList));
+                                tempDirSorted = tempDir(I);
+                                for iEcho = 1:handles.Cfg.MultiEchoNEcho(iSession)
+                                    EchoDirsFull{iEcho}= [tempDirSorted(iEcho).folder,filesep,tempDirSorted(iEcho).name];
+                                end
+                            end
+                            break;
+                        else % do normal echo-by-echo organization
+                            EchoDirsFull{e} = [tempDir.folder,filesep,tempDir.name];
+                        end
+                    end
+                end
+                
+%                 if EchoFullFlag
+%                     for e = 1:numel(EchoDirsFull) % Check echo file numbers
+%                         nFile = numel(dir(fullfile(EchoDirsFull{e},'*.dcm')));
+%                         if nFile == 0
+%                             tmp = dir(EchoDirsFull{e}); tmp = tmp(~[tmp.isdir]);
+%                             tmp = tmp(~ismember({tmp.name},{'.','..','.DS_Store'}));
+%                             nFile = numel(tmp);
+%                         end
+%                         if nFile ~= handles.Cfg.SeriesFileNumber.List.FunAll{iSession}(handles.Cfg.SeriesFileNumber.Flag.FunAll(iSession))  % ruling out the reference series for multi-echo
+%                             EchoFullFlag = 0; 
+%                             disp([SubString{iSub},' - S',num2str(iSession),'_FunRaw - Echo',num2str(e),'error: file count mismatch.']);
+%                             break;
+%                         end
+%                     end
+%                 end
+
+                if EchoFullFlag
+                    FunAllInputDirME{iSession}{iSub} = EchoDirsFull;
+                else
+                    % Missing echo or mismatched file count => exclude this subject
+                    FunAllInputDir{iSession}{iSub} = '';
+                    FunAllInputDirME{iSession}{iSub} = {};
+                    handles.Cfg.MultiEchoError{iSub,iSession} = ['Error in searching multi-echo series for ',SubString{iSub},' - S',num2str(iSession),'_FunRaw: missing echo series or file count mismatch.'];
+                end
+            end
+        end
+    end
+end
+
+
 %% Find qualified series to be appointed as pseudo series if needed (handles.Cfg.IsPseudoSeries == 1),
 % or delete the subject without full T1 session and functional sessions from sublist (handles.Cfg.IsPseudoSeries == 0) 
 SubStatus = ones(length(SubString),1);
@@ -2715,6 +2881,13 @@ if handles.Cfg.IsPseudoSeries
     handles.Cfg.FieldFunPseudo = cell(handles.Cfg.FieldFunFolderNumber,1);
     handles.Cfg.FieldDwiPseudo =cell(handles.Cfg.FieldDwiFolderNumber,1);
     handles.Cfg.FunAllPseudo = cell(handles.Cfg.FunSessionNumber,1);
+    handles.Cfg.FunAllPseudoME = cell(handles.Cfg.FunSessionNumber,1);
+    for iSession = 1:handles.Cfg.FunSessionNumber
+        if isfield(handles.Cfg,'IsMultiEchoFunAll') && handles.Cfg.IsMultiEchoFunAll(iSession)
+            handles.Cfg.FunAllPseudoME{iSession} = cell(handles.Cfg.MultiEchoNEcho(iSession),1);
+        end
+    end
+        
     for iSub = 1:length(SubString)
         if ~isempty(T1InputDir{iSub}) && ~strcmp(T1InputDir{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.T1Pseudo)
             handles.Cfg.T1Pseudo = T1InputDir{iSub};
@@ -2757,10 +2930,20 @@ if handles.Cfg.IsPseudoSeries
             end
             if handles.Cfg.IsOrganizeFun
                 for iSession = 1:handles.Cfg.FunSessionNumber
-                    if  ~isempty(FunAllInputDir{iSession}{iSub}) && ~strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.FunAllPseudo{iSession})
-                        handles.Cfg.FunAllPseudo{iSession} = FunAllInputDir{iSession}{iSub};
-                    elseif isempty(FunAllInputDir{iSession}{iSub}) || strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
-                        FunAllInputDir{iSession}{iSub} = 'PseudoSeries';
+                    if isfield(handles.Cfg,'IsMultiEchoFunAll') && handles.Cfg.IsMultiEchoFunAll(iSession)
+                        for iEcho  = 1:handles.Cfg.MultiEchoNEcho(iSession)
+                            if ~isempty(FunAllInputDirME{iSession}{iSub}{iEcho}) && isempty(handles.Cfg.FunAllPseudoME{iSession}{iEcho})
+                                handles.Cfg.FunAllPseudoME{iSession}{iEcho} = FunAllInputDirME{iSession}{iSub}{iEcho};
+                            elseif isempty(FunAllInputDirME{iSession}{iSub}{iEcho}) 
+                                FunAllInputDirME{iSession}{iSub}{iEcho} = 'PseudoSeries';
+                            end
+                        end                                
+                    else
+                        if  ~isempty(FunAllInputDir{iSession}{iSub}) && ~strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries') && isempty(handles.Cfg.FunAllPseudo{iSession})
+                            handles.Cfg.FunAllPseudo{iSession} = FunAllInputDir{iSession}{iSub};
+                        elseif isempty(FunAllInputDir{iSession}{iSub}) || strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
+                            FunAllInputDir{iSession}{iSub} = 'PseudoSeries';
+                        end
                     end
                 end
             end
@@ -2782,7 +2965,6 @@ else % handles.Cfg.IsPseudoSeries == 0
                     SubStatus(iSub) = 0;
                 end
             end
-
             if handles.Cfg.IsOrganizeFieldFun
                 for iSession = 1:handles.Cfg.FieldFunFolderNumber
                     if isempty(FieldFunInputDir{iSession}{iSub}) || strcmp(FieldFunInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
@@ -2799,14 +2981,23 @@ else % handles.Cfg.IsPseudoSeries == 0
             end
             if handles.Cfg.IsOrganizeFun
                 for iSession = 1:handles.Cfg.FunSessionNumber
-                    if isempty(FunAllInputDir{iSession}{iSub}) || strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
-                        SubStatus(iSub) = 0;
+                    if isfield(handles.Cfg,'IsMultiEchoFunAll') && handles.Cfg.IsMultiEchoFunAll(iSession)
+                        for iEcho  = 1:handles.Cfg.MultiEchoNEcho(iSession)
+                            if isempty(FunAllInputDirME{iSession}{iSub}{iEcho}) 
+                                SubStatus(iSub) = 0;
+                            end
+                        end       
+                    else 
+                        if isempty(FunAllInputDir{iSession}{iSub}) || strcmp(FunAllInputDir{iSession}{iSub}(end-11:end),'PseudoSeries')
+                            SubStatus(iSub) = 0;
+                        end
                     end
                 end
             end
         end
     end
 end
+
 
 %% Copy and paste files 
 disp([newline,'Start to copy files to DPABI-format starting directory ...']);
@@ -2831,8 +3022,13 @@ if ~handles.Cfg.AnatOnly
         end
     end
     if handles.Cfg.IsOrganizeFun
+        handles.Cfg.InputList.FunAllME = cell(handles.Cfg.FunSessionNumber,1);
         for iSession = 1:handles.Cfg.FunSessionNumber
-            handles.Cfg.InputList.FunAll{iSession} = FunAllInputDir{iSession}(find(SubStatus));
+            if isfield(handles.Cfg,'IsMultiEchoFunAll') && handles.Cfg.IsMultiEchoFunAll(iSession)
+                handles.Cfg.InputList.FunAllME{iSession} = FunAllInputDirME{iSession}(find(SubStatus));
+            else
+                handles.Cfg.InputList.FunAll{iSession} = FunAllInputDir{iSession}(find(SubStatus));
+            end
         end
     end
 end
@@ -2948,22 +3144,46 @@ for iSub = 1:length(handles.Cfg.SubList)
         if handles.Cfg.IsOrganizeFun
             for iSession = 1:handles.Cfg.FunSessionNumber
                 if iSession == 1
-                    FunAllOutputDir = [handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubID];
+                    BaseName = 'FunRaw';
                 else
-                    FunAllOutputDir = [handles.Cfg.OutputDir,filesep,'S',num2str(iSession),'_FunRaw',filesep,SubID];
+                    BaseName = ['S',num2str(iSession),'_FunRaw'];
                 end
-                mkdir(FunAllOutputDir);
-                try
-                    if ~strcmp(handles.Cfg.InputList.FunAll{iSession}{iSub},'PseudoSeries')
-                        copyfile(handles.Cfg.InputList.FunAll{iSession}{iSub},FunAllOutputDir);
-                    else
-                        copyfile(handles.Cfg.FunAllPseudo{iSession},FunAllOutputDir);
+                if isfield(handles.Cfg,'IsMultiEchoFunAll') && handles.Cfg.IsMultiEchoFunAll(iSession)
+                    EchoDirs = handles.Cfg.InputList.FunAllME{iSession}{iSub}; % full paths to each echo (subject-level)
+                    outSubBase = [handles.Cfg.OutputDir,filesep,BaseName,filesep,SubID];
+                    mkdir(outSubBase);
+                    for iEcho = 1:length(EchoDirs)
+                        FunAllOutputDir = [outSubBase,filesep,'FunEcho',num2str(iEcho)];
+                        mkdir(FunAllOutputDir);
+                        try
+                            if ~strcmp(EchoDirs{iEcho},'PseudoSeries')
+                                copyfile(EchoDirs{iEcho},FunAllOutputDir);
+                            else
+                                copyfile(handles.Cfg.FunAllPseudoME{iSession}{iEcho},FunAllOutputDir);
+                            end
+                        catch
+                            if ~strcmp(EchoDirs{iEcho},'PseudoSeries')
+                                dos(['for file in "',EchoDirs{iEcho},'"/*; do cp -- "$file" "',FunAllOutputDir,'" ; done']);
+                            else
+                                dos(['for file in "',handles.Cfg.FunAllPseudoME{iSession}{iEcho},'"/*; do cp -- "$file" "',FunAllOutputDir,'" ; done']);
+                            end
+                        end
                     end
-                catch
-                    if ~strcmp(handles.Cfg.InputList.FunAll{iSession}{iSub},'PseudoSeries')
-                        dos(['for file in "',handles.Cfg.InputList.FunAll{iSession}{iSub},'"/*; do cp -- "$file" "',FunAllOutputDir,'" ; done']);
-                    else
-                        dos(['for file in "',handles.Cfg.FunAllPseudo{iSession},'"/*; do cp -- "$file" "',FunAllOutputDir,'" ; done']);
+                else
+                    FunAllOutputDir = [handles.Cfg.OutputDir,filesep,BaseName,filesep,SubID];
+                    mkdir(FunAllOutputDir);
+                    try
+                        if ~strcmp(handles.Cfg.InputList.FunAll{iSession}{iSub},'PseudoSeries')
+                            copyfile(handles.Cfg.InputList.FunAll{iSession}{iSub},FunAllOutputDir);
+                        else
+                            copyfile(handles.Cfg.FunAllPseudo{iSession},FunAllOutputDir);
+                        end
+                    catch
+                        if ~strcmp(handles.Cfg.InputList.FunAll{iSession}{iSub},'PseudoSeries')
+                            dos(['for file in "',handles.Cfg.InputList.FunAll{iSession}{iSub},'"/*; do cp -- "$file" "',FunAllOutputDir,'" ; done']);
+                        else
+                            dos(['for file in "',handles.Cfg.FunAllPseudo{iSession},'"/*; do cp -- "$file" "',FunAllOutputDir,'" ; done']);
+                        end
                     end
                 end
             end
@@ -3099,16 +3319,20 @@ if handles.Cfg.IsOrganizeFun
         for iSub=1:length(handles.Cfg.SubList)
             OutputDir=[handles.Cfg.OutputDir,filesep,Prefix,'FunImg',filesep,SubjectID{iSub}];
             mkdir(OutputDir);
-            DirDCM=dir([handles.Cfg.OutputDir,filesep,Prefix,'FunRaw',filesep,SubjectID{iSub},filesep,'*']); %Revised by YAN Chao-Gan 100130. %DirDCM=dir([handles.Cfg.OutputDir,filesep,'FunRaw',filesep,SubjectID{i},filesep,'*.*']);
-            InputFilename=[handles.Cfg.OutputDir,filesep,Prefix,'FunRaw',filesep,SubjectID{iSub},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
-            %YAN Chao-Gan 120817.
-            y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
-            fprintf(['Converting ',Prefix,'FunImg: ',SubjectID{iSub},' OK']);
+            if isfield(handles.Cfg,'IsMultiEchoFunAll') && handles.Cfg.IsMultiEchoFunAll(iSession)
+                DirAllEcho = [handles.Cfg.OutputDir,filesep,Prefix,'FunRaw',filesep,SubjectID{iSub}];
+                y_Call_dcm2nii(DirAllEcho, OutputDir, 'DefaultINI');
+                fprintf(['Converting ',Prefix,'FunImg (multi-echo): ',SubjectID{iSub},' OK']);
+            else
+                DirDCM=dir([handles.Cfg.OutputDir,filesep,Prefix,'FunRaw',filesep,SubjectID{iSub},filesep,'*']);
+                InputFilename=[handles.Cfg.OutputDir,filesep,Prefix,'FunRaw',filesep,SubjectID{iSub},filesep,DirDCM(handles.Cfg.nFileOperator+1).name];
+                y_Call_dcm2nii(InputFilename, OutputDir, 'DefaultINI');
+                fprintf(['Converting ',Prefix,'FunImg: ',SubjectID{iSub},' OK']);
+            end
         end
         fprintf('\n');
     end
 end
-
 
 
 function CheckDCM2NIIStatus(hObject, handles)
@@ -3172,7 +3396,7 @@ for iSub = 1:length(SubjectID)
                     Flag(iSub) = 1;
                 end
             case 'B0Map'
-                if ~isempty(dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub},filesep,'*.nii*'])) && ...
+                if ~isempty(dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,SubjectID{iSub},filesep,'*.nii*'])) && ...
                         ~isempty(dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude',filesep,SubjectID{iSub},filesep,'*.nii*']))
                     handles.Cfg.DCM2NIIStatus.FieldFun{iSub,1} = 'Success';
                 else
@@ -3212,7 +3436,7 @@ for iSub = 1:length(SubjectID)
                     Flag(iSub) = 1;
                 end
             case 'B0Map'
-                if ~isempty(dir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub},filesep,'*.nii*'])) && ...
+                if ~isempty(dir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'B0Map',filesep,SubjectID{iSub},filesep,'*.nii*'])) && ...
                         ~isempty(dir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Magnitude',filesep,SubjectID{iSub},filesep,'*.nii*']))
                     handles.Cfg.DCM2NIIStatus.FieldDwi{iSub,1} = 'Success';
                 else
@@ -3268,7 +3492,7 @@ for iSub = 1:length(SubjectID)
                         rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,SubjectID{iSub}],'s')
                         rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,SubjectID{iSub}],'s')
                     case 'B0Map'
-                        rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub}],'s')
+                        rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'B0Map',filesep,SubjectID{iSub}],'s')
                         rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude',filesep,SubjectID{iSub}],'s')
                     case 'Topup'
                         rmdir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Topup',filesep,SubjectID{iSub}],'s')
@@ -3286,7 +3510,7 @@ for iSub = 1:length(SubjectID)
                         rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Magnitude1',filesep,SubjectID{iSub}],'s')
                         rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Magnitude2',filesep,SubjectID{iSub}],'s')
                     case 'B0Map'
-                        rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'FieldMap',filesep,SubjectID{iSub}],'s')
+                        rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'B0Map',filesep,SubjectID{iSub}],'s')
                         rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Magnitude',filesep,SubjectID{iSub}],'s')
                     case 'Topup'
                         rmdir([handles.Cfg.OutputDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,SubjectID{iSub}],'s')
@@ -3341,12 +3565,23 @@ if ~handles.Cfg.AnatOnly
     end
     if handles.Cfg.IsOrganizeFun
         for iSession = 1:handles.Cfg.FunSessionNumber
-            if iSession ==1
-                Titles = [Titles,['FunRaw']];
+            if isfield(handles.Cfg,'IsMultiEchoFunAll') && handles.Cfg.IsMultiEchoFunAll(iSession)
+               for iEcho  = 1:handles.Cfg.MultiEchoNEcho(iSession)
+                   if iSession ==1
+                       Titles = [Titles,['FunRaw_Echo',num2str(iEcho)]];
+                   else
+                       Titles = [Titles,['S_',num2str(iSession),'FunRaw_Echo',num2str(iEcho)]];
+                   end
+                   Text = [Text,cellfun(@(x) x{iEcho}, handles.Cfg.InputList.FunAllME{iSession}, 'UniformOutput', false)];
+               end
             else
-                Titles = [Titles,['S',num2str(iSession),'_FunRaw']];
+                if iSession ==1
+                    Titles = [Titles,['FunRaw']];
+                else
+                    Titles = [Titles,['S_',num2str(iSession),'_FunRaw']];
+                end
+                Text = [Text,handles.Cfg.InputList.FunAll{iSession}];
             end
-            Text = [Text,handles.Cfg.InputList.FunAll{iSession}];
         end
     end
 end
@@ -3563,9 +3798,7 @@ function checkboxIsOrganizeFieldFun_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.IsOrganizeFieldFun = get(handles.checkboxIsOrganizeFieldFun,'Value');
-if ~handles.Cfg.IsDCM2NII
-    handles.Cfg.IsDCM2NII = 1; % If uses want to organize fieldmaps, DCM2NII is mandated. Because users need to further organize the fieldmap folder into phasediff or phase 1+2 formats
-end
+handles = SetDCM2NII(hObject, handles);
 UpdateDisplay(handles);
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of checkboxIsOrganizeFieldFun
@@ -3577,9 +3810,7 @@ function checkboxIsOrganizeFieldDwi_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.Cfg.IsOrganizeFieldDwi = get(handles.checkboxIsOrganizeFieldDwi,'Value');
-if ~handles.Cfg.IsDCM2NII
-    handles.Cfg.IsDCM2NII = 1; % If uses want to organize fieldmaps, DCM2NII is mandated. Because users need to further organize the fieldmap folder into phasediff or phase 1+2 formats
-end
+handles = SetDCM2NII(hObject, handles);
 UpdateDisplay(handles);
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of checkboxIsOrganizeFieldDwi
@@ -3831,11 +4062,7 @@ set(handles.checkboxIsOrganizeDwi,'Value',handles.Cfg.IsOrganizeDwi);
 set(handles.checkboxIsOrganizeFieldFun,'Value',handles.Cfg.IsOrganizeFieldFun);
 set(handles.checkboxIsOrganizeFieldDwi,'Value',handles.Cfg.IsOrganizeFieldDwi);
 
-if handles.Cfg.IsOrganizeFieldFun || handles.Cfg.IsOrganizeFieldDwi
-    set(handles.checkboxDCM2NII,'Enable','off');  % Force DCM2NII
-else
-    set(handles.checkboxDCM2NII,'Enable','on');
-end
+% DCM2NII checkbox state/enabled is managed by SetDCM2NII() in callbacks.
 
 % T1Raw
 set(handles.popupmenuT1,'String',handles.Cfg.Demo.SeriesNames,'Value',handles.Cfg.SeriesIndex.T1);
@@ -3938,7 +4165,16 @@ if handles.Cfg.IsOrganizeFun
     set(handles.popupmenuSxFunRaw,'Enable','on');
     set(handles.popupmenuFunAll,'Enable','on');
     set(handles.editFunSessionNum,'Enable','on');
-    
+    % Multi-echo checkbox (per session)
+    if isfield(handles,'checkboxFunAllMultiEcho')
+        set(handles.checkboxFunAllMultiEcho,'Enable','on');
+        if isfield(handles.Cfg,'IsMultiEchoFunAll') && length(handles.Cfg.IsMultiEchoFunAll) >= handles.Cfg.SxFunRawFlag
+            set(handles.checkboxFunAllMultiEcho,'Value',handles.Cfg.IsMultiEchoFunAll(handles.Cfg.SxFunRawFlag));
+        else
+            set(handles.checkboxFunAllMultiEcho,'Value',0);
+        end
+    end
+
     %% need to deal with percentage problem !!!!!!!!
     Percentage = handles.Cfg.SeriesFileNumber.Percent.FunAll{handles.Cfg.SxFunRawFlag};
     DisplayString = cellfun(@(Num,Per) sprintf('%d (%.0f%%)',Num,Per*100),...
@@ -3967,6 +4203,10 @@ if handles.Cfg.IsOrganizeFun
 else
     set(handles.popupmenuSxFunRaw,'Enable','off');
     set(handles.popupmenuFunAll,'Enable','off');
+    if isfield(handles,'checkboxFunAllMultiEcho')
+        set(handles.checkboxFunAllMultiEcho,'Enable','off');
+        set(handles.checkboxFunAllMultiEcho,'Value',0);
+    end
     set(handles.popupmenuFunAllFileNumber,'Enable','off');
     set(handles.editFunSessionNum,'Enable','off');
     set(handles.popupmenuFunAllFileNumber,'Enable','off');
@@ -4305,3 +4545,217 @@ function editT2nFile_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in checkboxFunAllMultiEcho.
+function checkboxFunAllMultiEcho_Callback(hObject, eventdata, handles)
+% hObject    handle to checkboxFunAllMultiEcho (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+Val = get(hObject,'Value');
+
+% Current functional session index (clamp to valid range)
+iSession = handles.Cfg.SxFunRawFlag;
+iSession = max(1, min(iSession, handles.Cfg.FunSessionNumber));
+
+% Ensure per-session vector exists with correct size
+if ~isfield(handles.Cfg,'IsMultiEchoFunAll') || numel(handles.Cfg.IsMultiEchoFunAll) ~= handles.Cfg.FunSessionNumber
+    handles.Cfg.IsMultiEchoFunAll = zeros(handles.Cfg.FunSessionNumber,1);
+end
+
+handles.Cfg.IsMultiEchoFunAll(iSession) = Val;
+
+guidata(hObject,handles);
+handles = guidata(hObject);
+
+% Unified DCM2NII logic (multi-echo may force conversion)
+handles = SetDCM2NII(hObject, handles);
+
+% Update GUI display (read-only w.r.t. handles.Cfg)
+UpdateDisplay(handles);
+
+
+
+
+function handles = SetDCM2NII(hObject, handles)
+% SetDCM2NII  Unify logic of:
+%   1) user's manual choice (checkboxDCM2NII)
+%   2) multi-echo functional sessions (checkboxFunAllMultiEcho)
+%   3) fieldmap organizing checkboxes (checkboxIsOrganizeFieldFun / checkboxIsOrganizeFieldDwi)
+%
+% This function updates:
+%   - handles.Cfg.IsDCM2NII
+%   - UI enable state of handles.checkboxDCM2NII
+
+% Cache user's manual preference (only meaningful when not forced)
+if ~isfield(handles.Cfg,'UserIsDCM2NII')
+    handles.Cfg.UserIsDCM2NII = get(handles.checkboxDCM2NII,'Value');
+end
+
+ForceByField = (handles.Cfg.IsOrganizeFieldFun || handles.Cfg.IsOrganizeFieldDwi);
+ForceByME = isfield(handles.Cfg,'IsMultiEchoFunAll') && any(handles.Cfg.IsMultiEchoFunAll(:));
+
+% Fieldmap/Multi-echo forces DCM2NII and disables UI control 
+if ForceByField || ForceByME
+    handles.Cfg.IsDCM2NII = 1;
+    set(handles.checkboxDCM2NII,'Enable','off');
+    set(handles.checkboxDCM2NII,'Value',1);
+else
+    % Not forced: follow user's preference
+    handles.Cfg.IsDCM2NII = handles.Cfg.UserIsDCM2NII;
+    set(handles.checkboxDCM2NII,'Enable','on');
+    set(handles.checkboxDCM2NII,'Value',handles.Cfg.IsDCM2NII);
+end
+
+guidata(hObject,handles);
+handles = guidata(hObject);
+
+
+
+function [EchoDirs, IsOK, Msg] = GetMultiEchoDirs(hObject, handles, Echo1Dir)
+% GetMultiEchoDirs  Detect multi-echo series set for a functional session.
+%
+% Input Echo1Dir should be the DICOM directory for the selected series A:
+%   e.g., <WorkingDir>/<SubID>/<SeriesA>
+%
+% Logic (per your requirement):
+%   1) Read first DICOM header in A to get ProtocolName (fallback: SeriesDescription).
+%   2) Search all other series folders under <WorkingDir> and keep those where:
+%        - For the SAME subject (<SubID>), the folder exists
+%        - ProtocolName matches (case-insensitive)
+%        - DICOM file count matches that of A (to avoid Ref/localizer series etc.)
+%   3) Sort candidates by EchoTime (ascending) and return their *series folder names*
+%      (not full paths), as echo1..echoN for this functional session.
+%
+% EchoDirs: cellstr of series folder names (e.g., {'BOLD_xxx_Echo1_...', 'BOLD_xxx_Echo2_...', ...})
+% IsOK   : 1 if >=2 echoes found
+% Msg    : error/warning message
+
+EchoDirs = {};
+IsOK = 0;
+Msg = '';
+
+if isempty(Echo1Dir) || ~ischar(Echo1Dir) || ~exist(Echo1Dir,'dir')
+    Msg = 'Echo1Dir is empty or not a valid directory.';
+    return;
+end
+
+subID = handles.Cfg.Demo.SubID;
+workingDir = handles.Cfg.WorkingDir;
+
+% ---- locate first DICOM file in Echo1Dir ----
+dcmList = dir(fullfile(Echo1Dir,'*.dcm'));
+if isempty(dcmList)
+    tmp = dir(Echo1Dir);
+    tmp = tmp(~[tmp.isdir]);
+    tmp = tmp(~ismember({tmp.name},{'.','..','.DS_Store'}));
+    dcmList = tmp;
+end
+if isempty(dcmList)
+    Msg = 'No DICOM files found in the selected series subject directory.';
+    return;
+end
+
+firstDcm = fullfile(Echo1Dir, dcmList(1).name);
+try
+    infoA = dicominfo(firstDcm);
+catch
+    Msg = 'dicominfo failed on the first DICOM file of the selected series.';
+    return;
+end
+
+protoA = '';
+if isfield(infoA,'ProtocolName') && ~isempty(infoA.ProtocolName)
+    protoA = strtrim(infoA.ProtocolName);
+elseif isfield(infoA,'SeriesDescription') && ~isempty(infoA.SeriesDescription)
+    protoA = strtrim(infoA.SeriesDescription);
+end
+if isempty(protoA)
+    Msg = 'ProtocolName (and SeriesDescription) is empty; cannot identify multi-echo group.';
+    return;
+end
+
+% ---- file count of series A (subject-level) ----
+nFileA = numel(dir(fullfile(Echo1Dir,'*.dcm')));
+if nFileA == 0
+    tmp = dir(Echo1Dir);
+    tmp = tmp(~[tmp.isdir]);
+    tmp = tmp(~ismember({tmp.name},{'.','..','.DS_Store'}));
+    nFileA = numel(tmp);
+end
+if nFileA == 0
+    Msg = 'Cannot determine file count of the selected series (subject-level folder).';
+    return;
+end
+
+% ---- scan all series folders under WorkingDir and test the SAME subject subfolder ----
+if handles.Cfg.InputLayout == 1 % Participant first
+    D = dir([workingDir,filesep,subID]);
+else
+    D = dir(workingDir);
+end
+D = D([D.isdir]);
+seriesNames = {D.name};
+seriesNames = seriesNames(~ismember(seriesNames,{'.','..','.DS_Store'}));
+
+candSeries = {};
+candTE = [];
+
+for i = 1:numel(seriesNames)
+    sName = seriesNames{i};
+    if handles.Cfg.InputLayout == 1 % Participant first
+        candSubDir = fullfile(workingDir, subID, sName);
+    else
+        candSubDir = fullfile(workingDir, sName, subID);
+    end
+    if ~exist(candSubDir,'dir')
+        continue;
+    end
+
+    % read first dicom header and count DICOM files
+    d = dir(fullfile(candSubDir,'*.dcm'));
+    if isempty(d)
+        tmp = dir(candSubDir);
+        tmp = tmp(~[tmp.isdir]);
+        d = tmp(~ismember({tmp.name},{'.','..','.DS_Store'}));
+    end 
+    if isempty(d) || numel(d) ~= nFileA % avoid Ref and other aux series
+        continue;
+    end
+    
+    try
+        info = dicominfo(fullfile(candSubDir,d(1).name));
+    catch
+        continue;
+    end
+
+    proto = '';
+    if isfield(info,'ProtocolName') && ~isempty(info.ProtocolName)
+        proto = strtrim(info.ProtocolName);
+    elseif isfield(info,'SeriesDescription') && ~isempty(info.SeriesDescription)
+        proto = strtrim(info.SeriesDescription);
+    end
+    if isempty(proto) || ~strcmpi(proto, protoA)
+        continue;
+    end
+
+    te = NaN;
+    if isfield(info,'EchoTime') && ~isempty(info.EchoTime)
+        te = double(info.EchoTime);
+    end
+
+    candSeries{end+1,1} = sName; 
+    candTE(end+1,1) = te; 
+end
+
+% ---- sort by EchoTime if possible; otherwise sort by name ----
+if all(isnan(candTE))
+    [~, idx] = sort(lower(candSeries));
+else
+    [~, idx] = sort(candTE);
+end
+EchoDirs = candSeries(idx);
+
+IsOK = 1;
+Msg = sprintf('Detected %d echoes (ProtocolName match + same subject-level file count).', numel(EchoDirs));
