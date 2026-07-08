@@ -55,7 +55,7 @@ function DPABISurf_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABISurf
 
 
-Release='V3.3_250415';
+Release='V3.4_260625';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -71,11 +71,11 @@ fprintf('Citing Information:\nDPABISurf is a surface-based resting-state fMRI da
 fprintf('Reference: Yan, C.-G., Wang, X.-D., Lu, B. (2021). DPABISurf: data processing & analysis for brain imaging on surface. Science Bulletin, 66(24), 2453-2455, doi: https://doi.org/10.1016/j.scib.2021.09.016\n');
 
 try
-    [DPABISurfMessage]=webread('http://rfmri.org/DPABISurfMessage.txt');
+    [DPABISurfMessage]=webread('https://rfmri.org/DPABISurfMessage.txt');
     if ~isempty(DPABISurfMessage)
         uiwait(msgbox(DPABISurfMessage,'DPABISurf Message'));
     end
-    DPABISurfMessageWeb=webread('http://rfmri.org/DPABISurfMessageWeb.txt');
+    DPABISurfMessageWeb=webread('https://rfmri.org/DPABISurfMessageWeb.txt');
     if ~isempty(DPABISurfMessageWeb)
         web(DPABISurfMessageWeb,'-browser');
     end

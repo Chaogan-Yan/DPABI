@@ -55,7 +55,7 @@ function DPABINet_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABINet
 
 
-Release='V1.3_231111';
+Release='V2.0_260625';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -72,11 +72,11 @@ fprintf('Reference: Yan, C.G., Wang, X.D., Lu, B., Deng, Z.Y., Gao, Q.L. (2024).
 
 
 try
-    [DPABINetMessage]=webread('http://rfmri.org/DPABINetMessage.txt');
+    [DPABINetMessage]=webread('https://rfmri.org/DPABINetMessage.txt');
     if ~isempty(DPABINetMessage)
         uiwait(msgbox(DPABINetMessage,'DPABINet Message'));
     end
-    DPABINetMessageWeb=webread('http://rfmri.org/DPABINetMessageWeb.txt');
+    DPABINetMessageWeb=webread('https://rfmri.org/DPABINetMessageWeb.txt');
     if ~isempty(DPABINetMessageWeb)
         web(DPABINetMessageWeb,'-browser');
     end

@@ -74,16 +74,16 @@ fprintf('Citing Information:\nIf you think DPABI is useful for your work, citing
 
 
 try
-    [DPABILatestRelease]=webread('http://rfmri.org/DPABILatestRelease.txt');
+    [DPABILatestRelease]=webread('https://rfmri.org/DPABILatestRelease.txt');
     DPABILatestRelease=strtrim(DPABILatestRelease);
     if str2double(DPABILatestRelease(end-5:end)) > str2double(Release(end-5:end))
         uiwait(msgbox(sprintf('A new realease of DPABI is detected: %s, please update.',DPABILatestRelease)));
     end
-    DPABIMessage=webread('http://rfmri.org/DPABIMessage.txt');
+    DPABIMessage=webread('https://rfmri.org/DPABIMessage.txt');
     if ~isempty(DPABIMessage)
         uiwait(msgbox(DPABIMessage,'DPABI Message'));
     end
-    DPABIMessageWeb=webread('http://rfmri.org/DPABIMessageWeb.txt');
+    DPABIMessageWeb=webread('https://rfmri.org/DPABIMessageWeb.txt');
     if ~isempty(DPABIMessageWeb)
         web(DPABIMessageWeb,'-browser');
     end

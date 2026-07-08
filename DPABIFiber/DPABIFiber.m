@@ -55,7 +55,7 @@ function DPABIFiber_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABIFiber
 
 
-Release='V2.0_250415';
+Release='V2.1_260625';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -70,11 +70,11 @@ fprintf('-----------------------------------------------------------\n');
 fprintf('Citing Information:\nDPABIFiber is a fiber tractography analysis toolbox based on diffusion-weighted imaging (DWI), evolved from DPABI/DPABISurf/DPABINet/DPARSF, as easy-to-use as DPABI/DPABISurf/DPABINet/DPARSF. DPABIFiber is based on QSIPrep (Cieslak et al., 2021), MRtrix3 (Tournier et al., 2019), AFQ (Yeatman et al., 2012), fMRIPprep (Esteban et al., 2019), FreeSurfer (Tustison et al., 2014), ANTs (Avants et al., 2009), FSL (Jenkinson et al., 2012), SPM12 (Ashburner, 2012), dcm2niix (Li et al., 2016), PALM (Winkler et al., 2014), GNU Parallel (Tange, 2011), MATLAB (The MathWorks Inc., Natick, MA, US), Docker (https://docker.com) and DPABI (Yan et al., 2016). DPABIFiber provides a user-friendly graphical user interface (GUI) for pipeline DWI preprocessing, fiber tractography reconstruction, tract-based spatial statistics (TBSS) (Smith et al., 2006), automating fiber-tract quantification (AFQ) (Yeatman et al., 2012), structural connectome matrix analyses, seed-based structural connectivity analyses, and tract-weighted functional connectivity (TW-FC) (Calamante et al., 2013), while requires no programming/scripting skills from the users.\n');
 
 try
-    [DPABIFiberMessage]=webread('http://rfmri.org/DPABIFiberMessage.txt');
+    [DPABIFiberMessage]=webread('https://rfmri.org/DPABIFiberMessage.txt');
     if ~isempty(DPABIFiberMessage)
         uiwait(msgbox(DPABIFiberMessage,'DPABIFiber Message'));
     end
-    DPABIFiberMessageWeb=webread('http://rfmri.org/DPABIFiberMessageWeb.txt');
+    DPABIFiberMessageWeb=webread('https://rfmri.org/DPABIFiberMessageWeb.txt');
     if ~isempty(DPABIFiberMessageWeb)
         web(DPABIFiberMessageWeb,'-browser');
     end
