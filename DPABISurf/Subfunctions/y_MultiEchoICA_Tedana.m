@@ -33,6 +33,13 @@ function [Cfg, JobList] = y_MultiEchoICA_Tedana(Cfg,WorkingDir,SubjectListFile)
 %   - This function organizes tedana-denoised functional volume results and,
 %     when surface templates are available, regenerates denoised fsnative and
 %     fsaverage5 functional surface .gii files.
+%   - Safe parallel mode limits memory-heavy stages by default. After the
+%     initial pass, failed/incomplete run-session jobs are verified and
+%     retried once. A later call with the same Cfg resumes only incomplete
+%     stages while verified outputs are skipped.
+%   - Newly generated 4D warp outputs are written atomically. Legacy
+%     truncated .nii.gz files are detected, moved into
+%     tedana/Backup/IncompleteOutputs, and regenerated.
 %   - The denoised outputs are organized so that downstream DPABISurf/DPABI volume
 %     processing can continue from FunVolu/FunVoluW without selecting an echo-specific
 %     file by mistake.
@@ -119,6 +126,7 @@ local_ensure_surface_subjects(JobList, Cfg, CommandInit, WorkingDirInContainer);
 JobList = local_execute_jobs_with_parallel(JobList, Cfg, CommandInit, WorkingDirInContainer);
 
 save(fullfile(Cfg.TedanaDir,'tedana_joblist.mat'),'JobList');
+local_write_failed_jobs_report(JobList, Cfg);
 fprintf('\nMulti-echo ICA with tedana finished!\n');
 
 end
@@ -199,6 +207,12 @@ Cfg = local_fill_multiecho_default(Cfg, 'SurfaceInterpolation', 'trilinear');
 Cfg = local_fill_multiecho_default(Cfg, 'SurfaceProjectionFraction', 0.5);
 Cfg = local_fill_multiecho_default(Cfg, 'EstimatedTedanaMemoryOverheadFactor', 2.5);
 Cfg = local_fill_multiecho_default(Cfg, 'MaxTedanaMemoryGB', []);
+Cfg = local_fill_multiecho_default(Cfg, 'SafeParallelMode', 1);
+Cfg = local_fill_multiecho_default(Cfg, 'MaxTedanaParallelWorkers', 2);
+Cfg = local_fill_multiecho_default(Cfg, 'MaxT1wWarpParallelWorkers', 2);
+Cfg = local_fill_multiecho_default(Cfg, 'MaxSurfaceParallelWorkers', 2);
+Cfg = local_fill_multiecho_default(Cfg, 'MaxTargetWarpParallelWorkers', 1);
+Cfg = local_fill_multiecho_default(Cfg, 'RetryFailedJobsOnce', 1);
 if ~isfield(Cfg.MultiEcho,'LowMem') || isempty(Cfg.MultiEcho.LowMem)
     if isfield(Cfg,'LowMem') && ~isempty(Cfg.LowMem)
         Cfg.MultiEcho.LowMem = Cfg.LowMem;
@@ -228,6 +242,28 @@ Cfg.TedanaParallelWorkersNumber = local_normalize_worker_number(Cfg.TedanaParall
 Cfg.T1wWarpParallelWorkersNumber = local_normalize_worker_number(Cfg.T1wWarpParallelWorkersNumber);
 Cfg.SurfaceParallelWorkersNumber = local_normalize_worker_number(Cfg.SurfaceParallelWorkersNumber);
 Cfg.TargetWarpParallelWorkersNumber = local_normalize_worker_number(Cfg.TargetWarpParallelWorkersNumber);
+
+if Cfg.MultiEcho.SafeParallelMode
+    RequestedWorkers = [Cfg.TedanaParallelWorkersNumber, ...
+        Cfg.T1wWarpParallelWorkersNumber, Cfg.SurfaceParallelWorkersNumber, ...
+        Cfg.TargetWarpParallelWorkersNumber];
+    Cfg.TedanaParallelWorkersNumber = local_cap_worker_number( ...
+        Cfg.TedanaParallelWorkersNumber, Cfg.MultiEcho.MaxTedanaParallelWorkers);
+    Cfg.T1wWarpParallelWorkersNumber = local_cap_worker_number( ...
+        Cfg.T1wWarpParallelWorkersNumber, Cfg.MultiEcho.MaxT1wWarpParallelWorkers);
+    Cfg.SurfaceParallelWorkersNumber = local_cap_worker_number( ...
+        Cfg.SurfaceParallelWorkersNumber, Cfg.MultiEcho.MaxSurfaceParallelWorkers);
+    Cfg.TargetWarpParallelWorkersNumber = local_cap_worker_number( ...
+        Cfg.TargetWarpParallelWorkersNumber, Cfg.MultiEcho.MaxTargetWarpParallelWorkers);
+    SafeWorkers = [Cfg.TedanaParallelWorkersNumber, ...
+        Cfg.T1wWarpParallelWorkersNumber, Cfg.SurfaceParallelWorkersNumber, ...
+        Cfg.TargetWarpParallelWorkersNumber];
+    if any(SafeWorkers < RequestedWorkers)
+        fprintf(['Safe parallel mode limits workers (tedana/T1w/surface/target): ' ...
+            '%d/%d/%d/%d -> %d/%d/%d/%d.\n'], ...
+            [RequestedWorkers, SafeWorkers]);
+    end
+end
 end
 
 
@@ -852,12 +888,25 @@ for iTransform = 1:numel(TransformFiles)
 end
 TransformArg = strtrim(TransformArg);
 
-CommandBody = sprintf(['antsApplyTransforms -d 3 -e 3 -i %s -r %s %s -n %s -o %s'], ...
+% Write to a temporary file first. antsApplyTransforms may leave a truncated
+% output when it is killed by the OOM killer. A final-path rename only after
+% exit status 0 makes existence of OutFile an atomic completion signal for
+% all newly generated outputs.
+PartialOutFile = local_build_partial_output_file(OutFile);
+PartialOutContainer = local_map_to_container_path(PartialOutFile, Cfg.WorkingDir, WorkingDirInContainer);
+OutContainer = local_map_to_container_path(OutFile, Cfg.WorkingDir, WorkingDirInContainer);
+
+CommandBody = sprintf(['rm -f %s\n' ...
+    'antsApplyTransforms -d 3 -e 3 -i %s -r %s %s -n %s -o %s\n' ...
+    'mv -f %s %s'], ...
+    local_shellquote(PartialOutContainer), ...
     local_shellquote(local_map_to_container_path(InFile, Cfg.WorkingDir, WorkingDirInContainer)), ...
     local_shellquote(local_map_to_container_path(RefFile, Cfg.WorkingDir, WorkingDirInContainer)), ...
     TransformArg, ...
     Cfg.MultiEcho.TargetInterpolation, ...
-    local_shellquote(local_map_to_container_path(OutFile, Cfg.WorkingDir, WorkingDirInContainer)));
+    local_shellquote(PartialOutContainer), ...
+    local_shellquote(PartialOutContainer), ...
+    local_shellquote(OutContainer));
 end
 
 
@@ -1128,6 +1177,29 @@ end
 
 
 function JobList = local_execute_jobs_with_parallel(JobList, Cfg, CommandInit, WorkingDirInContainer)
+JobList = local_execute_jobs_with_parallel_pass(JobList, Cfg, CommandInit, WorkingDirInContainer, 'initial');
+
+FailedIndex = local_failed_job_indices(JobList);
+if Cfg.MultiEcho.RetryFailedJobsOnce && ~isempty(FailedIndex)
+    fprintf('\nInitial tedana pipeline pass left %d failed run/session job(s).\n', numel(FailedIndex));
+    local_print_failed_jobs(JobList, FailedIndex);
+    fprintf('\nAutomatically retry failed or incomplete jobs once. Completed stages will be skipped.\n');
+    JobList = local_execute_jobs_with_parallel_pass(JobList, Cfg, CommandInit, WorkingDirInContainer, 'retry');
+end
+
+FailedIndex = local_failed_job_indices(JobList);
+if isempty(FailedIndex)
+    fprintf('\nVerified completion: all %d tedana run/session job(s) completed successfully.\n', numel(JobList));
+else
+    fprintf('\nVerified completion: %d of %d tedana run/session job(s) remain incomplete.\n', ...
+        numel(FailedIndex), numel(JobList));
+    local_print_failed_jobs(JobList, FailedIndex);
+end
+end
+
+
+function JobList = local_execute_jobs_with_parallel_pass(JobList, Cfg, CommandInit, WorkingDirInContainer, PassLabel)
+fprintf('\n========== Tedana pipeline %s pass ==========\n', PassLabel);
 fprintf('Run tedana with docker parallel -j %d...\n', Cfg.TedanaParallelWorkersNumber);
 [JobList, TedanaBatchStatus, TedanaBatchOutput] = local_run_tedana_jobs_with_parallel(JobList, Cfg, CommandInit, WorkingDirInContainer);
 if TedanaBatchStatus ~= 0
@@ -1159,18 +1231,39 @@ end
 for iJob = 1:numel(JobList)
     NeedTargetWarp = local_has_target_warp(JobList(iJob));
     NeedSurface = local_has_surface_any(JobList(iJob));
-    if JobList(iJob).TedanaStatus == 0 && JobList(iJob).T1wWarpStatus == 0 && (~NeedSurface || JobList(iJob).SurfaceStatus == 0) && (~NeedTargetWarp || JobList(iJob).WarpStatus == 0)
-        JobList(iJob) = local_finalize_job(JobList(iJob), Cfg);
+    CoreOutputsReady = JobList(iJob).TedanaStatus == 0 ...
+        && JobList(iJob).T1wWarpStatus == 0 ...
+        && (~NeedSurface || JobList(iJob).SurfaceStatus == 0);
+    AllOutputsReady = CoreOutputsReady ...
+        && (~NeedTargetWarp || JobList(iJob).WarpStatus == 0);
+
+    FinalizeError = '';
+    if CoreOutputsReady
+        try
+            % Copy every successfully completed stage even if an optional
+            % target-space warp failed. This keeps valid T1w/surface outputs
+            % visible while the failed target warp is retried.
+            JobList(iJob) = local_finalize_job(JobList(iJob), Cfg);
+        catch ME
+            FinalizeError = sprintf('Final output organization failed: %s', ME.message);
+        end
+    end
+
+    if AllOutputsReady && isempty(FinalizeError)
+        JobList(iJob).Success = 1;
+        JobList(iJob).ErrorMessage = '';
     else
         JobList(iJob).Success = 0;
-        if isempty(JobList(iJob).ErrorMessage)
+        if ~isempty(FinalizeError)
+            JobList(iJob).ErrorMessage = FinalizeError;
+        elseif isempty(JobList(iJob).ErrorMessage)
             if JobList(iJob).TedanaStatus ~= 0
                 JobList(iJob).ErrorMessage = sprintf('tedana failed. See log: %s', JobList(iJob).TedanaLogFile);
             elseif JobList(iJob).T1wWarpStatus ~= 0
                 JobList(iJob).ErrorMessage = sprintf('T1w warp failed. See log: %s', JobList(iJob).T1wWarpLogFile);
             elseif NeedSurface && JobList(iJob).SurfaceStatus ~= 0
                 JobList(iJob).ErrorMessage = sprintf('Surface generation failed. See log: %s', JobList(iJob).SurfaceLogFile);
-            elseif JobList(iJob).WarpStatus ~= 0
+            elseif NeedTargetWarp && JobList(iJob).WarpStatus ~= 0
                 JobList(iJob).ErrorMessage = sprintf('Warp failed. See log: %s', JobList(iJob).WarpLogFile);
             else
                 JobList(iJob).ErrorMessage = 'Unknown job failure.';
@@ -1191,16 +1284,33 @@ local_mkdir(ScriptDir);
 for iJob = 1:numel(JobList)
     ExistingTedanaDenoised = local_resolve_tedana_denoised_file(JobList(iJob).TedanaOutDir, JobList(iJob).BasePrefix, Cfg.MultiEcho.Convention);
     if ~Cfg.MultiEcho.Overwrite && ~isempty(ExistingTedanaDenoised)
-        JobList(iJob).TedanaStatus = 0;
-        JobList(iJob).TedanaOutput = 'tedana skipped because denoised output already exists.';
-        JobList(iJob).TedanaDenoisedFile = ExistingTedanaDenoised;
-        continue;
+        [ExistingIsValid, ValidationMessage] = local_job_nifti_output_is_valid( ...
+            JobList(iJob), 'tedana', ExistingTedanaDenoised, '');
+        if ExistingIsValid
+            JobList(iJob).TedanaStatus = 0;
+            JobList(iJob).TedanaOutput = 'tedana skipped because a verified denoised output already exists.';
+            JobList(iJob).TedanaDenoisedFile = ExistingTedanaDenoised;
+            JobList(iJob).ErrorMessage = '';
+            local_write_stage_marker(JobList(iJob), 'tedana', {ExistingTedanaDenoised});
+            continue;
+        end
+        fprintf('Incomplete tedana output detected for %s: %s\n', JobList(iJob).BasePrefix, ValidationMessage);
+        local_backup_incomplete_file(ExistingTedanaDenoised, JobList(iJob), Cfg, 'tedana');
     end
+
+    % A job reaches this point only when no verified final denoised file is
+    % available (or full overwrite was explicitly requested). tedana may
+    % still have intermediate files from an OOM-killed attempt, so allow
+    % this selected job to overwrite those residual files.
+    TedanaCommandBody = local_ensure_command_flag(JobList(iJob).TedanaCommandBody, '--overwrite');
+    JobList(iJob).TedanaCommandBody = TedanaCommandBody;
+    JobList(iJob).TedanaCommand = local_prefix_command(CommandInit, TedanaCommandBody);
+    local_remove_stage_marker(JobList(iJob), 'tedana');
 
     ScriptHostFile = fullfile(ScriptDir, sprintf('tedana_%04d.sh', iJob));
     ScriptContainerFile = local_map_to_container_path(ScriptHostFile, Cfg.WorkingDir, WorkingDirInContainer);
     LogContainerFile = local_map_to_container_path(JobList(iJob).TedanaLogFile, Cfg.WorkingDir, WorkingDirInContainer);
-    local_write_parallel_script(ScriptHostFile, JobList(iJob).TedanaCommandBody, LogContainerFile);
+    local_write_parallel_script(ScriptHostFile, TedanaCommandBody, LogContainerFile);
 
     ScriptContainerFiles{end+1} = ScriptContainerFile; %#ok<AGROW>
     JobIndices(end+1) = iJob; %#ok<AGROW>
@@ -1230,6 +1340,16 @@ for i = 1:numel(JobIndices)
         if isempty(JobList(iJob).TedanaDenoisedFile)
             JobList(iJob).TedanaStatus = 1;
             JobList(iJob).ErrorMessage = sprintf('tedana finished but no denoised output was found in %s.', JobList(iJob).TedanaOutDir);
+        else
+            [OutputIsValid, ValidationMessage] = local_job_nifti_output_is_valid( ...
+                JobList(iJob), 'tedana', JobList(iJob).TedanaDenoisedFile, '');
+            if OutputIsValid
+                local_write_stage_marker(JobList(iJob), 'tedana', {JobList(iJob).TedanaDenoisedFile});
+                JobList(iJob).ErrorMessage = '';
+            else
+                JobList(iJob).TedanaStatus = 1;
+                JobList(iJob).ErrorMessage = sprintf('tedana output validation failed: %s', ValidationMessage);
+            end
         end
     else
         JobList(iJob).ErrorMessage = sprintf('tedana failed. See log: %s', JobList(iJob).TedanaLogFile);
@@ -1276,10 +1396,19 @@ for iJob = 1:numel(JobList)
     JobList(iJob).T1wWarpCommand = local_prefix_command(CommandInit, JobList(iJob).T1wWarpCommandBody);
 
     if ~Cfg.MultiEcho.Overwrite && exist(JobList(iJob).WarpedT1wFile, 'file')
-        JobList(iJob).T1wWarpStatus = 0;
-        JobList(iJob).T1wWarpOutput = 'T1w warp skipped because T1w-space denoised output already exists.';
-        continue;
+        [ExistingIsValid, ValidationMessage] = local_job_nifti_output_is_valid( ...
+            JobList(iJob), 'warp_t1w', JobList(iJob).WarpedT1wFile, JobList(iJob).T1wWarpReferenceFile);
+        if ExistingIsValid
+            JobList(iJob).T1wWarpStatus = 0;
+            JobList(iJob).T1wWarpOutput = 'T1w warp skipped because a verified T1w-space denoised output already exists.';
+            local_write_stage_marker(JobList(iJob), 'warp_t1w', {JobList(iJob).WarpedT1wFile});
+            continue;
+        end
+        fprintf('Incomplete T1w warp output detected for %s: %s\n', JobList(iJob).BasePrefix, ValidationMessage);
+        local_backup_incomplete_file(JobList(iJob).WarpedT1wFile, JobList(iJob), Cfg, 'warp_t1w');
     end
+
+    local_remove_stage_marker(JobList(iJob), 'warp_t1w');
 
     ScriptHostFile = fullfile(ScriptDir, sprintf('warp_t1w_%04d.sh', iJob));
     ScriptContainerFile = local_map_to_container_path(ScriptHostFile, Cfg.WorkingDir, WorkingDirInContainer);
@@ -1310,9 +1439,14 @@ for i = 1:numel(JobIndices)
     JobList(iJob).T1wWarpStatus = ExitStatus(i);
     JobList(iJob).T1wWarpOutput = JobList(iJob).T1wWarpLogFile;
     if JobList(iJob).T1wWarpStatus == 0
-        if ~exist(JobList(iJob).WarpedT1wFile, 'file')
+        [OutputIsValid, ValidationMessage] = local_job_nifti_output_is_valid( ...
+            JobList(iJob), 'warp_t1w', JobList(iJob).WarpedT1wFile, JobList(iJob).T1wWarpReferenceFile);
+        if ~OutputIsValid
             JobList(iJob).T1wWarpStatus = 1;
-            JobList(iJob).ErrorMessage = sprintf('T1w warp finished but no output was found: %s', JobList(iJob).WarpedT1wFile);
+            JobList(iJob).ErrorMessage = sprintf('T1w warp output validation failed: %s', ValidationMessage);
+        else
+            local_write_stage_marker(JobList(iJob), 'warp_t1w', {JobList(iJob).WarpedT1wFile});
+            JobList(iJob).ErrorMessage = '';
         end
     else
         JobList(iJob).ErrorMessage = sprintf('T1w warp failed. See log: %s', JobList(iJob).T1wWarpLogFile);
@@ -1359,11 +1493,26 @@ for iJob = 1:numel(JobList)
     JobList(iJob).SurfaceCommandBody = local_build_surface_command_body(WorkingDirInContainer, Cfg, JobList(iJob));
     JobList(iJob).SurfaceCommand = local_prefix_command(CommandInit, JobList(iJob).SurfaceCommandBody);
 
-    if ~Cfg.MultiEcho.Overwrite && local_surface_outputs_exist(JobList(iJob))
-        JobList(iJob).SurfaceStatus = 0;
-        JobList(iJob).SurfaceOutput = 'Surface generation skipped because denoised surface outputs already exist.';
-        continue;
+    if ~Cfg.MultiEcho.Overwrite
+        ExistingSurfaceFiles = local_surface_output_files(JobList(iJob));
+        ExistingSurfaceFlags = cellfun(@(x)exist(x, 'file') == 2, ExistingSurfaceFiles);
+        if all(ExistingSurfaceFlags)
+            [ExistingIsValid, ValidationMessage] = local_surface_outputs_are_valid(JobList(iJob));
+            if ExistingIsValid
+                JobList(iJob).SurfaceStatus = 0;
+                JobList(iJob).SurfaceOutput = 'Surface generation skipped because verified denoised surface outputs already exist.';
+                local_write_stage_marker(JobList(iJob), 'surface', ExistingSurfaceFiles);
+                continue;
+            end
+            fprintf('Incomplete surface output detected for %s: %s\n', JobList(iJob).BasePrefix, ValidationMessage);
+            local_backup_incomplete_surface_outputs(JobList(iJob), Cfg);
+        elseif any(ExistingSurfaceFlags)
+            fprintf('Partial surface output set detected for %s. Back up existing files before retry.\n', JobList(iJob).BasePrefix);
+            local_backup_incomplete_surface_outputs(JobList(iJob), Cfg);
+        end
     end
+
+    local_remove_stage_marker(JobList(iJob), 'surface');
 
     ScriptHostFile = fullfile(ScriptDir, sprintf('surf_%04d.sh', iJob));
     ScriptContainerFile = local_map_to_container_path(ScriptHostFile, Cfg.WorkingDir, WorkingDirInContainer);
@@ -1394,9 +1543,14 @@ for i = 1:numel(JobIndices)
     JobList(iJob).SurfaceStatus = ExitStatus(i);
     JobList(iJob).SurfaceOutput = JobList(iJob).SurfaceLogFile;
     if JobList(iJob).SurfaceStatus == 0
-        if ~local_surface_outputs_exist(JobList(iJob))
+        [OutputIsValid, ValidationMessage] = local_surface_outputs_are_valid(JobList(iJob));
+        if ~OutputIsValid
             JobList(iJob).SurfaceStatus = 1;
-            JobList(iJob).ErrorMessage = sprintf('Surface generation finished but outputs were not found for %s.', JobList(iJob).BasePrefix);
+            JobList(iJob).ErrorMessage = sprintf('Surface output validation failed for %s: %s', ...
+                JobList(iJob).BasePrefix, ValidationMessage);
+        else
+            local_write_stage_marker(JobList(iJob), 'surface', local_surface_output_files(JobList(iJob)));
+            JobList(iJob).ErrorMessage = '';
         end
     else
         JobList(iJob).ErrorMessage = sprintf('Surface generation failed. See log: %s', JobList(iJob).SurfaceLogFile);
@@ -1446,10 +1600,19 @@ for iJob = 1:numel(JobList)
     JobList(iJob).WarpCommand = local_prefix_command(CommandInit, JobList(iJob).WarpCommandBody);
 
     if ~Cfg.MultiEcho.Overwrite && exist(JobList(iJob).WarpedTargetFile, 'file')
-        JobList(iJob).WarpStatus = 0;
-        JobList(iJob).WarpOutput = 'Warp skipped because target-space denoised output already exists.';
-        continue;
+        [ExistingIsValid, ValidationMessage] = local_job_nifti_output_is_valid( ...
+            JobList(iJob), 'warp_target', JobList(iJob).WarpedTargetFile, JobList(iJob).TargetWarpReferenceFile);
+        if ExistingIsValid
+            JobList(iJob).WarpStatus = 0;
+            JobList(iJob).WarpOutput = 'Warp skipped because a verified target-space denoised output already exists.';
+            local_write_stage_marker(JobList(iJob), 'warp_target', {JobList(iJob).WarpedTargetFile});
+            continue;
+        end
+        fprintf('Incomplete target-space warp output detected for %s: %s\n', JobList(iJob).BasePrefix, ValidationMessage);
+        local_backup_incomplete_file(JobList(iJob).WarpedTargetFile, JobList(iJob), Cfg, 'warp_target');
     end
+
+    local_remove_stage_marker(JobList(iJob), 'warp_target');
 
     ScriptHostFile = fullfile(ScriptDir, sprintf('warp_%04d.sh', iJob));
     ScriptContainerFile = local_map_to_container_path(ScriptHostFile, Cfg.WorkingDir, WorkingDirInContainer);
@@ -1480,9 +1643,14 @@ for i = 1:numel(JobIndices)
     JobList(iJob).WarpStatus = ExitStatus(i);
     JobList(iJob).WarpOutput = JobList(iJob).WarpLogFile;
     if JobList(iJob).WarpStatus == 0
-        if ~exist(JobList(iJob).WarpedTargetFile, 'file')
+        [OutputIsValid, ValidationMessage] = local_job_nifti_output_is_valid( ...
+            JobList(iJob), 'warp_target', JobList(iJob).WarpedTargetFile, JobList(iJob).TargetWarpReferenceFile);
+        if ~OutputIsValid
             JobList(iJob).WarpStatus = 1;
-            JobList(iJob).ErrorMessage = sprintf('Target-space warp finished but no output was found: %s', JobList(iJob).WarpedTargetFile);
+            JobList(iJob).ErrorMessage = sprintf('Target-space warp output validation failed: %s', ValidationMessage);
+        else
+            local_write_stage_marker(JobList(iJob), 'warp_target', {JobList(iJob).WarpedTargetFile});
+            JobList(iJob).ErrorMessage = '';
         end
     else
         JobList(iJob).ErrorMessage = sprintf('Warp failed. See log: %s', JobList(iJob).WarpLogFile);
@@ -1557,6 +1725,60 @@ end
 end
 
 
+function FailedIndex = local_failed_job_indices(JobList)
+FailedIndex = [];
+for iJob = 1:numel(JobList)
+    if ~isfield(JobList(iJob), 'Success') || isempty(JobList(iJob).Success) ...
+            || ~isequal(JobList(iJob).Success, 1)
+        FailedIndex(end+1) = iJob; %#ok<AGROW>
+    end
+end
+end
+
+
+function local_print_failed_jobs(JobList, FailedIndex)
+for i = 1:numel(FailedIndex)
+    iJob = FailedIndex(i);
+    fprintf('  %3d) %s | session %d | %s\n', iJob, ...
+        JobList(iJob).SubjectID, JobList(iJob).SessionIndex, JobList(iJob).ErrorMessage);
+end
+end
+
+
+function local_write_failed_jobs_report(JobList, Cfg)
+ReportFile = fullfile(Cfg.TedanaDir, 'tedana_failed_jobs.tsv');
+fid = fopen(ReportFile, 'w');
+if fid < 0
+    warning('Unable to write failed-job report: %s', ReportFile);
+    return;
+end
+CleanupObj = onCleanup(@() fclose(fid)); %#ok<NASGU>
+fprintf(fid, 'JobIndex\tSubjectID\tSessionIndex\tBasePrefix\tTedanaStatus\tT1wWarpStatus\tSurfaceStatus\tTargetWarpStatus\tSuccess\tErrorMessage\n');
+for iJob = 1:numel(JobList)
+    if JobList(iJob).Success == 1
+        continue;
+    end
+    ErrorMessage = regexprep(JobList(iJob).ErrorMessage, '[\t\r\n]+', ' ');
+    fprintf(fid, '%d\t%s\t%d\t%s\t%s\t%s\t%s\t%s\t%d\t%s\n', ...
+        iJob, JobList(iJob).SubjectID, JobList(iJob).SessionIndex, JobList(iJob).BasePrefix, ...
+        local_status_to_text(JobList(iJob).TedanaStatus), ...
+        local_status_to_text(JobList(iJob).T1wWarpStatus), ...
+        local_status_to_text(JobList(iJob).SurfaceStatus), ...
+        local_status_to_text(JobList(iJob).WarpStatus), ...
+        JobList(iJob).Success, ErrorMessage);
+end
+end
+
+
+function Txt = local_status_to_text(Status)
+if isempty(Status) || ~isscalar(Status) || isnan(Status)
+    Txt = 'NaN';
+else
+    Txt = num2str(Status);
+end
+end
+
+
 function Job = local_execute_job(Job, Cfg)
 % Keep a single-job wrapper for compatibility, but route execution through
 % the same GNU parallel pipeline used by the main multi-job path.
@@ -1582,7 +1804,7 @@ end
 local_stage_existing_prefix_files(Job.TargetT1wDir, Job.BasePrefix, Job.TargetT1wFile, fullfile(Cfg.TedanaDir,'Backup',Job.SessionPrefix,'FunVolu',Job.SubjectID));
 local_copy_with_overwrite(Job.WarpedT1wFile, Job.TargetT1wFile, Cfg.MultiEcho.Overwrite);
 
-if local_has_target_warp(Job) && exist(Job.WarpedTargetFile, 'file')
+if local_has_target_warp(Job) && Job.WarpStatus == 0 && exist(Job.WarpedTargetFile, 'file')
     local_stage_existing_prefix_files(Job.TargetSpaceDir, Job.BasePrefix, Job.TargetSpaceFile, fullfile(Cfg.TedanaDir,'Backup',Job.SessionPrefix,'FunVoluW',Job.SubjectID));
     local_copy_with_overwrite(Job.WarpedTargetFile, Job.TargetSpaceFile, Cfg.MultiEcho.Overwrite);
 end
@@ -1590,7 +1812,7 @@ end
 if ~isempty(Job.T1wMaskFile) && exist(Job.T1wMaskFile, 'file')
     local_copy_with_overwrite(Job.T1wMaskFile, Job.TargetNativeMaskFile, Cfg.MultiEcho.Overwrite);
 end
-if local_has_target_warp(Job) && ~isempty(Job.TargetMaskFile) && exist(Job.TargetMaskFile, 'file')
+if local_has_target_warp(Job) && Job.WarpStatus == 0 && ~isempty(Job.TargetMaskFile) && exist(Job.TargetMaskFile, 'file')
     local_copy_with_overwrite(Job.TargetMaskFile, Job.TargetSpaceMaskFile, Cfg.MultiEcho.Overwrite);
 end
 if local_has_surface_native(Job)
@@ -1608,8 +1830,6 @@ if local_has_surface_standard(Job)
     local_copy_with_overwrite(Job.SurfaceStandardRightFile, Job.TargetFunSurfWRightFile, Cfg.MultiEcho.Overwrite);
 end
 
-Job.Success = 1;
-Job.ErrorMessage = '';
 end
 
 
@@ -1650,13 +1870,85 @@ tf = local_has_surface_native(Job) || local_has_surface_standard(Job);
 end
 
 
-function tf = local_surface_outputs_exist(Job)
-tf = true;
+function Files = local_surface_output_files(Job)
+Files = {};
 if local_has_surface_native(Job)
-    tf = tf && exist(Job.SurfaceNativeLeftFile, 'file') && exist(Job.SurfaceNativeRightFile, 'file');
+    Files = [Files, {Job.SurfaceNativeLeftFile, Job.SurfaceNativeRightFile}]; %#ok<AGROW>
 end
 if local_has_surface_standard(Job)
-    tf = tf && exist(Job.SurfaceStandardLeftFile, 'file') && exist(Job.SurfaceStandardRightFile, 'file');
+    Files = [Files, {Job.SurfaceStandardLeftFile, Job.SurfaceStandardRightFile}]; %#ok<AGROW>
+end
+Files = Files(~cellfun('isempty', Files));
+end
+
+
+function [tf, Message] = local_surface_outputs_are_valid(Job)
+Files = local_surface_output_files(Job);
+if isempty(Files)
+    tf = true;
+    Message = '';
+    return;
+end
+
+if local_stage_marker_is_current(Job, 'surface', Files)
+    tf = true;
+    Message = '';
+    return;
+end
+
+tf = true;
+Message = '';
+for iFile = 1:numel(Files)
+    [ThisValid, ThisMessage] = local_surface_file_is_complete(Files{iFile});
+    if ~ThisValid
+        tf = false;
+        Message = ThisMessage;
+        return;
+    end
+end
+end
+
+
+function [tf, Message] = local_surface_file_is_complete(FileName)
+tf = false;
+Message = '';
+if isempty(FileName) || exist(FileName, 'file') ~= 2
+    Message = sprintf('surface file is missing: %s', FileName);
+    return;
+end
+
+Info = dir(FileName);
+if isempty(Info) || Info(1).bytes <= 0
+    Message = sprintf('surface file is empty: %s', FileName);
+    return;
+end
+
+if local_ends_with(lower(FileName), '.gii')
+    fid = fopen(FileName, 'r');
+    if fid < 0
+        Message = sprintf('surface file cannot be opened: %s', FileName);
+        return;
+    end
+    CleanupObj = onCleanup(@() fclose(fid)); %#ok<NASGU>
+    TailBytes = min(double(Info(1).bytes), 8192);
+    fseek(fid, -TailBytes, 'eof');
+    TailText = char(fread(fid, TailBytes, '*char')');
+    if isempty(strfind(TailText, '</GIFTI>')) %#ok<STREMP>
+        Message = sprintf('surface GIFTI file appears truncated: %s', FileName);
+        return;
+    end
+end
+
+tf = true;
+end
+
+
+function local_backup_incomplete_surface_outputs(Job, Cfg)
+Files = local_surface_output_files(Job);
+for iFile = 1:numel(Files)
+    if exist(Files{iFile}, 'file') == 2
+        local_backup_incomplete_file(Files{iFile}, Job, Cfg, 'surface');
+    end
 end
 end
 
@@ -1710,6 +2002,17 @@ if isempty(WorkerNumber) || ~isfinite(WorkerNumber) || WorkerNumber < 1
 else
     WorkerNumber = max(1, round(double(WorkerNumber)));
 end
+end
+
+
+function WorkerNumber = local_cap_worker_number(WorkerNumber, MaximumWorkerNumber)
+if ischar(MaximumWorkerNumber) || isa(MaximumWorkerNumber, 'string')
+    MaximumWorkerNumber = str2double(MaximumWorkerNumber);
+end
+if isempty(MaximumWorkerNumber) || ~isfinite(MaximumWorkerNumber) || MaximumWorkerNumber < 1
+    return;
+end
+WorkerNumber = min(WorkerNumber, max(1, round(double(MaximumWorkerNumber))));
 end
 
 
@@ -1798,7 +2101,31 @@ if exist(DestinationFile, 'file')
     if Overwrite
         delete(DestinationFile);
     else
-        return;
+        SourceInfo = dir(SourceFile);
+        DestinationInfo = dir(DestinationFile);
+        if ~isempty(SourceInfo) && ~isempty(DestinationInfo) ...
+                && SourceInfo(1).bytes == DestinationInfo(1).bytes
+            return;
+        end
+
+        % The expected destination exists but does not match the verified
+        % source. Preserve it as an incomplete/older file, then repair the
+        % canonical destination even when global overwrite is disabled.
+        [DestinationDir, DestinationName, DestinationExt] = fileparts(DestinationFile);
+        Stamp = datestr(now, 'yyyymmdd_HHMMSS');
+        StagedFile = fullfile(DestinationDir, ...
+            sprintf('%s.incomplete_%s%s', DestinationName, Stamp, DestinationExt));
+        Counter = 1;
+        while exist(StagedFile, 'file') == 2
+            StagedFile = fullfile(DestinationDir, ...
+                sprintf('%s.incomplete_%s_%02d%s', DestinationName, Stamp, Counter, DestinationExt));
+            Counter = Counter + 1;
+        end
+        [IsMoved, MoveMessage] = movefile(DestinationFile, StagedFile);
+        if ~IsMoved
+            error('Failed to stage mismatched destination %s: %s', DestinationFile, MoveMessage);
+        end
+        fprintf('Staged mismatched destination before repair: %s -> %s\n', DestinationFile, StagedFile);
     end
 end
 
@@ -1885,6 +2212,189 @@ end
 end
 
 
+function [tf, Message] = local_job_nifti_output_is_valid(Job, StageName, FileName, ReferenceFile)
+Message = '';
+if local_stage_marker_is_current(Job, StageName, {FileName})
+    tf = true;
+    return;
+end
+
+ExpectedTimePointNumber = nan;
+if isfield(Job, 'EstimatedTedanaTimePointNumber') ...
+        && isfinite(Job.EstimatedTedanaTimePointNumber) ...
+        && Job.EstimatedTedanaTimePointNumber > 0
+    ExpectedTimePointNumber = double(Job.EstimatedTedanaTimePointNumber);
+end
+
+[tf, Message] = local_nifti_file_is_complete(FileName, ReferenceFile, ExpectedTimePointNumber);
+end
+
+
+function [tf, Message] = local_nifti_file_is_complete(FileName, ReferenceFile, ExpectedTimePointNumber)
+tf = false;
+Message = '';
+if isempty(FileName) || exist(FileName, 'file') ~= 2
+    Message = sprintf('NIfTI output is missing: %s', FileName);
+    return;
+end
+
+Info = dir(FileName);
+if isempty(Info) || Info(1).bytes < 348
+    Message = sprintf('NIfTI output is empty or too small: %s', FileName);
+    return;
+end
+
+if local_ends_with(lower(FileName), '.gz')
+    [GzipStatus, GzipOutput] = system(sprintf('gzip -t %s 2>&1', local_shellquote(FileName)));
+    if GzipStatus ~= 0
+        Message = sprintf('gzip integrity check failed for %s: %s', FileName, strtrim(GzipOutput));
+        return;
+    end
+end
+
+[VolumeSize, TimePointNumber] = local_read_nifti_size(FileName);
+if isempty(VolumeSize)
+    Message = sprintf('NIfTI header cannot be read: %s', FileName);
+    return;
+end
+
+if ~isempty(ReferenceFile)
+    [ReferenceVolumeSize, ~] = local_read_nifti_size(ReferenceFile);
+    if isempty(ReferenceVolumeSize)
+        Message = sprintf('reference NIfTI header cannot be read: %s', ReferenceFile);
+        return;
+    end
+    if ~isequal(double(VolumeSize(:)'), double(ReferenceVolumeSize(:)'))
+        Message = sprintf('spatial dimensions do not match reference for %s', FileName);
+        return;
+    end
+end
+
+if isfinite(ExpectedTimePointNumber) && ExpectedTimePointNumber > 0 ...
+        && (~isfinite(TimePointNumber) || TimePointNumber ~= ExpectedTimePointNumber)
+    Message = sprintf('time point count is %g, expected %g: %s', ...
+        TimePointNumber, ExpectedTimePointNumber, FileName);
+    return;
+end
+
+tf = true;
+end
+
+
+function MarkerFile = local_stage_marker_file(Job, StageName)
+MarkerFile = fullfile(Job.TedanaOutDir, sprintf('.dpabi_%s_complete', StageName));
+end
+
+
+function tf = local_stage_marker_is_current(Job, StageName, OutputFiles)
+tf = false;
+MarkerFile = local_stage_marker_file(Job, StageName);
+if exist(MarkerFile, 'file') ~= 2 || isempty(OutputFiles)
+    return;
+end
+
+MarkerInfo = dir(MarkerFile);
+if isempty(MarkerInfo)
+    return;
+end
+MarkerDate = MarkerInfo(1).datenum;
+
+for iFile = 1:numel(OutputFiles)
+    if isempty(OutputFiles{iFile}) || exist(OutputFiles{iFile}, 'file') ~= 2
+        return;
+    end
+    OutputInfo = dir(OutputFiles{iFile});
+    if isempty(OutputInfo) || OutputInfo(1).bytes <= 0
+        return;
+    end
+    % Allow one second for filesystems with coarse timestamp resolution.
+    if OutputInfo(1).datenum > MarkerDate + 1/86400
+        return;
+    end
+end
+tf = true;
+end
+
+
+function local_write_stage_marker(Job, StageName, OutputFiles)
+if isempty(OutputFiles)
+    return;
+end
+MarkerFile = local_stage_marker_file(Job, StageName);
+fid = fopen(MarkerFile, 'w');
+if fid < 0
+    warning('Unable to write completion marker: %s', MarkerFile);
+    return;
+end
+CleanupObj = onCleanup(@() fclose(fid)); %#ok<NASGU>
+fprintf(fid, 'stage\t%s\n', StageName);
+fprintf(fid, 'verified\t%s\n', datestr(now, 31));
+for iFile = 1:numel(OutputFiles)
+    if exist(OutputFiles{iFile}, 'file') == 2
+        Info = dir(OutputFiles{iFile});
+        fprintf(fid, 'output\t%s\t%d\n', OutputFiles{iFile}, Info(1).bytes);
+    end
+end
+end
+
+
+function local_remove_stage_marker(Job, StageName)
+MarkerFile = local_stage_marker_file(Job, StageName);
+if exist(MarkerFile, 'file') == 2
+    delete(MarkerFile);
+end
+end
+
+
+function local_backup_incomplete_file(FileName, Job, Cfg, StageName)
+if isempty(FileName) || exist(FileName, 'file') ~= 2
+    return;
+end
+
+BackupDir = fullfile(Cfg.TedanaDir, 'Backup', 'IncompleteOutputs', ...
+    sprintf('session_%02d', Job.SessionIndex), StageName, Job.SubjectID);
+local_mkdir(BackupDir);
+[~, Name, Ext] = fileparts(FileName);
+if strcmpi(Ext, '.gz')
+    [~, Name2, Ext2] = fileparts(Name);
+    Name = Name2;
+    Ext = [Ext2 Ext];
+end
+Stamp = datestr(now, 'yyyymmdd_HHMMSS');
+BackupFile = fullfile(BackupDir, sprintf('%s.incomplete_%s%s', Name, Stamp, Ext));
+Counter = 1;
+while exist(BackupFile, 'file') == 2
+    BackupFile = fullfile(BackupDir, sprintf('%s.incomplete_%s_%02d%s', Name, Stamp, Counter, Ext));
+    Counter = Counter + 1;
+end
+
+[IsSuccess, Message] = movefile(FileName, BackupFile);
+if ~IsSuccess
+    error('Unable to back up incomplete output %s to %s: %s', FileName, BackupFile, Message);
+end
+fprintf('Backed up incomplete output: %s -> %s\n', FileName, BackupFile);
+end
+
+
+function CommandBody = local_ensure_command_flag(CommandBody, FlagName)
+FlagPattern = ['(^|\s)' regexptranslate('escape', FlagName) '(\s|$)'];
+if isempty(regexp(CommandBody, FlagPattern, 'once'))
+    CommandBody = sprintf('%s %s', CommandBody, FlagName);
+end
+end
+
+
+function PartialFile = local_build_partial_output_file(OutputFile)
+if local_ends_with(lower(OutputFile), '.nii.gz')
+    PartialFile = [OutputFile(1:end-length('.nii.gz')) '.dpabi_partial.nii.gz'];
+elseif local_ends_with(lower(OutputFile), '.nii')
+    PartialFile = [OutputFile(1:end-length('.nii')) '.dpabi_partial.nii'];
+else
+    PartialFile = [OutputFile '.dpabi_partial'];
+end
+end
+
+
 function DenoisedFile = local_resolve_tedana_denoised_file(OutDir, Prefix, Convention)
 Candidates = { ...
     fullfile(OutDir, [Prefix '_desc-denoised_bold.nii.gz']), ...
@@ -1906,11 +2416,20 @@ for i = 1:numel(Candidates)
 end
 
 DirList = dir(fullfile(OutDir, [Prefix '*desc-denoised_bold.nii*']));
+if ~isempty(DirList)
+    IsNativeTedanaOutput = cellfun(@(x)isempty(strfind(x, '_space-')) ...
+        && isempty(strfind(x, '.dpabi_partial')), {DirList.name}); %#ok<STREMP>
+    DirList = DirList(IsNativeTedanaOutput);
+end
 if isempty(DirList)
     DirList = dir(fullfile(OutDir, [Prefix '*optcomDenoised*.nii*']));
 end
 if isempty(DirList)
     DirList = dir(fullfile(OutDir, [Prefix '*dn_ts*.nii*']));
+end
+if ~isempty(DirList)
+    IsCompleteName = cellfun(@(x)isempty(strfind(x, '.dpabi_partial')), {DirList.name}); %#ok<STREMP>
+    DirList = DirList(IsCompleteName);
 end
 
 if isempty(DirList)
