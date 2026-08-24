@@ -292,12 +292,22 @@ if Cfg.FunctionalSessionNumber<=1
                 if size(Data,4)==1
                     copyfile([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirNii(1).name],[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_dir-',topupdir,'_epi','.nii'])
                 else
+                    %% modify 20260805
+                    %                     DirBval=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.bval']);
+                    %                     Bval=load([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirBval(1).name]);
+                    %                     B0VolIndex=find(Bval==0);
+                    %                     B0Data=mean(Data(:,:,:,B0VolIndex),4);
                     DirBval=dir([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,'*.bval']);
-                    
-                    Bval=load([Cfg.WorkingDir,filesep,'DwiFieldMap',filesep,'Topup',filesep,Cfg.SubjectID{i},filesep,DirBval(1).name]);
-                    B0VolIndex=find(Bval==0);
-                    
-                    B0Data=mean(Data(:,:,:,B0VolIndex),4);
+                    if ~isempty(DirBval)
+                        filePath = [Cfg.WorkingDir, filesep, 'DwiFieldMap', filesep, 'Topup', filesep, Cfg.SubjectID{i}, filesep, DirBval(1).name];
+                        Bval = load(filePath);
+                        B0VolIndex = find(Bval == 0);
+                        B0Data = mean(Data(:,:,:,B0VolIndex), 4);
+                    else
+                        B0Data = mean(Data, 4);
+                    end
+                    %%
+
                     Header.pinfo=[1;0;0]; Header.dt=[16,0];
                     y_Write(B0Data,Header,[OutDir,filesep,SubjectID_BIDS{i},filesep,'fmap',filesep,SubjectID_BIDS{i},'_acq-dwi_dir-',topupdir,'_epi','.nii']);  
                 end

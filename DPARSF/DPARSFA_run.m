@@ -840,14 +840,30 @@ if isfield(AutoDataProcessParameter,'FieldMap')
                 if AutoDataProcessParameter.FieldMap.TE1==0
                     DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
                     JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
-                    TE1 = JSON.EchoTime1*1000;
+
+                    if isfield(JSON,'EchoTime1')==1
+                        TE1 = JSON.EchoTime1*1000;
+                    else
+                        DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
+                        JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
+                        TE1 = JSON.EchoTime*1000;
+                    end
+
                 else
                     TE1 = AutoDataProcessParameter.FieldMap.TE1*1000; %YAN Chao-Gan 250209. GUI Changed the unit to s, here need to convert to ms. TE1 = AutoDataProcessParameter.FieldMap.TE1;
                 end
                 if AutoDataProcessParameter.FieldMap.TE2==0
                     DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
                     JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
-                    TE2 = JSON.EchoTime2*1000;
+
+                    if isfield(JSON,'EchoTime2')==1
+                        TE2 = JSON.EchoTime2*1000;
+                    else
+                        DirJSON=dir([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,'*.json']);
+                        JSON=spm_jsonread([AutoDataProcessParameter.DataProcessDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,AutoDataProcessParameter.SubjectID{i},filesep,DirJSON(1).name]);
+                        TE2 = JSON.EchoTime*1000;
+                    end
+
                 else
                     TE2 = AutoDataProcessParameter.FieldMap.TE2*1000; %YAN Chao-Gan 250209. GUI Changed the unit to s, here need to convert to ms. TE2 = AutoDataProcessParameter.FieldMap.TE2*1000;
                 end

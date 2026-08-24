@@ -781,11 +781,34 @@ if handles.Cfg.IsOrganizeFieldFun && ~strcmp(handles.Cfg.OutLayout.FieldFun.Form
                 if ~isempty(Cfg.FieldMap.TE1)
                     break;
                 else
+                    %% modify 20260804
+                    %                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
+                    %                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                    %                     JsonStruct = jsondecode(JsonData);
+                    %                     Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+                    %                     Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
                     JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'PhaseDiff',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
                     JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
                     JsonStruct = jsondecode(JsonData);
-                    Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
-                    Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+                    if isfield(JsonStruct, 'EchoTime1')==1
+                        Cfg.FieldMap.TE1 = JsonStruct.EchoTime1;
+                    else
+                        JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude1',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
+                        JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                        JsonStruct = jsondecode(JsonData);
+                        Cfg.FieldMap.TE1 = JsonStruct.EchoTime;
+                    end
+
+                    if isfield(JsonStruct, 'EchoTime2')==1
+                        Cfg.FieldMap.TE2 = JsonStruct.EchoTime2;
+                    else
+                        JsonDir = dir([handles.Cfg.OutputDir,filesep,'FunFieldMap',filesep,'Magnitude2',filesep,Cfg.SubjectID{iSub},filesep,'*.json*']); %% dcm2niix records both TE1 and TE2 in the json file of PhaseDiff images
+                        JsonData = fileread([JsonDir(1).folder,filesep,JsonDir(1).name]);
+                        JsonStruct = jsondecode(JsonData);
+                        Cfg.FieldMap.TE2 = JsonStruct.EchoTime;
+                    end
+                    %%
+
                 end
             end
         case 'Phase12'
