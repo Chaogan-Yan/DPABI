@@ -63,6 +63,14 @@ end
 Cfg.SubjectNum=length(Cfg.SubjectID);
 
 
+[DPABIPath, fileN, extn] = fileparts(which('DPABI.m'));
+if ispc
+    CommandInit=sprintf('docker run -i --rm -v %s:/opt/freesurfer/license.txt -v %s:/data ', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), Cfg.WorkingDir); %YAN Chao-Gan, 181214. Remove -t because there is a tty issue in windows
+else
+    CommandInit=sprintf('docker run -ti --rm -v %s:/opt/freesurfer/license.txt -v %s:/data ', fullfile(DPABIPath, 'DPABISurf', 'FreeSurferLicense', 'license.txt'), Cfg.WorkingDir); %YAN Chao-Gan, 181214. Remove -t because there is a tty issue in windows
+end
+
+
 SuccessID=[];
 FailedID=[];
 WaitingID=[];

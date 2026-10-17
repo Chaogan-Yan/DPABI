@@ -2814,6 +2814,26 @@ if (Cfg.IsNormalize>0) && strcmpi(Cfg.Normalize.Timing,'OnResults')
 
                     case {'FunSurfLH','FunSurfRH'}
                         SpaceName='fsaverage5';
+                        % Resolve the FreeSurfer directory independently of functional session IDs.
+                        FreeSurferDir=fullfile(Cfg.WorkingDir,'freesurfer');
+                        FreeSurferSourceSubject=Cfg.SubjectID{i};
+                        if ~exist(fullfile(FreeSurferDir,FreeSurferSourceSubject),'dir')
+                            if exist(fullfile(FreeSurferDir,[Cfg.SubjectID{i},'_ses-1']),'dir')
+                                FreeSurferSourceSubject=[Cfg.SubjectID{i},'_ses-1'];
+                            else
+                                DirFreeSurfer=dir(fullfile(FreeSurferDir,[Cfg.SubjectID{i},'_ses-*']));
+                                DirFreeSurfer=DirFreeSurfer([DirFreeSurfer.isdir]);
+                                if isscalar(DirFreeSurfer)
+                                    FreeSurferSourceSubject=DirFreeSurfer(1).name;
+                                elseif isempty(DirFreeSurfer)
+                                    error('DPABISurf:MissingFreeSurferSubject', ...
+                                        'No FreeSurfer subject directory found for %s under %s.',Cfg.SubjectID{i},FreeSurferDir);
+                                else
+                                    error('DPABISurf:AmbiguousFreeSurferSubject', ...
+                                        'Multiple FreeSurfer session directories found for %s under %s; cannot select a unique source subject.',Cfg.SubjectID{i},FreeSurferDir);
+                                end
+                            end
+                        end
                         %Check the measures need to be normalized
                         DirMeasure = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace}]);
                         if strcmpi(DirMeasure(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
@@ -2838,11 +2858,11 @@ if (Cfg.IsNormalize>0) && strcmpi(Cfg.Normalize.Timing,'OnResults')
                             end
                             if strcmpi(DSpaceSet{iDSpace},'FunSurfLH')
                                 Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject %s --trgsubject %s --hemi lh --sval %s/%s/FunSurfLH/%s/{1}  --tval %s/%sW/FunSurfLH/%s/w{1} ::: %s', ...
-                                    CommandInit, Cfg.ParallelWorkersNumber, Cfg.SubjectID{i}, SpaceName,WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure},FileList);
+                                    CommandInit, Cfg.ParallelWorkersNumber, FreeSurferSourceSubject, SpaceName,WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure},FileList);
                                 system(Command);
                             elseif strcmpi(DSpaceSet{iDSpace},'FunSurfRH')
                                 Command = sprintf('%s parallel -j %g mri_surf2surf --srcsubject %s --trgsubject %s --hemi rh --sval %s/%s/FunSurfRH/%s/{1}  --tval %s/%sW/FunSurfRH/%s/w{1} ::: %s', ...
-                                    CommandInit, Cfg.ParallelWorkersNumber, Cfg.SubjectID{i}, SpaceName,WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure},FileList);
+                                    CommandInit, Cfg.ParallelWorkersNumber, FreeSurferSourceSubject, SpaceName,WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],MeasureSet{iMeasure},FileList);
                                 system(Command);
                             end
                         end

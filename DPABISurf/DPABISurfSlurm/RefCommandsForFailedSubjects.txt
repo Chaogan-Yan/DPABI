@@ -52,4 +52,9 @@ find . -type f -name 'DPABISurf_run_GSR.e*' -size +0c
 # Count the number of files.
 ls Results/FunVolu/ALFF_FunVoluWglobalC/ -1 | wc -l
 
+printf '%s\n' Results/FunVolu/ALFF_FunVoluWglobalC/z*.nii | sed 's|.*/zALFF_||; s|\.nii$||' > subjects_FunVoluWglobalC.txt
+printf '%s\n' Results/FunVolu/ALFF_FunVoluWC/z*.nii | sed 's|.*/zALFF_||; s|\.nii$||' > subjects_FunVoluWC.txt
+
+comm -12 <(sort subjects_FunVoluWglobalC.txt) <(sort subjects_FunVoluWC.txt) > subjects_FunVoluOK.txt
+
 

@@ -823,10 +823,10 @@ end
 function y_RunMPRAGEiseYanForUMR5T(WorkingDir, OutDir, SessionPrefix, SessionIndex, SubjectID, SubjectID_BIDS, DPABIPath)
 [Inv2File, UniFile, TI2Dir, T1Dir] = y_GetMPRAGEiseYanInputFiles(WorkingDir, SessionPrefix, SubjectID);
 if isempty(Inv2File)
-    error(['Can NOT find TI2 image for MPRAGEise_yan in: ',TI2Dir])
+    error(['Can NOT find uncropped TI2 image (filename without Crop) for MPRAGEise_yan in: ',TI2Dir])
 end
 if isempty(UniFile)
-    error(['Can NOT find T1/UNI image for MPRAGEise_yan in: ',T1Dir])
+    error(['Can NOT find uncropped T1/UNI image (filename without Crop) for MPRAGEise_yan in: ',T1Dir])
 end
 
 if isempty(SessionIndex)
@@ -898,12 +898,12 @@ function File = y_FindFirstSubjectNifti(BaseDir, SubjectID)
 File='';
 SubjectDir=[BaseDir,filesep,SubjectID];
 if 7==exist(SubjectDir,'dir')
-    File=y_FindFirstNiftiByPatterns(SubjectDir, {'*Crop*.nii','*Crop*.nii.gz','*.nii','*.nii.gz'});
+    File=y_FindFirstNiftiByPatterns(SubjectDir, {'*.nii','*.nii.gz'});
     if ~isempty(File)
         return
     end
 end
-File=y_FindFirstNiftiByPatterns(BaseDir, {[SubjectID,'*Crop*.nii'],[SubjectID,'*Crop*.nii.gz'],[SubjectID,'*.nii'],[SubjectID,'*.nii.gz']});
+File=y_FindFirstNiftiByPatterns(BaseDir, {[SubjectID,'*.nii'],[SubjectID,'*.nii.gz']});
 
 
 function File = y_FindFirstNiftiByPatterns(SearchDir, PatternSet)
@@ -913,6 +913,9 @@ if 7~=exist(SearchDir,'dir')
 end
 for iPattern=1:length(PatternSet)
     DirImg=dir([SearchDir,filesep,PatternSet{iPattern}]);
+    % Separately cropped TI2 and UNI images may not align; use uncropped inputs.
+    DirImg=DirImg(~[DirImg.isdir]);
+    DirImg=DirImg(cellfun('isempty',strfind(lower({DirImg.name}),'crop')));
     if ~isempty(DirImg)
         [~, SortIndex] = sort(lower({DirImg.name}));
         DirImg=DirImg(SortIndex);
