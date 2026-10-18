@@ -1795,9 +1795,21 @@ if (Cfg.IsSmooth==1) && strcmpi(Cfg.Smooth.Timing,'OnFunctionalData')
             parfor i=1:Cfg.SubjectNum
                 mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,'S',filesep,Cfg.SubjectID{i}])
                 if (Cfg.IsSmooth==1)
-                    movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,'s*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,'S',filesep,Cfg.SubjectID{i}])
+                    SmoothFilePattern='s*';
+                    DirSmooth=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,'ss*']);
+                    % Prefer ss* to avoid moving unsmoothed files named sub*.
+                    if any(~[DirSmooth.isdir])
+                        SmoothFilePattern='ss*';
+                    end
+                    movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,filesep,Cfg.SubjectID{i},filesep,SmoothFilePattern],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,'S',filesep,Cfg.SubjectID{i}])
                 elseif (Cfg.IsSmooth==2) % If smoothed by DARTEL, then the smoothed files still under realign directory.
-                    movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume(1:end-1),filesep,Cfg.SubjectID{i},filesep,'s*'],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,'S',filesep,Cfg.SubjectID{i}])
+                    SmoothFilePattern='s*';
+                    DirSmooth=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume(1:end-1),filesep,Cfg.SubjectID{i},filesep,'ss*']);
+                    % Prefer ss* to avoid moving unsmoothed files named sub*.
+                    if any(~[DirSmooth.isdir])
+                        SmoothFilePattern='ss*';
+                    end
+                    movefile([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume(1:end-1),filesep,Cfg.SubjectID{i},filesep,SmoothFilePattern],[Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName_Volume,'S',filesep,Cfg.SubjectID{i}])
                 end
                 fprintf(['Moving Smoothed Files:',Cfg.SubjectID{i},' OK']);
             end
