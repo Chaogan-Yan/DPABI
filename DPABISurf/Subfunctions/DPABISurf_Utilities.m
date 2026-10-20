@@ -22,7 +22,7 @@ function varargout = DPABISurf_Utilities(varargin)
 
 % Edit the above text to modify the response to help DPABISurf_Utilities
 
-% Last Modified by GUIDE v2.5 24-Feb-2020 14:20:02
+% Last Modified by GUIDE v2.5 20-Oct-2026 15:28:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -112,3 +112,11 @@ function pushbuttonReRunfmriprepFailedSubjects_Callback(hObject, eventdata, hand
 % handles    structure with handles and user data (see GUIDATA)
 
 y_ReRunfmriprepFailedSubjects
+
+
+% --- Executes on button press in pushbuttonPrepareBrainFor3DPrinting.
+function pushbuttonPrepareBrainFor3DPrinting_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbuttonPrepareBrainFor3DPrinting (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+y_PrepareBrainFor3DPrinting
