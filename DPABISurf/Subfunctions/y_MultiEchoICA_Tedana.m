@@ -1,4 +1,4 @@
-function [Cfg, JobList] = y_MultiEchoICA_Tedana(Cfg,WorkingDir,SubjectListFile)
+function [Cfg, JobList, SkippedJobs] = y_MultiEchoICA_Tedana(Cfg,WorkingDir,SubjectListFile)
 % function [Cfg, JobList] = y_MultiEchoICA_Tedana(Cfg,WorkingDir,SubjectListFile)
 % Run tedana on fMRIPrep multi-echo outputs and organize denoised files for DPABI.
 %
@@ -24,6 +24,7 @@ function [Cfg, JobList] = y_MultiEchoICA_Tedana(Cfg,WorkingDir,SubjectListFile)
 % Output:
 %   Cfg     - updated Cfg
 %   JobList - structure array describing tedana jobs and execution status
+%   SkippedJobs - subject/session/run inputs rejected during job collection
 %
 % Notes:
 %   - fMRIPrep must have been run with --me-output-echos.
@@ -40,6 +41,11 @@ function [Cfg, JobList] = y_MultiEchoICA_Tedana(Cfg,WorkingDir,SubjectListFile)
 %   - Newly generated 4D warp outputs are written atomically. Legacy
 %     truncated .nii.gz files are detected, moved into
 %     tedana/Backup/IncompleteOutputs, and regenerated.
+%   - Rejected inputs are recorded in tedana_skipped_jobs.tsv. Non-dry runs
+%     stop before execution if any inputs were skipped. DryRun returns the
+%     accepted and skipped lists so missing inputs can be diagnosed safely.
+%   - Cached stages are regenerated if their input files are newer than the
+%     output files (for example, after rerunning fMRIPrep).
 %   - The denoised outputs are organized so that downstream DPABISurf/DPABI volume
 %     processing can continue from FunVolu/FunVoluW without selecting an echo-specific
 %     file by mistake.
@@ -79,6 +85,7 @@ end
 
 Cfg.SubjectID = local_normalize_subject_ids(Cfg.SubjectID);
 Cfg.SubjectNum=length(Cfg.SubjectID);
+SkippedJobs = struct('SubjectID', {}, 'SessionIndex', {}, 'BasePrefix', {}, 'Reason', {});
 
 if Cfg.FunctionalSessionNumber==0
     warning('Cfg.FunctionalSessionNumber is 0. Nothing to process.');
@@ -98,9 +105,15 @@ if strcmpi(Cfg.MultiEcho.TEUnit, 'auto')
     fprintf('Detected tedana TE unit mode: %s\n', Cfg.MultiEcho.TEUnit);
 end
 
-JobList = local_collect_jobs(Cfg, FunSessionPrefixSet, fmriprepfuncSessionPrefixSet, CommandInit, WorkingDirInContainer);
+[JobList, SkippedJobs] = local_collect_jobs(Cfg, FunSessionPrefixSet, fmriprepfuncSessionPrefixSet, CommandInit, WorkingDirInContainer);
+local_write_skipped_jobs_report(SkippedJobs, Cfg);
+if ~isempty(SkippedJobs) && ~Cfg.MultiEcho.DryRun
+    error('y_MultiEchoICA_Tedana:IncompleteInputs', ...
+        '%d run/session input(s) were skipped. No jobs executed. Repair inputs listed in %s and rerun.', ...
+        numel(SkippedJobs), fullfile(Cfg.TedanaDir, 'tedana_skipped_jobs.tsv'));
+end
 
-if isempty(JobList)
+if isempty(JobList) && ~Cfg.MultiEcho.DryRun
     error(['No valid tedana jobs were created.\n' ...
         'Please ensure fMRIPrep was run with --me-output-echos and that echo-wise\n' ...
         'files such as *_echo-1_desc-preproc_bold.nii.gz are present in %s.'], Cfg.FMRIPrepDir);
@@ -114,7 +127,7 @@ for iJob = 1:numel(JobList)
 end
 
 if Cfg.MultiEcho.DryRun
-    save(fullfile(Cfg.TedanaDir,'tedana_joblist.mat'),'JobList');
+    save(fullfile(Cfg.TedanaDir,'tedana_joblist.mat'),'JobList','SkippedJobs');
     fprintf('\nDryRun = 1, commands were generated but not executed.\n');
     return;
 end
@@ -125,8 +138,13 @@ local_ensure_surface_subjects(JobList, Cfg, CommandInit, WorkingDirInContainer);
 % When ParallelWorkersNumber == 1, this becomes `parallel -j 1`.
 JobList = local_execute_jobs_with_parallel(JobList, Cfg, CommandInit, WorkingDirInContainer);
 
-save(fullfile(Cfg.TedanaDir,'tedana_joblist.mat'),'JobList');
+save(fullfile(Cfg.TedanaDir,'tedana_joblist.mat'),'JobList','SkippedJobs');
 local_write_failed_jobs_report(JobList, Cfg);
+if ~isempty(local_failed_job_indices(JobList))
+    error('y_MultiEchoICA_Tedana:IncompleteJobs', ...
+        'Tedana jobs remain incomplete after retries. See %s; rerun to resume incomplete stages.', ...
+        fullfile(Cfg.TedanaDir, 'tedana_failed_jobs.tsv'));
+end
 fprintf('\nMulti-echo ICA with tedana finished!\n');
 
 end
@@ -425,7 +443,8 @@ CommandInit = ['docker run ' DockerArgs];
 end
 
 
-function JobList = local_collect_jobs(Cfg, FunSessionPrefixSet, fmriprepfuncSessionPrefixSet, CommandInit, WorkingDirInContainer)
+function [JobList, SkippedJobs] = local_collect_jobs(Cfg, FunSessionPrefixSet, fmriprepfuncSessionPrefixSet, CommandInit, WorkingDirInContainer)
+SkippedJobs = struct('SubjectID', {}, 'SessionIndex', {}, 'BasePrefix', {}, 'Reason', {});
 JobList = struct('SubjectID', {}, 'SessionIndex', {}, 'SessionPrefix', {}, ...
     'FuncDir', {}, 'BasePrefix', {}, 'EchoFiles', {}, ...
     'EchoTimesSeconds', {}, 'EchoTimesForCommand', {}, 'TEUnitUsed', {}, ...
@@ -468,12 +487,16 @@ for iSubject = 1:Cfg.SubjectNum
     for iFunSession = 1:Cfg.FunctionalSessionNumber
         FuncDir = fullfile(Cfg.FMRIPrepDir, SubjectID, fmriprepfuncSessionPrefixSet{iFunSession});
         if ~exist(FuncDir, 'dir')
+            SkippedJobs = local_add_skipped_job(SkippedJobs, SubjectID, iFunSession, '', ...
+                ['Functional directory not found: ' FuncDir]);
             warning('Functional directory not found, skipping: %s', FuncDir);
             continue;
         end
 
         EchoFiles = dir(fullfile(FuncDir, '*_echo-*_desc-preproc_bold.nii.gz'));
         if isempty(EchoFiles)
+            SkippedJobs = local_add_skipped_job(SkippedJobs, SubjectID, iFunSession, '', ...
+                ['No echo-wise preprocessed .nii.gz files found: ' FuncDir]);
             warning(['No multi-echo fMRIPrep outputs were found in %s.\n' ...
                 'tedana is only created from echo-wise files, so this session will be skipped.'], ...
                 FuncDir);
@@ -494,6 +517,7 @@ for iSubject = 1:Cfg.SubjectNum
             ThisPaths = cell(numel(ThisFiles),1);
             ThisEchoTimesSec = nan(numel(ThisFiles),1);
             ThisEchoNumbers = nan(numel(ThisFiles),1);
+            EchoInputError = '';
 
             for iEcho = 1:numel(ThisFiles)
                 ThisPaths{iEcho} = fullfile(ThisFiles(iEcho).folder, ThisFiles(iEcho).name);
@@ -505,9 +529,24 @@ for iSubject = 1:Cfg.SubjectNum
 
                 JsonFile = strrep(ThisPaths{iEcho}, '.nii.gz', '.json');
                 if ~exist(JsonFile, 'file')
-                    error('JSON sidecar not found for %s', ThisPaths{iEcho});
+                    EchoInputError = sprintf('JSON sidecar not found for %s', ThisPaths{iEcho});
+                    break;
                 end
-                ThisEchoTimesSec(iEcho) = local_read_echo_time_seconds(JsonFile);
+                try
+                    TE = local_read_echo_time_seconds(JsonFile);
+                    if ~isnumeric(TE) || ~isscalar(TE) || ~isfinite(TE) || TE <= 0
+                        error('EchoTime must be a positive finite number in %s', JsonFile);
+                    end
+                    ThisEchoTimesSec(iEcho) = TE;
+                catch ME
+                    EchoInputError = ME.message;
+                    break;
+                end
+            end
+            if ~isempty(EchoInputError)
+                SkippedJobs = local_add_skipped_job(SkippedJobs, SubjectID, iFunSession, BasePrefix, EchoInputError);
+                warning('Skipping %s because %s', BasePrefix, EchoInputError);
+                continue;
             end
 
             if all(~isnan(ThisEchoTimesSec))
@@ -519,6 +558,8 @@ for iSubject = 1:Cfg.SubjectNum
             ThisEchoTimesSec = ThisEchoTimesSec(SortIndex);
 
             if numel(ThisPaths) < 2
+                SkippedJobs = local_add_skipped_job(SkippedJobs, SubjectID, iFunSession, BasePrefix, ...
+                    'Fewer than two echoes were found.');
                 warning('Skipping %s because fewer than two echoes were found.', BasePrefix);
                 continue;
             end
@@ -586,6 +627,7 @@ for iSubject = 1:Cfg.SubjectNum
                 MissingT1wReason = sprintf('boldref-to-T1w transform not found for %s in %s.', BasePrefix, FuncDir);
             end
             if ~isempty(MissingT1wReason)
+                SkippedJobs = local_add_skipped_job(SkippedJobs, SubjectID, iFunSession, BasePrefix, MissingT1wReason);
                 if Cfg.MultiEcho.RequireT1wSpace
                     warning('Skipping %s because %s', BasePrefix, MissingT1wReason);
                 else
@@ -598,6 +640,8 @@ for iSubject = 1:Cfg.SubjectNum
                 && ~isempty(BoldrefToT1wTransformFile) && ~isempty(TargetTransformFile);
             if ~NeedTargetWarp
                 if Cfg.MultiEcho.RequireTargetSpace
+                    SkippedJobs = local_add_skipped_job(SkippedJobs, SubjectID, iFunSession, BasePrefix, ...
+                        'Required target-space reference or transform was not found.');
                     warning(['Skipping %s because target-space organization is incomplete.\n' ...
                         'Target reference: %d, target warp reference: %d, boldref-to-T1w transform: %d, T1w-to-%s transform: %d'], ...
                         BasePrefix, ~isempty(TargetReferenceFile), ~isempty(TargetWarpReferenceFile), ...
@@ -621,6 +665,7 @@ for iSubject = 1:Cfg.SubjectNum
                     SurfaceWarningMessage = sprintf(['No matching FreeSurfer subject was found for %s under %s. ' ...
                         'Expected %s or %s_ses-*.'], SubjectID, Cfg.SurfaceSubjectsDir, SubjectID, SubjectID);
                     if Cfg.MultiEcho.RequireSurfaceResults
+                        SkippedJobs = local_add_skipped_job(SkippedJobs, SubjectID, iFunSession, BasePrefix, SurfaceWarningMessage);
                         warning('Skipping %s because %s', BasePrefix, SurfaceWarningMessage);
                         continue;
                     end
@@ -631,14 +676,15 @@ for iSubject = 1:Cfg.SubjectNum
             end
 
             SurfaceWarningMessage = '';
-            if Cfg.MultiEcho.GenerateSurfaceResults && xor(isempty(SurfaceNativeLeftTemplateFile), isempty(SurfaceNativeRightTemplateFile))
+            if Cfg.MultiEcho.GenerateSurfaceResults && (isempty(SurfaceNativeLeftTemplateFile) || isempty(SurfaceNativeRightTemplateFile))
                 SurfaceWarningMessage = sprintf('fsnative surface templates are incomplete for %s in %s.', BasePrefix, FuncDir);
             elseif Cfg.MultiEcho.GenerateSurfaceResults && NeedSurfaceNative ...
-                    && xor(isempty(SurfaceStandardLeftTemplateFile), isempty(SurfaceStandardRightTemplateFile))
+                    && (isempty(SurfaceStandardLeftTemplateFile) || isempty(SurfaceStandardRightTemplateFile))
                 SurfaceWarningMessage = sprintf('%s surface templates are incomplete for %s in %s.', Cfg.MultiEcho.SurfaceTargetSpace, BasePrefix, FuncDir);
             end
             if ~isempty(SurfaceWarningMessage)
                 if Cfg.MultiEcho.RequireSurfaceResults
+                    SkippedJobs = local_add_skipped_job(SkippedJobs, SubjectID, iFunSession, BasePrefix, SurfaceWarningMessage);
                     warning('Skipping %s because %s', BasePrefix, SurfaceWarningMessage);
                     continue;
                 end
@@ -1745,6 +1791,28 @@ end
 end
 
 
+function SkippedJobs = local_add_skipped_job(SkippedJobs, SubjectID, SessionIndex, BasePrefix, Reason)
+SkippedJobs(end+1) = struct('SubjectID', SubjectID, 'SessionIndex', SessionIndex, ...
+    'BasePrefix', BasePrefix, 'Reason', Reason);
+end
+
+
+function local_write_skipped_jobs_report(SkippedJobs, Cfg)
+ReportFile = fullfile(Cfg.TedanaDir, 'tedana_skipped_jobs.tsv');
+fid = fopen(ReportFile, 'w');
+if fid < 0
+    error('Unable to write skipped-job report: %s', ReportFile);
+end
+CleanupObj = onCleanup(@() fclose(fid)); %#ok<NASGU>
+fprintf(fid, 'SubjectID\tSessionIndex\tBasePrefix\tReason\n');
+for i = 1:numel(SkippedJobs)
+    Job = SkippedJobs(i);
+    fprintf(fid, '%s\t%d\t%s\t%s\n', Job.SubjectID, Job.SessionIndex, Job.BasePrefix, ...
+        regexprep(Job.Reason, '[\t\r\n]+', ' '));
+end
+end
+
+
 function local_write_failed_jobs_report(JobList, Cfg)
 ReportFile = fullfile(Cfg.TedanaDir, 'tedana_failed_jobs.tsv');
 fid = fopen(ReportFile, 'w');
@@ -1887,6 +1955,11 @@ Files = local_surface_output_files(Job);
 if isempty(Files)
     tf = true;
     Message = '';
+    return;
+end
+
+[tf, Message] = local_inputs_not_newer({Job.WarpedT1wFile}, Files);
+if ~tf
     return;
 end
 
@@ -2104,7 +2177,8 @@ if exist(DestinationFile, 'file')
         SourceInfo = dir(SourceFile);
         DestinationInfo = dir(DestinationFile);
         if ~isempty(SourceInfo) && ~isempty(DestinationInfo) ...
-                && SourceInfo(1).bytes == DestinationInfo(1).bytes
+                && SourceInfo(1).bytes == DestinationInfo(1).bytes ...
+                && SourceInfo(1).datenum <= DestinationInfo(1).datenum
             return;
         end
 
@@ -2213,7 +2287,21 @@ end
 
 
 function [tf, Message] = local_job_nifti_output_is_valid(Job, StageName, FileName, ReferenceFile)
-Message = '';
+switch StageName
+    case 'tedana'
+        Inputs = [Job.EchoFiles(:); strrep(Job.EchoFiles(:), '.nii.gz', '.json'); {Job.MaskFile}];
+    case 'warp_t1w'
+        Inputs = {Job.TedanaDenoisedFile, Job.T1wWarpReferenceFile, Job.BoldrefToT1wTransformFile};
+    case 'warp_target'
+        Inputs = {Job.TedanaDenoisedFile, Job.TargetWarpReferenceFile, ...
+            Job.BoldrefToT1wTransformFile, Job.TransformFile};
+    otherwise
+        Inputs = {};
+end
+[tf, Message] = local_inputs_not_newer(Inputs, {FileName});
+if ~tf
+    return;
+end
 if local_stage_marker_is_current(Job, StageName, {FileName})
     tf = true;
     return;
@@ -2227,6 +2315,35 @@ if isfield(Job, 'EstimatedTedanaTimePointNumber') ...
 end
 
 [tf, Message] = local_nifti_file_is_complete(FileName, ReferenceFile, ExpectedTimePointNumber);
+end
+
+
+function [tf, Message] = local_inputs_not_newer(Inputs, Outputs)
+% Compare actual dependencies even when a cached completion marker exists.
+tf = false;
+Message = '';
+OldestOutput = inf;
+for i = 1:numel(Outputs)
+    Info = dir(Outputs{i});
+    if isempty(Info) || Info(1).isdir || Info(1).bytes == 0
+        Message = sprintf('output is missing or empty: %s', Outputs{i});
+        return;
+    end
+    OldestOutput = min(OldestOutput, Info(1).datenum);
+end
+Inputs = Inputs(~cellfun('isempty', Inputs));
+for i = 1:numel(Inputs)
+    Info = dir(Inputs{i});
+    if isempty(Info) || Info(1).isdir || Info(1).bytes == 0
+        Message = sprintf('input is missing or empty: %s', Inputs{i});
+        return;
+    end
+    if Info(1).datenum > OldestOutput
+        Message = sprintf('input is newer than cached output: %s', Inputs{i});
+        return;
+    end
+end
+tf = true;
 end
 
 

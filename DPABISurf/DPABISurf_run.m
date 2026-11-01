@@ -854,10 +854,44 @@ else
 end
 
 
-% Tedana ICA
-if isfield(Cfg,'MultiEcho') && isfield(Cfg.MultiEcho,'MultiEchoMethod') && strcmpi(Cfg.MultiEcho.MultiEchoMethod,'MultiEchoICA_Tedana') %YAN Chao-Gan, 20260504.
-    if ~exist([Cfg.WorkingDir,filesep,'tedana'],'dir')
-        y_MultiEchoICA_Tedana(Cfg);
+% Verify each functional session/run before handing fMRIPrep outputs downstream.
+% A directory (or a subject-level file count) does not prove completion.
+NeedFMRIPrepHandoff = Cfg.FunctionalSessionNumber > 0 && ...
+    (Cfg.Isfmriprep == 1 || Cfg.IsOrganizefmriprepResults == 1 || ...
+    strcmpi(Cfg.StartingDirName, 'fmriprep'));
+if NeedFMRIPrepHandoff
+    FMRIPrepReport = fullfile(Cfg.WorkingDir, 'fmriprep_missing_outputs.tsv');
+    [FMRIPrepComplete, MissingOutputs] = y_CheckFMRIPrepOutputs(Cfg, FMRIPrepReport);
+    if ~FMRIPrepComplete
+        for iMissing = 1:numel(MissingOutputs)
+            fprintf('%s | session %d | %s | missing %s\n', ...
+                MissingOutputs(iMissing).SubjectID, MissingOutputs(iMissing).SessionIndex, ...
+                MissingOutputs(iMissing).BasePrefix, MissingOutputs(iMissing).MissingOutput);
+        end
+        error('DPABISurf:IncompleteFMRIPrep', ...
+            'Incomplete fMRIPrep outputs. Repair the listed runs before continuing. See %s', FMRIPrepReport);
+    end
+end
+
+% Resume tedana even when its output directory already exists. Verified stages
+% are reused by y_MultiEchoICA_Tedana (Overwrite defaults to 0). Do this only at
+% the fMRIPrep handoff, not when resuming later surface/volume processing.
+if NeedFMRIPrepHandoff && isfield(Cfg,'MultiEcho') && ...
+        isfield(Cfg.MultiEcho,'MultiEchoMethod') && ...
+        strcmpi(Cfg.MultiEcho.MultiEchoMethod,'MultiEchoICA_Tedana')
+    TedanaCfg = Cfg;
+    TedanaCfg.MultiEcho.RequireSurfaceResults = 1;
+    TedanaCfg.MultiEcho.RequireTargetSpace = 1;
+    TedanaCfg.MultiEcho.GenerateSurfaceResults = 1;
+    [TedanaCfg, TedanaJobs] = y_MultiEchoICA_Tedana(TedanaCfg);
+    if TedanaCfg.MultiEcho.DryRun
+        error('DPABISurf:TedanaDryRun', ...
+            'Tedana DryRun created commands only. Disable DryRun before downstream processing.');
+    end
+    if isempty(TedanaJobs) || any([TedanaJobs.Success] ~= 1)
+        error('DPABISurf:IncompleteTedana', ...
+            'Incomplete tedana jobs. See %s and rerun to resume incomplete stages.', ...
+            fullfile(TedanaCfg.TedanaDir, 'tedana_failed_jobs.tsv'));
     end
 end
 
