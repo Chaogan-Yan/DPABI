@@ -46,6 +46,9 @@ function [Cfg, JobList, SkippedJobs] = y_MultiEchoICA_Tedana(Cfg,WorkingDir,Subj
 %     accepted and skipped lists so missing inputs can be diagnosed safely.
 %   - Cached stages are regenerated if their input files are newer than the
 %     output files (for example, after rerunning fMRIPrep).
+%   - OrganizeOnly validates/copies existing outputs without executing external
+%     tools or using modification times to decide whether to recompute. It
+%     writes separate organize reports and preserves the original job records.
 %   - The denoised outputs are organized so that downstream DPABISurf/DPABI volume
 %     processing can continue from FunVolu/FunVoluW without selecting an echo-specific
 %     file by mistake.
@@ -94,18 +97,35 @@ if Cfg.FunctionalSessionNumber==0
 end
 
 if ~exist(Cfg.TedanaDir,'dir')
+    if Cfg.MultiEcho.OrganizeOnly
+        error('DPABISurf:MissingTedanaDirectory', 'Existing tedana directory not found: %s', Cfg.TedanaDir);
+    end
     mkdir(Cfg.TedanaDir);
 end
 
 [FunSessionPrefixSet, fmriprepfuncSessionPrefixSet] = local_build_session_prefixes(Cfg);
-[CommandInit, WorkingDirInContainer] = local_prepare_command_init(Cfg);
+if Cfg.MultiEcho.OrganizeOnly
+    % Commands are never executed in this mode. Use local paths while collecting.
+    CommandInit = '';
+    WorkingDirInContainer = Cfg.WorkingDir;
+else
+    [CommandInit, WorkingDirInContainer] = local_prepare_command_init(Cfg);
+end
 
 if strcmpi(Cfg.MultiEcho.TEUnit, 'auto')
-    Cfg.MultiEcho.TEUnit = local_detect_tedana_te_unit(CommandInit);
-    fprintf('Detected tedana TE unit mode: %s\n', Cfg.MultiEcho.TEUnit);
+    if Cfg.MultiEcho.OrganizeOnly
+        Cfg.MultiEcho.TEUnit = 'milliseconds'; % Only unused command text needs a unit.
+    else
+        Cfg.MultiEcho.TEUnit = local_detect_tedana_te_unit(CommandInit);
+        fprintf('Detected tedana TE unit mode: %s\n', Cfg.MultiEcho.TEUnit);
+    end
 end
 
 [JobList, SkippedJobs] = local_collect_jobs(Cfg, FunSessionPrefixSet, fmriprepfuncSessionPrefixSet, CommandInit, WorkingDirInContainer);
+if Cfg.MultiEcho.OrganizeOnly
+    JobList = local_organize_existing_jobs(JobList, SkippedJobs, Cfg);
+    return;
+end
 local_write_skipped_jobs_report(SkippedJobs, Cfg);
 if ~isempty(SkippedJobs) && ~Cfg.MultiEcho.DryRun
     error('y_MultiEchoICA_Tedana:IncompleteInputs', ...
@@ -208,6 +228,7 @@ Cfg = local_fill_multiecho_default(Cfg, 'Overwrite', 0);
 Cfg = local_fill_multiecho_default(Cfg, 'RunInParallel', 0);
 Cfg = local_fill_multiecho_default(Cfg, 'TEUnit', 'auto');
 Cfg = local_fill_multiecho_default(Cfg, 'DryRun', 0);
+Cfg = local_fill_multiecho_default(Cfg, 'OrganizeOnly', 0);
 Cfg = local_fill_multiecho_default(Cfg, 'Verbose', 0);
 Cfg = local_fill_multiecho_default(Cfg, 'NoReports', 0);
 if ~isfield(Cfg,'UseDPABILicenseMount') || isempty(Cfg.UseDPABILicenseMount)
@@ -691,9 +712,13 @@ for iSubject = 1:Cfg.SubjectNum
                 warning('Some surface outputs may be skipped for %s because %s', BasePrefix, SurfaceWarningMessage);
             end
 
-            RelFuncDir = local_relative_path(FuncDir, Cfg.FMRIPrepDir);
+            if Cfg.MultiEcho.OrganizeOnly
+                RelFuncDir = fullfile(SubjectID, fmriprepfuncSessionPrefixSet{iFunSession});
+            else
+                RelFuncDir = local_relative_path(FuncDir, Cfg.FMRIPrepDir);
+            end
             TedanaOutDir = fullfile(Cfg.TedanaDir, RelFuncDir, BasePrefix);
-            if ~exist(TedanaOutDir, 'dir')
+            if ~Cfg.MultiEcho.OrganizeOnly && ~exist(TedanaOutDir, 'dir')
                 mkdir(TedanaOutDir);
             end
 
@@ -752,8 +777,12 @@ for iSubject = 1:Cfg.SubjectNum
                 TargetSpaceMaskFile = '';
             end
 
-            TedanaCommandBody = local_build_tedana_command_body(Cfg, WorkingDirInContainer, ThisPaths, TEForCommand, MaskFile, TedanaOutDir, BasePrefix);
-            TedanaCommand = local_prefix_command(CommandInit, TedanaCommandBody);
+            TedanaCommandBody = '';
+            TedanaCommand = '';
+            if ~Cfg.MultiEcho.OrganizeOnly
+                TedanaCommandBody = local_build_tedana_command_body(Cfg, WorkingDirInContainer, ThisPaths, TEForCommand, MaskFile, TedanaOutDir, BasePrefix);
+                TedanaCommand = local_prefix_command(CommandInit, TedanaCommandBody);
+            end
             T1wWarpCommand = '';
             T1wWarpCommandBody = '';
             SurfaceCommand = '';
@@ -1853,6 +1882,93 @@ function Job = local_execute_job(Job, Cfg)
 [CommandInit, WorkingDirInContainer] = local_prepare_command_init(Cfg);
 JobList = local_execute_jobs_with_parallel(Job, Cfg, CommandInit, WorkingDirInContainer);
 Job = JobList(1);
+end
+
+
+function Jobs = local_organize_existing_jobs(Jobs, SkippedJobs, Cfg)
+% Validate all requested runs before creating any organized functional outputs.
+for i = 1:numel(Jobs)
+    Job = Jobs(i);
+    Job.TedanaDenoisedFile = local_resolve_tedana_denoised_file( ...
+        Job.TedanaOutDir, Job.BasePrefix, Cfg.MultiEcho.Convention);
+    Confounds = fullfile(Job.FuncDir, [Job.BasePrefix '_desc-confounds_timeseries.tsv']);
+    TimePoints = nan;
+    if exist(Confounds, 'file'), TimePoints = local_count_tsv_data_rows(Confounds); end
+    if ~isfinite(TimePoints) || TimePoints < 1
+        [~, TimePoints] = local_read_nifti_size(Job.EchoFiles{1});
+    end
+    Messages = {};
+    [Valid, Message] = local_nifti_file_is_complete(Job.TedanaDenoisedFile, '', TimePoints);
+    Job.TedanaStatus = double(~Valid);
+    if ~Valid, Messages{end+1} = ['tedana: ' Message]; end %#ok<AGROW>
+    [Valid, Message] = local_nifti_file_is_complete(Job.WarpedT1wFile, Job.T1wWarpReferenceFile, TimePoints);
+    Job.T1wWarpStatus = double(~Valid);
+    if ~Valid, Messages{end+1} = ['T1w: ' Message]; end %#ok<AGROW>
+    Job.WarpStatus = 0;
+    if local_has_target_warp(Job)
+        [Valid, Message] = local_nifti_file_is_complete(Job.WarpedTargetFile, Job.TargetWarpReferenceFile, TimePoints);
+        Job.WarpStatus = double(~Valid);
+        if ~Valid, Messages{end+1} = ['target: ' Message]; end %#ok<AGROW>
+    end
+    Job.SurfaceStatus = 0;
+    Files = local_surface_output_files(Job);
+    for j = 1:numel(Files)
+        [Valid, Message] = local_surface_file_is_complete(Files{j});
+        if ~Valid
+            Job.SurfaceStatus = 1;
+            Messages{end+1} = Message; %#ok<AGROW>
+        end
+    end
+    Job.Success = double(isempty(Messages));
+    Job.ErrorMessage = strjoin(Messages, ' | ');
+    Jobs(i) = Job;
+end
+local_write_organize_report(Jobs, SkippedJobs, Cfg, 'validation');
+if isempty(Jobs) || ~isempty(SkippedJobs) || any([Jobs.Success] ~= 1)
+    error('DPABISurf:IncompleteTedanaResults', ...
+        ['Existing tedana results are incomplete. No functional files copied. See %s. ' ...
+         'To compute missing stages, set Cfg.MultiEcho.OrganizeMode to resume.'], ...
+        fullfile(Cfg.WorkingDir, 'tedana_organize_report.tsv'));
+end
+if Cfg.MultiEcho.DryRun, return; end
+for i = 1:numel(Jobs)
+    Jobs(i).Success = 0;
+    Jobs(i).ErrorMessage = 'Not copied yet.';
+end
+for i = 1:numel(Jobs)
+    try
+        Jobs(i) = local_finalize_job(Jobs(i), Cfg);
+        Jobs(i).Success = 1;
+        Jobs(i).ErrorMessage = '';
+    catch ME
+        Jobs(i).Success = 0;
+        Jobs(i).ErrorMessage = ['Copy failed: ' ME.message];
+        local_write_organize_report(Jobs, SkippedJobs, Cfg, 'copy');
+        rethrow(ME);
+    end
+end
+local_write_organize_report(Jobs, SkippedJobs, Cfg, 'copy');
+fprintf('Organized %d existing tedana run/session(s) into %s.\n', numel(Jobs), Cfg.WorkingDir);
+end
+
+
+function local_write_organize_report(Jobs, SkippedJobs, Cfg, Phase)
+save(fullfile(Cfg.WorkingDir, 'tedana_organize_joblist.mat'), 'Jobs', 'SkippedJobs', 'Phase');
+ReportFile = fullfile(Cfg.WorkingDir, 'tedana_organize_report.tsv');
+fid = fopen(ReportFile, 'w');
+if fid < 0, error('Cannot write %s', ReportFile); end
+Cleanup = onCleanup(@() fclose(fid)); %#ok<NASGU>
+fprintf(fid, 'SubjectID\tSessionIndex\tBasePrefix\tPhase\tSuccess\tSourceDir\tErrorMessage\n');
+for i = 1:numel(Jobs)
+    J = Jobs(i);
+    fprintf(fid, '%s\t%d\t%s\t%s\t%d\t%s\t%s\n', J.SubjectID, J.SessionIndex, ...
+        J.BasePrefix, Phase, J.Success, J.TedanaOutDir, regexprep(J.ErrorMessage, '[\t\r\n]+', ' '));
+end
+for i = 1:numel(SkippedJobs)
+    J = SkippedJobs(i);
+    fprintf(fid, '%s\t%d\t%s\t%s\t0\t\t%s\n', J.SubjectID, J.SessionIndex, ...
+        J.BasePrefix, Phase, regexprep(J.Reason, '[\t\r\n]+', ' '));
+end
 end
 
 

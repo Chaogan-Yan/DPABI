@@ -1,4 +1,4 @@
-function Cfg = y_Organize_fmriprep(Cfg,WorkingDir,SubjectListFile,IsSlurmOrganizeSurf)
+function Cfg = y_Organize_fmriprep(Cfg,WorkingDir,SubjectListFile,IsSlurmOrganizeSurf,TedanaAction)
 % function Cfg = y_Organize_fmriprep(Cfg,WorkingDir,SubjectListFile,IsSlurmOrganizeSurf)
 % Organize results by fmriprep.
 %   Input:
@@ -6,6 +6,9 @@ function Cfg = y_Organize_fmriprep(Cfg,WorkingDir,SubjectListFile,IsSlurmOrganiz
 %   WorkingDir - Define the working directory to replace the one defined in Cfg
 %   SubjectListFile - Define the subject list to replace the one defined in Cfg. Should be a text file
 %   IsSlurmOrganizeSurf - Surf files have been organized by Slurm, thus no need to use parallel
+%   TedanaAction - optional internal resume action after a new fMRIPrep run.
+%     Direct calls default to organizing existing tedana results in WorkingDir.
+%     Cfg.MultiEcho.OrganizeMode=resume explicitly permits missing-stage computation.
 %   Output:
 %     see Results/Anat/Thickness, Area and Curv. See FunSurfW.
 %___________________________________________________________________________
@@ -27,6 +30,35 @@ if exist('SubjectListFile','var') && ~isempty(SubjectListFile)
     IDCell = textscan(fid,'%s\n'); %YAN Chao-Gan. For compatiblity of MALLAB 2014b. IDCell = textscan(fid,'%s','\n');
     fclose(fid);
     Cfg.SubjectID=IDCell{1};
+end
+
+% Resolve and prepare functional tedana outputs before any anatomical commands.
+% Direct calls and Organize-only restarts share the same relocation-safe path.
+if nargin < 5 || isempty(TedanaAction)
+    [Cfg, UseTedana] = y_ResolveOrganizeConfig(Cfg);
+    TedanaAction = Cfg.MultiEcho.OrganizeMode;
+else
+    UseTedana = isfield(Cfg, 'MultiEcho') && ...
+        isfield(Cfg.MultiEcho, 'MultiEchoMethod') && ...
+        strcmpi(Cfg.MultiEcho.MultiEchoMethod, 'MultiEchoICA_Tedana');
+end
+if UseTedana && Cfg.FunctionalSessionNumber > 0
+    if strcmpi(TedanaAction, 'reuse')
+        [Cfg, ~] = y_OrganizeTedanaResults(Cfg);
+    elseif strcmpi(TedanaAction, 'resume')
+        TedanaCfg = Cfg;
+        TedanaCfg.MultiEcho.OrganizeOnly = 0;
+        TedanaCfg.MultiEcho.RequireSurfaceResults = 1;
+        TedanaCfg.MultiEcho.RequireTargetSpace = 1;
+        TedanaCfg.MultiEcho.GenerateSurfaceResults = 1;
+        [TedanaCfg, TedanaJobs] = y_MultiEchoICA_Tedana(TedanaCfg);
+        if TedanaCfg.MultiEcho.DryRun || isempty(TedanaJobs) || any([TedanaJobs.Success] ~= 1)
+            error('DPABISurf:IncompleteTedana', ...
+                'Tedana has not completed. Inspect the tedana job reports before organizing.');
+        end
+    else
+        error('DPABISurf:OrganizeMode', 'Tedana action must be reuse or resume.');
+    end
 end
 
 IsNeedOrganizeSurfWithParallel = 1;
@@ -301,7 +333,7 @@ end
 
 fprintf('Organize functional surface files...\n');
 if IsMultiEchoICATedana
-    fprintf('Skip organizing functional surface files, because y_MultiEchoICA_Tedana has already copied them into FunSurf and FunSurfW.\n');
+    fprintf('Skip organizing functional surface files, because verified tedana results have been copied into FunSurf and FunSurfW.\n');
 elseif Cfg.FunctionalSessionNumber==1
     mkdir(fullfile(Cfg.WorkingDir,'FunSurfW'));
     mkdir(fullfile(Cfg.WorkingDir,'FunSurf'));
@@ -328,7 +360,7 @@ end
 
 fprintf('Organize functional volume files...\n');
 if IsMultiEchoICATedana
-    fprintf('Skip organizing functional volume files, because y_MultiEchoICA_Tedana has already copied them into FunVolu and FunVoluW.\n');
+    fprintf('Skip organizing functional volume files, because verified tedana results have been copied into FunVolu and FunVoluW.\n');
 elseif Cfg.FunctionalSessionNumber==1
     mkdir(fullfile(Cfg.WorkingDir,'FunVoluW'));
     mkdir(fullfile(Cfg.WorkingDir,'FunVolu'));
@@ -354,7 +386,7 @@ end
 
 fprintf('Organize functional mask files...\n');
 if IsMultiEchoICATedana
-    fprintf('Skip organizing functional mask files, because y_MultiEchoICA_Tedana has already copied them into Masks/AutoMasks.\n');
+    fprintf('Skip organizing functional mask files, because verified tedana results have been copied into Masks/AutoMasks.\n');
 elseif Cfg.FunctionalSessionNumber==1
     mkdir(fullfile(Cfg.WorkingDir,'Masks','AutoMasks'));
     parfor i=1:Cfg.SubjectNum

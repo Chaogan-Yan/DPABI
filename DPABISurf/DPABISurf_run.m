@@ -854,6 +854,11 @@ else
 end
 
 
+% Resolve copied results before validating inputs or selecting the data source.
+if Cfg.IsOrganizefmriprepResults == 1 && Cfg.Isfmriprep == 0
+    [Cfg, ~] = y_ResolveOrganizeConfig(Cfg);
+end
+
 % Verify each functional session/run before handing fMRIPrep outputs downstream.
 % A directory (or a subject-level file count) does not prove completion.
 NeedFMRIPrepHandoff = Cfg.FunctionalSessionNumber > 0 && ...
@@ -876,10 +881,13 @@ end
 % Resume tedana even when its output directory already exists. Verified stages
 % are reused by y_MultiEchoICA_Tedana (Overwrite defaults to 0). Do this only at
 % the fMRIPrep handoff, not when resuming later surface/volume processing.
-if NeedFMRIPrepHandoff && isfield(Cfg,'MultiEcho') && ...
+% When organizing, y_Organize_fmriprep owns the tedana reuse/resume step.
+if NeedFMRIPrepHandoff && Cfg.IsOrganizefmriprepResults == 0 && ...
+        isfield(Cfg,'MultiEcho') && ...
         isfield(Cfg.MultiEcho,'MultiEchoMethod') && ...
         strcmpi(Cfg.MultiEcho.MultiEchoMethod,'MultiEchoICA_Tedana')
     TedanaCfg = Cfg;
+    TedanaCfg.MultiEcho.OrganizeOnly = 0;
     TedanaCfg.MultiEcho.RequireSurfaceResults = 1;
     TedanaCfg.MultiEcho.RequireTargetSpace = 1;
     TedanaCfg.MultiEcho.GenerateSurfaceResults = 1;
@@ -941,7 +949,11 @@ if (Cfg.IsOrganizefmriprepResults==1)
         system(Command);
     end
     
-    y_Organize_fmriprep(Cfg);
+    if Cfg.Isfmriprep == 1
+        Cfg = y_Organize_fmriprep(Cfg, [], [], [], 'resume');
+    else
+        Cfg = y_Organize_fmriprep(Cfg);
+    end
     if Cfg.IsBasedOnFunSurf==1
         Cfg.StartingDirName = 'FunSurf';
     else
