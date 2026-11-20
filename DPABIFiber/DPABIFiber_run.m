@@ -133,7 +133,7 @@ end
 NeedWeightedImageT1wToACPC = local_need_weighted_image_to_acpc(Cfg);
 NeedTWFCT1wToACPC = local_need_twfc_fcfile_to_acpc(Cfg);
 NeedT1wToACPC = NeedWeightedImageT1wToACPC || NeedTWFCT1wToACPC;
-T1wToACPCTransformReady = 0;
+ACPCReferenceFileSet = {};
 
 
 
@@ -218,22 +218,14 @@ if (Cfg.Isqsiprep==1)
     end
 
     if any(HasAparcasegSource) || NeedT1wToACPC
-        T1wToACPCTransformReady = local_ensure_fmriprep_t1_to_qsiprep_acpc_transform(Cfg, CommandInit, WorkingDir, SubjectIDString);
+        ACPCReferenceFileSet = local_ensure_fmriprep_t1_to_qsiprep_acpc_transform(Cfg, CommandInit, WorkingDir);
     end
 
     if any(HasAparcasegSource)
-        RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
-        if (2==exist(RefFile,'file'))
-            Command = sprintf('%s antsApplyTransforms -d 3 -i %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-T1w_desc-aparcaseg.nii.gz -r %s/qsiprep/{1}/anat/{1}_space-ACPC_desc-preproc_T1w.nii.gz -o %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-ACPC_desc-aparcaseg.nii.gz -n MultiLabel -t %s/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_0GenericAffine.mat',CommandParallelQsiprep,WorkingDir,WorkingDir,WorkingDir,WorkingDir);
-            Command = sprintf('%s ::: %s', Command, SubjectIDString);
-            fprintf('Transform space-T1w_desc-aparcaseg to _space-ACPC_desc-aparcaseg, please wait...\n');
-            system(Command);
-        else
-            Command = sprintf('%s antsApplyTransforms -d 3 -i %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-T1w_desc-aparcaseg.nii.gz -r %s/qsiprep/{1}/ses-1/anat/{1}_ses-1_space-ACPC_desc-preproc_T1w.nii.gz -o %s/Results/AnatVolu/T1wSpace/{1}/{1}_space-ACPC_desc-aparcaseg.nii.gz -n MultiLabel -t %s/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_0GenericAffine.mat',CommandParallelQsiprep,WorkingDir,WorkingDir,WorkingDir,WorkingDir);
-            Command = sprintf('%s ::: %s', Command, SubjectIDString);
-            fprintf('Transform space-T1w_desc-aparcaseg to _space-ACPC_desc-aparcaseg, please wait...\n');
-            system(Command);
-        end
+        AparcasegInput = [WorkingDir,'/Results/AnatVolu/T1wSpace/{1}/{1}_space-T1w_desc-aparcaseg.nii.gz'];
+        AparcasegOutput = 'Results/AnatVolu/T1wSpace/{1}/{1}_space-ACPC_desc-aparcaseg.nii.gz';
+        fprintf('Transform aparcaseg to space-ACPC, please wait...\n');
+        local_apply_t1w_to_acpc(Cfg, CommandParallelQsiprep, WorkingDir, ACPCReferenceFileSet, AparcasegInput, AparcasegOutput, 'MultiLabel');
     end
 
 
@@ -605,8 +597,8 @@ if (Cfg.StructuralConnectomeMatrix.Is==1)
         end
     end
 
-    if NeedWeightedImageT1wToACPC && (~T1wToACPCTransformReady)
-        T1wToACPCTransformReady = local_ensure_fmriprep_t1_to_qsiprep_acpc_transform(Cfg, CommandInit, WorkingDir, SubjectIDString);
+    if NeedWeightedImageT1wToACPC && isempty(ACPCReferenceFileSet)
+        ACPCReferenceFileSet = local_ensure_fmriprep_t1_to_qsiprep_acpc_transform(Cfg, CommandInit, WorkingDir);
     end
 
 
@@ -656,7 +648,7 @@ if (Cfg.StructuralConnectomeMatrix.Is==1)
         ImageFile = replace(ImageFile,'{SubjectID}','{1}');
 
         if NeedWeightedImageT1wToACPC
-            [ImageFile, MountPath, WithinFile] = local_transform_weighted_image_to_acpc(Cfg, ImageFile, MountPath, WithinFile, CommandInit, CommandParallelQsiprep, WorkingDir, SubjectIDString);
+            [ImageFile, MountPath, WithinFile] = local_transform_weighted_image_to_acpc(Cfg, ImageFile, MountPath, WithinFile, CommandInit, CommandParallelQsiprep, WorkingDir, ACPCReferenceFileSet);
         end
 
 
@@ -768,8 +760,8 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
         end
     end
 
-    if NeedTWFCT1wToACPC && (~T1wToACPCTransformReady)
-        T1wToACPCTransformReady = local_ensure_fmriprep_t1_to_qsiprep_acpc_transform(Cfg, CommandInit, WorkingDir, SubjectIDString);
+    if NeedTWFCT1wToACPC && isempty(ACPCReferenceFileSet)
+        ACPCReferenceFileSet = local_ensure_fmriprep_t1_to_qsiprep_acpc_transform(Cfg, CommandInit, WorkingDir);
     end
 
 
@@ -848,7 +840,7 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
                 FCFile = replace(FCFile,'{SubjectID}','{1}');
 
                 if NeedTWFCT1wToACPC
-                    [FCFile, MountPath, WithinFile] = local_transform_twfc_fcfile_to_acpc(Cfg, FCFile, MountPath, WithinFile, iElement, 1, CommandInit, CommandParallelQsiprep, WorkingDir, SubjectIDString);
+                    [FCFile, MountPath, WithinFile] = local_transform_twfc_fcfile_to_acpc(Cfg, FCFile, MountPath, WithinFile, iElement, 1, CommandInit, CommandParallelQsiprep, WorkingDir, ACPCReferenceFileSet);
                 end
 
                 %tckmap tracks.tck temp.mif <-template / -vox options> -contrast scalar_map -image FC_map.mif -stat_vox mean -stat_tck sum
@@ -996,7 +988,7 @@ if (Cfg.SeedBasedStructuralConnectivity.Is==1)
             FCFile = replace(FCFile,'{SubjectID}','{1}');
 
             if NeedTWFCT1wToACPC
-                [FCFile, MountPath, WithinFile] = local_transform_twfc_fcfile_to_acpc(Cfg, FCFile, MountPath, WithinFile, [], 0, CommandInit, CommandParallelQsiprep, WorkingDir, SubjectIDString);
+                [FCFile, MountPath, WithinFile] = local_transform_twfc_fcfile_to_acpc(Cfg, FCFile, MountPath, WithinFile, [], 0, CommandInit, CommandParallelQsiprep, WorkingDir, ACPCReferenceFileSet);
             end
 
             RefFile=fullfile(Cfg.WorkingDir,'qsirecon','derivatives',QsireconDerivativesDirSpecific,Cfg.SubjectID{1},'dwi',[Cfg.SubjectID{1},'_space-ACPC_model-ifod2_streamlines.tck']);
@@ -1103,117 +1095,13 @@ if (Cfg.Normalize.Is>0) && strcmpi(Cfg.Normalize.Timing,'OnResults')
     copyfile([DPABIPath,filesep,'Templates',filesep,'BrainMask_05_97x115x97.nii'],[Cfg.WorkingDir,filesep,'Masks']);
 
 
-    fprintf(['Normalizing the resutls...\n']);
+    fprintf('Normalizing the results...\n');
     for iFunSession=1:Cfg.FunctionalSessionNumber
-        for i=1:Cfg.SubjectNum
-            %Check the DSpaces need to be normalized
-            DirDSpace = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName]);
-            if strcmpi(DirDSpace(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
-                StartIndex=4;
-            else
-                StartIndex=3;
-            end
-            DSpaceSet=[];
-            for iDir=StartIndex:length(DirDSpace)
-                if DirDSpace(iDir).isdir
-                    DSpaceSet = [DSpaceSet;{DirDSpace(iDir).name}];
-                end
-
-            end
-
-            for iDSpace=1:length(DSpaceSet)
-                switch DSpaceSet{iDSpace}
-                    case {'DwiVolu'}
-                        %Check the measures need to be normalized
-                        DirMeasure = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace}]);
-                        if strcmpi(DirMeasure(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
-                            StartIndex=4;
-                        else
-                            StartIndex=3;
-                        end
-                        MeasureSet=[];
-                        for iDir=StartIndex:length(DirMeasure)
-                            if DirMeasure(iDir).isdir
-                                MeasureSet = [MeasureSet;{DirMeasure(iDir).name}];
-                            end
-                        end
-                        for iMeasure=1:length(MeasureSet)
-                            switch MeasureSet{iMeasure}
-                                case {'SeedBasedStructuralConnectivityTDIMap','SeedBasedStructuralConnectivityTWFCMap'}
-                                    [tmp1 tmp2]=mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'W',filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure}]);
-                                    FileList=[];
-                                    DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,'*',Cfg.SubjectID{i},'*.nii*']);
-                                    for j=1:length(DirImg)
-                                        FileList=[FileList,' ',DirImg(j).name];
-                                    end
-
-                                    RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
-                                    if (2==exist(RefFile,'file'))
-                                        Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/anat/%s_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                            CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
-                                    else
-                                        Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/ses-1/anat/%s_ses-1_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                            CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
-                                    end
-                                    system(Command);
-
-                                case {'TensorMetrics'}
-
-                                    DirSubfolder = dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure}]);
-                                    if strcmpi(DirSubfolder(3).name,'.DS_Store')  %110908 YAN Chao-Gan, for MAC OS compatablie
-                                        StartIndex=4;
-                                    else
-                                        StartIndex=3;
-                                    end
-                                    SubfolderSet=[];
-                                    for iDir=StartIndex:length(DirSubfolder)
-                                        if DirSubfolder(iDir).isdir
-                                            SubfolderSet = [SubfolderSet;{DirSubfolder(iDir).name}];
-                                        end
-                                    end
-
-                                    for iSubfolder=1:length(SubfolderSet)
-
-                                        [tmp1 tmp2]=mkdir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,'W',filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,SubfolderSet{iSubfolder}]);
-                                        FileList=[];
-                                        DirImg=dir([Cfg.WorkingDir,filesep,FunSessionPrefixSet{iFunSession},Cfg.StartingDirName,filesep,DSpaceSet{iDSpace},filesep,MeasureSet{iMeasure},filesep,SubfolderSet{iSubfolder},filesep,'*',Cfg.SubjectID{i},'*.nii*']);
-                                        for j=1:length(DirImg)
-                                            FileList=[FileList,' ',DirImg(j).name];
-                                        end
-
-                                        RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
-                                        if (2==exist(RefFile,'file'))
-                                            if strcmpi(SubfolderSet{iSubfolder},'Tensor')
-                                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input-image-type 3 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/anat/%s_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                                    CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
-                                            else
-                                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/anat/%s_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                                    CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
-                                            end
-
-                                        else
-                                            if strcmpi(SubfolderSet{iSubfolder},'Tensor')
-                                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input-image-type 3 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/ses-1/anat/%s_ses-1_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                                    CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
-                                            else
-                                                Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 --input %s/%s/%s/%s/%s/{1} --interpolation Linear --output %s/%sW/%s/%s/%s/w{1} --reference-image %s/Masks/BrainMask_05_97x115x97.nii  --transform %s/qsiprep/%s/ses-1/anat/%s_ses-1_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5 ::: %s', ...
-                                                    CommandParallelQsiprep, WorkingDir, [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder}, WorkingDir,[FunSessionPrefixSet{iFunSession},Cfg.StartingDirName],DSpaceSet{iDSpace},MeasureSet{iMeasure},SubfolderSet{iSubfolder},WorkingDir,WorkingDir,Cfg.SubjectID{i},Cfg.SubjectID{i},FileList);
-                                            end
-
-                                        end
-
-                                        system(Command);
-                                    end
-                            end
-
-                        end
-                end
-            end
-        end
+        ResultsDir = [FunSessionPrefixSet{iFunSession},Cfg.StartingDirName];
+        local_normalize_dwi_results(Cfg.WorkingDir, WorkingDir, CommandParallelQsiprep, ...
+            Cfg.SubjectID(1:Cfg.SubjectNum), ResultsDir);
     end
-    Cfg.StartingDirName=[Cfg.StartingDirName,'W']; %Now StartingDirName is with new suffix 'S'
-
-  
+    Cfg.StartingDirName = [Cfg.StartingDirName,'W'];
 end
 
 
@@ -1721,59 +1609,234 @@ end
 
 
 
-function IsReady = local_ensure_fmriprep_t1_to_qsiprep_acpc_transform(Cfg, CommandInit, ContainerWorkingDir, SubjectIDString)
-IsReady = 0;
-
-local_prepare_t1w_to_acpc_transform_output_dirs(Cfg.WorkingDir, Cfg.SubjectID);
-TransformFileSet = local_get_fmriprep_t1_to_qsiprep_acpc_transform_files(Cfg.WorkingDir, Cfg.SubjectID);
+function ACPCReferenceFileSet = local_ensure_fmriprep_t1_to_qsiprep_acpc_transform(Cfg, CommandInit, ContainerWorkingDir)
+SubjectIDCell = Cfg.SubjectID(:);
+TransformPrefix = local_t1w_to_acpc_transform_prefix();
+TransformFileSet = local_expand_parallel_subject_file_template( ...
+    fullfile(Cfg.WorkingDir, [TransformPrefix,'0GenericAffine.mat']), SubjectIDCell);
 HasTransform = cellfun(@(FileName) 2==exist(FileName,'file'), TransformFileSet);
+
+ACPCReferenceFileSet = cell(size(SubjectIDCell));
+MovingFileSet = cell(size(SubjectIDCell));
+
+for iSubject = 1:numel(SubjectIDCell)
+    SubjectID = SubjectIDCell{iSubject};
+    DwiSessions = local_get_qsiprep_dwi_sessions(Cfg.WorkingDir, SubjectID);
+
+    [FixedFile, ACPCSession] = local_resolve_anat_derivative(Cfg.WorkingDir, 'qsiprep', SubjectID, ...
+        '_space-ACPC_desc-preproc_T1w.nii.gz', DwiSessions);
+    ACPCReferenceFileSet{iSubject} = [ContainerWorkingDir,'/',FixedFile];
+
+    if ~HasTransform(iSubject)
+        MovingFile = local_resolve_anat_derivative(Cfg.WorkingDir, 'fmriprep', SubjectID, ...
+            '_desc-preproc_T1w.nii.gz', {ACPCSession});
+        MovingFileSet{iSubject} = [ContainerWorkingDir,'/',MovingFile];
+    end
+end
+
 if all(HasTransform)
-    IsReady = 1;
     return;
 end
 
-RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
-if (2==exist(RefFile,'file'))
-    Command = sprintf('%s cgyan/qsiprep bash -lc ''parallel --quote -j 1 bash -lc "antsRegistrationSyNQuick.sh -d 3 -f %s/qsiprep/{1}/anat/{1}_space-ACPC_desc-preproc_T1w.nii.gz -m %s/fmriprep/{1}/anat/{1}_desc-preproc_T1w.nii.gz -t a -o %s/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_"',CommandInit,ContainerWorkingDir,ContainerWorkingDir,ContainerWorkingDir);
+MissingSubjects = SubjectIDCell(~HasTransform);
+for iSubject = 1:numel(MissingSubjects)
+    SubjectOutputDir = fullfile(Cfg.WorkingDir, 'Results', 'AnatVolu', 'T1wSpace', MissingSubjects{iSubject});
+    if ~exist(SubjectOutputDir,'dir')
+        mkdir(SubjectOutputDir);
+    end
+end
+OutputPrefixSet = local_expand_parallel_subject_file_template([ContainerWorkingDir,'/',TransformPrefix], MissingSubjects);
+JobFiles = [ACPCReferenceFileSet(~HasTransform), MovingFileSet(~HasTransform), OutputPrefixSet];
+
+if isdeployed && isunix && ~ismac
+    CommandParallel = 'parallel -j 1';
 else
-    Command = sprintf('%s cgyan/qsiprep bash -lc ''parallel --quote -j 1 bash -lc "antsRegistrationSyNQuick.sh -d 3 -f %s/qsiprep/{1}/ses-1/anat/{1}_ses-1_space-ACPC_desc-preproc_T1w.nii.gz -m %s/fmriprep/{1}/ses-1/anat/{1}_ses-1_desc-preproc_T1w.nii.gz -t a -o %s/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_"',CommandInit,ContainerWorkingDir,ContainerWorkingDir,ContainerWorkingDir);
+    CommandParallel = sprintf('%s cgyan/qsiprep parallel -j 1', CommandInit);
 end
-Command = sprintf('%s ::: %s''', Command, SubjectIDString);
 fprintf('Calculate T1 -> ACPC, please wait...\n');
-system(Command);
-
-IsReady = 1;
+local_run_ants_jobs(Cfg.WorkingDir, ContainerWorkingDir, CommandParallel, ...
+    'antsRegistrationSyNQuick.sh -d 3 -f {1} -m {2} -t a -o {3}', JobFiles, 'T1w to ACPC registration');
+local_require_ants_outputs(TransformFileSet, 'T1w to ACPC registration');
 end
 
 
 
-function local_prepare_t1w_to_acpc_transform_output_dirs(WorkingDir, SubjectIDCell)
-T1wSpaceDir = fullfile(WorkingDir,'Results','AnatVolu','T1wSpace');
-if ~exist(T1wSpaceDir,'dir')
-    mkdir(T1wSpaceDir);
+function DwiSessions = local_get_qsiprep_dwi_sessions(WorkingDir, SubjectID)
+QsiprepSubjectDir = fullfile(WorkingDir, 'qsiprep', SubjectID);
+DwiFiles = dir(fullfile(QsiprepSubjectDir, 'ses-*', 'dwi', ...
+    [SubjectID,'_ses-*_space-ACPC_desc-preproc_dwi.nii.gz']));
+DwiSessions = cellfun(@(FileName) local_get_session_label_from_bids_file(FileName, SubjectID), ...
+    {DwiFiles(~[DwiFiles.isdir]).name}, 'UniformOutput', false);
+DwiSessions = unique(DwiSessions(~cellfun(@isempty, DwiSessions)));
 end
 
-for iSubject=1:length(SubjectIDCell)
-    SubjectDir = fullfile(T1wSpaceDir, SubjectIDCell{iSubject});
-    if ~exist(SubjectDir,'dir')
-        mkdir(SubjectDir);
+
+
+function [RelativeFile, SessionLabel] = local_resolve_anat_derivative(WorkingDir, DerivativeName, SubjectID, FileSuffix, RequiredSessions)
+SubjectPath = [DerivativeName,'/',SubjectID];
+SubjectAnat = [SubjectPath,'/anat/'];
+RelativeFile = [SubjectAnat,SubjectID,FileSuffix];
+SessionLabel = '';
+if 2==exist(fullfile(WorkingDir, RelativeFile),'file')
+    return;
+end
+
+SessionDirs = dir(fullfile(WorkingDir, SubjectPath, 'ses-*'));
+SessionFiles = dir(fullfile(WorkingDir, SubjectAnat, [SubjectID,'_ses-*',FileSuffix]));
+FlatSessions = cellfun(@(FileName) local_get_session_label_from_bids_file(FileName, SubjectID), ...
+    {SessionFiles(~[SessionFiles.isdir]).name}, 'UniformOutput', false);
+Sessions = unique([{SessionDirs([SessionDirs.isdir]).name}, FlatSessions]);
+Sessions = Sessions(~cellfun(@isempty, Sessions));
+RequiredSessions = RequiredSessions(~cellfun(@isempty, RequiredSessions));
+
+% A session-specific reference must correspond to the target DWI or ACPC session.
+CandidateFiles = cell(size(Sessions));
+for iSession = 1:numel(Sessions)
+    FileName = [SubjectID,'_',Sessions{iSession},FileSuffix];
+    CandidateFiles{iSession} = local_pick_existing_file({ ...
+        fullfile(WorkingDir, SubjectPath, Sessions{iSession}, 'anat', FileName), ...
+        fullfile(WorkingDir, SubjectAnat, FileName)});
+end
+HasFile = ~cellfun(@isempty, CandidateFiles);
+MatchesSession = true(size(Sessions));
+if ~isempty(RequiredSessions)
+    MatchesSession = ismember(Sessions, RequiredSessions);
+end
+Selected = find(HasFile & MatchesSession);
+if numel(Selected) ~= 1 || numel(RequiredSessions) > 1
+    Found = strjoin(CandidateFiles(HasFile), ', ');
+    if isempty(Found)
+        Found = '(none)';
+    end
+    error('Cannot select a unique %s anatomical derivative for %s. Target sessions: %s. Checked %s. Session candidates: %s.', ...
+        DerivativeName, SubjectID, strjoin(RequiredSessions, ', '), fullfile(WorkingDir, RelativeFile), Found);
+end
+
+SessionLabel = Sessions{Selected};
+FileName = [SubjectID,'_',SessionLabel,FileSuffix];
+RelativeFile = [SubjectPath,'/',SessionLabel,'/anat/',FileName];
+if 2~=exist(fullfile(WorkingDir, RelativeFile),'file')
+    RelativeFile = [SubjectAnat,FileName];
+end
+end
+
+
+
+function TransformPrefix = local_t1w_to_acpc_transform_prefix()
+TransformPrefix = 'Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_';
+end
+
+
+
+function local_apply_t1w_to_acpc(Cfg, CommandParallel, ContainerWorkingDir, ACPCReferenceFileSet, InputFile, OutputWithinFile, Interpolation)
+SubjectIDCell = Cfg.SubjectID;
+InputFileSet = local_expand_parallel_subject_file_template(InputFile, SubjectIDCell);
+OutputFileSet = local_expand_parallel_subject_file_template([ContainerWorkingDir,'/',OutputWithinFile], SubjectIDCell);
+TransformFileSet = local_expand_parallel_subject_file_template( ...
+    [ContainerWorkingDir,'/',local_t1w_to_acpc_transform_prefix(),'0GenericAffine.mat'], SubjectIDCell);
+JobFiles = [InputFileSet, ACPCReferenceFileSet, OutputFileSet, TransformFileSet];
+JobCommand = sprintf('antsApplyTransforms --default-value 0 --float 0 -d 3 -i {1} -r {2} -o {3} -n %s -t {4}', Interpolation);
+local_run_ants_jobs(Cfg.WorkingDir, ContainerWorkingDir, CommandParallel, JobCommand, JobFiles, 'T1w to ACPC resampling');
+OutputFileSet = local_expand_parallel_subject_file_template(fullfile(Cfg.WorkingDir, OutputWithinFile), SubjectIDCell);
+local_require_ants_outputs(OutputFileSet, 'T1w to ACPC resampling');
+end
+
+
+
+function local_normalize_dwi_results(WorkingDir, ContainerWorkingDir, CommandParallel, SubjectIDCell, ResultsDir)
+InputRoot = [ResultsDir,'/DwiVolu/'];
+OutputRoot = [ResultsDir,'W/DwiVolu/'];
+ReferenceFile = [ContainerWorkingDir,'/Masks/BrainMask_05_97x115x97.nii'];
+TransformSuffix = '_from-ACPC_to-MNI152NLin2009cAsym_mode-image_xfm.h5';
+
+ResultFolders = {'SeedBasedStructuralConnectivityTDIMap','SeedBasedStructuralConnectivityTWFCMap'};
+TensorFolders = dir(fullfile(WorkingDir, InputRoot, 'TensorMetrics'));
+TensorFolders = {TensorFolders([TensorFolders.isdir]).name};
+TensorFolders = TensorFolders(~ismember(TensorFolders, {'.','..'}));
+ResultFolders = [ResultFolders,strcat('TensorMetrics/',TensorFolders)];
+
+for iSubject = 1:numel(SubjectIDCell)
+    SubjectID = SubjectIDCell{iSubject};
+    SubjectPattern = ['(^|_)',regexptranslate('escape',SubjectID),'(?=_|\.)'];
+    TransformFile = '';
+
+    for iFolder = 1:numel(ResultFolders)
+        InputDir = [InputRoot,ResultFolders{iFolder}];
+        Images = dir(fullfile(WorkingDir, InputDir, ['*',SubjectID,'*.nii*']));
+        FileNames = {Images(~[Images.isdir]).name}.';
+        IsSubject = ~cellfun(@isempty, regexp(FileNames, SubjectPattern, 'once'));
+        IsNifti = ~cellfun(@isempty, regexp(FileNames, '\.nii(\.gz)?$', 'once'));
+        FileNames = FileNames(IsSubject & IsNifti);
+        if isempty(FileNames)
+            continue;
+        end
+
+        if isempty(TransformFile)
+            DwiSessions = local_get_qsiprep_dwi_sessions(WorkingDir, SubjectID);
+            RelativeTransform = local_resolve_anat_derivative(WorkingDir, 'qsiprep', ...
+                SubjectID, TransformSuffix, DwiSessions);
+            TransformFile = [ContainerWorkingDir,'/',RelativeTransform];
+        end
+
+        OutputDir = [OutputRoot,ResultFolders{iFolder}];
+        HostOutputDir = fullfile(WorkingDir, OutputDir);
+        if ~exist(HostOutputDir,'dir')
+            mkdir(HostOutputDir);
+        end
+
+        InputFileSet = strcat([ContainerWorkingDir,'/',InputDir,'/'], FileNames);
+        OutputFileSet = strcat([ContainerWorkingDir,'/',OutputDir,'/w'], FileNames);
+        JobFiles = [InputFileSet, OutputFileSet, repmat({ReferenceFile,TransformFile}, numel(FileNames), 1)];
+        JobCommand = ['antsApplyTransforms --default-value 0 --float 0 --input {1} ', ...
+            '--interpolation Linear --output {2} --reference-image {3} --transform {4}'];
+        if strcmpi(ResultFolders{iFolder}, 'TensorMetrics/Tensor')
+            JobCommand = [JobCommand,' --input-image-type 3'];
+        end
+
+        Action = sprintf('ACPC to MNI normalization for %s (%s)', SubjectID, ResultFolders{iFolder});
+        local_run_ants_jobs(WorkingDir, ContainerWorkingDir, CommandParallel, JobCommand, JobFiles, Action);
+        local_require_ants_outputs(fullfile(HostOutputDir, strcat('w',FileNames)), Action);
     end
 end
 end
 
 
 
-function TransformFileSet = local_get_fmriprep_t1_to_qsiprep_acpc_transform_files(WorkingDir, SubjectIDCell)
-TransformFileSet = cell(length(SubjectIDCell),1);
-
-for iSubject=1:length(SubjectIDCell)
-    TransformFileSet{iSubject} = fullfile(WorkingDir,'Results','AnatVolu','T1wSpace',SubjectIDCell{iSubject},[SubjectIDCell{iSubject},'_fmriprepT1_to_qsiprepACPC_0GenericAffine.mat']);
+function local_run_ants_jobs(WorkingDir, ContainerWorkingDir, CommandParallel, JobCommand, JobFiles, Action)
+% Each row keeps the input, reference and output paths for one job together.
+JobList = [tempname(WorkingDir),'.tsv'];
+[FileID, Message] = fopen(JobList, 'w', 'n', 'UTF-8');
+if FileID == -1
+    error('Could not create ANTs job list %s: %s', JobList, Message);
+end
+RemoveJobList = onCleanup(@() delete(JobList));
+JobFormat = [repmat('%s\t', 1, size(JobFiles,2)-1), '%s\n'];
+for iJob = 1:size(JobFiles,1)
+    fprintf(FileID, JobFormat, JobFiles{iJob,:});
+end
+if fclose(FileID) ~= 0
+    error('Could not write ANTs job list %s.', JobList);
+end
+Command = sprintf('%s --halt soon,fail=1 --colsep "\\t" %s :::: "%s/%s"', ...
+    CommandParallel, JobCommand, ContainerWorkingDir, local_basename(JobList));
+Status = system(Command);
+if Status ~= 0
+    error('%s failed (exit status %d). See the ANTs output above for the failed subject and image paths.', Action, Status);
 end
 end
 
 
 
-function [FCFile, MountPath, WithinFile] = local_transform_twfc_fcfile_to_acpc(Cfg, FCFileInput, MountPathInput, WithinFileInput, iElement, IsTracksForEachROI, CommandInit, CommandParallelQsiprep, ContainerWorkingDir, SubjectIDString)
+function local_require_ants_outputs(FileSet, Action)
+HasOutput = cellfun(@(FileName) 2==exist(FileName,'file'), FileSet);
+if ~all(HasOutput)
+    error('%s did not produce the expected files: %s', Action, strjoin(FileSet(~HasOutput), ', '));
+end
+end
+
+
+
+function [FCFile, MountPath, WithinFile] = local_transform_twfc_fcfile_to_acpc(Cfg, FCFileInput, MountPathInput, WithinFileInput, iElement, IsTracksForEachROI, CommandInit, CommandParallelQsiprep, ContainerWorkingDir, ACPCReferenceFileSet)
 OutputDir = fullfile(Cfg.WorkingDir,'Results','DwiVolu','SeedBasedStructuralConnectivityTWFCMap','FCFileACPC');
 if ~exist(OutputDir,'dir')
     mkdir(OutputDir);
@@ -1787,19 +1850,10 @@ end
 
 OutputFileHost = fullfile(OutputDir, OutputName);
 OutputWithinFile = ['Results/DwiVolu/SeedBasedStructuralConnectivityTWFCMap/FCFileACPC/',OutputName];
-OutputFileContainer = [ContainerWorkingDir,'/',OutputWithinFile];
 
 OutputFileSet = local_expand_parallel_subject_file_template(OutputFileHost, Cfg.SubjectID);
 HasOutput = cellfun(@(FileName) 2==exist(FileName,'file'), OutputFileSet);
 if ~all(HasOutput)
-    RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
-    if (2==exist(RefFile,'file'))
-        RefImage = [ContainerWorkingDir,'/qsiprep/{1}/anat/{1}_space-ACPC_desc-preproc_T1w.nii.gz'];
-    else
-        RefImage = [ContainerWorkingDir,'/qsiprep/{1}/ses-1/anat/{1}_ses-1_space-ACPC_desc-preproc_T1w.nii.gz'];
-    end
-
-    TransformFile = [ContainerWorkingDir,'/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_0GenericAffine.mat'];
     if isdeployed && (isunix && (~ismac))
         CommandParallelForFC = CommandParallelQsiprep;
         InputFile = FCFileInput;
@@ -1808,10 +1862,8 @@ if ~all(HasOutput)
         InputFile = ['/MountPath/',WithinFileInput];
     end
 
-    Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 -d 3 -i %s -r %s -o %s -n Linear -t %s', CommandParallelForFC, InputFile, RefImage, OutputFileContainer, TransformFile);
-    Command = sprintf('%s ::: %s', Command, SubjectIDString);
     fprintf('Transform TWFC FCFile to space-ACPC, please wait...\n');
-    system(Command);
+    local_apply_t1w_to_acpc(Cfg, CommandParallelForFC, ContainerWorkingDir, ACPCReferenceFileSet, InputFile, OutputWithinFile, 'Linear');
 end
 
 FCFile = OutputFileHost;
@@ -1821,7 +1873,7 @@ end
 
 
 
-function [ImageFile, MountPath, WithinFile] = local_transform_weighted_image_to_acpc(Cfg, ImageFileInput, MountPathInput, WithinFileInput, CommandInit, CommandParallelQsiprep, ContainerWorkingDir, SubjectIDString)
+function [ImageFile, MountPath, WithinFile] = local_transform_weighted_image_to_acpc(Cfg, ImageFileInput, MountPathInput, WithinFileInput, CommandInit, CommandParallelQsiprep, ContainerWorkingDir, ACPCReferenceFileSet)
 OutputDir = fullfile(Cfg.WorkingDir,'Results','DwiVolu','StructuralConnectomeMatrix','ImageFileACPC');
 if ~exist(OutputDir,'dir')
     mkdir(OutputDir);
@@ -1830,19 +1882,10 @@ end
 OutputName = '{1}_space-ACPC_WeightedByImage.nii.gz';
 OutputFileHost = fullfile(OutputDir, OutputName);
 OutputWithinFile = ['Results/DwiVolu/StructuralConnectomeMatrix/ImageFileACPC/',OutputName];
-OutputFileContainer = [ContainerWorkingDir,'/',OutputWithinFile];
 
 OutputFileSet = local_expand_parallel_subject_file_template(OutputFileHost, Cfg.SubjectID);
 HasOutput = cellfun(@(FileName) 2==exist(FileName,'file'), OutputFileSet);
 if ~all(HasOutput)
-    RefFile=[Cfg.WorkingDir,filesep,'qsiprep',filesep,Cfg.SubjectID{1},filesep,'dwi',filesep,Cfg.SubjectID{1},'_space-ACPC_desc-preproc_dwi.b'];
-    if (2==exist(RefFile,'file'))
-        RefImage = [ContainerWorkingDir,'/qsiprep/{1}/anat/{1}_space-ACPC_desc-preproc_T1w.nii.gz'];
-    else
-        RefImage = [ContainerWorkingDir,'/qsiprep/{1}/ses-1/anat/{1}_ses-1_space-ACPC_desc-preproc_T1w.nii.gz'];
-    end
-
-    TransformFile = [ContainerWorkingDir,'/Results/AnatVolu/T1wSpace/{1}/{1}_fmriprepT1_to_qsiprepACPC_0GenericAffine.mat'];
     if isdeployed && (isunix && (~ismac))
         CommandParallelForImage = CommandParallelQsiprep;
         InputFile = ImageFileInput;
@@ -1851,10 +1894,8 @@ if ~all(HasOutput)
         InputFile = ['/MountPath/',WithinFileInput];
     end
 
-    Command = sprintf('%s antsApplyTransforms --default-value 0 --float 0 -d 3 -i %s -r %s -o %s -n Linear -t %s', CommandParallelForImage, InputFile, RefImage, OutputFileContainer, TransformFile);
-    Command = sprintf('%s ::: %s', Command, SubjectIDString);
     fprintf('Transform weighted image to space-ACPC, please wait...\n');
-    system(Command);
+    local_apply_t1w_to_acpc(Cfg, CommandParallelForImage, ContainerWorkingDir, ACPCReferenceFileSet, InputFile, OutputWithinFile, 'Linear');
 end
 
 ImageFile = OutputFileHost;
