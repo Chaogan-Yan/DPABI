@@ -55,7 +55,7 @@ function dpabi_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dpabi
 
 
-Release='V10.0_260625';
+Release='V10.1_261123';
 if ispc
     UserName =getenv('USERNAME');
 else
@@ -65,6 +65,7 @@ Datetime=fix(clock);
 fprintf('Welcome: %s, %.4d-%.2d-%.2d %.2d:%.2d \n', UserName,Datetime(1),Datetime(2),Datetime(3),Datetime(4),Datetime(5));
 fprintf('DPABI: a toolbox for Data Processing & Analysis of Brain Imaging.\nRelease = %s\n',Release);
 fprintf('Copyright(c) 2014; GNU LGPL 2.1\n');
+fprintf('THU Yan Lab, Tsinghua University, Haidian District, Beijing 100084, China; ');
 fprintf('The R-fMRI Lab, Institute of Psychology, Chinese Academy of Sciences, 16 Lincui Road, Chaoyang District, Beijing 100101, China; ');
 fprintf('The Nathan Kline Institute for Psychiatric Research, 140 Old Orangeburg Road, Orangeburg, NY 10962; Department of Child and Adolescent Psychiatry / NYU Langone Medical Center Child Study Center, New York University, New York, NY 10016; ');
 fprintf('State Key Laboratory of Cognitive Neuroscience and Learning, Beijing Normal University, China\n');

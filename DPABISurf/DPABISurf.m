@@ -55,7 +55,7 @@ function DPABISurf_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABISurf
 
 
-Release='V3.4_260625';
+Release='V3.5_261123';
 if ispc
     UserName =getenv('USERNAME');
 else

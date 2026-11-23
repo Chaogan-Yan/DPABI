@@ -55,7 +55,7 @@ function DPABIFiber_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for DPABIFiber
 
 
-Release='V2.1_260625';
+Release='V2.2_261123';
 if ispc
     UserName =getenv('USERNAME');
 else
